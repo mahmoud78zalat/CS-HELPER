@@ -12,6 +12,8 @@ export default function Home() {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
 
+  console.log('Home component is rendering - user is authenticated');
+
   return (
     <Layout
       onCheckOrder={() => setShowCheckOrder(true)}
