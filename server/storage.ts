@@ -214,4 +214,240 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Memory storage for temporary use while database connection is being fixed
+class MemStorage implements IStorage {
+  private users: Map<string, User> = new Map();
+  private templates: Map<string, Template> = new Map();
+  private templateUsages: TemplateUsage[] = [];
+  private siteContents: Map<string, SiteContent> = new Map();
+
+  constructor() {
+    // Initialize with sample data
+    this.initializeSampleData();
+  }
+
+  private initializeSampleData() {
+    // Add sample templates
+    const sampleTemplates = [
+      {
+        id: "1",
+        name: "Order Delay Notification",
+        subject: "Update on Your Recent Order",
+        content: "Dear {customer_name}, We wanted to update you regarding your order {order_id}. Due to unforeseen circumstances, there will be a slight delay in processing your order. We sincerely apologize for any inconvenience this may cause.",
+        category: "Order Issues",
+        genre: "Standard",
+        concernedTeam: "Customer Service",
+        variables: ["customer_name", "order_id"],
+        stageOrder: 1,
+        isActive: true,
+        usageCount: 0,
+        createdBy: "system",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "2",
+        name: "Delivery Problem Resolution",
+        subject: "Regarding Your Delivery - {order_id}",
+        content: "Hello {customer_name}, We understand you're experiencing an issue with the delivery of order {order_id}. Our team is working diligently to resolve this matter. We will update you within 24 hours with a resolution.",
+        category: "Delivery Problems",
+        genre: "Urgent",
+        concernedTeam: "Logistics",
+        variables: ["customer_name", "order_id"],
+        stageOrder: 1,
+        isActive: true,
+        usageCount: 0,
+        createdBy: "system",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "3",
+        name: "Refund Request Confirmation",
+        subject: "Your Refund Request - Order {order_id}",
+        content: "Dear {customer_name}, We have received your refund request for order {order_id}. Your request is being processed and you can expect the refund to be completed within 3-5 business days.",
+        category: "Refunds",
+        genre: "Standard",
+        concernedTeam: "Finance",
+        variables: ["customer_name", "order_id"],
+        stageOrder: 1,
+        isActive: true,
+        usageCount: 0,
+        createdBy: "system",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    sampleTemplates.forEach(template => {
+      this.templates.set(template.id, template as Template);
+    });
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const user: User = {
+      ...userData,
+      email: userData.email ?? null,
+      firstName: userData.firstName ?? null,
+      lastName: userData.lastName ?? null,
+      profileImageUrl: userData.profileImageUrl ?? null,
+      role: userData.role || "agent",
+      status: userData.status || "active",
+      isOnline: userData.isOnline || false,
+      lastSeen: userData.lastSeen || new Date(),
+      createdAt: userData.createdAt || new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(user.id, user);
+    return user;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values()).sort((a, b) => 
+      (a.firstName || "").localeCompare(b.firstName || "")
+    );
+  }
+
+  async updateUserStatus(id: string, status: "active" | "blocked" | "banned"): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      user.status = status;
+      user.updatedAt = new Date();
+      this.users.set(id, user);
+    }
+  }
+
+  async updateUserOnlineStatus(id: string, isOnline: boolean): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      user.isOnline = isOnline;
+      user.lastSeen = new Date();
+      user.updatedAt = new Date();
+      this.users.set(id, user);
+    }
+  }
+
+  async updateUserRole(id: string, role: "admin" | "agent"): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      user.role = role;
+      user.updatedAt = new Date();
+      this.users.set(id, user);
+    }
+  }
+
+  async getTemplates(filters?: {
+    category?: string;
+    genre?: string;
+    search?: string;
+    isActive?: boolean;
+  }): Promise<Template[]> {
+    let result = Array.from(this.templates.values());
+
+    if (filters?.category) {
+      result = result.filter(t => t.category === filters.category);
+    }
+    if (filters?.genre) {
+      result = result.filter(t => t.genre === filters.genre);
+    }
+    if (filters?.isActive !== undefined) {
+      result = result.filter(t => t.isActive === filters.isActive);
+    }
+    if (filters?.search) {
+      const search = filters.search.toLowerCase();
+      result = result.filter(t => 
+        t.name.toLowerCase().includes(search) ||
+        t.content.toLowerCase().includes(search) ||
+        t.subject.toLowerCase().includes(search) ||
+        t.category.toLowerCase().includes(search) ||
+        t.genre.toLowerCase().includes(search)
+      );
+    }
+
+    return result.sort((a, b) => a.stageOrder - b.stageOrder);
+  }
+
+  async getTemplate(id: string): Promise<Template | undefined> {
+    return this.templates.get(id);
+  }
+
+  async createTemplate(template: InsertTemplate): Promise<Template> {
+    const newTemplate: Template = {
+      id: Math.random().toString(36).substr(2, 9),
+      ...template,
+      variables: template.variables ?? null,
+      stageOrder: template.stageOrder ?? 1,
+      isActive: template.isActive ?? true,
+      usageCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.templates.set(newTemplate.id, newTemplate);
+    return newTemplate;
+  }
+
+  async updateTemplate(id: string, template: Partial<InsertTemplate>): Promise<Template> {
+    const existing = this.templates.get(id);
+    if (!existing) {
+      throw new Error("Template not found");
+    }
+    
+    const updated: Template = {
+      ...existing,
+      ...template,
+      updatedAt: new Date(),
+    };
+    this.templates.set(id, updated);
+    return updated;
+  }
+
+  async deleteTemplate(id: string): Promise<void> {
+    this.templates.delete(id);
+  }
+
+  async incrementTemplateUsage(templateId: string, userId: string): Promise<void> {
+    const template = this.templates.get(templateId);
+    if (template) {
+      template.usageCount++;
+      template.updatedAt = new Date();
+      this.templates.set(templateId, template);
+    }
+
+    this.templateUsages.push({
+      id: Math.random().toString(36).substr(2, 9),
+      templateId,
+      userId,
+      usedAt: new Date(),
+    });
+  }
+
+  async getTemplateUsageStats(templateId: string): Promise<number> {
+    return this.templateUsages.filter(u => u.templateId === templateId).length;
+  }
+
+  async getSiteContent(key?: string): Promise<SiteContent[]> {
+    if (key) {
+      const content = this.siteContents.get(key);
+      return content ? [content] : [];
+    }
+    return Array.from(this.siteContents.values());
+  }
+
+  async upsertSiteContent(content: InsertSiteContent): Promise<SiteContent> {
+    const siteContent: SiteContent = {
+      id: Math.random().toString(36).substr(2, 9),
+      ...content,
+      updatedAt: new Date(),
+    };
+    this.siteContents.set(content.key, siteContent);
+    return siteContent;
+  }
+}
+
+export const storage = process.env.NODE_ENV === 'development' 
+  ? new MemStorage() 
+  : new DatabaseStorage();
