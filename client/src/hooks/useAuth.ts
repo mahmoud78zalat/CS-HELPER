@@ -27,13 +27,17 @@ export function useAuth() {
   }, []);
 
   const signOut = async () => {
-    // First sign out from Supabase
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      // First sign out from Supabase
+      await supabase.auth.signOut();
+    } catch (error) {
       console.error("Error signing out from Supabase:", error);
     }
-    // Then redirect to logout endpoint to clear server session
-    window.location.href = '/api/logout';
+    // Clear all auth state immediately
+    setUser(null);
+    setIsLoading(false);
+    // Force redirect to logout endpoint
+    window.location.replace('/api/logout');
   };
 
   return {

@@ -16,8 +16,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { realTimeService } from "@/lib/realTimeService";
-import { X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle } from "lucide-react";
+import { 
+  X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
+  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp 
+} from "lucide-react";
 import { User, Template } from "@shared/schema";
+import TemplateFormModal from "@/components/TemplateFormModal";
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -26,7 +30,7 @@ interface AdminPanelProps {
 export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState('templates');
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-  const [showCreateTemplate, setShowCreateTemplate] = useState(false);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
@@ -161,7 +165,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
       await realTimeService.broadcastTemplateUpdate();
-      setShowCreateTemplate(false);
+      setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
         title: "Success",
@@ -185,7 +189,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
       await realTimeService.broadcastTemplateUpdate();
-      setShowCreateTemplate(false);
+      setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
         title: "Success", 
@@ -352,7 +356,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Template Management</h3>
                 <Button 
-                  onClick={() => setShowCreateTemplate(true)}
+                  onClick={() => {
+                    setEditingTemplate(null);
+                    setShowTemplateForm(true);
+                  }}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -372,7 +379,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     Get started by creating your first template. Templates help customer service agents provide consistent and professional responses.
                   </p>
                   <Button 
-                    onClick={() => setShowCreateTemplate(true)}
+                    onClick={() => {
+                      setEditingTemplate(null);
+                      setShowTemplateForm(true);
+                    }}
                     className="mt-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white"
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -415,7 +425,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setEditingTemplate(template)}
+                                onClick={() => {
+                                  setEditingTemplate(template);
+                                  setShowTemplateForm(true);
+                                }}
                                 title="Edit Template"
                               >
                                 <Edit className="h-3 w-3" />
@@ -508,148 +521,23 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
           </TabsContent>
         </Tabs>
 
-        {/* Template Create/Edit Modal */}
-        {(showCreateTemplate || editingTemplate) && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <h3 className="text-lg font-semibold mb-4">
-                {editingTemplate ? 'Edit Template' : 'Create New Template'}
-              </h3>
-              
-              <form id="template-form" className="space-y-4">
-                <div>
-                  <Label htmlFor="template-name">Template Name</Label>
-                  <Input
-                    id="template-name"
-                    name="template-name"
-                    placeholder="e.g., Order Delay Notification"
-                    defaultValue={editingTemplate?.name || ''}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="template-category">Category</Label>
-                    <Select name="template-category" defaultValue={editingTemplate?.category || ''}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Order Issues">Order Issues</SelectItem>
-                        <SelectItem value="Delivery Problems">Delivery Problems</SelectItem>
-                        <SelectItem value="Payment Issues">Payment Issues</SelectItem>
-                        <SelectItem value="Returns & Refunds">Returns & Refunds</SelectItem>
-                        <SelectItem value="Product Inquiry">Product Inquiry</SelectItem>
-                        <SelectItem value="General Support">General Support</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="template-genre">Genre/Priority</Label>
-                    <Select name="template-genre" defaultValue={editingTemplate?.genre || ''}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select priority" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Urgent">Urgent</SelectItem>
-                        <SelectItem value="Standard">Standard</SelectItem>
-                        <SelectItem value="Escalation">Escalation</SelectItem>
-                        <SelectItem value="Follow-up">Follow-up</SelectItem>
-                        <SelectItem value="Courtesy">Courtesy</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="template-team">Concerned Team</Label>
-                  <Select name="template-team" defaultValue={editingTemplate?.concernedTeam || ''}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select team" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Customer Service">Customer Service</SelectItem>
-                      <SelectItem value="Logistics">Logistics</SelectItem>
-                      <SelectItem value="Finance">Finance</SelectItem>
-                      <SelectItem value="Technical">Technical</SelectItem>
-                      <SelectItem value="Management">Management</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="template-content">Template Content</Label>
-                  <Textarea
-                    id="template-content"
-                    name="template-content"
-                    rows={8}
-                    placeholder="Write your template content here... Use {customer_name}, {order_number}, etc. for variables"
-                    defaultValue={editingTemplate?.content || ''}
-                  />
-                  <p className="text-sm text-slate-500 mt-2">
-                    Use variables like {'{customer_name}'}, {'{order_number}'}, {'{tracking_number}'} for dynamic content
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="checkbox" 
-                      id="template-active"
-                      name="template-active"
-                      defaultChecked={editingTemplate?.isActive !== false}
-                    />
-                    <Label htmlFor="template-active">Active Template</Label>
-                  </div>
-
-                  <div className="flex space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setShowCreateTemplate(false);
-                        setEditingTemplate(null);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                      disabled={createTemplateMutation.isPending || updateTemplateMutation.isPending}
-                      onClick={() => {
-                        const form = document.getElementById('template-form') as HTMLFormElement;
-                        const formData = new FormData(form);
-                        
-                        const templateData = {
-                          name: formData.get('template-name') as string,
-                          subject: formData.get('template-name') as string,
-                          content: formData.get('template-content') as string,
-                          category: formData.get('template-category') as string,
-                          genre: formData.get('template-genre') as string,
-                          concernedTeam: formData.get('template-team') as string,
-                          isActive: formData.get('template-active') === 'on',
-                        };
-
-                        if (editingTemplate) {
-                          updateTemplateMutation.mutate({ id: editingTemplate.id, data: templateData });
-                        } else {
-                          createTemplateMutation.mutate(templateData);
-                        }
-                      }}
-                    >
-                      {(createTemplateMutation.isPending || updateTemplateMutation.isPending) && (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      )}
-                      {editingTemplate ? 'Update Template' : 'Create Template'}
-                    </Button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+      {/* Template Form Modal */}
+      <TemplateFormModal
+        template={editingTemplate}
+        isOpen={showTemplateForm}
+        onClose={() => {
+          setShowTemplateForm(false);
+          setEditingTemplate(null);
+        }}
+        onSave={(templateData) => {
+          if (editingTemplate) {
+            updateTemplateMutation.mutate({ id: editingTemplate.id, data: templateData });
+          } else {
+            createTemplateMutation.mutate({ ...templateData, createdBy: currentUser?.id });
+          }
+        }}
+        isLoading={createTemplateMutation.isPending || updateTemplateMutation.isPending}
+      />
       </DialogContent>
     </Dialog>
   );

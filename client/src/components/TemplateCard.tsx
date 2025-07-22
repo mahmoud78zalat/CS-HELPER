@@ -5,7 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { replaceVariables } from "@/lib/templateUtils";
+import { replaceVariables, extractVariablesFromTemplate, TEMPLATE_WARNING_PRESETS } from "@/lib/templateUtils";
+import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Template } from "@shared/schema";
 
 interface TemplateCardProps {
@@ -28,6 +30,15 @@ export default function TemplateCard({ template }: TemplateCardProps) {
   });
 
   const handleCopyTemplate = () => {
+    // Show warning if exists
+    const warningNote = template.warningNote || 
+      TEMPLATE_WARNING_PRESETS[template.category] || 
+      TEMPLATE_WARNING_PRESETS[template.genre];
+      
+    if (warningNote && !confirm(`⚠️ TEMPLATE WARNING:\n\n${warningNote}\n\nDo you want to proceed with copying this template?`)) {
+      return;
+    }
+
     const agentName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
     const variables = {
       ...customerData,
@@ -103,12 +114,41 @@ export default function TemplateCard({ template }: TemplateCardProps) {
             Used {template.usageCount} times
           </div>
         </div>
+
+        {/* Warning Note */}
+        {(template.warningNote || TEMPLATE_WARNING_PRESETS[template.category] || TEMPLATE_WARNING_PRESETS[template.genre]) && (
+          <Alert variant="destructive" className="mb-3">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              {template.warningNote || TEMPLATE_WARNING_PRESETS[template.category] || TEMPLATE_WARNING_PRESETS[template.genre]}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Dynamic Variables */}
+        {template.variables && template.variables.length > 0 && (
+          <div className="mb-3">
+            <p className="text-xs font-medium text-slate-600 mb-1">Variables:</p>
+            <div className="flex flex-wrap gap-1">
+              {template.variables.slice(0, 3).map((variable) => (
+                <Badge key={variable} variant="outline" className="text-xs px-2 py-0">
+                  [{variable}]
+                </Badge>
+              ))}
+              {template.variables.length > 3 && (
+                <Badge variant="outline" className="text-xs px-2 py-0">
+                  +{template.variables.length - 3} more
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
         
         <div className="text-sm text-slate-600">
           <div className="font-medium mb-2">
             Subject: {template.subject}
           </div>
-          <div className={`text-xs bg-slate-50 p-3 rounded border-l-2 border-${getGenreColor(template.genre)}-500`}>
+          <div className="text-xs bg-slate-50 p-3 rounded border-l-2 border-blue-500">
             {template.content.slice(0, 200)}
             {template.content.length > 200 && '...'}
           </div>

@@ -136,7 +136,7 @@ export async function setupAuth(app: Express) {
           console.error('Session destroy error:', err);
         }
         res.clearCookie('connect.sid');
-        res.redirect('/login');
+        res.redirect('/');
       });
     });
   });

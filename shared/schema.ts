@@ -48,6 +48,7 @@ export const templates = pgTable("templates", {
   category: varchar("category").notNull(),
   genre: varchar("genre").notNull(),
   concernedTeam: varchar("concerned_team").notNull(),
+  warningNote: text("warning_note"),
   variables: text("variables").array(),
   stageOrder: integer("stage_order").default(1).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
