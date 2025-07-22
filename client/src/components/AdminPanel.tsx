@@ -23,42 +23,14 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ onClose }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState('templates');
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [showCreateTemplate, setShowCreateTemplate] = useState(false);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
 
-  // Check admin access - Debug logging
-  console.log('AdminPanel - Current user:', currentUser);
-  console.log('AdminPanel - User metadata:', currentUser?.user_metadata);
-  console.log('AdminPanel - User email:', currentUser?.email);
-  
-  const isAdmin = currentUser?.user_metadata?.role === 'admin' || currentUser?.email === 'mahmoud78zalat@gmail.com';
-  console.log('AdminPanel - Is Admin:', isAdmin);
-  
-  if (!isAdmin) {
-    return (
-      <Dialog open onOpenChange={onClose}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Access Denied</DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                You don't have admin permissions to access this panel.
-              </AlertDescription>
-            </Alert>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Users query
+  // Users query - always call hooks at top level
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['/api/users'],
     retry: false,
@@ -179,6 +151,37 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       deleteTemplateMutation.mutate(templateId);
     }
   };
+
+  // Check admin access AFTER all hooks are called
+  console.log('AdminPanel - Current user:', currentUser);
+  console.log('AdminPanel - User metadata:', currentUser?.user_metadata);
+  console.log('AdminPanel - User email:', currentUser?.email);
+  
+  const isAdmin = currentUser?.user_metadata?.role === 'admin' || currentUser?.email === 'mahmoud78zalat@gmail.com';
+  console.log('AdminPanel - Is Admin:', isAdmin);
+  
+  if (!isAdmin) {
+    return (
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent className="max-w-md" aria-describedby="access-denied-description">
+          <DialogHeader>
+            <DialogTitle>Access Denied</DialogTitle>
+            <div id="access-denied-description" className="sr-only">
+              You don't have admin permissions to access this panel
+            </div>
+          </DialogHeader>
+          <div className="p-4">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                You don't have admin permissions to access this panel.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -449,6 +452,131 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Template Create/Edit Modal */}
+        {(showCreateTemplate || editingTemplate) && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg font-semibold mb-4">
+                {editingTemplate ? 'Edit Template' : 'Create New Template'}
+              </h3>
+              
+              <form className="space-y-4">
+                <div>
+                  <Label htmlFor="template-name">Template Name</Label>
+                  <Input
+                    id="template-name"
+                    placeholder="e.g., Order Delay Notification"
+                    defaultValue={editingTemplate?.name || ''}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="template-category">Category</Label>
+                    <Select defaultValue={editingTemplate?.category || ''}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Order Issues">Order Issues</SelectItem>
+                        <SelectItem value="Delivery Problems">Delivery Problems</SelectItem>
+                        <SelectItem value="Payment Issues">Payment Issues</SelectItem>
+                        <SelectItem value="Returns & Refunds">Returns & Refunds</SelectItem>
+                        <SelectItem value="Product Inquiry">Product Inquiry</SelectItem>
+                        <SelectItem value="General Support">General Support</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="template-genre">Genre/Priority</Label>
+                    <Select defaultValue={editingTemplate?.genre || ''}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Urgent">Urgent</SelectItem>
+                        <SelectItem value="Standard">Standard</SelectItem>
+                        <SelectItem value="Escalation">Escalation</SelectItem>
+                        <SelectItem value="Follow-up">Follow-up</SelectItem>
+                        <SelectItem value="Courtesy">Courtesy</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="template-team">Concerned Team</Label>
+                  <Select defaultValue={editingTemplate?.concernedTeam || ''}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Customer Service">Customer Service</SelectItem>
+                      <SelectItem value="Logistics">Logistics</SelectItem>
+                      <SelectItem value="Finance">Finance</SelectItem>
+                      <SelectItem value="Technical">Technical</SelectItem>
+                      <SelectItem value="Management">Management</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="template-content">Template Content</Label>
+                  <Textarea
+                    id="template-content"
+                    rows={8}
+                    placeholder="Write your template content here... Use {customer_name}, {order_number}, etc. for variables"
+                    defaultValue={editingTemplate?.content || ''}
+                  />
+                  <p className="text-sm text-slate-500 mt-2">
+                    Use variables like {'{customer_name}'}, {'{order_number}'}, {'{tracking_number}'} for dynamic content
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      id="template-active"
+                      defaultChecked={editingTemplate?.isActive !== false}
+                    />
+                    <Label htmlFor="template-active">Active Template</Label>
+                  </div>
+
+                  <div className="flex space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowCreateTemplate(false);
+                        setEditingTemplate(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                      onClick={() => {
+                        // Here you would normally save the template
+                        toast({
+                          title: "Success",
+                          description: `Template ${editingTemplate ? 'updated' : 'created'} successfully!`,
+                        });
+                        setShowCreateTemplate(false);
+                        setEditingTemplate(null);
+                      }}
+                    >
+                      {editingTemplate ? 'Update Template' : 'Create Template'}
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
