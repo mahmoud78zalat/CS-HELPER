@@ -30,12 +30,32 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
 
-  // Check admin access
+  // Check admin access - Debug logging
+  console.log('AdminPanel - Current user:', currentUser);
+  console.log('AdminPanel - User metadata:', currentUser?.user_metadata);
+  console.log('AdminPanel - User email:', currentUser?.email);
+  
   const isAdmin = currentUser?.user_metadata?.role === 'admin' || currentUser?.email === 'mahmoud78zalat@gmail.com';
+  console.log('AdminPanel - Is Admin:', isAdmin);
   
   if (!isAdmin) {
-    onClose();
-    return null;
+    return (
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Access Denied</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                You don't have admin permissions to access this panel.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   // Users query
@@ -162,13 +182,16 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-5/6">
+      <DialogContent className="max-w-6xl h-5/6" aria-describedby="admin-panel-description">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center space-x-2">
               <Settings className="h-5 w-5" />
               <span>Admin Panel</span>
             </DialogTitle>
+            <div id="admin-panel-description" className="sr-only">
+              Admin panel for managing users, templates, and site content
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -280,56 +303,81 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
               </div>
               
               {templatesLoading ? (
-                <div>Loading templates...</div>
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-slate-600">Loading templates...</div>
+                </div>
+              ) : templates.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                  <FileText className="h-12 w-12 mb-4" />
+                  <h4 className="text-lg font-medium mb-2">No Templates Found</h4>
+                  <p className="text-sm text-center max-w-md">
+                    Get started by creating your first template. Templates help customer service agents provide consistent and professional responses.
+                  </p>
+                  <Button 
+                    onClick={() => setShowCreateTemplate(true)}
+                    className="mt-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Template
+                  </Button>
+                </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Genre</TableHead>
-                      <TableHead>Team</TableHead>
-                      <TableHead>Usage</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {templates.map((template: Template) => (
-                      <TableRow key={template.id}>
-                        <TableCell>{template.name}</TableCell>
-                        <TableCell>{template.category}</TableCell>
-                        <TableCell>{template.genre}</TableCell>
-                        <TableCell>{template.concernedTeam}</TableCell>
-                        <TableCell>{template.usageCount}</TableCell>
-                        <TableCell>
-                          <Badge variant={template.isActive ? "default" : "secondary"}>
-                            {template.isActive ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingTemplate(template)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteTemplate(template.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Genre</TableHead>
+                        <TableHead>Team</TableHead>
+                        <TableHead>Usage</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {templates.map((template: any) => (
+                        <TableRow key={template.id}>
+                          <TableCell className="font-medium">{template.name}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{template.category}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{template.genre}</Badge>
+                          </TableCell>
+                          <TableCell>{template.concernedTeam || 'General'}</TableCell>
+                          <TableCell className="text-center">{template.usageCount || 0}</TableCell>
+                          <TableCell>
+                            <Badge variant={template.isActive ? "default" : "secondary"}>
+                              {template.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditingTemplate(template)}
+                                title="Edit Template"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteTemplate(template.id)}
+                                className="text-red-600 hover:text-red-700"
+                                title="Delete Template"
+                              >
+                                <Trash className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </div>
           </TabsContent>
