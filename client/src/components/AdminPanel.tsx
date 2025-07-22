@@ -3,6 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { X, Users, FileText, Settings, Edit, Trash, Plus } from "lucide-react";
+import { X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle } from "lucide-react";
 import { User, Template } from "@shared/schema";
 
 interface AdminPanelProps {
@@ -28,8 +30,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
 
-  // Redirect if not admin
-  if (currentUser?.role !== 'admin') {
+  // Check admin access
+  const isAdmin = currentUser?.user_metadata?.role === 'admin' || currentUser?.email === 'mahmoud78zalat@gmail.com';
+  
+  if (!isAdmin) {
     onClose();
     return null;
   }
@@ -331,9 +335,69 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
           </TabsContent>
 
           <TabsContent value="content" className="flex-1 overflow-y-auto">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Site Content Management</h3>
-              <p className="text-slate-600">Site content management functionality coming soon...</p>
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold">Admin Management Guide</h3>
+              
+              <Alert>
+                <Crown className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Super Admin:</strong> mahmoud78zalat@gmail.com has permanent admin access.
+                </AlertDescription>
+              </Alert>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center">
+                    <Shield className="h-4 w-4 mr-2" />
+                    How to Make Someone Admin
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-sm text-slate-600">
+                    <p><strong>Method 1: Through Supabase Dashboard (Recommended)</strong></p>
+                    <ol className="list-decimal ml-4 mt-2 space-y-2">
+                      <li>Log into your Supabase project dashboard</li>
+                      <li>Go to "Authentication" → "Users"</li>
+                      <li>Find the user you want to promote</li>
+                      <li>Click on their user record</li>
+                      <li>In the "Raw User Meta Data" section, add:</li>
+                      <div className="bg-slate-100 p-3 rounded mt-2 font-mono text-xs">
+                        {`{\n  "role": "admin",\n  "first_name": "User First Name",\n  "last_name": "User Last Name"\n}`}
+                      </div>
+                      <li>Save the changes</li>
+                      <li>User will have admin access on next login</li>
+                    </ol>
+                  </div>
+
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Security Warning:</strong> Only grant admin access to trusted team members. Admins can manage templates, view all user data, and change system settings.
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="text-sm text-slate-600">
+                    <p><strong>Method 2: Through Code (For Developers)</strong></p>
+                    <p className="mt-2">Add the user's email to the admin check in the Header component alongside 'mahmoud78zalat@gmail.com'</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Current Admin Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Crown className="h-4 w-4 text-yellow-600" />
+                    <span>You are currently logged in as: <strong>{currentUser?.email}</strong></span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm mt-2">
+                    <Shield className="h-4 w-4 text-green-600" />
+                    <span>Admin Role: <strong>Active</strong></span>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>

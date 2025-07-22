@@ -42,7 +42,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
               Email Composer
             </Button>
             
-            {user?.user_metadata?.role === 'admin' && (
+            {(user?.user_metadata?.role === 'admin' || user?.email === 'mahmoud78zalat@gmail.com') && (
               <Button 
                 onClick={onAdminPanel}
                 variant="secondary"
@@ -76,11 +76,11 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
                     {user?.user_metadata?.first_name || user?.email} {user?.user_metadata?.last_name || ''}
                   </span>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    user?.user_metadata?.role === 'admin' 
+                    (user?.user_metadata?.role === 'admin' || user?.email === 'mahmoud78zalat@gmail.com')
                       ? 'text-blue-600 bg-blue-50' 
                       : 'text-green-600 bg-green-50'
                   }`}>
-                    {user?.user_metadata?.role === 'admin' ? 'Admin' : 'Agent'}
+                    {(user?.user_metadata?.role === 'admin' || user?.email === 'mahmoud78zalat@gmail.com') ? 'Admin' : 'Agent'}
                   </span>
                 </div>
               </div>
