@@ -1,0 +1,433 @@
+# **BFL Customer Service Helper - Complete Project Brief**
+
+## **Project Overview**
+
+Build a comprehensive customer service management tool for "Brands For Less" (BFL) that helps customer service agents manage customer information, create internal team communications, and streamline support workflows.
+
+## **Core Purpose**
+
+- **NOT a customer-facing tool** - this is for internal customer service agents
+- **NOT for sending emails directly to customers** - all emails go to internal teams to help resolve customer issues
+- Centralized platform for agents to manage customer data and escalate issues to appropriate departments
+
+
+## **Technical Stack Requirements**
+
+- **Frontend**: Next.js 14+ with App Router, TypeScript, Tailwind CSS
+- **UI Components**: shadcn/ui component library
+- **Backend**: Supabase (PostgreSQL database, authentication, real-time subscriptions)
+- **Authentication**: Supabase Auth with role-based access (Admin/Agent)
+- **Deployment**: Vercel-compatible
+
+
+## **Database Schema**
+
+### **user_profiles table**
+
+```sql
+- id (UUID, primary key)
+- auth_user_id (UUID, references auth.users)
+- email (VARCHAR, unique)
+- first_name (VARCHAR)
+- last_name (VARCHAR)
+- role (ENUM: 'admin', 'agent')
+- status (ENUM: 'active', 'blocked', 'banned')
+- is_online (BOOLEAN)
+- last_seen (TIMESTAMP)
+- created_at (TIMESTAMP)
+- updated_at (TIMESTAMP)
+```
+
+### **templates table**
+
+```sql
+- id (UUID, primary key)
+- name (VARCHAR) - template display name
+- subject (TEXT) - email subject line
+- content (TEXT) - email body content
+- category (VARCHAR) - Order Issues, Delivery Problems, Payment Issues, etc.
+- genre (VARCHAR) - Urgent, Standard, Follow-up, Escalation, Resolution, etc.
+- concerned_team (VARCHAR) - which internal team receives the email
+- variables (TEXT[]) - array of variable names like {customer_name}
+- stage_order (INTEGER) - controls display order (1=first, 2=second, etc.)
+- is_active (BOOLEAN) - whether template is available for use
+- usage_count (INTEGER, default 0) - how many times used
+- created_by (UUID, references user_profiles.id)
+- created_at (TIMESTAMP)
+- updated_at (TIMESTAMP)
+```
+
+### **template_usage table**
+
+```sql
+- id (UUID, primary key)
+- template_id (UUID, references templates.id)
+- user_id (UUID, references user_profiles.id)
+- used_at (TIMESTAMP)
+```
+
+### **site_content table**
+
+```sql
+- id (UUID, primary key)
+- key (VARCHAR, unique) - content identifier
+- content (TEXT) - actual content
+- updated_by (UUID, references user_profiles.id)
+- updated_at (TIMESTAMP)
+```
+
+## **Authentication System**
+
+- **Login page** with email/password
+- **Role-based access**: Admin can access admin panel, agents cannot
+- **User status checking**: blocked/banned users cannot access
+- **Online status tracking**: track when users are online/offline
+- **Auto-logout** when user closes browser
+
+
+## **Main Application Layout**
+
+### **Header**
+
+- BFL logo and branding
+- App title: "BFL Customer Service Helper"
+- Welcome message with user name
+- Action buttons: Email Composer, Admin Panel (admin only), About Tool
+- User badge showing role (Admin/Agent) and sign out button
+
+
+### **Sidebar Navigation**
+
+- **Customer Info** tab - manage customer details
+- **Order Converter** tab - convert order formats and IDs
+- **Additional Info** tab - extra customer information
+- **Check Order** button - modal to track orders
+- **Reply Templates** - quick response templates (main content area)
+- **Email Composer** button - create internal team emails
+- **Admin Panel** button (admin only)
+- **About Tool** and **Sign Out** at bottom
+
+
+## **Feature Requirements**
+
+### **1. Customer Information Panel**
+
+```typescript
+interface Customer {
+  name: string
+  phone: string
+  email?: string
+  country: string
+  gender: string
+  language?: string
+  orderNumber?: string
+  issue?: string
+}
+```
+
+- Form fields for all customer data
+- Country dropdown with flag icons
+- Gender selection
+- Language preference (English/Arabic)
+- Auto-save to local storage
+- Copy customer info to clipboard
+
+
+### **2. Order Converter Panel**
+
+- Input field for order numbers
+- Auto-detect format: Order ID (A1234567) vs AWB tracking numbers
+- Convert between different order formats
+- Copy converted numbers to clipboard
+- Show conversion history
+
+
+### **3. Additional Information Panel**
+
+```typescript
+interface AdditionalInfo {
+  itemName: string
+  deliveryDate: string
+  waitingTime: string
+}
+```
+
+- Item name input
+- Delivery date picker
+- Waiting time input
+- Auto-save functionality
+
+
+### **4. Check Order Modal**
+
+- Input field for order number or AWB
+- Auto-detect order type
+- Mock tracking results (since no real API)
+- Show order status, delivery info, tracking history
+- Copy tracking info to clipboard
+
+
+### **5. Reply Templates System**
+
+- Display templates grouped by genre
+- Filter by category and genre
+- Search functionality
+- Click to copy template content
+- Variable replacement with customer data
+- Usage tracking
+
+
+### **6. Email Composer (CRITICAL FEATURE)**
+
+**This is NOT for customer emails - it's for internal team communication**
+
+#### **Template Categories:**
+
+- Order Issues
+- Delivery Problems
+- Payment Issues
+- Product Complaints
+- Returns & Refunds
+- Technical Support
+- General Inquiry
+- Escalation
+
+
+#### **Template Genres:**
+
+- Urgent
+- Standard
+- Follow-up
+- Escalation
+- Resolution
+- Information Request
+- Complaint Handling
+
+
+#### **Concerned Teams:**
+
+- Customer Service Team
+- Technical Support Team
+- Order Management Team
+- Delivery Team
+- Refunds Team
+- Quality Assurance Team
+- Management Team
+- Escalation Team
+
+
+#### **Email Composer UI:**
+
+- Left panel: Templates grouped by genre with stage order
+- Right panel: Email composition area
+- Template selection shows concerned team
+- Variable replacement system using variable_name format
+- Available variables: customer_name, customer_phone, customer_email, order_number, item_name, delivery_date, waiting_time, agent_name, concerned_team
+- Copy subject, copy body, copy full email buttons
+- **NO "Send" button** - emails are copied for manual sending
+
+
+### **7. Admin Panel (Admin Only)**
+
+#### **User Management:**
+
+- View all users in table format
+- Real-time online status
+- Block/unblock users
+- Ban/unban users
+- Promote agents to admin
+- Kick users (force offline)
+- User activity tracking
+
+
+#### **Template Management:**
+
+- Create/edit/delete templates
+- Set template categories and genres
+- Assign concerned teams
+- Set stage order (controls display priority)
+- Toggle active/inactive status
+- Variable auto-detection from variable_name format
+- Usage statistics
+- Search and filter templates
+- Move templates up/down in stage order
+
+
+#### **Site Content Management:**
+
+- Edit app title, welcome messages
+- Manage system-wide content
+- Real-time updates
+
+
+## **UI/UX Requirements**
+
+### **Design System:**
+
+- Modern, clean interface with Tailwind CSS
+- Blue/purple gradient theme for BFL branding
+- Card-based layout with shadows and rounded corners
+- Responsive design (desktop-first, mobile-friendly)
+- Loading states and skeleton screens
+- Toast notifications for user feedback
+- Modal dialogs for complex interactions
+
+
+### **Color Scheme:**
+
+- Primary: Blue to purple gradients
+- Success: Green tones
+- Warning: Orange/yellow tones
+- Error: Red tones
+- Neutral: Gray scale
+- Background: Light gray gradient
+
+
+### **Typography:**
+
+- Clear hierarchy with proper font weights
+- Readable font sizes
+- Proper spacing and line heights
+
+
+## **Real-time Features**
+
+- User online/offline status updates
+- Template usage tracking
+- Admin panel live updates
+- Real-time notifications
+
+
+## **Data Flow Examples**
+
+### **Email Creation Workflow:**
+
+1. Agent fills customer info
+2. Agent opens Email Composer
+3. Agent selects template by genre/category
+4. System shows which team will receive email
+5. Agent customizes variables
+6. System replaces variables with actual data
+7. Agent copies email for manual sending to internal team
+
+
+### **Template Management Workflow:**
+
+1. Admin creates template with category/genre
+2. Admin sets concerned team and stage order
+3. System auto-detects variables from content
+4. Template becomes available to agents
+5. Usage is tracked when agents use it
+
+
+## **Sample Templates:**
+
+### **Order Issue Escalation (Urgent, Stage 1)**
+
+```plaintext
+Subject: URGENT: Customer Order Issue - {order_number}
+Team: Order Management Team
+
+Dear {concerned_team},
+
+We have received a customer complaint regarding order {order_number}.
+
+Customer Details:
+- Name: {customer_name}
+- Phone: {customer_phone}
+- Email: {customer_email}
+- Country: {customer_country}
+
+Issue: {customer_issue}
+Order: {order_number}
+Item: {item_name}
+Expected Delivery: {delivery_date}
+
+Please investigate within {waiting_time}.
+
+Best regards,
+{agent_name}
+```
+
+## **Error Handling**
+
+- Graceful error messages
+- Offline state handling
+- Form validation
+- Network error recovery
+- User-friendly error displays
+
+
+## **Security Requirements**
+
+- Row Level Security (RLS) in Supabase
+- Role-based access control
+- Input sanitization
+- XSS protection
+- CSRF protection
+
+
+## **Performance Requirements**
+
+- Fast page loads
+- Efficient database queries
+- Optimized images and assets
+- Lazy loading where appropriate
+- Caching strategies
+
+
+## **Testing Requirements**
+
+- Component testing
+- Integration testing
+- User authentication testing
+- Database operation testing
+- Error scenario testing
+
+
+## **Deployment**
+
+- Vercel deployment
+- Environment variables setup
+- Database migrations
+- Production configuration
+
+
+## **File Structure**
+
+```plaintext
+/app
+  /page.tsx (main app)
+  /layout.tsx
+  /globals.css
+/components
+  /Auth (login, auth provider)
+  /Admin (user management, template management, site content)
+  /CustomerInfo
+  /OrderConverter  
+  /AdditionalInfo
+  /CheckOrder
+  /EmailComposer
+  /Navigation
+  /UI (shared components)
+/lib
+  /supabase.ts (database functions)
+  /utils.ts
+/types
+  /index.ts (TypeScript interfaces)
+/scripts
+  /*.sql (database setup scripts)
+```
+
+## **Success Criteria**
+
+- Agents can efficiently manage customer information
+- Email composer creates proper internal team communications
+- Admin can fully manage users and templates
+- System is responsive and user-friendly
+- All features work without "coming soon" placeholders
+- Real-time updates function properly
+- Authentication and authorization work correctly
+
+
+Build this as a complete, production-ready application with no placeholder content or incomplete features.
