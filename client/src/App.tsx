@@ -31,6 +31,7 @@ function Router() {
         <>
           <Route path="/login" component={Login} />
           <Route path="/" component={Login} />
+          <Route path="*" component={() => { window.location.href = "/login"; return null; }} />
         </>
       ) : (
         <>

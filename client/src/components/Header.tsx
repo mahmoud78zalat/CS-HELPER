@@ -12,7 +12,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
   const { user, signOut } = useAuth();
 
   const handleSignOut = () => {
-    signOut();
+    window.location.href = '/api/logout';
   };
 
   return (
