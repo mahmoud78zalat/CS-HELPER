@@ -15,6 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { realTimeService } from "@/lib/realTimeService";
 import { X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle } from "lucide-react";
 import { User, Template } from "@shared/schema";
 
@@ -47,8 +48,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
       await apiRequest('PATCH', `/api/users/${userId}/status`, { status });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      // Broadcast user update to all connected users
+      await realTimeService.broadcastUserUpdate();
       toast({
         title: "Success",
         description: "User status updated successfully!",
@@ -79,8 +82,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
       await apiRequest('PATCH', `/api/users/${userId}/role`, { role });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      // Broadcast user update to all connected users
+      await realTimeService.broadcastUserUpdate();
       toast({
         title: "Success",
         description: "User role updated successfully!",
@@ -111,8 +116,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     mutationFn: async (templateId: string) => {
       await apiRequest('DELETE', `/api/templates/${templateId}`);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      // Broadcast template update to all connected users
+      await realTimeService.broadcastTemplateUpdate();
       toast({
         title: "Success",
         description: "Template deleted successfully!",
@@ -145,6 +152,54 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const handleUserRoleChange = (userId: string, role: string) => {
     userRoleMutation.mutate({ userId, role });
   };
+
+  // Template create mutation
+  const createTemplateMutation = useMutation({
+    mutationFn: async (templateData: any) => {
+      await apiRequest('POST', '/api/templates', templateData);
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      await realTimeService.broadcastTemplateUpdate();
+      setShowCreateTemplate(false);
+      setEditingTemplate(null);
+      toast({
+        title: "Success",
+        description: "Template created successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create template",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Template update mutation
+  const updateTemplateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      await apiRequest('PATCH', `/api/templates/${id}`, data);
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      await realTimeService.broadcastTemplateUpdate();
+      setShowCreateTemplate(false);
+      setEditingTemplate(null);
+      toast({
+        title: "Success", 
+        description: "Template updated successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update template",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleDeleteTemplate = (templateId: string) => {
     if (confirm('Are you sure you want to delete this template?')) {
@@ -461,11 +516,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 {editingTemplate ? 'Edit Template' : 'Create New Template'}
               </h3>
               
-              <form className="space-y-4">
+              <form id="template-form" className="space-y-4">
                 <div>
                   <Label htmlFor="template-name">Template Name</Label>
                   <Input
                     id="template-name"
+                    name="template-name"
                     placeholder="e.g., Order Delay Notification"
                     defaultValue={editingTemplate?.name || ''}
                   />
@@ -474,7 +530,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="template-category">Category</Label>
-                    <Select defaultValue={editingTemplate?.category || ''}>
+                    <Select name="template-category" defaultValue={editingTemplate?.category || ''}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
@@ -491,7 +547,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
                   <div>
                     <Label htmlFor="template-genre">Genre/Priority</Label>
-                    <Select defaultValue={editingTemplate?.genre || ''}>
+                    <Select name="template-genre" defaultValue={editingTemplate?.genre || ''}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
@@ -508,7 +564,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
                 <div>
                   <Label htmlFor="template-team">Concerned Team</Label>
-                  <Select defaultValue={editingTemplate?.concernedTeam || ''}>
+                  <Select name="template-team" defaultValue={editingTemplate?.concernedTeam || ''}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select team" />
                     </SelectTrigger>
@@ -526,6 +582,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   <Label htmlFor="template-content">Template Content</Label>
                   <Textarea
                     id="template-content"
+                    name="template-content"
                     rows={8}
                     placeholder="Write your template content here... Use {customer_name}, {order_number}, etc. for variables"
                     defaultValue={editingTemplate?.content || ''}
@@ -540,6 +597,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     <input 
                       type="checkbox" 
                       id="template-active"
+                      name="template-active"
                       defaultChecked={editingTemplate?.isActive !== false}
                     />
                     <Label htmlFor="template-active">Active Template</Label>
@@ -559,16 +617,31 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     <Button
                       type="button"
                       className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                      disabled={createTemplateMutation.isPending || updateTemplateMutation.isPending}
                       onClick={() => {
-                        // Here you would normally save the template
-                        toast({
-                          title: "Success",
-                          description: `Template ${editingTemplate ? 'updated' : 'created'} successfully!`,
-                        });
-                        setShowCreateTemplate(false);
-                        setEditingTemplate(null);
+                        const form = document.getElementById('template-form') as HTMLFormElement;
+                        const formData = new FormData(form);
+                        
+                        const templateData = {
+                          name: formData.get('template-name') as string,
+                          subject: formData.get('template-name') as string,
+                          content: formData.get('template-content') as string,
+                          category: formData.get('template-category') as string,
+                          genre: formData.get('template-genre') as string,
+                          concernedTeam: formData.get('template-team') as string,
+                          isActive: formData.get('template-active') === 'on',
+                        };
+
+                        if (editingTemplate) {
+                          updateTemplateMutation.mutate({ id: editingTemplate.id, data: templateData });
+                        } else {
+                          createTemplateMutation.mutate(templateData);
+                        }
                       }}
                     >
+                      {(createTemplateMutation.isPending || updateTemplateMutation.isPending) && (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      )}
                       {editingTemplate ? 'Update Template' : 'Create Template'}
                     </Button>
                   </div>

@@ -10,13 +10,16 @@ interface AboutModalProps {
 export default function AboutModal({ onClose }: AboutModalProps) {
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="about-dialog-description">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center space-x-2">
               <Headphones className="h-5 w-5" />
               <span>About BFL Customer Service Helper</span>
             </DialogTitle>
+            <div id="about-dialog-description" className="sr-only">
+              Information about the BFL Customer Service Helper tool and its features
+            </div>
             <Button
               variant="ghost"
               size="sm"

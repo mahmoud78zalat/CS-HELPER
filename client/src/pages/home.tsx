@@ -5,12 +5,16 @@ import CheckOrderModal from "@/components/CheckOrderModal";
 import EmailComposerModal from "@/components/EmailComposerModal";
 import AdminPanel from "@/components/AdminPanel";
 import AboutModal from "@/components/AboutModal";
+import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 
 export default function Home() {
   const [showCheckOrder, setShowCheckOrder] = useState(false);
   const [showEmailComposer, setShowEmailComposer] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+
+  // Enable real-time updates for all users
+  useRealTimeUpdates();
 
   console.log('Home component is rendering - user is authenticated');
 

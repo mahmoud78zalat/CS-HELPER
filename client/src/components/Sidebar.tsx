@@ -122,11 +122,14 @@ export default function Sidebar({
           {/* Check Order Button */}
           <Button
             variant="ghost"
-            className="w-full justify-start p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
+            className="w-full justify-between p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
             onClick={onCheckOrder}
           >
-            <Search className="h-4 w-4 text-blue-500 mr-3" />
-            <span className="font-medium text-slate-700">Check Order</span>
+            <div className="flex items-center space-x-3">
+              <Search className="h-4 w-4 text-blue-500" />
+              <span className="font-medium text-slate-700">Check Order</span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-slate-400" />
           </Button>
 
           {/* Navigation Links */}
