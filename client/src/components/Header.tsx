@@ -9,10 +9,10 @@ interface HeaderProps {
 }
 
 export default function Header({ onEmailComposer, onAdminPanel, onAbout }: HeaderProps) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   const handleSignOut = () => {
-    window.location.href = '/api/logout';
+    signOut();
   };
 
   return (
@@ -27,7 +27,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
             <div>
               <h1 className="text-xl font-bold text-slate-800">BFL Customer Service Helper</h1>
               <p className="text-sm text-slate-600">
-                Welcome back, {user?.firstName || 'User'}
+                Welcome back, {user?.user_metadata?.first_name || user?.email || 'User'}
               </p>
             </div>
           </div>
@@ -42,7 +42,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
               Email Composer
             </Button>
             
-            {user?.role === 'admin' && (
+            {user?.user_metadata?.role === 'admin' && (
               <Button 
                 onClick={onAdminPanel}
                 variant="secondary"
@@ -67,19 +67,20 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-semibold">
-                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                    {user?.user_metadata?.first_name?.[0] || user?.email?.[0] || 'U'}
+                    {user?.user_metadata?.last_name?.[0] || ''}
                   </span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-slate-800">
-                    {user?.firstName} {user?.lastName}
+                    {user?.user_metadata?.first_name || user?.email} {user?.user_metadata?.last_name || ''}
                   </span>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    user?.role === 'admin' 
+                    user?.user_metadata?.role === 'admin' 
                       ? 'text-blue-600 bg-blue-50' 
                       : 'text-green-600 bg-green-50'
                   }`}>
-                    {user?.role === 'admin' ? 'Admin' : 'Agent'}
+                    {user?.user_metadata?.role === 'admin' ? 'Admin' : 'Agent'}
                   </span>
                 </div>
               </div>
