@@ -12,8 +12,8 @@ export default function TemplatesArea() {
   const [genreFilter, setGenreFilter] = useState('');
 
   const { data: templates, isLoading } = useTemplates({
-    category: categoryFilter || undefined,
-    genre: genreFilter || undefined,
+    category: categoryFilter && categoryFilter !== 'all' ? categoryFilter : undefined,
+    genre: genreFilter && genreFilter !== 'all' ? genreFilter : undefined,
     search: searchTerm || undefined,
     isActive: true,
   });
@@ -81,7 +81,7 @@ export default function TemplatesArea() {
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 {categories.map(category => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}
@@ -93,7 +93,7 @@ export default function TemplatesArea() {
                 <SelectValue placeholder="All Genres" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Genres</SelectItem>
+                <SelectItem value="all">All Genres</SelectItem>
                 {genres.map(genre => (
                   <SelectItem key={genre} value={genre}>{genre}</SelectItem>
                 ))}
