@@ -34,14 +34,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(id);
       
       if (!user) {
-        console.log('[API] User not found:', id);
+        console.log('[API] User not found in backend storage:', id);
         return res.status(404).json({ message: "User not found" });
       }
       
-      console.log('[API] User found:', user.email, user.role);
+      console.log('[API] User found in backend:', user.email, user.role);
       res.json(user);
     } catch (error) {
-      console.error("Error fetching user:", error);
+      console.error("[API] Error fetching user from storage:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });

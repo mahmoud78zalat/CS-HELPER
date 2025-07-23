@@ -88,10 +88,12 @@ export function useAuth() {
           .single();
 
         console.log('[Auth] Query result - error:', error, 'data:', userData);
+        console.log('[Auth] Error details:', error?.message, error?.details, error?.hint);
 
         if (error || !userData) {
           console.log('[Auth] User not found in database, error:', error?.message, error?.details);
           console.log('[Auth] Creating new user for:', supabaseUser.email);
+          console.log('[Auth] User object from Supabase auth:', supabaseUser);
           
           try {
             // Create user automatically if they don't exist
