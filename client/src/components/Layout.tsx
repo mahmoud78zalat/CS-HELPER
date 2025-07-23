@@ -25,10 +25,10 @@ export default function Layout({
         onAbout={onAbout}
       />
       
-      {/* Mobile-responsive layout */}
-      <div className="flex flex-col lg:flex-row h-screen pt-16 lg:pt-20">
-        {/* Sidebar - Hidden on mobile, shown on larger screens */}
-        <div className="hidden lg:block">
+      {/* Responsive layout with sidebar always visible */}
+      <div className="flex h-screen pt-16 lg:pt-20">
+        {/* Sidebar - Always visible, responsive width */}
+        <div className="w-16 lg:w-80">
           <Sidebar 
             onCheckOrder={onCheckOrder}
             onEmailComposer={onEmailComposer}
@@ -37,11 +37,9 @@ export default function Layout({
           />
         </div>
         
-        {/* Main content area - Full width on mobile */}
+        {/* Main content area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6">
-            {children}
-          </div>
+          {children}
         </div>
       </div>
     </div>

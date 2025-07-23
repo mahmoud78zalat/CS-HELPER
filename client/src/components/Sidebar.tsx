@@ -10,7 +10,7 @@ import {
   Info, 
   Search, 
   Mail, 
-  Settings,
+  Shield,
   HelpCircle,
   LogOut,
   ChevronRight
@@ -41,22 +41,22 @@ export default function Sidebar({
   };
 
   return (
-    <div className="bg-white shadow-lg border-r border-slate-200 transition-all duration-300 w-full lg:w-80">
-      <div className="p-6">
+    <div className="bg-white shadow-lg border-r border-slate-200 transition-all duration-300 w-16 lg:w-80 overflow-hidden">
+      <div className="p-2 lg:p-6">
         <nav className="space-y-2">
           {/* Customer Info Panel */}
           <div className="customer-panel">
             <Button
               variant="ghost"
-              className="w-full justify-between p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
+              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
               onClick={() => togglePanel('customer-info')}
             >
               <div className="flex items-center space-x-3">
                 <User className="h-4 w-4 text-blue-500" />
-                <span className="font-medium text-slate-700">Customer Info</span>
+                <span className="hidden lg:block font-medium text-slate-700">Customer Info</span>
               </div>
               <ChevronRight 
-                className={`h-4 w-4 transition-transform duration-200 ${
+                className={`hidden lg:block h-4 w-4 transition-transform duration-200 ${
                   expandedPanel === 'customer-info' ? 'rotate-90' : ''
                 }`} 
               />
@@ -73,15 +73,15 @@ export default function Sidebar({
           <div className="order-panel">
             <Button
               variant="ghost"
-              className="w-full justify-between p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
+              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
               onClick={() => togglePanel('order-converter')}
             >
               <div className="flex items-center space-x-3">
                 <ArrowLeftRight className="h-4 w-4 text-blue-500" />
-                <span className="font-medium text-slate-700">Order Converter</span>
+                <span className="hidden lg:block font-medium text-slate-700">Order Converter</span>
               </div>
               <ChevronRight 
-                className={`h-4 w-4 transition-transform duration-200 ${
+                className={`hidden lg:block h-4 w-4 transition-transform duration-200 ${
                   expandedPanel === 'order-converter' ? 'rotate-90' : ''
                 }`} 
               />
@@ -98,15 +98,15 @@ export default function Sidebar({
           <div className="additional-panel">
             <Button
               variant="ghost"
-              className="w-full justify-between p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
+              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
               onClick={() => togglePanel('additional-info')}
             >
               <div className="flex items-center space-x-3">
                 <Info className="h-4 w-4 text-blue-500" />
-                <span className="font-medium text-slate-700">Additional Info</span>
+                <span className="hidden lg:block font-medium text-slate-700">Additional Info</span>
               </div>
               <ChevronRight 
-                className={`h-4 w-4 transition-transform duration-200 ${
+                className={`hidden lg:block h-4 w-4 transition-transform duration-200 ${
                   expandedPanel === 'additional-info' ? 'rotate-90' : ''
                 }`} 
               />
@@ -119,60 +119,61 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* Check Order Button */}
-          <Button
-            variant="ghost"
-            className="w-full justify-between p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
-            onClick={onCheckOrder}
-          >
-            <div className="flex items-center space-x-3">
-              <Search className="h-4 w-4 text-blue-500" />
-              <span className="font-medium text-slate-700">Check Order</span>
-            </div>
-            <ChevronRight className="h-4 w-4 text-slate-400" />
-          </Button>
-
-          {/* Navigation Links */}
-          <div className="pt-4 border-t border-slate-200 mt-4 space-y-2">
-            <Button
-              variant="ghost"
-              className="w-full justify-start p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200"
-              onClick={onEmailComposer}
+          {/* Action Buttons */}
+          <div className="pt-4 space-y-2">
+            <Button 
+              onClick={onCheckOrder}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-2 lg:p-3 transition-colors duration-200 shadow-sm"
             >
-              <Mail className="h-4 w-4 text-slate-500 mr-3" />
-              <span className="text-slate-700">Email Composer</span>
+              <div className="flex items-center justify-center lg:justify-start space-x-3">
+                <Search className="h-4 w-4" />
+                <span className="hidden lg:block font-medium">Check Order</span>
+              </div>
             </Button>
-            
-            {user?.role === 'admin' && (
-              <Button
-                variant="ghost"
-                className="w-full justify-start p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200"
+
+            <Button 
+              onClick={onEmailComposer}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg p-2 lg:p-3 transition-colors duration-200 shadow-sm"
+            >
+              <div className="flex items-center justify-center lg:justify-start space-x-3">
+                <Mail className="h-4 w-4" />
+                <span className="hidden lg:block font-medium">Email Composer</span>
+              </div>
+            </Button>
+
+            {/* Show Admin Panel button only for admins */}
+            {(user?.role === 'admin' || user?.email === 'mahmoud78zalat@gmail.com' || user?.id === 'beta-admin-user') && (
+              <Button 
                 onClick={onAdminPanel}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-lg p-2 lg:p-3 transition-colors duration-200 shadow-sm"
               >
-                <Settings className="h-4 w-4 text-slate-500 mr-3" />
-                <span className="text-slate-700">Admin Panel</span>
+                <div className="flex items-center justify-center lg:justify-start space-x-3">
+                  <Shield className="h-4 w-4" />
+                  <span className="hidden lg:block font-medium">Admin Panel</span>
+                </div>
               </Button>
             )}
-          </div>
 
-          {/* Bottom Links */}
-          <div className="pt-4 border-t border-slate-200 mt-4 space-y-2">
-            <Button
-              variant="ghost"
-              className="w-full justify-start p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200"
+            <Button 
               onClick={onAbout}
+              variant="outline"
+              className="w-full border-slate-300 hover:bg-slate-50 rounded-lg p-2 lg:p-3 transition-colors duration-200"
             >
-              <HelpCircle className="h-4 w-4 text-slate-500 mr-3" />
-              <span className="text-slate-700">About Tool</span>
+              <div className="flex items-center justify-center lg:justify-start space-x-3">
+                <HelpCircle className="h-4 w-4 text-slate-600" />
+                <span className="hidden lg:block font-medium text-slate-700">About</span>
+              </div>
             </Button>
-            
-            <Button
-              variant="ghost"
-              className="w-full justify-start p-3 text-left hover:bg-red-50 text-red-600 rounded-lg transition-colors duration-200"
+
+            <Button 
               onClick={handleSignOut}
+              variant="outline"
+              className="w-full border-red-300 hover:bg-red-50 text-red-600 rounded-lg p-2 lg:p-3 transition-colors duration-200"
             >
-              <LogOut className="h-4 w-4 mr-3" />
-              <span>Sign Out</span>
+              <div className="flex items-center justify-center lg:justify-start space-x-3">
+                <LogOut className="h-4 w-4" />
+                <span className="hidden lg:block font-medium">Sign Out</span>
+              </div>
             </Button>
           </div>
         </nav>
