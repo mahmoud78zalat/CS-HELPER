@@ -20,6 +20,9 @@ export class SupabaseStorage implements IStorage {
 
   constructor() {
     // Environment variables seem to be swapped in Replit, let's handle both cases
+    console.log('[SupabaseStorage] DEBUG: SUPABASE_URL =', process.env.SUPABASE_URL);
+    console.log('[SupabaseStorage] DEBUG: SUPABASE_ANON_KEY =', process.env.SUPABASE_ANON_KEY ? '***PRESENT***' : 'MISSING');
+    
     let supabaseUrl = process.env.SUPABASE_URL;
     let supabaseKey = process.env.SUPABASE_ANON_KEY;
     
