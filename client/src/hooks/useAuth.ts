@@ -80,14 +80,17 @@ export function useAuth() {
         console.log('[Auth] API route intercepted, querying Supabase directly...');
         
         // Query Supabase directly if API routes are being intercepted
+        console.log('[Auth] Querying users table for ID:', supabaseUser.id);
         const { data: userData, error } = await supabase
           .from('users')
           .select('*')
           .eq('id', supabaseUser.id)
           .single();
 
+        console.log('[Auth] Query result - error:', error, 'data:', userData);
+
         if (error || !userData) {
-          console.log('[Auth] User not found in database, error:', error);
+          console.log('[Auth] User not found in database, error:', error?.message, error?.details);
           console.log('[Auth] Creating new user for:', supabaseUser.email);
           
           try {
