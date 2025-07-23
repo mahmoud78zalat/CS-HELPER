@@ -23,36 +23,43 @@ export default function LoginPage() {
     setError('');
 
     try {
+      console.log('[Login] Attempting to sign in:', email);
       const { data, error } = await signInWithEmail(email, password);
       
       if (error) {
+        console.error('[Login] Sign in error:', error);
         setError(error.message);
         return;
       }
 
       if (data.user) {
-        // Check if user exists in our system and has admin role
+        console.log('[Login] User signed in:', data.user.email);
+        
+        // Check if user exists in our system
         const response = await fetch(`/api/users/${data.user.id}`);
         if (response.ok) {
           const userData = await response.json();
-          if (userData.role === 'admin') {
+          console.log('[Login] User data found:', userData.email, userData.role);
+          
+          if (userData.role === 'admin' || userData.role === 'agent') {
             toast({
               title: "Login Successful",
-              description: "Welcome back, admin!",
+              description: `Welcome back, ${userData.firstName}!`,
             });
             setLocation('/');
           } else {
-            setError('Access denied. Admin role required.');
+            setError('Access denied. Insufficient permissions.');
             await signOut();
           }
         } else {
+          console.error('[Login] User not found in database');
           setError('User not found in system. Please contact your administrator.');
           await signOut();
         }
       }
     } catch (err) {
+      console.error('[Login] Unexpected error:', err);
       setError('An unexpected error occurred. Please try again.');
-      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }

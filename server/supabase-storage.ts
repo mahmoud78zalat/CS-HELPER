@@ -225,15 +225,20 @@ export class SupabaseStorage implements IStorage {
   }
 
   async deleteLiveReplyTemplate(id: string): Promise<void> {
-    const { error } = await this.client
+    console.log('[SupabaseStorage] 🗑️ Attempting to delete live reply template:', id);
+    
+    const { data, error } = await this.client
       .from('live_reply_templates')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select();
 
     if (error) {
-      console.error('[SupabaseStorage] Error deleting live reply template:', error);
-      throw error;
+      console.error('[SupabaseStorage] ❌ Error deleting live reply template:', error);
+      throw new Error(`Failed to delete template: ${error.message}`);
     }
+
+    console.log('[SupabaseStorage] ✅ Successfully deleted template:', data);
   }
 
   async incrementLiveReplyUsage(templateId: string, userId: string): Promise<void> {
@@ -365,15 +370,20 @@ export class SupabaseStorage implements IStorage {
   }
 
   async deleteEmailTemplate(id: string): Promise<void> {
-    const { error } = await this.client
+    console.log('[SupabaseStorage] 🗑️ Attempting to delete email template:', id);
+    
+    const { data, error } = await this.client
       .from('email_templates')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select();
 
     if (error) {
-      console.error('[SupabaseStorage] Error deleting email template:', error);
-      throw error;
+      console.error('[SupabaseStorage] ❌ Error deleting email template:', error);
+      throw new Error(`Failed to delete email template: ${error.message}`);
     }
+
+    console.log('[SupabaseStorage] ✅ Successfully deleted email template:', data);
   }
 
   async incrementEmailTemplateUsage(templateId: string, userId: string): Promise<void> {
