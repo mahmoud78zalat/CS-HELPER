@@ -319,20 +319,10 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-[98vw] max-h-[98vh] w-[98vw] h-[98vh] overflow-hidden p-0">
         <DialogHeader className="p-6 pb-4 border-b bg-white">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Send className="h-6 w-6" />
-              Email Template Composer - Full Screen
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-600"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Send className="h-6 w-6" />
+            Email Template Composer - Full Screen
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex h-[calc(100vh-120px)] gap-4">

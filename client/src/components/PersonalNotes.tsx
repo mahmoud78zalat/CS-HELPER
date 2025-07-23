@@ -173,11 +173,10 @@ export default function PersonalNotes() {
   };
 
   const handleCopyNote = (note: PersonalNote) => {
-    const fullText = `${note.subject || 'Untitled'}\n\n${note.content}`;
-    navigator.clipboard.writeText(fullText);
+    navigator.clipboard.writeText(note.content);
     toast({
       title: "Copied!",
-      description: "Complete note copied to clipboard.",
+      description: "Note content copied to clipboard.",
     });
   };
 
