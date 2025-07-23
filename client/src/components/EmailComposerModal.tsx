@@ -42,8 +42,22 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       concerned_team: template.concernedTeam,
     };
 
-    setEmailSubject(replaceVariables(template.subject || '', variables));
-    setEmailBody(replaceVariables(template.content || '', variables));
+    // Add more comprehensive variable mapping
+    const enhancedVariables = {
+      ...variables,
+      time_frame: customerData.waiting_time || '2-3 business days',
+      current_date: new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }),
+      company_name: 'Brands For Less',
+      support_email: 'support@brandsforless.com',
+      business_hours: '9 AM - 6 PM, Sunday - Thursday'
+    };
+
+    setEmailSubject(replaceVariables(template.subject || '', enhancedVariables));
+    setEmailBody(replaceVariables(template.content || '', enhancedVariables));
   };
 
   const handleCopySubject = () => {
@@ -95,7 +109,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-5/6">
+      <DialogContent className="max-w-7xl h-[95vh] overflow-hidden">
         <div className="flex h-full">
           {/* Left Panel: Templates */}
           <div className="w-1/3 border-r border-slate-200 p-6 overflow-y-auto">
@@ -113,8 +127,14 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               </Button>
             </div>
 
-            <div className="space-y-3">
-              {templates?.map((template) => (
+            {!templates?.length ? (
+              <div className="text-center py-8 text-slate-500">
+                <p className="text-sm">No email templates available</p>
+                <p className="text-xs mt-1">Create templates in Admin Panel first</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {templates.map((template) => (
                 <div
                   key={template.id}
                   className={`p-3 border rounded-lg cursor-pointer transition-colors ${
@@ -133,8 +153,9 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                     {template.genre}
                   </Badge>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right Panel: Email Composition */}
@@ -172,26 +193,28 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 </Button>
               </div>
 
-              <div className="flex-1">
+              <div className="flex-1 flex flex-col">
                 <Label htmlFor="email-body" className="text-sm font-medium text-slate-700 mb-2">
                   Email Body
                 </Label>
-                <Textarea
-                  id="email-body"
-                  className="w-full h-64 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  value={emailBody}
-                  onChange={(e) => setEmailBody(e.target.value)}
-                  placeholder="Select a template to auto-populate"
-                />
-                <Button
-                  variant="link"
-                  size="sm"
-                  onClick={handleCopyBody}
-                  className="text-xs text-blue-500 hover:underline mt-1 p-0"
-                  disabled={!emailBody}
-                >
-                  Copy Body
-                </Button>
+                <div className="flex-1 flex flex-col">
+                  <Textarea
+                    id="email-body"
+                    className="flex-1 min-h-[300px] w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    value={emailBody}
+                    onChange={(e) => setEmailBody(e.target.value)}
+                    placeholder="Select a template to auto-populate"
+                  />
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={handleCopyBody}
+                    className="text-xs text-blue-500 hover:underline mt-1 p-0 self-start"
+                    disabled={!emailBody}
+                  >
+                    Copy Body
+                  </Button>
+                </div>
               </div>
             </div>
 

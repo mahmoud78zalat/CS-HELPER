@@ -103,9 +103,22 @@ export default function TemplateFormModal({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+
+
+  const useTemplateStarter = (starterKey: string) => {
+    const starter = QUICK_TEMPLATE_STARTERS[starterKey as keyof typeof QUICK_TEMPLATE_STARTERS];
+    if (starter) {
+      setFormData(prev => ({ 
+        ...prev, 
+        content: starter,
+        subject: `${starterKey} - {customer_name}`
+      }));
+    }
+  };
+
   const insertVariable = (variableName: string) => {
-    const variable = `[${variableName}]`;
-    const textarea = document.querySelector('textarea[name="content"]') as HTMLTextAreaElement;
+    const variable = `{${variableName.toLowerCase()}}`;
+    const textarea = document.getElementById('content') as HTMLTextAreaElement;
     if (textarea) {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
@@ -114,22 +127,11 @@ export default function TemplateFormModal({
       
       setFormData(prev => ({ ...prev, content: newContent }));
       
-      // Restore cursor position
+      // Set cursor position after inserted variable
       setTimeout(() => {
         textarea.focus();
         textarea.setSelectionRange(start + variable.length, start + variable.length);
       }, 0);
-    }
-  };
-
-  const useTemplateStarter = (starterKey: string) => {
-    const starter = QUICK_TEMPLATE_STARTERS[starterKey as keyof typeof QUICK_TEMPLATE_STARTERS];
-    if (starter) {
-      setFormData(prev => ({ 
-        ...prev, 
-        content: starter,
-        subject: `${starterKey} - [CUSTOMERNAME]`
-      }));
     }
   };
 

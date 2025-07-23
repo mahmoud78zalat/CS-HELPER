@@ -35,6 +35,16 @@ export default function TemplateCard({ template }: TemplateCardProps) {
       ...customerData,
       agent_name: agentName,
       concerned_team: template.concernedTeam || '',
+      // Add more dynamic variables
+      time_frame: customerData.waiting_time || '2-3 business days',
+      current_date: new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }),
+      company_name: 'Brands For Less',
+      support_email: 'support@brandsforless.com',
+      business_hours: '9 AM - 6 PM, Sunday - Thursday'
     };
 
     // For live reply templates (chat), only copy content without subject
