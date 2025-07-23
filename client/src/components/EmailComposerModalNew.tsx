@@ -135,9 +135,9 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     });
   };
 
-  // Replace variables specifically for subject (limited set)
+  // Replace variables specifically for subject (includes both predefined and custom)
   const replaceSubjectVariables = (subject: string) => {
-    return subject.replace(/\{(ordernumber|AWB|customernumber)\}/g, (match, variable) => {
+    return subject.replace(/\{(\w+)\}/g, (match, variable) => {
       return variableValues[variable] || match;
     });
   };
@@ -185,8 +185,16 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     return matches ? matches.map(match => match.slice(1, -1)) : [];
   };
 
+  // Get custom dynamic variables from subject (not in predefined SUBJECT_VARIABLES)
+  const getCustomSubjectVariables = (subject: string) => {
+    const subjectVars = getTemplateVariables(subject);
+    const predefinedKeys = SUBJECT_VARIABLES.map(v => v.key);
+    return subjectVars.filter(varName => !predefinedKeys.includes(varName));
+  };
+
   const allVariables = [...getTemplateVariables(emailSubject), ...getTemplateVariables(emailBody)];
   const uniqueVariables = Array.from(new Set(allVariables));
+  const customSubjectVars = getCustomSubjectVariables(emailSubject);
 
   const handleCopyEmail = () => {
     const finalEmail = `Subject: ${getFinalSubject()}\n\n${getFinalBody()}`;
@@ -447,8 +455,38 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               </div>
               
               <div className="flex-1 overflow-y-auto p-4">
-                {uniqueVariables.length > 0 ? (
+                {(uniqueVariables.length > 0 || customSubjectVars.length > 0) ? (
                   <div className="space-y-4">
+                    {/* Custom Subject Variables Section */}
+                    {customSubjectVars.length > 0 && (
+                      <div>
+                        <h4 className="font-medium text-sm text-slate-700 mb-2 flex items-center gap-2">
+                          <Sparkles className="h-3 w-3" />
+                          Custom Subject Variables
+                        </h4>
+                        <p className="text-xs text-slate-500 mb-3">
+                          These variables are used in the email subject line
+                        </p>
+                        <div className="space-y-2">
+                          {customSubjectVars.map((varName) => (
+                            <div key={varName}>
+                              <Label htmlFor={varName} className="text-xs font-mono text-purple-600">
+                                {`{${varName}}`}
+                              </Label>
+                              <Input
+                                id={varName}
+                                value={variableValues[varName] || ''}
+                                onChange={(e) => handleVariableChange(varName, e.target.value)}
+                                placeholder={`Enter value for ${varName}...`}
+                                className="text-xs border-purple-200 focus:border-purple-400"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Standard Template Variables */}
                     {Object.entries(TEMPLATE_VARIABLES).map(([category, variables]) => {
                       const categoryVariables = variables.filter(v => 
                         uniqueVariables.includes(v.key)
@@ -484,7 +522,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 ) : (
                   <div className="text-center py-8 text-slate-500">
                     <p className="text-sm">No variables found</p>
-                    <p className="text-xs mt-1">Select a template to see variables</p>
+                    <p className="text-xs mt-1">Select a template with variables to see inputs</p>
                   </div>
                 )}
               </div>
