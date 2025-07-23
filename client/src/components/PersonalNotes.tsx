@@ -32,6 +32,7 @@ export default function PersonalNotes() {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': user?.id || '',
         },
         credentials: 'include',
       });
@@ -55,6 +56,7 @@ export default function PersonalNotes() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': user?.id || '',
         },
         credentials: 'include',
         body: JSON.stringify({ content }),

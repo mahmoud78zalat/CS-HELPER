@@ -249,8 +249,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     }
   });
 
-  // Add timeout storage for debouncing
-  const timeoutRef = useState<NodeJS.Timeout | null>(null)[0];
+  // Add timeout ref for debouncing
+  const [timeoutRef, setTimeoutRef] = useState<NodeJS.Timeout | null>(null);
 
   const handleSiteContentChange = (key: string, value: string) => {
     // Update local state immediately for responsive UI
@@ -265,7 +265,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       updateSiteContentMutation.mutate({ key, content: value });
     }, 1000);
     
-    timeoutRef = newTimeout;
+    setTimeoutRef(newTimeout);
   };
 
   const handleUserStatusChange = (userId: string, status: string) => {
