@@ -37,13 +37,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const queryClient = useQueryClient();
 
   // Users query - always call hooks at top level
-  const { data: users = [], isLoading: usersLoading } = useQuery({
+  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ['/api/users'],
     retry: false,
   });
 
   // Templates query
-  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+  const { data: templates = [], isLoading: templatesLoading } = useQuery<Template[]>({
     queryKey: ['/api/templates'],
     retry: false,
   });
@@ -214,13 +214,11 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
   // Check admin access AFTER all hooks are called
   console.log('AdminPanel - Current user:', currentUser);
-  console.log('AdminPanel - User metadata:', currentUser?.user_metadata);
   console.log('AdminPanel - User email:', currentUser?.email);
-  console.log('AdminPanel - Is Admin:', currentUser?.role === 'admin' || currentUser?.user_metadata?.role === 'admin' || currentUser?.email === 'mahmoud78zalat@gmail.com');
+  console.log('AdminPanel - User role:', currentUser?.role);
   
   // BETA TESTING: Allow all beta users admin access + production admin check
   const isAdmin = currentUser?.role === 'admin' || 
-                  currentUser?.user_metadata?.role === 'admin' || 
                   currentUser?.email === 'mahmoud78zalat@gmail.com' ||
                   currentUser?.id === 'beta-admin-user'; // Beta testing access
   console.log('AdminPanel - Is Admin:', isAdmin);

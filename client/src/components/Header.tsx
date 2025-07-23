@@ -17,7 +17,6 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
 
   // Check if user is admin - including beta testing
   const isAdmin = user?.role === 'admin' || 
-                  user?.user_metadata?.role === 'admin' || 
                   user?.email === 'mahmoud78zalat@gmail.com' ||
                   user?.id === 'beta-admin-user';
 
