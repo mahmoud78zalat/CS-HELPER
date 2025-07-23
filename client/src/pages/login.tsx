@@ -35,91 +35,13 @@ export default function LoginPage() {
       if (data.user) {
         console.log('[Login] User signed in:', data.user.email);
         
-        // Check if user exists in our system
-        console.log('[Login] Checking user in database:', data.user.id);
-        const response = await fetch(`/api/user/${data.user.id}`, {
-          headers: {
-            'Content-Type': 'application/json',
-          }
+        // Successfully authenticated, let useAuth handle user checking
+        console.log('[Login] Authentication successful, navigating to home...');
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${data.user.email}!`,
         });
-        console.log('[Login] Response status:', response.status);
-        const responseText = await response.text();
-        console.log('[Login] Response body:', responseText);
-        
-        if (response.ok && !responseText.includes('<!DOCTYPE html>')) {
-          const userData = JSON.parse(responseText);
-          console.log('[Login] User data found via API:', userData.email, userData.role);
-          
-          // Allow all authenticated users regardless of role
-          toast({
-            title: "Login Successful",
-            description: `Welcome back, ${userData.firstName || userData.email}!`,
-          });
-          setLocation('/');
-        } else {
-          // API routes being intercepted or user not found, check Supabase directly
-          console.log('[Login] API route failed, checking Supabase directly...');
-          
-          const { supabase } = await import('@/lib/supabase');
-          const { data: existingUser, error: fetchError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-
-          if (existingUser && !fetchError) {
-            // User exists, allow login regardless of role
-            console.log('[Login] User found in Supabase:', existingUser.email, existingUser.role);
-            
-            toast({
-              title: "Login Successful",
-              description: `Welcome back, ${existingUser.first_name || existingUser.email}!`,
-            });
-            setLocation('/');
-            return;
-          }
-          
-          // User doesn't exist, create them
-          console.log('[Login] User not found, creating new user record...');
-          
-          try {
-            
-            const { error: upsertError } = await supabase
-              .from('users')
-              .upsert({
-                id: data.user.id,
-                email: data.user.email,
-                first_name: data.user.user_metadata?.first_name || data.user.email?.split('@')[0],
-                last_name: data.user.user_metadata?.last_name || '',
-                profile_image_url: data.user.user_metadata?.avatar_url || '',
-                role: 'agent', // Default role
-                status: 'active',
-                is_online: false,
-                last_seen: new Date().toISOString(),
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
-
-            if (upsertError) {
-              console.error('[Login] Error creating user in Supabase:', upsertError);
-              setError('Unable to create user account. Please contact administrator.');
-              await signOut();
-              return;
-            }
-
-            console.log('[Login] User created successfully in Supabase');
-            toast({
-              title: "Account Created",
-              description: `Welcome ${data.user.email?.split('@')[0]}!`,
-            });
-            setLocation('/');
-            
-          } catch (createError) {
-            console.error('[Login] Error with direct Supabase creation:', createError);
-            setError('Unable to create user account. Please contact administrator.');
-            await signOut();
-          }
-        }
+        setLocation('/');
       }
     } catch (err) {
       console.error('[Login] Unexpected error:', err);

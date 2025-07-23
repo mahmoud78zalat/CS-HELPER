@@ -99,11 +99,9 @@ export function useAuth() {
           setUser(newUser);
         } else {
           console.error('[Auth] Failed to create user via API:', createResponse.status);
-          setError('Failed to create user account');
         }
       } else {
         console.error('[Auth] API error:', response.status);
-        setError('Authentication failed');
       }
     } catch (error) {
       console.error('[Auth] Error fetching user data:', error);
