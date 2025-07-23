@@ -72,7 +72,6 @@ export default function PersonalNotes() {
       console.log('Note created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       setNewNote('');
-      setNewSubject('');
       toast({
         title: "Note Created",
         description: "Your personal note has been saved successfully.",
@@ -110,7 +109,6 @@ export default function PersonalNotes() {
       queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       setEditingId(null);
       setEditContent('');
-      setEditSubject('');
       toast({
         title: "Note Updated",
         description: "Your note has been updated successfully.",
@@ -162,23 +160,20 @@ export default function PersonalNotes() {
     e?.preventDefault();
     if (newNote.trim() && !createNoteMutation.isPending) {
       console.log('Creating note:', newNote.trim());
-      // Combine subject and content for now since schema doesn't support subject yet
-      const fullContent = newSubject.trim() ? `${newSubject.trim()}\n\n${newNote.trim()}` : newNote.trim();
-      createNoteMutation.mutate({ content: fullContent });
+      // Only use the note content, don't duplicate subject
+      createNoteMutation.mutate({ content: newNote.trim() });
     }
   };
 
   const handleUpdateNote = (id: string) => {
     if (editContent.trim()) {
-      // Combine subject and content for now since schema doesn't support subject yet
-      const fullContent = editSubject.trim() ? `${editSubject.trim()}\n\n${editContent.trim()}` : editContent.trim();
-      updateNoteMutation.mutate({ id, content: fullContent });
+      // Only use the note content, don't duplicate subject
+      updateNoteMutation.mutate({ id, content: editContent.trim() });
     }
   };
 
   const handleCopyNote = (note: PersonalNote) => {
-    const fullText = note.content; // Remove subject for now until schema is updated
-    navigator.clipboard.writeText(fullText);
+    navigator.clipboard.writeText(note.content);
     toast({
       title: "Copied!",
       description: "Note content copied to clipboard.",
@@ -187,14 +182,13 @@ export default function PersonalNotes() {
 
   const startEditing = (note: PersonalNote) => {
     setEditingId(note.id);
-    setEditSubject(''); // Remove subject for now until schema is updated
+    setEditSubject(''); 
     setEditContent(note.content);
   };
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditContent('');
-    setEditSubject('');
   };
 
   // Filter notes based on search term
@@ -312,22 +306,13 @@ export default function PersonalNotes() {
 
                 <form onSubmit={handleCreateNote} className="flex-1 flex flex-col">
                   <div className="space-y-4 flex-1">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Subject</label>
-                      <Input
-                        placeholder="Note subject..."
-                        value={editingId ? editSubject : newSubject}
-                        onChange={(e) => editingId ? setEditSubject(e.target.value) : setNewSubject(e.target.value)}
-                        className="w-full"
-                      />
-                    </div>
                     <div className="flex-1 flex flex-col">
-                      <label className="text-sm font-medium mb-2 block">Content</label>
+                      <label className="text-sm font-medium mb-2 block">Note Content</label>
                       <Textarea
                         placeholder="Write your note content..."
                         value={editingId ? editContent : newNote}
                         onChange={(e) => editingId ? setEditContent(e.target.value) : setNewNote(e.target.value)}
-                        className="flex-1 resize-none min-h-[300px]"
+                        className="flex-1 resize-none min-h-[350px]"
                       />
                     </div>
                   </div>

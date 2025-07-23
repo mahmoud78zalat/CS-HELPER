@@ -25,15 +25,15 @@ export default function Sidebar({
   onCheckOrder, 
   onAbout 
 }: SidebarProps) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [expandedPanel, setExpandedPanel] = useState<string | null>(null);
 
   const togglePanel = (panelId: string) => {
     setExpandedPanel(expandedPanel === panelId ? null : panelId);
   };
 
-  const handleSignOut = () => {
-    window.location.href = '/api/logout';
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (

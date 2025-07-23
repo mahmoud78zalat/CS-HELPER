@@ -30,8 +30,8 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
     }
   }, [agentName]);
 
-  const handleSignOut = () => {
-    window.location.href = '/api/logout';
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   const handleNameSave = () => {
