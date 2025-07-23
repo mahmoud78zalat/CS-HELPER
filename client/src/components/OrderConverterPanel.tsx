@@ -21,9 +21,9 @@ export default function OrderConverterPanel() {
       // Auto-detect order type and convert
       if (value.startsWith('A') && value.length === 8) {
         setOrderType('Order ID Format');
-        setConvertedOrder(`AWB${Math.random().toString().slice(2, 11)}`);
-      } else if (value.startsWith('AWB')) {
-        setOrderType('AWB Format');
+        setConvertedOrder(`U${Math.random().toString().slice(2, 11)}`);
+      } else if (value.startsWith('U')) {
+        setOrderType('User ID Format');
         setConvertedOrder(`A${Math.random().toString().slice(2, 9)}`);
       } else {
         setOrderType('Unknown Format');
@@ -49,11 +49,11 @@ export default function OrderConverterPanel() {
     <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
       <div className="space-y-3">
         <div>
-          <Label className="text-xs font-medium text-slate-600 mb-1">Order Number</Label>
+          <Label className="text-xs font-medium text-slate-600 mb-1">Order/User ID</Label>
           <Input
             type="text"
             className="w-full text-sm"
-            placeholder="A1234567 or AWB123456789"
+            placeholder="A1234567 or U123456789"
             value={orderInput}
             onChange={(e) => handleOrderConversion(e.target.value)}
           />

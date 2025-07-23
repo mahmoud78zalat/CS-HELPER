@@ -8,45 +8,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TemplatesArea() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [genreFilter, setGenreFilter] = useState('');
 
   const { data: templates, isLoading } = useTemplates({
-    category: categoryFilter && categoryFilter !== 'all' ? categoryFilter : undefined,
-    genre: genreFilter && genreFilter !== 'all' ? genreFilter : undefined,
     search: searchTerm || undefined,
     isActive: true,
   });
 
-  const categories = [
-    'Order Issues',
-    'Delivery Problems', 
-    'Payment Issues',
-    'Product Complaints',
-    'Returns & Refunds',
-    'Technical Support',
-    'General Inquiry',
-    'Escalation'
-  ];
 
-  const genres = [
-    'Urgent',
-    'Standard',
-    'Follow-up',
-    'Escalation',
-    'Resolution',
-    'Information Request',
-    'Complaint Handling',
-    'Greeting',
-    'CSAT',
-    'Warning Abusive Language',
-    'Apology',
-    'Thank You',
-    'Farewell',
-    'Confirmation',
-    'Technical Support',
-    'Holiday/Special Occasion'
-  ];
 
   const groupedTemplates = templates?.reduce((acc, template) => {
     if (!acc[template.genre]) {
@@ -93,31 +61,7 @@ export default function TemplatesArea() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-2 lg:flex lg:items-center lg:space-x-2 lg:gap-0">
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full lg:w-48">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={genreFilter} onValueChange={setGenreFilter}>
-              <SelectTrigger className="w-full lg:w-48">
-                <SelectValue placeholder="All Genres" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Genres</SelectItem>
-                {genres.map(genre => (
-                  <SelectItem key={genre} value={genre}>{genre}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+
         </div>
       </div>
 

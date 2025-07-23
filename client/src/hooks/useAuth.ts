@@ -25,7 +25,7 @@ export function useAuth() {
       console.log('Beta testing: Auto-login as admin');
       setUser(betaUser);
       setIsLoading(false);
-    }, 100); // Reduced timeout for faster loading
+    }, 50); // Further reduced timeout for faster loading
 
     /* 
     // PRODUCTION CODE: Uncomment this block when ready to enable real authentication

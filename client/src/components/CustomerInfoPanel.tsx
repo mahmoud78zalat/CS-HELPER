@@ -10,6 +10,46 @@ export default function CustomerInfoPanel() {
   const { customerData, updateCustomerData } = useCustomerData();
   const { toast } = useToast();
 
+  const handleDetectCountry = () => {
+    const phone = customerData.customer_phone || '';
+    let detectedCountry = '';
+    
+    // Arab countries phone code detection
+    if (phone.startsWith('+971') || phone.startsWith('971')) {
+      detectedCountry = '🇦🇪 United Arab Emirates';
+    } else if (phone.startsWith('+966') || phone.startsWith('966')) {
+      detectedCountry = '🇸🇦 Saudi Arabia';
+    } else if (phone.startsWith('+965') || phone.startsWith('965')) {
+      detectedCountry = '🇰🇼 Kuwait';
+    } else if (phone.startsWith('+974') || phone.startsWith('974')) {
+      detectedCountry = '🇶🇦 Qatar';
+    } else if (phone.startsWith('+973') || phone.startsWith('973')) {
+      detectedCountry = '🇧🇭 Bahrain';
+    } else if (phone.startsWith('+968') || phone.startsWith('968')) {
+      detectedCountry = '🇴🇲 Oman';
+    } else if (phone.startsWith('+20') || phone.startsWith('20')) {
+      detectedCountry = '🇪🇬 Egypt';
+    } else if (phone.startsWith('+962') || phone.startsWith('962')) {
+      detectedCountry = '🇯🇴 Jordan';
+    } else if (phone.startsWith('+961') || phone.startsWith('961')) {
+      detectedCountry = '🇱🇧 Lebanon';
+    }
+    
+    if (detectedCountry) {
+      updateCustomerData('customer_country', detectedCountry);
+      toast({
+        title: "Country Detected",
+        description: `Customer is from ${detectedCountry}`,
+      });
+    } else {
+      toast({
+        title: "Unable to Detect",
+        description: "Country could not be detected from phone number",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCopyInfo = () => {
     const info = `Customer Information:
 Name: ${customerData.customer_name || 'N/A'}
@@ -41,13 +81,23 @@ Gender: ${customerData.gender || 'N/A'}`;
         
         <div>
           <Label className="text-xs font-medium text-slate-600 mb-1">Phone Number</Label>
-          <Input
-            type="tel"
-            className="w-full text-sm"
-            placeholder="+971 50 123 4567"
-            value={customerData.customer_phone || ''}
-            onChange={(e) => updateCustomerData('customer_phone', e.target.value)}
-          />
+          <div className="flex gap-2">
+            <Input
+              type="tel"
+              className="flex-1 text-sm"
+              placeholder="+971 50 123 4567"
+              value={customerData.customer_phone || ''}
+              onChange={(e) => updateCustomerData('customer_phone', e.target.value)}
+            />
+            <Button
+              type="button"
+              onClick={handleDetectCountry}
+              className="px-3 py-2 text-xs bg-emerald-500 hover:bg-emerald-600 text-white rounded-md"
+              disabled={!customerData.customer_phone}
+            >
+              Detect Country
+            </Button>
+          </div>
         </div>
         
         <div>
@@ -75,6 +125,11 @@ Gender: ${customerData.gender || 'N/A'}`;
               <SelectItem value="🇸🇦 Saudi Arabia">🇸🇦 Saudi Arabia</SelectItem>
               <SelectItem value="🇰🇼 Kuwait">🇰🇼 Kuwait</SelectItem>
               <SelectItem value="🇶🇦 Qatar">🇶🇦 Qatar</SelectItem>
+              <SelectItem value="🇧🇭 Bahrain">🇧🇭 Bahrain</SelectItem>
+              <SelectItem value="🇴🇲 Oman">🇴🇲 Oman</SelectItem>
+              <SelectItem value="🇪🇬 Egypt">🇪🇬 Egypt</SelectItem>
+              <SelectItem value="🇯🇴 Jordan">🇯🇴 Jordan</SelectItem>
+              <SelectItem value="🇱🇧 Lebanon">🇱🇧 Lebanon</SelectItem>
             </SelectContent>
           </Select>
         </div>
