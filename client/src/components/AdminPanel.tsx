@@ -44,7 +44,25 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Only allow admin users to access the admin panel
+  // Users query - always call hooks at top level
+  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
+    queryKey: ['/api/users'],
+    retry: false,
+  });
+
+  // Templates query
+  const { data: templates = [], isLoading: templatesLoading } = useQuery<Template[]>({
+    queryKey: ['/api/templates'],
+    retry: false,
+  });
+
+  // Email Templates query with proper typing
+  const { data: emailTemplates = [], isLoading: emailTemplatesLoading } = useQuery<Template[]>({
+    queryKey: ['/api/email-templates'],
+    retry: false,
+  });
+
+  // Only allow admin users to access the admin panel - check after all hooks are called
   if (!currentUser || currentUser.role !== 'admin') {
     return (
       <Dialog open={true} onOpenChange={onClose}>
@@ -66,24 +84,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       </Dialog>
     );
   }
-
-  // Users query - always call hooks at top level
-  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
-    queryKey: ['/api/users'],
-    retry: false,
-  });
-
-  // Templates query
-  const { data: templates = [], isLoading: templatesLoading } = useQuery<Template[]>({
-    queryKey: ['/api/templates'],
-    retry: false,
-  });
-
-  // Email Templates query with proper typing
-  const { data: emailTemplates = [], isLoading: emailTemplatesLoading } = useQuery<Template[]>({
-    queryKey: ['/api/email-templates'],
-    retry: false,
-  });
 
   // User status mutation
   const userStatusMutation = useMutation({

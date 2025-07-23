@@ -108,11 +108,13 @@ export function useAuth() {
       
       console.log('[Auth] Setting user manually based on backend data:', userData.email, userData.role);
       setUser(userData);
+      setIsLoading(false);
+      if (authTimeout) clearTimeout(authTimeout);
+      return;
       
     } catch (error) {
       console.error('[Auth] Error in handleUser:', error);
       setUser(null);
-    } finally {
       setIsLoading(false);
       if (authTimeout) clearTimeout(authTimeout);
     }
