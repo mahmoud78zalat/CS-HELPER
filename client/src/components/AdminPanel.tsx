@@ -18,7 +18,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { realTimeService } from "@/lib/realTimeService";
 import { 
   X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
-  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload
+  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare
 } from "lucide-react";
 import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
@@ -834,8 +834,71 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <p className="text-sm text-slate-600">Manage template options, categories, genres, concerned teams, and custom variables</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Template Configuration Card */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Site Branding Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Globe className="h-5 w-5" />
+                      Site Branding
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Customize site name, about content, and footer</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="siteName">Site Name</Label>
+                      <Input
+                        id="siteName"
+                        placeholder="e.g., Customer Service Platform"
+                        defaultValue={localStorage.getItem('site_name') || ''}
+                        onChange={(e) => localStorage.setItem('site_name', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="aboutTitle">About Tool Title</Label>
+                      <Input
+                        id="aboutTitle"
+                        placeholder="e.g., Customer Service Helper"
+                        defaultValue={localStorage.getItem('about_title') || ''}
+                        onChange={(e) => localStorage.setItem('about_title', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="aboutDescription">About Description</Label>
+                      <Textarea
+                        id="aboutDescription"
+                        placeholder="Brief description of your platform..."
+                        rows={3}
+                        defaultValue={localStorage.getItem('about_description') || ''}
+                        onChange={(e) => localStorage.setItem('about_description', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="versionLabel">Version Label (optional)</Label>
+                      <Input
+                        id="versionLabel"
+                        placeholder="e.g., Version 1.0.0 | Built for Company X"
+                        defaultValue={localStorage.getItem('version_label') || ''}
+                        onChange={(e) => localStorage.setItem('version_label', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="footerText">Footer Text (optional)</Label>
+                      <Input
+                        id="footerText"
+                        placeholder="e.g., © 2025 Your Company. All rights reserved."
+                        defaultValue={localStorage.getItem('footer_text') || ''}
+                        onChange={(e) => localStorage.setItem('footer_text', e.target.value)}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Template Configuration Section */}
                 <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowConfigManager(true)}>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">

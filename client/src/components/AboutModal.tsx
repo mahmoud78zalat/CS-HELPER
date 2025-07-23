@@ -8,6 +8,13 @@ interface AboutModalProps {
 }
 
 export default function AboutModal({ onClose }: AboutModalProps) {
+  // Get dynamic content from localStorage
+  const siteName = localStorage.getItem('site_name') || 'Customer Service Platform';
+  const aboutTitle = localStorage.getItem('about_title') || 'Customer Service Helper';
+  const aboutDescription = localStorage.getItem('about_description') || 'A comprehensive customer service management tool designed to streamline support operations, template management, and team communications.';
+  const versionLabel = localStorage.getItem('version_label') || '';
+  const footerText = localStorage.getItem('footer_text') || '';
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="about-dialog-description">
@@ -15,10 +22,10 @@ export default function AboutModal({ onClose }: AboutModalProps) {
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center space-x-2">
               <Headphones className="h-5 w-5" />
-              <span>About BFL Customer Service Helper</span>
+              <span>About {aboutTitle}</span>
             </DialogTitle>
             <div id="about-dialog-description" className="sr-only">
-              Information about the BFL Customer Service Helper tool and its features
+              Information about the {aboutTitle} tool and its features
             </div>
             <Button
               variant="ghost"
@@ -37,12 +44,10 @@ export default function AboutModal({ onClose }: AboutModalProps) {
               <Headphones className="text-white text-2xl" />
             </div>
             <h2 className="text-2xl font-bold text-slate-800 mb-2">
-              BFL Customer Service Helper
+              {aboutTitle}
             </h2>
             <p className="text-slate-600 max-w-2xl mx-auto">
-              A comprehensive internal customer service management tool designed to streamline 
-              customer support operations, template management, and internal team communications 
-              for Brands For Less (BFL).
+              {aboutDescription}
             </p>
           </div>
 
@@ -56,10 +61,19 @@ export default function AboutModal({ onClose }: AboutModalProps) {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm text-slate-600">
-                  <li>• Centralized customer information storage</li>
-                  <li>• Auto-save functionality</li>
-                  <li>• Order number conversion tools</li>
-                  <li>• Additional customer details tracking</li>
+                  {(() => {
+                    const features = localStorage.getItem('about_customer_features');
+                    const defaultFeatures = [
+                      'Centralized customer information storage',
+                      'Auto-save functionality', 
+                      'Order number conversion tools',
+                      'Additional customer details tracking'
+                    ];
+                    const featuresList = features ? JSON.parse(features) : defaultFeatures;
+                    return featuresList.map((feature: string, index: number) => (
+                      <li key={index}>• {feature}</li>
+                    ));
+                  })()}
                 </ul>
               </CardContent>
             </Card>
@@ -73,10 +87,19 @@ export default function AboutModal({ onClose }: AboutModalProps) {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm text-slate-600">
-                  <li>• Instant template search and filtering</li>
-                  <li>• One-click copy functionality</li>
-                  <li>• Variable replacement system</li>
-                  <li>• Usage tracking and analytics</li>
+                  {(() => {
+                    const features = localStorage.getItem('about_template_features');
+                    const defaultFeatures = [
+                      'Instant template search and filtering',
+                      'One-click copy functionality',
+                      'Variable replacement system',
+                      'Usage tracking and analytics'
+                    ];
+                    const featuresList = features ? JSON.parse(features) : defaultFeatures;
+                    return featuresList.map((feature: string, index: number) => (
+                      <li key={index}>• {feature}</li>
+                    ));
+                  })()}
                 </ul>
               </CardContent>
             </Card>
@@ -125,30 +148,50 @@ export default function AboutModal({ onClose }: AboutModalProps) {
               <div>
                 <h4 className="font-medium text-slate-800 mb-2">For Agents:</h4>
                 <ul className="space-y-1">
-                  <li>• Manage customer information</li>
-                  <li>• Access reply templates instantly</li>
-                  <li>• Convert order numbers</li>
-                  <li>• Create internal emails</li>
-                  <li>• Track order status</li>
+                  {(() => {
+                    const features = localStorage.getItem('about_agent_features');
+                    const defaultFeatures = [
+                      'Manage customer information',
+                      'Access reply templates instantly',
+                      'Convert order numbers',
+                      'Create internal emails',
+                      'Track order status'
+                    ];
+                    const featuresList = features ? JSON.parse(features) : defaultFeatures;
+                    return featuresList.map((feature: string, index: number) => (
+                      <li key={index}>• {feature}</li>
+                    ));
+                  })()}
                 </ul>
               </div>
               <div>
                 <h4 className="font-medium text-slate-800 mb-2">For Administrators:</h4>
                 <ul className="space-y-1">
-                  <li>• Manage user accounts and roles</li>
-                  <li>• Create and edit templates</li>
-                  <li>• Monitor usage statistics</li>
-                  <li>• Configure system settings</li>
-                  <li>• Track team performance</li>
+                  {(() => {
+                    const features = localStorage.getItem('about_admin_features');
+                    const defaultFeatures = [
+                      'Manage user accounts and roles',
+                      'Create and edit templates',
+                      'Monitor usage statistics',
+                      'Configure system settings',
+                      'Track team performance'
+                    ];
+                    const featuresList = features ? JSON.parse(features) : defaultFeatures;
+                    return featuresList.map((feature: string, index: number) => (
+                      <li key={index}>• {feature}</li>
+                    ));
+                  })()}
                 </ul>
               </div>
             </div>
           </div>
 
-          <div className="text-center text-sm text-slate-500">
-            <p>Version 1.0.0 | Built for Brands For Less Customer Service Team</p>
-            <p className="mt-1">© 2024 BFL. All rights reserved.</p>
-          </div>
+          {(versionLabel || footerText) && (
+            <div className="text-center text-sm text-slate-500">
+              {versionLabel && <p>{versionLabel}</p>}
+              {footerText && <p className={versionLabel ? "mt-1" : ""}>{footerText}</p>}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

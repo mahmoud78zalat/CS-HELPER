@@ -53,7 +53,12 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
               <Headphones className="text-white text-sm lg:text-lg" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg lg:text-xl font-bold text-slate-800">BFL Customer Service</h1>
+              <h1 className="text-lg lg:text-xl font-bold text-slate-800">
+                {(() => {
+                  const siteName = localStorage.getItem('site_name');
+                  return siteName || 'Customer Service Platform';
+                })()}
+              </h1>
               <div className="flex items-center gap-2">
                 <p className="text-xs lg:text-sm text-slate-600">Agent:</p>
                 {isEditingName ? (
@@ -79,7 +84,12 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
               </div>
             </div>
             <div className="sm:hidden">
-              <h1 className="text-base font-bold text-slate-800">BFL CS</h1>
+              <h1 className="text-base font-bold text-slate-800">
+                {(() => {
+                  const siteName = localStorage.getItem('site_name');
+                  return siteName ? siteName.split(' ').map(w => w.charAt(0)).join('').toUpperCase() : 'CS';
+                })()}
+              </h1>
             </div>
           </div>
 
