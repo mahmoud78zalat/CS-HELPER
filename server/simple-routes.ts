@@ -328,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on('close', () => {
       console.log('WebSocket client disconnected');
       // Find and remove the disconnected client
-      for (const [userId, client] of connectedClients.entries()) {
+      for (const [userId, client] of Array.from(connectedClients.entries())) {
         if (client === ws) {
           connectedClients.delete(userId);
           // Broadcast user offline status
@@ -345,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   function broadcast(message: any) {
     const messageStr = JSON.stringify(message);
-    for (const [userId, client] of connectedClients.entries()) {
+    for (const [userId, client] of Array.from(connectedClients.entries())) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(messageStr);
       } else {

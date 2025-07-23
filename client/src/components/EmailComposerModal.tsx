@@ -145,46 +145,35 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             {/* Scrollable Templates List */}
             <div className="flex-1 overflow-y-auto">
               {!filteredTemplates?.length ? (
-              </DialogHeader>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {!templates?.length ? (
-              <div className="text-center py-8 text-slate-500">
-                <p className="text-sm">No email templates available</p>
-                <p className="text-xs mt-1">Create templates in Admin Panel first</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {templates.map((template) => (
-                <div
-                  key={template.id}
-                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                    selectedTemplate?.id === template.id 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-slate-200 hover:border-blue-500'
-                  }`}
-                  onClick={() => handleTemplateSelect(template)}
-                >
-                  <h4 className="font-medium text-slate-800">{template.name}</h4>
-                  <div className="text-xs text-slate-500 mt-1">To: {template.concernedTeam}</div>
-                  <Badge 
-                    variant="secondary" 
-                    className={`mt-2 bg-${getGenreColor(template.genre)}-100 text-${getGenreColor(template.genre)}-700`}
-                  >
-                    {template.genre}
-                  </Badge>
+                <div className="text-center py-8 text-slate-500">
+                  <p className="text-sm">No templates found</p>
+                  <p className="text-xs mt-1">Try adjusting your search terms</p>
                 </div>
-                ))}
-              </div>
-            )}
+              ) : (
+                <div className="space-y-3 p-4">
+                  {filteredTemplates.map((template) => (
+                    <div
+                      key={template.id}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedTemplate?.id === template.id 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-slate-200 hover:border-blue-500'
+                      }`}
+                      onClick={() => handleTemplateSelect(template)}
+                    >
+                      <h4 className="font-medium text-slate-800">{template.name}</h4>
+                      <div className="text-xs text-slate-500 mt-1">To: {template.concernedTeam}</div>
+                      <Badge 
+                        variant="secondary" 
+                        className={`mt-2 bg-${getGenreColor(template.genre)}-100 text-${getGenreColor(template.genre)}-700`}
+                      >
+                        {template.genre}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Panel: Email Composition */}

@@ -21,9 +21,11 @@ import {
   type Template,
   type InsertTemplate,
 } from "@shared/schema";
-import { supabaseSync } from "./supabase";
-import { db } from "./db";
-import { eq, desc, asc, and, or, like, sql } from "drizzle-orm";
+// Database imports commented out for beta testing
+// import { supabaseSync } from "./supabase";
+// import { db } from "./db";
+// import { eq, desc, asc, and, or, like, sql } from "drizzle-orm";
+import { MemoryStorage } from "./memory-storage";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -82,6 +84,8 @@ export interface IStorage {
   upsertSiteContent(content: InsertSiteContent): Promise<SiteContent>;
 }
 
+// DatabaseStorage class commented out for beta testing
+/*
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
@@ -487,6 +491,8 @@ export class DatabaseStorage implements IStorage {
     return newContent;
   }
 }
+*/
 
-// Create storage instance
-export const storage = new DatabaseStorage();
+// Create storage instance - using memory storage for beta testing
+// export const storage = new DatabaseStorage();
+export const storage = new MemoryStorage();
