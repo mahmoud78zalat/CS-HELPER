@@ -851,7 +851,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         id="siteName"
                         placeholder="e.g., Customer Service Platform"
                         defaultValue={localStorage.getItem('site_name') || ''}
-                        onChange={(e) => localStorage.setItem('site_name', e.target.value)}
                       />
                     </div>
                     
@@ -861,7 +860,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         id="aboutTitle"
                         placeholder="e.g., Customer Service Helper"
                         defaultValue={localStorage.getItem('about_title') || ''}
-                        onChange={(e) => localStorage.setItem('about_title', e.target.value)}
                       />
                     </div>
                     
@@ -872,7 +870,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         placeholder="Brief description of your platform..."
                         rows={3}
                         defaultValue={localStorage.getItem('about_description') || ''}
-                        onChange={(e) => localStorage.setItem('about_description', e.target.value)}
                       />
                     </div>
                     
@@ -882,7 +879,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         id="versionLabel"
                         placeholder="e.g., Version 1.0.0 | Built for Company X"
                         defaultValue={localStorage.getItem('version_label') || ''}
-                        onChange={(e) => localStorage.setItem('version_label', e.target.value)}
                       />
                     </div>
                     
@@ -892,9 +888,35 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         id="footerText"
                         placeholder="e.g., © 2025 Your Company. All rights reserved."
                         defaultValue={localStorage.getItem('footer_text') || ''}
-                        onChange={(e) => localStorage.setItem('footer_text', e.target.value)}
                       />
                     </div>
+                    
+                    <Button 
+                      onClick={() => {
+                        const siteName = (document.getElementById('siteName') as HTMLInputElement)?.value;
+                        const aboutTitle = (document.getElementById('aboutTitle') as HTMLInputElement)?.value;
+                        const aboutDescription = (document.getElementById('aboutDescription') as HTMLTextAreaElement)?.value;
+                        const versionLabel = (document.getElementById('versionLabel') as HTMLInputElement)?.value;
+                        const footerText = (document.getElementById('footerText') as HTMLInputElement)?.value;
+                        
+                        localStorage.setItem('site_name', siteName || '');
+                        localStorage.setItem('about_title', aboutTitle || '');
+                        localStorage.setItem('about_description', aboutDescription || '');
+                        localStorage.setItem('version_label', versionLabel || '');
+                        localStorage.setItem('footer_text', footerText || '');
+                        
+                        toast({
+                          title: "Success",
+                          description: "Site content changes saved successfully",
+                        });
+                        
+                        // Force refresh the page to show changes
+                        window.location.reload();
+                      }}
+                      className="w-full mt-4"
+                    >
+                      Save Changes
+                    </Button>
                   </CardContent>
                 </Card>
 

@@ -186,12 +186,13 @@ export default function AboutModal({ onClose }: AboutModalProps) {
             </div>
           </div>
 
-          {(versionLabel || footerText) && (
-            <div className="text-center text-sm text-slate-500">
-              {versionLabel && <p>{versionLabel}</p>}
-              {footerText && <p className={versionLabel ? "mt-1" : ""}>{footerText}</p>}
-            </div>
-          )}
+          <div className="text-center text-sm text-slate-500">
+            {versionLabel && <p>{versionLabel}</p>}
+            {footerText && <p className={versionLabel ? "mt-1" : ""}>{footerText}</p>}
+            <p className={`text-xs text-slate-400 mt-3 ${(versionLabel || footerText) ? 'border-t pt-3' : ''}`}>
+              Made by Mahmoud Zalat
+            </p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
