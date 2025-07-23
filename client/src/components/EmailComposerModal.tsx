@@ -136,27 +136,36 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     template.concernedTeam.toLowerCase().includes(searchTerm.toLowerCase())
   ) : [];
 
-  // Replace variables in template content with case-insensitive matching
+  // Replace variables in content - supports both {variable} and [variable] patterns
   const replaceVariables = (text: string) => {
-    return text.replace(/\{(\w+)\}/g, (match, key) => {
-      // Try exact match first, then lowercase, then uppercase
+    let result = text;
+    
+    // Replace {variable} patterns
+    result = result.replace(/\{(\w+)\}/g, (match, key) => {
       return variableValues[key] || 
              variableValues[key.toLowerCase()] || 
              variableValues[key.toUpperCase()] || 
              match;
     });
+    
+    // Replace [variable] patterns  
+    result = result.replace(/\[(\w+)\]/g, (match, key) => {
+      return variableValues[key] || 
+             variableValues[key.toLowerCase()] || 
+             variableValues[key.toUpperCase()] || 
+             match;
+    });
+    
+    return result;
   };
 
-  // Handle template selection - directly replace variables in content
+  // Handle template selection - preserve original template content
   const handleTemplateSelect = (template: EmailTemplate) => {
     setSelectedTemplate(template);
     
-    // Apply variable replacement immediately to the template content
-    const replacedSubject = replaceVariables(template.subject || '');
-    const replacedBody = replaceVariables(template.content || '');
-    
-    setEmailSubject(replacedSubject);
-    setEmailBody(replacedBody);
+    // Keep original template content in editing fields - NO variable replacement here
+    setEmailSubject(template.subject || '');
+    setEmailBody(template.content || '');
     setShowVariables(true);
     
     // Update concerned team in variables
@@ -166,40 +175,40 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     }));
   };
 
-  // Handle variable value change - CRITICAL FIX: Keep variables visible and update templates
+  // Handle variable value change - NO template re-processing, just update values
   const handleVariableChange = (key: string, value: string) => {
-    console.log('Variable changed - keeping visible:', key, value);
-    setVariableValues(prev => {
-      const newValues = {
-        ...prev,
-        [key]: value
-      };
-      
-      // Force immediate template update - variables stay visible
-      if (selectedTemplate) {
-        const newSubject = replaceVariables(selectedTemplate.subject || '');
-        const newBody = replaceVariables(selectedTemplate.content || '');
-        
-        setEmailSubject(newSubject);
-        setEmailBody(newBody);
-      }
-      
-      return newValues;
-    });
+    setVariableValues(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
 
-  // Get final email content with variables replaced
+  // Get final email content with variables replaced - for preview/copy only
   const getFinalSubject = () => replaceVariables(emailSubject);
   const getFinalBody = () => replaceVariables(emailBody);
 
-  // Extract variables from template content
+  // Extract variables from ORIGINAL template content - this keeps variables always visible
   const getTemplateVariables = (content: string) => {
-    const matches = content.match(/\{(\w+)\}/g);
-    return matches ? matches.map(match => match.slice(1, -1)) : [];
+    const curlyMatches = content.match(/\{(\w+)\}/g) || [];
+    const squareMatches = content.match(/\[(\w+)\]/g) || [];
+    
+    const curlyVars = curlyMatches.map(match => match.slice(1, -1));
+    const squareVars = squareMatches.map(match => match.slice(1, -1));
+    
+    return [...curlyVars, ...squareVars];
   };
 
-  const allVariables = [...getTemplateVariables(emailSubject), ...getTemplateVariables(emailBody)];
-  const uniqueVariables = Array.from(new Set(allVariables));
+  // Extract variables from the ORIGINAL template, not the editing fields
+  const getOriginalTemplateVariables = () => {
+    if (!selectedTemplate) return [];
+    
+    const subjectVars = getTemplateVariables(selectedTemplate.subject || '');
+    const bodyVars = getTemplateVariables(selectedTemplate.content || '');
+    
+    return Array.from(new Set([...subjectVars, ...bodyVars]));
+  };
+
+  const uniqueVariables = getOriginalTemplateVariables();
 
   const handleCopyEmail = () => {
     const finalEmail = `Subject: ${getFinalSubject()}\n\n${getFinalBody()}`;
@@ -379,27 +388,50 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="subject" className="text-sm font-medium">Subject Line</Label>
+                  <Label htmlFor="subject" className="text-sm font-medium">Template Subject (Original)</Label>
                   <Input
                     id="subject"
                     value={emailSubject}
                     onChange={(e) => setEmailSubject(e.target.value)}
-                    placeholder="Enter email subject..."
-                    className="mt-1"
+                    placeholder="Select a template to see the subject..."
+                    className="mt-1 font-mono text-sm"
+                    readOnly={!!selectedTemplate}
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="body" className="text-sm font-medium">Email Content</Label>
+                  <Label htmlFor="body" className="text-sm font-medium">Template Content (Original)</Label>
                   <Textarea
                     id="body"
                     value={emailBody}
                     onChange={(e) => setEmailBody(e.target.value)}
-                    placeholder="Enter email content..."
-                    rows={16}
+                    placeholder="Select a template to see the content..."
+                    rows={14}
                     className="mt-1 font-mono text-sm resize-none"
+                    readOnly={!!selectedTemplate}
                   />
                 </div>
+                
+                {/* Live Preview Section */}
+                {selectedTemplate && (
+                  <div className="border-t pt-4">
+                    <Label className="text-sm font-medium text-green-700">Live Preview (With Variables)</Label>
+                    <div className="bg-green-50 border border-green-200 rounded p-3 mt-2">
+                      <div className="mb-3">
+                        <div className="text-xs font-medium text-green-600 mb-1">Subject:</div>
+                        <div className="text-sm bg-white p-2 rounded border font-mono">
+                          {getFinalSubject()}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-green-600 mb-1">Content:</div>
+                        <div className="text-sm bg-white p-3 rounded border font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+                          {getFinalBody()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {selectedTemplate?.warningNote && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
@@ -420,7 +452,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 Live Template Variables
               </h3>
               <p className="text-xs text-blue-600 mt-1">
-                Always visible - Updates templates instantly
+                Variables found: <span className="font-semibold">{uniqueVariables.length}</span> | Updates live preview
               </p>
             </div>
               
@@ -441,20 +473,27 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                             {category} Variables
                           </h4>
                           <div className="space-y-3">
-                            {categoryVariables.map((variable) => (
-                              <div key={variable.key}>
-                                <Label htmlFor={variable.key} className="text-xs font-medium">
-                                  {variable.label}
-                                </Label>
-                                <Input
-                                  id={variable.key}
-                                  value={variableValues[variable.key] || ''}
-                                  onChange={(e) => handleVariableChange(variable.key, e.target.value)}
-                                  placeholder={variable.placeholder}
-                                  className="text-xs mt-1"
-                                />
-                              </div>
-                            ))}
+                            {categoryVariables.map((variable) => {
+                              const hasValue = !!variableValues[variable.key];
+                              const isFromCustomerData = ['customer_name', 'customer_email', 'customer_phone', 'customer_country', 'gender', 'order_id', 'awb_number', 'order_status', 'tracking_number', 'item_name', 'delivery_date', 'waiting_time'].includes(variable.key);
+                              
+                              return (
+                                <div key={variable.key} className={`${hasValue ? 'bg-green-50 border border-green-200 rounded p-2' : ''}`}>
+                                  <Label htmlFor={variable.key} className={`text-xs font-medium flex items-center gap-2 ${hasValue ? 'text-green-700' : ''}`}>
+                                    {variable.label}
+                                    {hasValue && <span className="text-xs bg-green-100 px-1 rounded">✓ Active</span>}
+                                    {isFromCustomerData && <span className="text-xs bg-blue-100 px-1 rounded">Auto</span>}
+                                  </Label>
+                                  <Input
+                                    id={variable.key}
+                                    value={variableValues[variable.key] || ''}
+                                    onChange={(e) => handleVariableChange(variable.key, e.target.value)}
+                                    placeholder={variable.placeholder}
+                                    className={`text-xs mt-1 ${hasValue ? 'border-green-300 bg-white' : ''}`}
+                                  />
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );
@@ -473,20 +512,26 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                             Custom Variables
                           </h4>
                           <div className="space-y-3">
-                            {unrecognizedVariables.map((variable) => (
-                              <div key={variable}>
-                                <Label htmlFor={variable} className="text-xs font-medium">
-                                  {variable.toUpperCase()}
-                                </Label>
-                                <Input
-                                  id={variable}
-                                  value={variableValues[variable] || ''}
-                                  onChange={(e) => handleVariableChange(variable, e.target.value)}
-                                  placeholder={`Enter ${variable.toLowerCase()} here...`}
-                                  className="text-xs mt-1"
-                                />
-                              </div>
-                            ))}
+                            {unrecognizedVariables.map((variable) => {
+                              const hasValue = !!variableValues[variable];
+                              
+                              return (
+                                <div key={variable} className={`${hasValue ? 'bg-orange-50 border border-orange-200 rounded p-2' : ''}`}>
+                                  <Label htmlFor={variable} className={`text-xs font-medium flex items-center gap-2 ${hasValue ? 'text-orange-700' : ''}`}>
+                                    {variable.toUpperCase()}
+                                    {hasValue && <span className="text-xs bg-orange-100 px-1 rounded">✓ Active</span>}
+                                    <span className="text-xs bg-orange-100 px-1 rounded">Custom</span>
+                                  </Label>
+                                  <Input
+                                    id={variable}
+                                    value={variableValues[variable] || ''}
+                                    onChange={(e) => handleVariableChange(variable, e.target.value)}
+                                    placeholder={`Enter ${variable.toLowerCase()} here...`}
+                                    className={`text-xs mt-1 ${hasValue ? 'border-orange-300 bg-white' : ''}`}
+                                  />
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );
