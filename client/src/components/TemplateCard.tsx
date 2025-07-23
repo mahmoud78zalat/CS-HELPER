@@ -68,7 +68,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
     const currentLanguage = customerData.language || 'en';
     const rawContent = currentLanguage === 'ar' && template.contentAr 
       ? template.contentAr 
-      : template.contentEn || template.content;
+      : template.contentEn;
 
     // Replace variables with error handling
     return replaceVariables(rawContent || '', variables);
@@ -142,7 +142,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
       <CardContent className="p-0">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-3">
           <div className="flex-1">
-            <h4 className="font-semibold text-slate-800 text-sm lg:text-base leading-tight">{template.name}</h4>
+            <h4 className="font-semibold text-slate-800 text-sm lg:text-base leading-tight">{replaceVariablesInTemplateName(template.name)}</h4>
             <div className="flex items-center flex-wrap gap-1 lg:gap-2 mt-2">
               <Badge variant="secondary" className={`bg-${getGenreColor(template.genre)}-100 text-${getGenreColor(template.genre)}-700 text-xs px-2 py-1`}>
                 {template.genre}
