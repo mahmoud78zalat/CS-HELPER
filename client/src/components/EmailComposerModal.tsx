@@ -5,29 +5,34 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useTemplates } from "@/hooks/useTemplates";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useCustomerData } from "@/hooks/useCustomerData";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { replaceVariables } from "@/lib/templateUtils";
 import { Copy, X } from "lucide-react";
-import { Template } from "@shared/schema";
+import { EmailTemplate } from "@shared/schema";
 
 interface EmailComposerModalProps {
   onClose: () => void;
 }
 
 export default function EmailComposerModal({ onClose }: EmailComposerModalProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
   
-  const { data: templates } = useTemplates({ isActive: true });
+  // Fetch email templates (not live reply templates)
+  const { data: templates } = useQuery({
+    queryKey: ['/api/email-templates'],
+    queryFn: () => apiRequest('GET', '/api/email-templates?isActive=true'),
+  });
   const { customerData } = useCustomerData();
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleTemplateSelect = (template: Template) => {
+  const handleTemplateSelect = (template: EmailTemplate) => {
     setSelectedTemplate(template);
     
     const agentName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
@@ -37,8 +42,8 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       concerned_team: template.concernedTeam,
     };
 
-    setEmailSubject(replaceVariables(template.subject, variables));
-    setEmailBody(replaceVariables(template.content, variables));
+    setEmailSubject(replaceVariables(template.subject || '', variables));
+    setEmailBody(replaceVariables(template.content || '', variables));
   };
 
   const handleCopySubject = () => {

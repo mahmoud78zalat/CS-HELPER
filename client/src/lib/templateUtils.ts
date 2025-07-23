@@ -60,18 +60,24 @@ export function replaceVariablesInTemplate(
   customerData: Record<string, string> = {},
   additionalData: Record<string, string> = {}
 ): string {
+  if (!template) return '';
+  
   let result = template;
   const allData = { ...customerData, ...additionalData };
   
   // Replace variables in both [VARIABLE] and {VARIABLE} formats
   Object.entries(allData).forEach(([key, value]) => {
-    const patterns = [
-      new RegExp(`\\[${key.toUpperCase()}\\]`, 'g'),
-      new RegExp(`\\{${key.toUpperCase()}\\}`, 'g')
-    ];
-    patterns.forEach(pattern => {
-      result = result.replace(pattern, value || `[${key.toUpperCase()}]`);
-    });
+    if (key && value) {
+      const patterns = [
+        new RegExp(`\\[${key.toUpperCase()}\\]`, 'g'),
+        new RegExp(`\\{${key.toUpperCase()}\\}`, 'g'),
+        new RegExp(`\\{${key.toLowerCase()}\\}`, 'gi'),
+        new RegExp(`\\{${key}\\}`, 'g')
+      ];
+      patterns.forEach(pattern => {
+        result = result.replace(pattern, value);
+      });
+    }
   });
   
   return result;

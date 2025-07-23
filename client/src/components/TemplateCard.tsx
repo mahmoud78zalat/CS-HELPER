@@ -30,32 +30,21 @@ export default function TemplateCard({ template }: TemplateCardProps) {
   });
 
   const handleCopyTemplate = () => {
-    // Show warning if exists
-    const warningNote = template.warningNote || 
-      TEMPLATE_WARNING_PRESETS[template.category] || 
-      TEMPLATE_WARNING_PRESETS[template.genre];
-      
-    if (warningNote && !confirm(`⚠️ TEMPLATE WARNING:\n\n${warningNote}\n\nDo you want to proceed with copying this template?`)) {
-      return;
-    }
-
     const agentName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
     const variables = {
       ...customerData,
       agent_name: agentName,
-      concerned_team: template.concernedTeam,
+      concerned_team: template.concernedTeam || '',
     };
 
-    const processedSubject = replaceVariables(template.subject, variables);
-    const processedContent = replaceVariables(template.content, variables);
+    // For live reply templates (chat), only copy content without subject
+    const processedContent = replaceVariables(template.content || '', variables);
     
-    const fullTemplate = `Subject: ${processedSubject}\n\n${processedContent}`;
-
-    navigator.clipboard.writeText(fullTemplate);
+    navigator.clipboard.writeText(processedContent);
     
     toast({
       title: "Success",
-      description: "Template copied to clipboard!",
+      description: "Live chat reply copied to clipboard!",
     });
 
     // Record usage
@@ -105,9 +94,6 @@ export default function TemplateCard({ template }: TemplateCardProps) {
               <Badge variant="secondary" className={`bg-${getCategoryColor(template.category)}-100 text-${getCategoryColor(template.category)}-700 text-xs px-2 py-1`}>
                 {template.category}
               </Badge>
-              <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs px-2 py-1">
-                {template.concernedTeam}
-              </Badge>
             </div>
           </div>
           <div className="text-xs text-slate-500 mt-2 lg:mt-0 lg:ml-2 flex-shrink-0">
@@ -115,15 +101,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
           </div>
         </div>
 
-        {/* Warning Note */}
-        {(template.warningNote || TEMPLATE_WARNING_PRESETS[template.category] || TEMPLATE_WARNING_PRESETS[template.genre]) && (
-          <Alert variant="destructive" className="mb-3">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-xs">
-              {template.warningNote || TEMPLATE_WARNING_PRESETS[template.category] || TEMPLATE_WARNING_PRESETS[template.genre]}
-            </AlertDescription>
-          </Alert>
-        )}
+
 
         {/* Dynamic Variables */}
         {template.variables && template.variables.length > 0 && (
@@ -132,7 +110,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
             <div className="flex flex-wrap gap-1">
               {template.variables.slice(0, 3).map((variable) => (
                 <Badge key={variable} variant="outline" className="text-xs px-2 py-0">
-                  [{variable}]
+                  {`{${variable}}`}
                 </Badge>
               ))}
               {template.variables.length > 3 && (
@@ -145,12 +123,9 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         )}
         
         <div className="text-sm text-slate-600">
-          <div className="font-medium mb-2">
-            Subject: {template.subject}
-          </div>
           <div className="text-xs bg-slate-50 p-3 rounded border-l-2 border-blue-500">
-            {template.content.slice(0, 200)}
-            {template.content.length > 200 && '...'}
+            {template.content && template.content.slice(0, 200)}
+            {template.content && template.content.length > 200 && '...'}
           </div>
         </div>
       </CardContent>
