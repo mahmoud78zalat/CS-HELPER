@@ -74,10 +74,15 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const [showVariables, setShowVariables] = useState(false);
   
   // Fetch email templates
-  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+  const { data: templates = [], isLoading: templatesLoading } = useQuery<EmailTemplate[]>({
     queryKey: ['/api/email-templates'],
     retry: false,
   });
+
+  // Debug email templates
+  console.log('EmailComposer - Templates loaded:', templates);
+  console.log('EmailComposer - Templates count:', Array.isArray(templates) ? templates.length : 0);
+  console.log('EmailComposer - Templates loading:', templatesLoading);
 
   const { customerData } = useCustomerData();
   const { user } = useAuth();
@@ -346,42 +351,53 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             </div>
             
             <div className="flex-1 overflow-y-auto p-4">
-              <div className="space-y-3">
-                {filteredTemplates.map((template: EmailTemplate) => (
-                  <Card
-                    key={template.id}
-                    className={`cursor-pointer transition-all hover:border-blue-500 hover:shadow-md ${
-                      selectedTemplate?.id === template.id 
-                        ? 'border-blue-500 bg-blue-50 shadow-md' 
-                        : 'border-slate-200'
-                    }`}
-                    onClick={() => handleTemplateSelect(template)}
-                  >
-                    <CardContent className="p-3">
-                      <h4 className="font-medium text-slate-800 mb-1">{template.name}</h4>
-                      <div className="text-xs text-slate-500 mb-2">
-                        To: {template.concernedTeam}
-                      </div>
-                      <div className="flex gap-1 mb-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {template.genre}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {template.category}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-slate-600 line-clamp-2">
-                        {template.content.substring(0, 80)}...
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              
-              {filteredTemplates.length === 0 && (
+              {templatesLoading ? (
                 <div className="text-center py-8 text-slate-500">
-                  <p className="text-sm">No templates found</p>
-                  <p className="text-xs mt-1">Try adjusting your search terms</p>
+                  <p className="text-sm">Loading templates...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredTemplates.map((template: EmailTemplate) => (
+                    <Card
+                      key={template.id}
+                      className={`cursor-pointer transition-all hover:border-blue-500 hover:shadow-md ${
+                        selectedTemplate?.id === template.id 
+                          ? 'border-blue-500 bg-blue-50 shadow-md' 
+                          : 'border-slate-200'
+                      }`}
+                      onClick={() => handleTemplateSelect(template)}
+                    >
+                      <CardContent className="p-3">
+                        <h4 className="font-medium text-slate-800 mb-1">{template.name}</h4>
+                        <div className="text-xs text-slate-500 mb-2">
+                          To: {template.concernedTeam}
+                        </div>
+                        <div className="flex gap-1 mb-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {template.genre}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {template.category}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-slate-600 line-clamp-2">
+                          {template.content.substring(0, 80)}...
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  {filteredTemplates.length === 0 && !templatesLoading && (
+                    <div className="text-center py-8 text-slate-500">
+                      <p className="text-sm">No email templates found</p>
+                      <p className="text-xs mt-1">
+                        {searchTerm ? 'Try adjusting your search terms' : 'Create templates from Admin Panel'}
+                      </p>
+                      <p className="text-xs mt-2 text-blue-600">
+                        Debug: {Array.isArray(templates) ? templates.length : 0} templates loaded
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

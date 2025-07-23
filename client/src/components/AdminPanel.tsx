@@ -18,7 +18,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { realTimeService } from "@/lib/realTimeService";
 import { 
   X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
-  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2
+  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search
 } from "lucide-react";
 import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
@@ -32,6 +32,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState('templates');
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [showTemplateForm, setShowTemplateForm] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [templateSearchTerm, setTemplateSearchTerm] = useState('');
+  const [emailTemplateSearchTerm, setEmailTemplateSearchTerm] = useState('');
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
@@ -239,6 +242,29 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     }
   };
 
+  // Filter functions for search
+  const filteredUsers = users.filter((user: User) =>
+    user.firstName?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+    user.lastName?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+    user.role?.toLowerCase().includes(userSearchTerm.toLowerCase())
+  );
+
+  const filteredTemplates = templates.filter((template: any) =>
+    template.name?.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
+    template.category?.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
+    template.genre?.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
+    template.content?.toLowerCase().includes(templateSearchTerm.toLowerCase())
+  );
+
+  const filteredEmailTemplates = emailTemplates.filter((template: any) =>
+    template.name?.toLowerCase().includes(emailTemplateSearchTerm.toLowerCase()) ||
+    template.subject?.toLowerCase().includes(emailTemplateSearchTerm.toLowerCase()) ||
+    template.content?.toLowerCase().includes(emailTemplateSearchTerm.toLowerCase()) ||
+    template.concernedTeam?.toLowerCase().includes(emailTemplateSearchTerm.toLowerCase()) ||
+    template.genre?.toLowerCase().includes(emailTemplateSearchTerm.toLowerCase())
+  );
+
   // Check admin access AFTER all hooks are called
   console.log('AdminPanel - Current user:', currentUser);
   console.log('AdminPanel - User email:', currentUser?.email);
@@ -332,7 +358,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
           <TabsContent value="users" className="flex-1 overflow-y-auto">
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">User Management</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">User Management</h3>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                  <Input
+                    type="text"
+                    className="pl-10"
+                    placeholder="Search users by name, email, or role..."
+                    value={userSearchTerm}
+                    onChange={(e) => setUserSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
               
               {usersLoading ? (
                 <div>Loading users...</div>
@@ -349,7 +387,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user: User) => (
+                    {filteredUsers.map((user: User) => (
                       <TableRow key={user.id}>
                         <TableCell>{user.firstName} {user.lastName}</TableCell>
                         <TableCell>{user.email}</TableCell>
@@ -404,16 +442,28 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Template Management</h3>
-                <Button 
-                  onClick={() => {
-                    setEditingTemplate(null);
-                    setShowTemplateForm(true);
-                  }}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Template
-                </Button>
+                <div className="flex items-center gap-3">
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                    <Input
+                      type="text"
+                      className="pl-10"
+                      placeholder="Search templates by name, category..."
+                      value={templateSearchTerm}
+                      onChange={(e) => setTemplateSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      setEditingTemplate(null);
+                      setShowTemplateForm(true);
+                    }}
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Template
+                  </Button>
+                </div>
               </div>
               
               {templatesLoading ? (
@@ -453,7 +503,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {templates.map((template: any) => (
+                      {filteredTemplates.map((template: any) => (
                         <TableRow key={template.id}>
                           <TableCell className="font-medium">{template.name}</TableCell>
                           <TableCell>
@@ -683,16 +733,28 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Email Template Management</h3>
-                <Button 
-                  onClick={() => {
-                    setEditingTemplate(null);
-                    setShowTemplateForm(true);
-                  }}
-                  className="bg-gradient-to-r from-purple-500 to-pink-600 text-white"
-                >
-                  <Wand2 className="h-4 w-4 mr-2" />
-                  Create Magic Template
-                </Button>
+                <div className="flex items-center gap-3">
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                    <Input
+                      type="text"
+                      className="pl-10"
+                      placeholder="Search email templates..."
+                      value={emailTemplateSearchTerm}
+                      onChange={(e) => setEmailTemplateSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      setEditingTemplate(null);
+                      setShowTemplateForm(true);
+                    }}
+                    className="bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+                  >
+                    <Wand2 className="h-4 w-4 mr-2" />
+                    Create Magic Template
+                  </Button>
+                </div>
               </div>
 
               {/* Current Email Templates */}
@@ -711,7 +773,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {emailTemplates.map((template: any) => (
+                      {filteredEmailTemplates.map((template: any) => (
                         <div key={template.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">

@@ -31,9 +31,16 @@ export interface EmailTemplate {
   category: string;
   genre: string;
   concernedTeam: string;
+  warningNote?: string;
   variables: string[];
+  stageOrder: number;
   isActive: boolean;
   usageCount: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  supabaseId?: string;
+  lastSyncedAt?: string;
 }
 
 export interface WebSocketMessage {
