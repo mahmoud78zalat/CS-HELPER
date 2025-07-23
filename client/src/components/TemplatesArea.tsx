@@ -36,7 +36,16 @@ export default function TemplatesArea() {
     'Escalation',
     'Resolution',
     'Information Request',
-    'Complaint Handling'
+    'Complaint Handling',
+    'Greeting',
+    'CSAT',
+    'Warning Abusive Language',
+    'Apology',
+    'Thank You',
+    'Farewell',
+    'Confirmation',
+    'Technical Support',
+    'Holiday/Special Occasion'
   ];
 
   const groupedTemplates = templates?.reduce((acc, template) => {
@@ -55,7 +64,16 @@ export default function TemplatesArea() {
       'Escalation': 'orange',
       'Resolution': 'emerald',
       'Information Request': 'purple',
-      'Complaint Handling': 'yellow'
+      'Complaint Handling': 'yellow',
+      'Greeting': 'cyan',
+      'CSAT': 'indigo',
+      'Warning Abusive Language': 'red',
+      'Apology': 'amber',
+      'Thank You': 'pink',
+      'Farewell': 'teal',
+      'Confirmation': 'lime',
+      'Technical Support': 'violet',
+      'Holiday/Special Occasion': 'rose'
     };
     return colors[genre as keyof typeof colors] || 'gray';
   };

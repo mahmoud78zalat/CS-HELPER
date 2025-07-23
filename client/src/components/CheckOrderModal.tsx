@@ -182,60 +182,65 @@ ${searchResult.trackingHistory.map((item: any) => `- ${item.status} - ${item.dat
 
           {/* Order Converter Section */}
           <div className="mt-6 border-t border-slate-200 pt-6">
-            <Collapsible open={isConverterOpen} onOpenChange={setIsConverterOpen}>
-              <CollapsibleTrigger className="w-full flex items-center justify-between text-left p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+            <div>
+              <button
+                onClick={() => setIsConverterOpen(!isConverterOpen)}
+                className="w-full flex items-center justify-between text-left p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
                 <span className="font-medium text-slate-800">Order ID to AWB Converter</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${isConverterOpen ? 'rotate-180' : ''}`} />
-              </CollapsibleTrigger>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isConverterOpen ? 'rotate-180' : ''}`} />
+              </button>
               
-              <CollapsibleContent className="mt-3 space-y-4">
-                <div>
-                  <Label htmlFor="converter-input" className="text-sm font-medium text-slate-700 mb-2">
-                    Order ID
-                  </Label>
-                  <Input
-                    id="converter-input"
-                    type="text"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter Order ID (e.g., 1234567)"
-                    value={converterId}
-                    onChange={(e) => setConverterId(e.target.value)}
-                  />
-                </div>
-
-                <Button 
-                  onClick={handleOrderConverter}
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Convert to AWB
-                </Button>
-
-                {converterResult && (
-                  <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <span className="text-sm text-green-600 font-medium">AWB Number:</span>
-                        <div className="text-lg font-bold text-green-800 mt-1">{converterResult}</div>
-                      </div>
-                      <Button 
-                        onClick={() => {
-                          navigator.clipboard.writeText(converterResult);
-                          toast({
-                            title: "Copied!",
-                            description: "AWB number copied to clipboard",
-                          });
-                        }}
-                        size="sm"
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                    </div>
+              {isConverterOpen && (
+                <div className="mt-3 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  <div>
+                    <Label htmlFor="converter-input" className="text-sm font-medium text-slate-700 mb-2">
+                      Order ID
+                    </Label>
+                    <Input
+                      id="converter-input"
+                      type="text"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter Order ID (e.g., 1234567)"
+                      value={converterId}
+                      onChange={(e) => setConverterId(e.target.value)}
+                    />
                   </div>
-                )}
-              </CollapsibleContent>
-            </Collapsible>
+
+                  <Button 
+                    onClick={handleOrderConverter}
+                    className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Convert to AWB
+                  </Button>
+
+                  {converterResult && (
+                    <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-sm text-green-600 font-medium">AWB Number:</span>
+                          <div className="text-lg font-bold text-green-800 mt-1">{converterResult}</div>
+                        </div>
+                        <Button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(converterResult);
+                            toast({
+                              title: "Copied!",
+                              description: "AWB number copied to clipboard",
+                            });
+                          }}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>

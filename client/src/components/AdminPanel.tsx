@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
+import { QUICK_TEMPLATE_STARTERS } from "@/lib/templateUtils";
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -266,7 +267,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="users">
               <Users className="h-4 w-4 mr-2" />
               User Management
@@ -274,6 +275,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             <TabsTrigger value="templates">
               <FileText className="h-4 w-4 mr-2" />
               Template Management
+            </TabsTrigger>
+            <TabsTrigger value="analytics">
+              <Crown className="h-4 w-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="emailtemplates">
+              <Wand2 className="h-4 w-4 mr-2" />
+              Email Templates
             </TabsTrigger>
             <TabsTrigger value="content">
               <Settings className="h-4 w-4 mr-2" />
@@ -514,6 +523,204 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   <div className="flex items-center space-x-2 text-sm mt-2">
                     <Shield className="h-4 w-4 text-green-600" />
                     <span>Admin Role: <strong>Active</strong></span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="flex-1 overflow-y-auto">
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold">Analytics & Insights</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-600">Total Templates</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-blue-600">{templates.length}</div>
+                    <div className="text-xs text-slate-500 mt-1">Active templates in system</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-600">Total Users</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">{users.length}</div>
+                    <div className="text-xs text-slate-500 mt-1">Registered users</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-600">Online Users</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-orange-600">
+                      {users.filter((user: User) => user.isOnline).length}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Currently active</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Template Usage by Category</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {templates.reduce((acc: any, template: any) => {
+                        const category = template.category || 'Uncategorized';
+                        acc[category] = (acc[category] || 0) + (template.usageCount || 0);
+                        return acc;
+                      }, {}) && Object.entries(templates.reduce((acc: any, template: any) => {
+                        const category = template.category || 'Uncategorized';
+                        acc[category] = (acc[category] || 0) + (template.usageCount || 0);
+                        return acc;
+                      }, {})).map(([category, count]) => (
+                        <div key={category} className="flex justify-between items-center">
+                          <span className="text-sm text-slate-700">{category}</span>
+                          <Badge variant="secondary">{count as number}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">User Roles Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-slate-700">Admins</span>
+                        <Badge variant="default">
+                          {users.filter((user: User) => user.role === 'admin').length}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-slate-700">Agents</span>
+                        <Badge variant="secondary">
+                          {users.filter((user: User) => user.role === 'agent').length}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Most Used Templates</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {templates
+                      .sort((a: any, b: any) => (b.usageCount || 0) - (a.usageCount || 0))
+                      .slice(0, 5)
+                      .map((template: any) => (
+                        <div key={template.id} className="flex justify-between items-center p-2 bg-slate-50 rounded">
+                          <div>
+                            <span className="font-medium text-sm">{template.name}</span>
+                            <div className="text-xs text-slate-500">{template.category} • {template.genre}</div>
+                          </div>
+                          <Badge variant="outline">{template.usageCount || 0} uses</Badge>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="emailtemplates" className="flex-1 overflow-y-auto">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Email Template Wizard</h3>
+                <Button 
+                  onClick={() => {
+                    setEditingTemplate(null);
+                    setShowTemplateForm(true);
+                  }}
+                  className="bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  Create Magic Template
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(QUICK_TEMPLATE_STARTERS).map(([name, template]) => (
+                  <Card key={name} className="hover:shadow-lg transition-shadow cursor-pointer">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Wand2 size={16} className="text-purple-600" />
+                        {name}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-xs text-slate-600 mb-3 line-clamp-3">
+                        {template.substring(0, 100)}...
+                      </p>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setEditingTemplate(null);
+                          setShowTemplateForm(true);
+                          // Pre-fill with starter template
+                          setTimeout(() => {
+                            const event = new CustomEvent('useTemplateStarter', { detail: name });
+                            window.dispatchEvent(event);
+                          }, 100);
+                        }}
+                        className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+                      >
+                        Use This Template
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <Alert>
+                <Wand2 className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Pro Tip:</strong> These template starters include smart variables that automatically populate with customer data. You can customize them further after selection.
+                </AlertDescription>
+              </Alert>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Template Categories & Genres</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-medium mb-3">Available Categories</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {['Order Issues', 'Delivery Problems', 'Payment Issues', 'Returns & Refunds', 'Product Inquiry', 'General Support', 'Technical Support', 'Escalation'].map((category) => (
+                          <Badge key={category} variant="secondary" className="text-xs">
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-medium mb-3">Available Genres</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {['Urgent', 'Standard', 'Follow-up', 'Escalation', 'Resolution', 'Greeting', 'CSAT', 'Warning Abusive Language', 'Apology', 'Thank You', 'Farewell', 'Confirmation', 'Technical Support', 'Holiday/Special Occasion'].map((genre) => (
+                          <Badge key={genre} variant="outline" className="text-xs">
+                            {genre}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -121,7 +121,17 @@ export const TEMPLATE_WARNING_PRESETS: Record<string, string> = {
   'General Support': 'ℹ️ INFO: General purpose template. Customize based on specific customer needs.',
   'Escalation': '🚨 URGENT: Use only when escalating to management. Include all relevant details and context.',
   'Follow-up': '📋 FOLLOW-UP: Use for checking on previous issues. Reference original ticket number.',
-  'Courtesy': '😊 COURTESY: Use for positive customer interactions and appreciation messages.'
+  'Courtesy': '😊 COURTESY: Use for positive customer interactions and appreciation messages.',
+  'Greeting': '👋 GREETING: Use for initial customer contact and welcome messages.',
+  'CSAT': '📊 CSAT: Use for customer satisfaction surveys and feedback collection.',
+  'Warning Abusive Language': '🛑 WARNING: Use when addressing inappropriate customer behavior. Handle with extreme care and escalate if necessary.',
+  'Apology': '🙏 APOLOGY: Use for sincere apologies. Ensure genuine empathy and resolution commitment.',
+  'Thank You': '💝 THANK YOU: Use to express gratitude for customer loyalty and patience.',
+  'Farewell': '👋 FAREWELL: Use for closing conversations and ensuring customer satisfaction.',
+  'Confirmation': '✅ CONFIRMATION: Use to confirm actions, changes, or resolutions.',
+  'Information Request': '📋 INFO REQUEST: Use when requesting additional information from customers.',
+  'Technical Support': '🔧 TECHNICAL: Use for technical issues and troubleshooting guidance.',
+  'Holiday/Special Occasion': '🎉 SPECIAL: Use for holiday greetings and special occasion messages.'
 };
 
 export function getTemplateWarning(category: string, genre: string): string {
@@ -135,5 +145,15 @@ export const QUICK_TEMPLATE_STARTERS = {
   
   'Delivery Update': 'Hello [CUSTOMERNAME],\n\nYour order [ORDERNUMBER] has been shipped! You can track your package using tracking number [TRACKINGNUMBER].\n\nExpected delivery: [DELIVERYDATE]\n\nIf you have any questions, please contact us at [SUPPORTEMAIL].\n\nThank you for shopping with [COMPANYNAME]!',
   
-  'Refund Confirmation': 'Dear [CUSTOMERNAME],\n\nYour refund request for order [ORDERNUMBER] has been processed.\n\nRefund amount: [ORDERVALUE]\nProcessing time: [PROCESSINGTIME]\nPayment method: [PAYMENTMETHOD]\n\nYou should see the refund in your account within [WAITINGTIME].\n\nBest regards,\n[AGENTNAME]'
+  'Refund Confirmation': 'Dear [CUSTOMERNAME],\n\nYour refund request for order [ORDERNUMBER] has been processed.\n\nRefund amount: [ORDERVALUE]\nProcessing time: [PROCESSINGTIME]\nPayment method: [PAYMENTMETHOD]\n\nYou should see the refund in your account within [WAITINGTIME].\n\nBest regards,\n[AGENTNAME]',
+
+  'Greeting Welcome': 'Hello [CUSTOMERNAME],\n\nWelcome to [COMPANYNAME]! We\'re delighted to have you as our valued customer.\n\nOur customer service team is here to assist you during [BUSINESSHOURS]. For immediate assistance, please contact us at [SUPPORTEMAIL] or [SUPPORTPHONE].\n\nThank you for choosing [COMPANYNAME]!\n\nBest regards,\n[AGENTNAME]',
+
+  'CSAT Survey': 'Dear [CUSTOMERNAME],\n\nThank you for contacting [COMPANYNAME] customer service. We hope we were able to resolve your inquiry regarding [ORDERNUMBER].\n\nWe would appreciate your feedback on our service today. Please take a moment to rate your experience:\n\nYour feedback helps us improve our service quality.\n\nThank you for your time and for choosing [COMPANYNAME]!\n\nBest regards,\n[AGENTNAME]',
+
+  'Warning Inappropriate Behavior': 'Dear [CUSTOMERNAME],\n\nWe understand your frustration regarding [ORDERNUMBER], and we are committed to resolving your concern.\n\nHowever, we must maintain a respectful communication environment. We kindly ask that all interactions remain professional and courteous.\n\nOur team is here to help you, and we believe we can resolve this matter together.\n\nFor immediate assistance, please contact us at [SUPPORTEMAIL].\n\nThank you for your understanding.\n\n[AGENTNAME]\n[COMPANYNAME] Customer Service',
+
+  'Thank You Loyalty': 'Dear [CUSTOMERNAME],\n\nThank you for being a loyal [COMPANYNAME] customer! Your continued trust and support mean the world to us.\n\nWe appreciate your patience with [ORDERNUMBER] and are committed to providing you with the best possible service.\n\nIf you need any assistance, we\'re always here to help at [SUPPORTEMAIL] or [SUPPORTPHONE].\n\nThank you for choosing [COMPANYNAME]!\n\nWarm regards,\n[AGENTNAME]',
+
+  'Final Resolution': 'Dear [CUSTOMERNAME],\n\nI\'m pleased to inform you that your concern regarding [ORDERNUMBER] has been fully resolved.\n\nSummary of resolution:\n- [RESOLUTION_DETAILS]\n\nIf you have any further questions or concerns, please don\'t hesitate to contact us at [SUPPORTEMAIL].\n\nThank you for your patience and for giving us the opportunity to serve you.\n\nBest regards,\n[AGENTNAME]\n[COMPANYNAME] Customer Service'
 };

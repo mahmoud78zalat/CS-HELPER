@@ -233,8 +233,20 @@ export default function TemplateFormModal({
                     <SelectContent>
                       <SelectItem value="Urgent">Urgent</SelectItem>
                       <SelectItem value="Standard">Standard</SelectItem>
-                      <SelectItem value="Escalation">Escalation</SelectItem>
                       <SelectItem value="Follow-up">Follow-up</SelectItem>
+                      <SelectItem value="Escalation">Escalation</SelectItem>
+                      <SelectItem value="Resolution">Resolution</SelectItem>
+                      <SelectItem value="Information Request">Information Request</SelectItem>
+                      <SelectItem value="Complaint Handling">Complaint Handling</SelectItem>
+                      <SelectItem value="Greeting">Greeting</SelectItem>
+                      <SelectItem value="CSAT">CSAT</SelectItem>
+                      <SelectItem value="Warning Abusive Language">Warning Abusive Language</SelectItem>
+                      <SelectItem value="Apology">Apology</SelectItem>
+                      <SelectItem value="Thank You">Thank You</SelectItem>
+                      <SelectItem value="Farewell">Farewell</SelectItem>
+                      <SelectItem value="Confirmation">Confirmation</SelectItem>
+                      <SelectItem value="Technical Support">Technical Support</SelectItem>
+                      <SelectItem value="Holiday/Special Occasion">Holiday/Special Occasion</SelectItem>
                       <SelectItem value="Courtesy">Courtesy</SelectItem>
                     </SelectContent>
                   </Select>

@@ -74,7 +74,16 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       'Escalation': 'orange',
       'Resolution': 'emerald',
       'Information Request': 'purple',
-      'Complaint Handling': 'yellow'
+      'Complaint Handling': 'yellow',
+      'Greeting': 'cyan',
+      'CSAT': 'indigo',
+      'Warning Abusive Language': 'red',
+      'Apology': 'amber',
+      'Thank You': 'pink',
+      'Farewell': 'teal',
+      'Confirmation': 'lime',
+      'Technical Support': 'violet',
+      'Holiday/Special Occasion': 'rose'
     };
     return colors[genre as keyof typeof colors] || 'gray';
   };
