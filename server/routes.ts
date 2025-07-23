@@ -26,6 +26,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get single user by ID (for authentication)
+  app.get('/api/users/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Create new user (for auto-registration)
+  app.post('/api/users', async (req, res) => {
+    try {
+      const userData = req.body;
+      const user = await storage.upsertUser(userData);
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
   // User management routes (admin only)
   app.get('/api/users', isAuthenticated, async (req: any, res) => {
     try {

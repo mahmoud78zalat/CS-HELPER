@@ -45,16 +45,52 @@ export default function LoginPage() {
           if (userData.role === 'admin' || userData.role === 'agent') {
             toast({
               title: "Login Successful",
-              description: `Welcome back, ${userData.firstName}!`,
+              description: `Welcome back, ${userData.firstName || userData.email}!`,
             });
             setLocation('/');
           } else {
             setError('Access denied. Please contact your administrator.');
             await signOut();
           }
+        } else if (response.status === 404) {
+          // User exists in Supabase Auth but not in our users table
+          console.log('[Login] User not in database, creating user record...');
+          
+          // Try to create the user in our database
+          try {
+            const createResponse = await fetch('/api/users', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: data.user.id,
+                email: data.user.email,
+                firstName: data.user.user_metadata?.first_name || data.user.email?.split('@')[0],
+                lastName: data.user.user_metadata?.last_name || '',
+                profileImageUrl: data.user.user_metadata?.avatar_url || '',
+                role: 'agent', // Default role
+                status: 'active'
+              })
+            });
+
+            if (createResponse.ok) {
+              const newUser = await createResponse.json();
+              toast({
+                title: "Account Created",
+                description: `Welcome ${newUser.firstName || newUser.email}!`,
+              });
+              setLocation('/');
+            } else {
+              setError('Unable to create user account. Please contact administrator.');
+              await signOut();
+            }
+          } catch (createError) {
+            console.error('[Login] Error creating user:', createError);
+            setError('Unable to create user account. Please contact administrator.');
+            await signOut();
+          }
         } else {
-          console.error('[Login] User not found in database');
-          setError('User not found in system. Please contact your administrator.');
+          console.error('[Login] Error fetching user data');
+          setError('Unable to verify user account. Please try again.');
           await signOut();
         }
       }
@@ -125,13 +161,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-semibold text-blue-900 mb-2">Admin Access Only</h4>
-            <p className="text-sm text-blue-700">
-              This platform is restricted to administrators only. Users must be manually created 
-              in the Supabase dashboard with admin role permissions.
-            </p>
-          </div>
+
         </CardContent>
       </Card>
     </div>
