@@ -41,6 +41,7 @@ export default function LoginPage() {
           const userData = await response.json();
           console.log('[Login] User data found:', userData.email, userData.role);
           
+          // Allow all authenticated users with valid roles
           if (userData.role === 'admin' || userData.role === 'agent') {
             toast({
               title: "Login Successful",
@@ -48,7 +49,7 @@ export default function LoginPage() {
             });
             setLocation('/');
           } else {
-            setError('Access denied. Insufficient permissions.');
+            setError('Access denied. Please contact your administrator.');
             await signOut();
           }
         } else {
@@ -69,9 +70,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Admin Login</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
           <CardDescription className="text-center">
-            Sign in to access the customer service platform
+            Access your customer service workspace
           </CardDescription>
         </CardHeader>
         <CardContent>

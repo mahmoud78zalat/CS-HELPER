@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import CustomerInfoPanel from "./CustomerInfoPanel";
 import OrderConverterPanel from "./OrderConverterPanel";
 import AdditionalInfoPanel from "./AdditionalInfoPanel";
+import PersonalNotes from "./PersonalNotes";
 import { 
   User, 
   ArrowLeftRight, 
@@ -11,7 +12,8 @@ import {
   Search, 
   HelpCircle,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  StickyNote
 } from "lucide-react";
 
 interface SidebarProps {
@@ -109,6 +111,33 @@ export default function Sidebar({
             {expandedPanel === 'additional-info' && (
               <div className="mt-2">
                 <AdditionalInfoPanel />
+              </div>
+            )}
+          </div>
+
+          {/* Personal Notes Panel */}
+          <div className="notes-panel">
+            <Button
+              variant="ghost"
+              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
+              onClick={() => togglePanel('personal-notes')}
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-4 h-4 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+                  <StickyNote className="h-2 w-2 text-white" />
+                </div>
+                <span className="hidden lg:block font-medium text-slate-700">Notes ✦</span>
+              </div>
+              <ChevronRight 
+                className={`hidden lg:block h-4 w-4 transition-transform duration-200 ${
+                  expandedPanel === 'personal-notes' ? 'rotate-90' : ''
+                }`} 
+              />
+            </Button>
+            
+            {expandedPanel === 'personal-notes' && (
+              <div className="mt-2">
+                <PersonalNotes />
               </div>
             )}
           </div>

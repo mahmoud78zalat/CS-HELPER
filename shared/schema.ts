@@ -222,6 +222,31 @@ export type EmailTemplateUsage = typeof emailTemplateUsage.$inferSelect;
 export type InsertSiteContent = z.infer<typeof insertSiteContentSchema>;
 export type SiteContent = typeof siteContent.$inferSelect;
 
+// Personal Notes Schema
+export const personalNotes = pgTable("personal_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const personalNotesRelations = relations(personalNotes, ({ one }) => ({
+  user: one(users, {
+    fields: [personalNotes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertPersonalNoteSchema = createInsertSchema(personalNotes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type PersonalNote = typeof personalNotes.$inferSelect;
+export type InsertPersonalNote = z.infer<typeof insertPersonalNoteSchema>;
+
 // Legacy template type for backward compatibility (will remove after migration)
 export type Template = LiveReplyTemplate;
 export type InsertTemplate = InsertLiveReplyTemplate;

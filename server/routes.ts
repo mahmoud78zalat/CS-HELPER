@@ -2,8 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
+import { SupabasePersonalNotesStorage } from "./supabase-personal-notes";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertTemplateSchema, insertSiteContentSchema } from "@shared/schema";
+import { insertTemplateSchema, insertSiteContentSchema, insertPersonalNoteSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -230,6 +231,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error updating site content:", error);
       res.status(500).json({ message: "Failed to update site content" });
+    }
+  });
+
+  // Personal Notes Routes
+  const personalNotesStorage = new SupabasePersonalNotesStorage();
+
+  app.get('/api/personal-notes', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const notes = await personalNotesStorage.getPersonalNotes(userId);
+      res.json(notes);
+    } catch (error) {
+      console.error('Error fetching personal notes:', error);
+      res.status(500).json({ message: 'Failed to fetch notes' });
+    }
+  });
+
+  app.post('/api/personal-notes', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { content } = req.body;
+      
+      const noteData = insertPersonalNoteSchema.parse({
+        userId,
+        content
+      });
+
+      const note = await personalNotesStorage.createPersonalNote(noteData);
+      res.status(201).json(note);
+    } catch (error) {
+      console.error('Error creating personal note:', error);
+      res.status(500).json({ message: 'Failed to create note' });
+    }
+  });
+
+  app.patch('/api/personal-notes/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { content } = req.body;
+      
+      const note = await personalNotesStorage.updatePersonalNote(id, content);
+      res.json(note);
+    } catch (error) {
+      console.error('Error updating personal note:', error);
+      res.status(500).json({ message: 'Failed to update note' });
+    }
+  });
+
+  app.delete('/api/personal-notes/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await personalNotesStorage.deletePersonalNote(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting personal note:', error);
+      res.status(500).json({ message: 'Failed to delete note' });
     }
   });
 
