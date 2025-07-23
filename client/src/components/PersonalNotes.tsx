@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Edit3, Copy, Plus, StickyNote } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Trash2, Edit3, Copy, Plus, StickyNote, Search, X, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,8 +14,12 @@ import { PersonalNote } from '@shared/schema';
 
 export default function PersonalNotes() {
   const [newNote, setNewNote] = useState('');
+  const [newSubject, setNewSubject] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [editSubject, setEditSubject] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -23,35 +29,20 @@ export default function PersonalNotes() {
     enabled: !!user,
   });
 
-  // Create new note mutation
+  // Create new note mutation using apiRequest to bypass Vite interception
   const createNoteMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content }: { content: string }) => {
       console.log('Creating note with content:', content, 'userId:', user?.id);
-      const response = await fetch('/api/personal-notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, userId: user?.id }),
+      return await apiRequest('POST', '/api/personal-notes', { 
+        content, 
+        userId: user?.id 
       });
-      
-      console.log('Create note response status:', response.status);
-      const responseText = await response.text();
-      console.log('Create note response text:', responseText);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to create note: ${response.status} - ${responseText}`);
-      }
-      
-      try {
-        return JSON.parse(responseText);
-      } catch (e) {
-        console.error('Failed to parse response as JSON:', e);
-        throw new Error('Invalid response format');
-      }
     },
     onSuccess: (data) => {
       console.log('Note created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       setNewNote('');
+      setNewSubject('');
       toast({
         title: "Note Created",
         description: "Your personal note has been saved successfully.",
@@ -61,7 +52,7 @@ export default function PersonalNotes() {
       console.error('Create note error:', error);
       toast({
         title: "Error",
-        description: `Failed to create note: ${error.message}`,
+        description: "Failed to create note. Please try again.",
         variant: "destructive",
       });
     },
@@ -70,18 +61,13 @@ export default function PersonalNotes() {
   // Update note mutation
   const updateNoteMutation = useMutation({
     mutationFn: async ({ id, content }: { id: string; content: string }) => {
-      const response = await fetch(`/api/personal-notes/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
-      });
-      if (!response.ok) throw new Error('Failed to update note');
-      return response.json();
+      return await apiRequest('PATCH', `/api/personal-notes/${id}`, { content });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       setEditingId(null);
       setEditContent('');
+      setEditSubject('');
       toast({
         title: "Note Updated",
         description: "Your note has been updated successfully.",
@@ -99,11 +85,7 @@ export default function PersonalNotes() {
   // Delete note mutation
   const deleteNoteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/personal-notes/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Failed to delete note');
-      return response.json();
+      return await apiRequest('DELETE', `/api/personal-notes/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
@@ -125,18 +107,23 @@ export default function PersonalNotes() {
     e?.preventDefault();
     if (newNote.trim() && !createNoteMutation.isPending) {
       console.log('Creating note:', newNote.trim());
-      createNoteMutation.mutate(newNote.trim());
+      // Combine subject and content for now since schema doesn't support subject yet
+      const fullContent = newSubject.trim() ? `${newSubject.trim()}\n\n${newNote.trim()}` : newNote.trim();
+      createNoteMutation.mutate({ content: fullContent });
     }
   };
 
   const handleUpdateNote = (id: string) => {
     if (editContent.trim()) {
-      updateNoteMutation.mutate({ id, content: editContent.trim() });
+      // Combine subject and content for now since schema doesn't support subject yet
+      const fullContent = editSubject.trim() ? `${editSubject.trim()}\n\n${editContent.trim()}` : editContent.trim();
+      updateNoteMutation.mutate({ id, content: fullContent });
     }
   };
 
-  const handleCopyNote = (content: string) => {
-    navigator.clipboard.writeText(content);
+  const handleCopyNote = (note: PersonalNote) => {
+    const fullText = note.content; // Remove subject for now until schema is updated
+    navigator.clipboard.writeText(fullText);
     toast({
       title: "Copied!",
       description: "Note content copied to clipboard.",
@@ -145,63 +132,194 @@ export default function PersonalNotes() {
 
   const startEditing = (note: PersonalNote) => {
     setEditingId(note.id);
+    setEditSubject(''); // Remove subject for now until schema is updated
     setEditContent(note.content);
   };
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditContent('');
+    setEditSubject('');
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <StickyNote className="h-5 w-5" />
-          Notes ✦
-        </h3>
-        <div className="text-sm text-gray-500">Loading your notes...</div>
-      </div>
-    );
-  }
+  // Filter notes based on search term
+  const filteredNotes = notes.filter(note => 
+    note.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
-        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
-          <StickyNote className="h-4 w-4 text-white" />
-        </div>
-        Notes ✦
-      </h3>
+      {/* Notes Dropdown Toggle */}
+      <div className="flex items-center justify-between">
+        <Button
+          onClick={() => setIsOpen(!isOpen)}
+          variant="outline"
+          className="flex items-center gap-2 w-full"
+        >
+          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+            <StickyNote className="h-4 w-4 text-white" />
+          </div>
+          <span className="flex-1 text-left">Personal Notes ({notes.length})</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </Button>
+      </div>
 
-      {/* Add New Note */}
-      <Card className="border-dashed border-2 border-purple-300 bg-purple-50/30">
-        <CardContent className="pt-6">
-          <form onSubmit={handleCreateNote} className="space-y-3">
-            <Textarea
-              placeholder="Write a quick note..."
-              value={newNote}
-              onChange={(e) => setNewNote(e.target.value)}
-              className="min-h-[80px] resize-none border-purple-200 focus:border-purple-400"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.ctrlKey) {
-                  e.preventDefault();
-                  handleCreateNote();
-                }
-              }}
-            />
-            <Button
-              type="button"
-              onClick={() => handleCreateNote()}
-              disabled={!newNote.trim() || createNoteMutation.isPending}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 disabled:opacity-50"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {createNoteMutation.isPending ? 'Saving...' : 'Add Note'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      {/* Fullscreen Notes Dialog */}
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-6xl h-[90vh] overflow-hidden">
+          <DialogHeader className="border-b pb-4">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+                  <StickyNote className="h-4 w-4 text-white" />
+                </div>
+                Personal Notes ✦
+              </DialogTitle>
+              <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <div className="flex h-full overflow-hidden">
+            {/* Left Panel - Notes List */}
+            <div className="w-1/2 pr-4 flex flex-col">
+              {/* Search Bar */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search notes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Notes List */}
+              <div className="flex-1 overflow-y-auto space-y-3">
+                {isLoading ? (
+                  <div className="text-center text-gray-500 py-8">Loading your notes...</div>
+                ) : filteredNotes.length === 0 ? (
+                  <div className="text-center text-gray-500 py-8">
+                    {searchTerm ? 'No notes match your search.' : 'No notes yet. Create your first note!'}
+                  </div>
+                ) : (
+                  filteredNotes.map((note) => (
+                    <Card key={note.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between">
+                          <CardTitle className="text-sm font-semibold line-clamp-1">
+                            Note #{notes.indexOf(note) + 1}
+                          </CardTitle>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCopyNote(note)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => startEditing(note)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Edit3 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteNoteMutation.mutate(note.id)}
+                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-sm text-gray-600 line-clamp-3">{note.content}</p>
+                        <div className="flex justify-between items-center mt-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'No date'}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Right Panel - Add/Edit Note */}
+            <div className="w-1/2 pl-4 border-l">
+              <div className="h-full flex flex-col">
+                <h3 className="text-lg font-semibold mb-4">
+                  {editingId ? 'Edit Note' : 'Add New Note'}
+                </h3>
+
+                <form onSubmit={handleCreateNote} className="flex-1 flex flex-col">
+                  <div className="space-y-4 flex-1">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Subject</label>
+                      <Input
+                        placeholder="Note subject..."
+                        value={editingId ? editSubject : newSubject}
+                        onChange={(e) => editingId ? setEditSubject(e.target.value) : setNewSubject(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col">
+                      <label className="text-sm font-medium mb-2 block">Content</label>
+                      <Textarea
+                        placeholder="Write your note content..."
+                        value={editingId ? editContent : newNote}
+                        onChange={(e) => editingId ? setEditContent(e.target.value) : setNewNote(e.target.value)}
+                        className="flex-1 resize-none min-h-[300px]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-4">
+                    {editingId ? (
+                      <>
+                        <Button
+                          type="button"
+                          onClick={() => handleUpdateNote(editingId)}
+                          disabled={!editContent.trim() || updateNoteMutation.isPending}
+                          className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+                        >
+                          <Edit3 className="h-4 w-4 mr-2" />
+                          {updateNoteMutation.isPending ? 'Updating...' : 'Update Note'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={cancelEditing}
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        type="button"
+                        onClick={() => handleCreateNote()}
+                        disabled={!newNote.trim() || createNoteMutation.isPending}
+                        className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        {createNoteMutation.isPending ? 'Saving...' : 'Add Note'}
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Existing Notes */}
       <div className="space-y-3">
