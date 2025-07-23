@@ -25,16 +25,23 @@ export default function Layout({
         onAbout={onAbout}
       />
       
-      <div className="flex h-screen pt-20">
-        <Sidebar 
-          onCheckOrder={onCheckOrder}
-          onEmailComposer={onEmailComposer}
-          onAdminPanel={onAdminPanel}
-          onAbout={onAbout}
-        />
+      {/* Mobile-responsive layout */}
+      <div className="flex flex-col lg:flex-row h-screen pt-16 lg:pt-20">
+        {/* Sidebar - Hidden on mobile, shown on larger screens */}
+        <div className="hidden lg:block">
+          <Sidebar 
+            onCheckOrder={onCheckOrder}
+            onEmailComposer={onEmailComposer}
+            onAdminPanel={onAdminPanel}
+            onAbout={onAbout}
+          />
+        </div>
         
-        <div className="flex-1 flex flex-col">
-          {children}
+        {/* Main content area - Full width on mobile */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6">
+            {children}
+          </div>
         </div>
       </div>
     </div>

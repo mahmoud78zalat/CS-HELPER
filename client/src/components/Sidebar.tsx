@@ -41,7 +41,7 @@ export default function Sidebar({
   };
 
   return (
-    <div className="bg-white shadow-lg border-r border-slate-200 transition-all duration-300 w-80">
+    <div className="bg-white shadow-lg border-r border-slate-200 transition-all duration-300 w-full lg:w-80">
       <div className="p-6">
         <nav className="space-y-2">
           {/* Customer Info Panel */}

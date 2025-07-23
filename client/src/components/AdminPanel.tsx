@@ -216,8 +216,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   console.log('AdminPanel - Current user:', currentUser);
   console.log('AdminPanel - User metadata:', currentUser?.user_metadata);
   console.log('AdminPanel - User email:', currentUser?.email);
+  console.log('AdminPanel - Is Admin:', currentUser?.role === 'admin' || currentUser?.user_metadata?.role === 'admin' || currentUser?.email === 'mahmoud78zalat@gmail.com');
   
-  const isAdmin = currentUser?.user_metadata?.role === 'admin' || currentUser?.email === 'mahmoud78zalat@gmail.com';
+  // BETA TESTING: Allow all beta users admin access + production admin check
+  const isAdmin = currentUser?.role === 'admin' || 
+                  currentUser?.user_metadata?.role === 'admin' || 
+                  currentUser?.email === 'mahmoud78zalat@gmail.com' ||
+                  currentUser?.id === 'beta-admin-user'; // Beta testing access
   console.log('AdminPanel - Is Admin:', isAdmin);
   
   if (!isAdmin) {
@@ -245,12 +250,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-5/6" aria-describedby="admin-panel-description">
-        <DialogHeader>
+      <DialogContent className="max-w-7xl max-h-[95vh] w-[95vw] h-[90vh] p-0" aria-describedby="admin-panel-description">
+        <DialogHeader className="p-4 lg:p-6 border-b">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center space-x-2">
               <Settings className="h-5 w-5" />
-              <span>Admin Panel</span>
+              <span className="text-base lg:text-lg">Admin Panel</span>
+              <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
+                Beta Mode
+              </Badge>
             </DialogTitle>
             <div id="admin-panel-description" className="sr-only">
               Admin panel for managing users, templates, and site content
@@ -266,29 +274,36 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
           </div>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="users">
-              <Users className="h-4 w-4 mr-2" />
-              User Management
-            </TabsTrigger>
-            <TabsTrigger value="templates">
-              <FileText className="h-4 w-4 mr-2" />
-              Template Management
-            </TabsTrigger>
-            <TabsTrigger value="analytics">
-              <Crown className="h-4 w-4 mr-2" />
-              Analytics
-            </TabsTrigger>
-            <TabsTrigger value="emailtemplates">
-              <Wand2 className="h-4 w-4 mr-2" />
-              Email Templates
-            </TabsTrigger>
-            <TabsTrigger value="content">
-              <Settings className="h-4 w-4 mr-2" />
-              Site Content
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex-1 overflow-hidden p-4 lg:p-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+            {/* Mobile-responsive tabs */}
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-4">
+              <TabsTrigger value="users" className="text-xs lg:text-sm p-2 lg:p-3">
+                <Users className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+                <span className="hidden lg:inline">User Management</span>
+                <span className="lg:hidden">Users</span>
+              </TabsTrigger>
+              <TabsTrigger value="templates" className="text-xs lg:text-sm p-2 lg:p-3">
+                <FileText className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+                <span className="hidden lg:inline">Template Management</span>
+                <span className="lg:hidden">Templates</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="text-xs lg:text-sm p-2 lg:p-3">
+                <Crown className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+                <span className="hidden lg:inline">Analytics</span>
+                <span className="lg:hidden">Analytics</span>
+              </TabsTrigger>
+              <TabsTrigger value="emailtemplates" className="text-xs lg:text-sm p-2 lg:p-3">
+                <Wand2 className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+                <span className="hidden lg:inline">Email Templates</span>
+                <span className="lg:hidden">Email</span>
+              </TabsTrigger>
+              <TabsTrigger value="content" className="text-xs lg:text-sm p-2 lg:p-3">
+                <Settings className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+                <span className="hidden lg:inline">Site Content</span>
+                <span className="lg:hidden">Content</span>
+              </TabsTrigger>
+            </TabsList>
 
           <TabsContent value="users" className="flex-1 overflow-y-auto">
             <div className="space-y-4">
@@ -727,6 +742,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             </div>
           </TabsContent>
         </Tabs>
+        </div>
 
       {/* Template Form Modal */}
       <TemplateFormModal

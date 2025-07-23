@@ -91,26 +91,26 @@ export default function TemplateCard({ template }: TemplateCardProps) {
 
   return (
     <Card 
-      className="template-card bg-white rounded-lg shadow-sm border border-slate-200 p-4 hover:shadow-md hover:border-blue-500 cursor-pointer transition-all duration-200"
+      className="template-card bg-white rounded-lg shadow-sm border border-slate-200 p-3 lg:p-4 hover:shadow-lg hover:border-blue-500 cursor-pointer transition-all duration-200 active:scale-95 active:shadow-sm"
       onClick={handleCopyTemplate}
     >
       <CardContent className="p-0">
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <h4 className="font-semibold text-slate-800">{template.name}</h4>
-            <div className="flex items-center space-x-2 mt-1">
-              <Badge variant="secondary" className={`bg-${getGenreColor(template.genre)}-100 text-${getGenreColor(template.genre)}-700`}>
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-3">
+          <div className="flex-1">
+            <h4 className="font-semibold text-slate-800 text-sm lg:text-base leading-tight">{template.name}</h4>
+            <div className="flex items-center flex-wrap gap-1 lg:gap-2 mt-2">
+              <Badge variant="secondary" className={`bg-${getGenreColor(template.genre)}-100 text-${getGenreColor(template.genre)}-700 text-xs px-2 py-1`}>
                 {template.genre}
               </Badge>
-              <Badge variant="secondary" className={`bg-${getCategoryColor(template.category)}-100 text-${getCategoryColor(template.category)}-700`}>
+              <Badge variant="secondary" className={`bg-${getCategoryColor(template.category)}-100 text-${getCategoryColor(template.category)}-700 text-xs px-2 py-1`}>
                 {template.category}
               </Badge>
-              <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+              <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs px-2 py-1">
                 {template.concernedTeam}
               </Badge>
             </div>
           </div>
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-slate-500 mt-2 lg:mt-0 lg:ml-2 flex-shrink-0">
             Used {template.usageCount} times
           </div>
         </div>

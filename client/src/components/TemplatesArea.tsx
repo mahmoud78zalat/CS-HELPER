@@ -80,22 +80,22 @@ export default function TemplatesArea() {
 
   return (
     <>
-      {/* Search Bar */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
+      {/* Mobile-responsive Search Bar */}
+      <div className="bg-white border-b border-slate-200 px-3 lg:px-6 py-3 lg:py-4">
         <div className="max-w-2xl">
-          <div className="relative">
+          <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
             <Input
               type="text"
-              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Search templates by category, genre, content, or keywords..."
+              className="w-full pl-10 pr-4 py-2 lg:py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm lg:text-base"
+              placeholder="Search templates..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center space-x-2 mt-3">
+          <div className="grid grid-cols-2 gap-2 lg:flex lg:items-center lg:space-x-2 lg:gap-0">
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full lg:w-48">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
@@ -107,7 +107,7 @@ export default function TemplatesArea() {
             </Select>
             
             <Select value={genreFilter} onValueChange={setGenreFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full lg:w-48">
                 <SelectValue placeholder="All Genres" />
               </SelectTrigger>
               <SelectContent>
@@ -121,13 +121,13 @@ export default function TemplatesArea() {
         </div>
       </div>
 
-      {/* Templates Content */}
-      <div className="flex-1 overflow-y-auto bg-slate-50 p-6">
+      {/* Mobile-responsive Templates Content */}
+      <div className="flex-1 overflow-y-auto bg-slate-50 p-3 lg:p-6">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Reply Templates</h2>
-            <p className="text-slate-600">
-              Click on any template to instantly copy it to your clipboard. Customer information from the sidebar will automatically populate variables.
+          <div className="mb-4 lg:mb-6">
+            <h2 className="text-xl lg:text-2xl font-bold text-slate-800 mb-2">Reply Templates</h2>
+            <p className="text-sm lg:text-base text-slate-600">
+              Click on any template to instantly copy it to your clipboard.
             </p>
           </div>
 
@@ -152,7 +152,7 @@ export default function TemplatesArea() {
                     <div className={`w-2 h-2 bg-${getGenreColor(genre)}-500 rounded-full mr-3`}></div>
                     {genre} Templates
                   </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
                     {genreTemplates.map((template) => (
                       <TemplateCard key={template.id} template={template} />
                     ))}
