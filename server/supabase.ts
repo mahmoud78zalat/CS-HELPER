@@ -39,7 +39,8 @@ class SupabaseSync {
         .upsert({
           id: template.supabaseId || undefined,
           name: template.name,
-          content: template.content,
+          content_en: template.contentEn,
+          content_ar: template.contentAr,
           category: template.category,
           genre: template.genre,
           variables: template.variables,

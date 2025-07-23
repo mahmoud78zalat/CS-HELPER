@@ -26,6 +26,7 @@ import {
 // import { db } from "./db";
 // import { eq, desc, asc, and, or, like, sql } from "drizzle-orm";
 import { MemoryStorage } from "./memory-storage";
+import { SupabaseStorage } from "./supabase-storage";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -493,6 +494,15 @@ export class DatabaseStorage implements IStorage {
 }
 */
 
-// Create storage instance - using memory storage for beta testing
-// export const storage = new DatabaseStorage();
-export const storage = new MemoryStorage();
+// Create storage instance - using Supabase for production
+let storage: IStorage;
+
+try {
+  storage = new SupabaseStorage();
+  console.log('[Storage] Using Supabase storage');
+} catch (error) {
+  console.error('[Storage] Failed to initialize Supabase storage, falling back to memory storage:', error);
+  storage = new MemoryStorage();
+}
+
+export { storage };
