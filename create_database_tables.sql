@@ -121,6 +121,26 @@ ALTER TABLE email_template_usage ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE personal_notes ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist to avoid conflicts
+DROP POLICY IF EXISTS "Users can view all users" ON users;
+DROP POLICY IF EXISTS "Users can update their own profile" ON users;
+DROP POLICY IF EXISTS "Allow user creation" ON users;
+DROP POLICY IF EXISTS "Everyone can view live reply templates" ON live_reply_templates;
+DROP POLICY IF EXISTS "Everyone can view email templates" ON email_templates;
+DROP POLICY IF EXISTS "Allow template creation" ON live_reply_templates;
+DROP POLICY IF EXISTS "Allow email template creation" ON email_templates;
+DROP POLICY IF EXISTS "Allow template updates" ON live_reply_templates;
+DROP POLICY IF EXISTS "Allow email template updates" ON email_templates;
+DROP POLICY IF EXISTS "Allow template deletion" ON live_reply_templates;
+DROP POLICY IF EXISTS "Allow email template deletion" ON email_templates;
+DROP POLICY IF EXISTS "Everyone can track usage" ON live_reply_usage;
+DROP POLICY IF EXISTS "Everyone can track email usage" ON email_template_usage;
+DROP POLICY IF EXISTS "Everyone can view usage" ON live_reply_usage;
+DROP POLICY IF EXISTS "Everyone can view email usage" ON email_template_usage;
+DROP POLICY IF EXISTS "Everyone can view site content" ON site_content;
+DROP POLICY IF EXISTS "Allow site content management" ON site_content;
+DROP POLICY IF EXISTS "Users can manage their own notes" ON personal_notes;
+
 -- RLS Policies for users table
 CREATE POLICY "Users can view all users" ON users FOR SELECT USING (true);
 CREATE POLICY "Users can update their own profile" ON users FOR UPDATE USING (true);
