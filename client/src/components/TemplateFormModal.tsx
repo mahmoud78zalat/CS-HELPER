@@ -29,6 +29,7 @@ interface TemplateFormModalProps {
   onClose: () => void;
   onSave: (templateData: any) => void;
   isLoading: boolean;
+  isEmailTemplate?: boolean;
 }
 
 export default function TemplateFormModal({ 
@@ -36,7 +37,8 @@ export default function TemplateFormModal({
   isOpen, 
   onClose, 
   onSave, 
-  isLoading 
+  isLoading,
+  isEmailTemplate = false
 }: TemplateFormModalProps) {
   const [formData, setFormData] = useState({
     name: '',
@@ -191,21 +193,26 @@ export default function TemplateFormModal({
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="concernedTeam">Concerned Team *</Label>
-                  <Select value={formData.concernedTeam} onValueChange={(value) => handleInputChange('concernedTeam', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select team" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Customer Service">Customer Service</SelectItem>
-                      <SelectItem value="Order Management">Order Management</SelectItem>
-                      <SelectItem value="Delivery Team">Delivery Team</SelectItem>
-                      <SelectItem value="Returns Team">Returns Team</SelectItem>
-                      <SelectItem value="Technical Support">Technical Support</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Concerned Team - Only for Email Templates */}
+                {isEmailTemplate && (
+                  <div className="space-y-2">
+                    <Label htmlFor="concernedTeam">Concerned Team *</Label>
+                    <Select value={formData.concernedTeam} onValueChange={(value) => handleInputChange('concernedTeam', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select team" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(() => {
+                          const teams = localStorage.getItem('template_concerned_teams');
+                          const teamsList = teams ? JSON.parse(teams) : ['Customer Service', 'Order Management', 'Delivery Team', 'Returns Team', 'Technical Support', 'Finance', 'IT Support', 'Fulfillment', 'Quality Assurance', 'Management'];
+                          return teamsList.map((team: string) => (
+                            <SelectItem key={team} value={team}>{team}</SelectItem>
+                          ));
+                        })()}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -216,12 +223,13 @@ export default function TemplateFormModal({
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Order Issues">Order Issues</SelectItem>
-                      <SelectItem value="Delivery Problems">Delivery Problems</SelectItem>
-                      <SelectItem value="Payment Issues">Payment Issues</SelectItem>
-                      <SelectItem value="Returns & Refunds">Returns & Refunds</SelectItem>
-                      <SelectItem value="Product Inquiry">Product Inquiry</SelectItem>
-                      <SelectItem value="General Support">General Support</SelectItem>
+                      {(() => {
+                        const categories = localStorage.getItem('template_categories');
+                        const categoriesList = categories ? JSON.parse(categories) : ['Order Issues', 'Delivery Problems', 'Payment Issues', 'Returns & Refunds', 'Product Inquiry', 'General Support', 'Technical Support', 'Escalation'];
+                        return categoriesList.map((category: string) => (
+                          <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ));
+                      })()}
                     </SelectContent>
                   </Select>
                 </div>
@@ -233,38 +241,31 @@ export default function TemplateFormModal({
                       <SelectValue placeholder="Select genre" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Urgent">Urgent</SelectItem>
-                      <SelectItem value="Standard">Standard</SelectItem>
-                      <SelectItem value="Follow-up">Follow-up</SelectItem>
-                      <SelectItem value="Escalation">Escalation</SelectItem>
-                      <SelectItem value="Resolution">Resolution</SelectItem>
-                      <SelectItem value="Information Request">Information Request</SelectItem>
-                      <SelectItem value="Complaint Handling">Complaint Handling</SelectItem>
-                      <SelectItem value="Greeting">Greeting</SelectItem>
-                      <SelectItem value="CSAT">CSAT</SelectItem>
-                      <SelectItem value="Warning Abusive Language">Warning Abusive Language</SelectItem>
-                      <SelectItem value="Apology">Apology</SelectItem>
-                      <SelectItem value="Thank You">Thank You</SelectItem>
-                      <SelectItem value="Farewell">Farewell</SelectItem>
-                      <SelectItem value="Confirmation">Confirmation</SelectItem>
-                      <SelectItem value="Technical Support">Technical Support</SelectItem>
-                      <SelectItem value="Holiday/Special Occasion">Holiday/Special Occasion</SelectItem>
-                      <SelectItem value="Courtesy">Courtesy</SelectItem>
+                      {(() => {
+                        const genres = localStorage.getItem('template_genres');
+                        const genresList = genres ? JSON.parse(genres) : ['Urgent', 'Standard', 'Follow-up', 'Escalation', 'Resolution', 'Greeting', 'CSAT', 'Warning Abusive Language', 'Apology', 'Thank You', 'Farewell', 'Confirmation', 'Technical Support', 'Holiday/Special Occasion'];
+                        return genresList.map((genre: string) => (
+                          <SelectItem key={genre} value={genre}>{genre}</SelectItem>
+                        ));
+                      })()}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="subject">Email Subject *</Label>
-                <Input
-                  id="subject"
-                  value={formData.subject}
-                  onChange={(e) => handleInputChange('subject', e.target.value)}
-                  placeholder="e.g., Update on Your Order [ORDERNUMBER]"
-                  required
-                />
-              </div>
+              {/* Email Subject - Only for Email Templates */}
+              {isEmailTemplate && (
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Email Subject *</Label>
+                  <Input
+                    id="subject"
+                    value={formData.subject}
+                    onChange={(e) => handleInputChange('subject', e.target.value)}
+                    placeholder="e.g., Update on Your Order [ORDERNUMBER]"
+                    required
+                  />
+                </div>
+              )}
               
               <div className="space-y-2">
                 <Label htmlFor="warningNote">Warning Note</Label>

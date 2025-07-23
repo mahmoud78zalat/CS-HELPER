@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
+import TemplateConfigManager from "@/components/TemplateConfigManager";
+import CustomVariableManager from "@/components/CustomVariableManager";
 import { QUICK_TEMPLATE_STARTERS } from "@/lib/templateUtils";
 
 interface AdminPanelProps {
@@ -36,6 +38,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [templateSearchTerm, setTemplateSearchTerm] = useState('');
   const [emailTemplateSearchTerm, setEmailTemplateSearchTerm] = useState('');
+  const [showConfigManager, setShowConfigManager] = useState(false);
+  const [showVariableManager, setShowVariableManager] = useState(false);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
@@ -375,7 +379,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         <div className="flex-1 overflow-hidden p-4 lg:p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
             {/* Mobile-responsive tabs */}
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-4">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-4">
               <TabsTrigger value="users" className="text-xs lg:text-sm p-2 lg:p-3">
                 <Users className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
                 <span className="hidden lg:inline">User Management</span>
@@ -396,10 +400,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <span className="hidden lg:inline">Email Templates</span>
                 <span className="lg:hidden">Email</span>
               </TabsTrigger>
-              <TabsTrigger value="content" className="text-xs lg:text-sm p-2 lg:p-3">
+              <TabsTrigger value="sitecontent" className="text-xs lg:text-sm p-2 lg:p-3">
                 <Settings className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
                 <span className="hidden lg:inline">Site Content</span>
                 <span className="lg:hidden">Content</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="text-xs lg:text-sm p-2 lg:p-3">
+                <Shield className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+                <span className="hidden lg:inline">Settings</span>
+                <span className="lg:hidden">Settings</span>
               </TabsTrigger>
             </TabsList>
 
@@ -600,322 +609,129 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="content" className="flex-1 overflow-y-auto">
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Admin Management Guide</h3>
-              
-              <Alert>
-                <Crown className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Super Admin:</strong> mahmoud78zalat@gmail.com has permanent admin access.
-                </AlertDescription>
-              </Alert>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center">
-                    <Shield className="h-4 w-4 mr-2" />
-                    How to Make Someone Admin
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-sm text-slate-600">
-                    <p><strong>Method 1: Through Supabase Dashboard (Recommended)</strong></p>
-                    <ol className="list-decimal ml-4 mt-2 space-y-2">
-                      <li>Log into your Supabase project dashboard</li>
-                      <li>Go to "Authentication" → "Users"</li>
-                      <li>Find the user you want to promote</li>
-                      <li>Click on their user record</li>
-                      <li>In the "Raw User Meta Data" section, add:</li>
-                      <div className="bg-slate-100 p-3 rounded mt-2 font-mono text-xs">
-                        {`{\n  "role": "admin",\n  "first_name": "User First Name",\n  "last_name": "User Last Name"\n}`}
-                      </div>
-                      <li>Save the changes</li>
-                      <li>User will have admin access on next login</li>
-                    </ol>
-                  </div>
-
-                  <Alert>
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>
-                      <strong>Security Warning:</strong> Only grant admin access to trusted team members. Admins can manage templates, view all user data, and change system settings.
-                    </AlertDescription>
-                  </Alert>
-
-                  <div className="text-sm text-slate-600">
-                    <p><strong>Method 2: Through Code (For Developers)</strong></p>
-                    <p className="mt-2">Add the user's email to the admin check in the Header component alongside 'mahmoud78zalat@gmail.com'</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Current Admin Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Crown className="h-4 w-4 text-yellow-600" />
-                    <span>You are currently logged in as: <strong>{currentUser?.email}</strong></span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm mt-2">
-                    <Shield className="h-4 w-4 text-green-600" />
-                    <span>Admin Role: <strong>Active</strong></span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="flex-1 overflow-y-auto">
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Analytics & Insights</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-600">Total Templates</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">{templates.length}</div>
-                    <div className="text-xs text-slate-500 mt-1">Active templates in system</div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-600">Total Users</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{users.length}</div>
-                    <div className="text-xs text-slate-500 mt-1">Registered users</div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-600">Online Users</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">
-                      {users.filter((user: User) => user.isOnline).length}
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">Currently active</div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Template Usage by Category</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {templates.reduce((acc: any, template: any) => {
-                        const category = template.category || 'Uncategorized';
-                        acc[category] = (acc[category] || 0) + (template.usageCount || 0);
-                        return acc;
-                      }, {}) && Object.entries(templates.reduce((acc: any, template: any) => {
-                        const category = template.category || 'Uncategorized';
-                        acc[category] = (acc[category] || 0) + (template.usageCount || 0);
-                        return acc;
-                      }, {})).map(([category, count]) => (
-                        <div key={category} className="flex justify-between items-center">
-                          <span className="text-sm text-slate-700">{category}</span>
-                          <Badge variant="secondary">{count as number}</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">User Roles Distribution</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-slate-700">Admins</span>
-                        <Badge variant="default">
-                          {users.filter((user: User) => user.role === 'admin').length}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-slate-700">Agents</span>
-                        <Badge variant="secondary">
-                          {users.filter((user: User) => user.role === 'agent').length}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Most Used Templates</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {templates
-                      .sort((a: any, b: any) => (b.usageCount || 0) - (a.usageCount || 0))
-                      .slice(0, 5)
-                      .map((template: any) => (
-                        <div key={template.id} className="flex justify-between items-center p-2 bg-slate-50 rounded">
-                          <div>
-                            <span className="font-medium text-sm">{template.name}</span>
-                            <div className="text-xs text-slate-500">{template.category} • {template.genre}</div>
-                          </div>
-                          <Badge variant="outline">{template.usageCount || 0} uses</Badge>
-                        </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="emailtemplates" className="flex-1 overflow-y-auto">
+          <TabsContent value="sitecontent" className="flex-1 overflow-y-auto">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Email Template Management</h3>
-                <div className="flex items-center gap-3">
-                  <div className="relative w-64">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-                    <Input
-                      type="text"
-                      className="pl-10"
-                      placeholder="Search email templates..."
-                      value={emailTemplateSearchTerm}
-                      onChange={(e) => setEmailTemplateSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <Button 
-                    onClick={() => {
-                      setEditingTemplate(null);
-                      setIsEmailTemplate(true);
-                      setShowTemplateForm(true);
-                    }}
-                    className="bg-gradient-to-r from-purple-500 to-pink-600 text-white"
-                  >
-                    <Wand2 className="h-4 w-4 mr-2" />
-                    Create Email Template
-                  </Button>
-                </div>
+                <h3 className="text-lg font-semibold">Site Content Management</h3>
+                <p className="text-sm text-slate-600">Manage template options, categories, genres, concerned teams, and custom variables</p>
               </div>
 
-              {/* Current Email Templates */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Current Email Templates</CardTitle>
-                  <p className="text-sm text-slate-600">Manage your email templates - create, edit, or remove them easily</p>
-                </CardHeader>
-                <CardContent>
-                  {emailTemplatesLoading ? (
-                    <div>Loading email templates...</div>
-                  ) : !emailTemplates?.length ? (
-                    <div className="text-center py-8 text-slate-500">
-                      <p className="text-sm">No email templates created yet</p>
-                      <p className="text-xs mt-1">Click "Create Magic Template" to add your first template</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Template Configuration Card */}
+                <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowConfigManager(true)}>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Template Configuration
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Manage categories, genres, and concerned teams</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Categories:</span>
+                        <span className="font-medium">{(() => {
+                          const categories = localStorage.getItem('template_categories');
+                          return categories ? JSON.parse(categories).length : 8;
+                        })()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Genres:</span>
+                        <span className="font-medium">{(() => {
+                          const genres = localStorage.getItem('template_genres');
+                          return genres ? JSON.parse(genres).length : 14;
+                        })()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Concerned Teams:</span>
+                        <span className="font-medium">{(() => {
+                          const teams = localStorage.getItem('template_concerned_teams');
+                          return teams ? JSON.parse(teams).length : 7;
+                        })()}</span>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {filteredEmailTemplates.map((template: any) => (
-                        <div key={template.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-medium text-slate-800">{template.name}</h4>
-                              <Badge variant="secondary" className="text-xs">
-                                {template.genre}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {template.concernedTeam}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-slate-600 mb-2">{template.subject}</p>
-                            <p className="text-xs text-slate-500 line-clamp-2">
-                              {template.content.substring(0, 150)}...
-                            </p>
-                            {template.variables && template.variables.length > 0 && (
-                              <div className="flex gap-1 mt-2">
-                                {template.variables.slice(0, 3).map((variable: string) => (
-                                  <Badge key={variable} variant="outline" className="text-xs px-1 py-0">
-                                    {variable}
-                                  </Badge>
-                                ))}
-                                {template.variables.length > 3 && (
-                                  <Badge variant="outline" className="text-xs px-1 py-0">
-                                    +{template.variables.length - 3} more
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center gap-2 ml-4">
-                            <Badge variant="outline" className="text-xs">
-                              {template.usageCount || 0} uses
-                            </Badge>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setEditingTemplate(template);
-                                setIsEmailTemplate(true);
-                                setShowTemplateForm(true);
-                              }}
-                            >
-                              <Edit3 className="h-3 w-3 mr-1" />
-                              Edit
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => deleteEmailTemplateMutation.mutate(template.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <Button variant="outline" size="sm" className="w-full mt-4" onClick={(e) => {
+                      e.stopPropagation();
+                      setShowConfigManager(true);
+                    }}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Configuration
+                    </Button>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Template Categories & Genres</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-medium mb-3">Available Categories</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {['Order Issues', 'Delivery Problems', 'Payment Issues', 'Returns & Refunds', 'Product Inquiry', 'General Support', 'Technical Support', 'Escalation'].map((category) => (
-                          <Badge key={category} variant="secondary" className="text-xs">
-                            {category}
-                          </Badge>
-                        ))}
+                {/* Custom Variables Card */}
+                <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowVariableManager(true)}>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Code className="h-5 w-5" />
+                      Custom Variables
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Manage custom template variables</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Total Variables:</span>
+                        <span className="font-medium">{(() => {
+                          const variables = localStorage.getItem('custom_template_variables');
+                          return variables ? JSON.parse(variables).length : 3;
+                        })()}</span>
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        Add custom variables that can be used in templates with {`{VARIABLE_NAME}`} syntax
                       </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium mb-3">Available Genres</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {['Urgent', 'Standard', 'Follow-up', 'Escalation', 'Resolution', 'Greeting', 'CSAT', 'Warning Abusive Language', 'Apology', 'Thank You', 'Farewell', 'Confirmation', 'Technical Support', 'Holiday/Special Occasion'].map((genre) => (
-                          <Badge key={genre} variant="outline" className="text-xs">
-                            {genre}
-                          </Badge>
-                        ))}
+                    <Button variant="outline" size="sm" className="w-full mt-4" onClick={(e) => {
+                      e.stopPropagation();
+                      setShowVariableManager(true);
+                    }}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Manage Variables
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Quick Stats Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Eye className="h-5 w-5" />
+                      System Overview
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Current system configuration</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Live Templates:</span>
+                        <span className="font-medium">{templatesData?.length || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Email Templates:</span>
+                        <span className="font-medium">{emailTemplatesData?.length || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Active Users:</span>
+                        <span className="font-medium">{usersData?.filter(u => u.status === 'active').length || 0}</span>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <Badge variant="secondary" className="w-full mt-4 justify-center">
+                      Beta Testing Mode
+                    </Badge>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Configuration Notes</h4>
+                <ul className="text-sm text-slate-600 space-y-1">
+                  <li>• Changes to categories and genres apply immediately to new templates</li>
+                  <li>• Concerned teams are only used for email templates (internal communication)</li>
+                  <li>• Custom variables can be used in both email and live chat templates</li>
+                  <li>• All configurations are stored locally and persist across sessions</li>
+                </ul>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
@@ -946,7 +762,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
           }
         }}
         isLoading={createTemplateMutation.isPending || updateTemplateMutation.isPending || createEmailTemplateMutation.isPending || updateEmailTemplateMutation.isPending}
+        isEmailTemplate={isEmailTemplate}
       />
+
+      {/* Template Config Manager */}
+      <TemplateConfigManager isOpen={showConfigManager} onClose={() => setShowConfigManager(false)} />
+
+      {/* Custom Variable Manager */}
+      <CustomVariableManager isOpen={showVariableManager} onClose={() => setShowVariableManager(false)} />
       </DialogContent>
     </Dialog>
   );
