@@ -1,22 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTemplates } from "@/hooks/useTemplates";
 import TemplateCard from "./TemplateCard";
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCustomerData } from "@/hooks/useCustomerData";
 
 export default function TemplatesArea() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [forceRefresh, setForceRefresh] = useState(0);
-  const { customerData } = useCustomerData();
-
-  // Force refresh when customer data changes - CRITICAL FIX
-  useEffect(() => {
-    console.log('TemplatesArea: Customer data changed, forcing refresh:', customerData);
-    setForceRefresh(prev => prev + 1);
-  }, [customerData, customerData?.customer_name, customerData?.customer_phone, customerData?.customer_email]);
 
   const { data: allTemplates, isLoading } = useTemplates({
     search: searchTerm || undefined,
@@ -25,8 +16,6 @@ export default function TemplatesArea() {
 
   // All templates are now bilingual, no need to filter by language
   const templates = allTemplates || [];
-
-
 
   const groupedTemplates = templates?.reduce((acc, template) => {
     if (!acc[template.genre]) {
@@ -84,7 +73,7 @@ export default function TemplatesArea() {
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl lg:text-2xl font-bold text-slate-800">Reply Templates</h2>
               <div className="text-xs bg-slate-100 px-2 py-1 rounded-full">
-                {customerData.language === 'ar' ? '🇴🇲 Arabic' : '🇬🇧 English'}
+                {localStorage.getItem('selectedLanguage') === 'ar' ? '🇸🇦 Arabic' : '🇬🇧 English'}
               </div>
             </div>
             <p className="text-sm lg:text-base text-slate-600">
@@ -113,9 +102,9 @@ export default function TemplatesArea() {
                     <div className={`w-2 h-2 bg-${getGenreColor(genre)}-500 rounded-full mr-3`}></div>
                     {genre} Templates
                   </h3>
-                  <div key={`genre-${genre}-${forceRefresh}`} className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
                     {genreTemplates.map((template) => (
-                      <TemplateCard key={`${template.id}-${forceRefresh}`} template={template} />
+                      <TemplateCard key={template.id} template={template} />
                     ))}
                   </div>
                 </div>

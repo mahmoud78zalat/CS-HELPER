@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useCustomerData } from "@/hooks/useCustomerData";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, X, Search, Send, Edit3, Sparkles } from "lucide-react";
+import { Copy, X, Search, Send, Edit3, Sparkles, Plus } from "lucide-react";
 import { EmailTemplate } from "@shared/schema";
 
 interface EmailComposerModalProps {
@@ -48,6 +48,13 @@ const TEMPLATE_VARIABLES = {
   ]
 };
 
+// Allowed variables for email subject field (strictly limited)
+const SUBJECT_VARIABLES = [
+  { key: "ordernumber", label: "Order Number", placeholder: "ORD123456" },
+  { key: "AWB", label: "AWB Number", placeholder: "AWB789012" },
+  { key: "customernumber", label: "Customer Number", placeholder: "CUST001" },
+];
+
 export default function EmailComposerModal({ onClose }: EmailComposerModalProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,6 +62,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const [emailBody, setEmailBody] = useState('');
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [showVariables, setShowVariables] = useState(false);
+  const [showSubjectVariables, setShowSubjectVariables] = useState(false);
   
   // Fetch email templates
   const { data: templates } = useQuery({
@@ -104,11 +112,16 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       current_date: currentDate,
       current_time: currentTime,
       time_frame: '24-48 hours',
+
+      // Subject-specific variables (limited set)
+      ordernumber: customerData.order_id || customerData.awb_number || '',
+      AWB: customerData.awb_number || '',
+      customernumber: customerData.customer_name?.replace(/\s+/g, '').toUpperCase() + '001' || 'CUST001',
     });
   }, [customerData, user]);
 
   // Filter templates based on search
-  const filteredTemplates = templates?.filter((template: EmailTemplate) =>
+  const filteredTemplates = (templates as EmailTemplate[])?.filter((template: EmailTemplate) =>
     template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     template.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
     template.genre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -120,6 +133,24 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     return text.replace(/\{(\w+)\}/g, (match, key) => {
       return variableValues[key] || match;
     });
+  };
+
+  // Replace variables specifically for subject (limited set)
+  const replaceSubjectVariables = (subject: string) => {
+    return subject.replace(/\{(ordernumber|AWB|customernumber)\}/g, (match, variable) => {
+      return variableValues[variable] || match;
+    });
+  };
+
+  // Insert variable into subject at cursor position
+  const insertSubjectVariable = (variable: string) => {
+    const subjectInput = document.getElementById('emailSubject') as HTMLInputElement;
+    const cursorPosition = subjectInput?.selectionStart || emailSubject.length;
+    const beforeCursor = emailSubject.substring(0, cursorPosition);
+    const afterCursor = emailSubject.substring(cursorPosition);
+    const newSubject = beforeCursor + `{${variable}}` + afterCursor;
+    setEmailSubject(newSubject);
+    setShowSubjectVariables(false);
   };
 
   // Handle template selection
@@ -145,7 +176,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   };
 
   // Get final email content with variables replaced
-  const getFinalSubject = () => replaceVariables(emailSubject);
+  const getFinalSubject = () => replaceSubjectVariables(emailSubject);
   const getFinalBody = () => replaceVariables(emailBody);
 
   // Extract variables from template content
@@ -155,7 +186,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   };
 
   const allVariables = [...getTemplateVariables(emailSubject), ...getTemplateVariables(emailBody)];
-  const uniqueVariables = [...new Set(allVariables)];
+  const uniqueVariables = Array.from(new Set(allVariables));
 
   const handleCopyEmail = () => {
     const finalEmail = `Subject: ${getFinalSubject()}\n\n${getFinalBody()}`;
@@ -278,14 +309,48 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="subject">Subject</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="emailSubject">Subject</Label>
+                    <div className="relative">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowSubjectVariables(!showSubjectVariables)}
+                        className="text-xs"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add Variable
+                      </Button>
+                      
+                      {showSubjectVariables && (
+                        <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg p-2 z-50 min-w-48">
+                          <p className="text-xs text-slate-600 mb-2 font-medium">Subject Variables (limited)</p>
+                          <div className="space-y-1">
+                            {SUBJECT_VARIABLES.map((variable) => (
+                              <button
+                                key={variable.key}
+                                onClick={() => insertSubjectVariable(variable.key)}
+                                className="w-full text-left px-2 py-1 text-xs hover:bg-slate-100 rounded flex justify-between items-center"
+                              >
+                                <span className="font-mono text-blue-600">{`{${variable.key}}`}</span>
+                                <span className="text-slate-500">{variable.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <Input
-                    id="subject"
+                    id="emailSubject"
                     value={emailSubject}
                     onChange={(e) => setEmailSubject(e.target.value)}
                     placeholder="Select a template to populate subject..."
                     className="mt-1"
                   />
+                  <div className="mt-1 text-xs text-slate-500">
+                    Preview: {getFinalSubject() || 'No subject entered'}
+                  </div>
                   <Button
                     variant="link"
                     size="sm"

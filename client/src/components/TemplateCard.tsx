@@ -9,7 +9,7 @@ import { replaceVariables, extractVariablesFromTemplate, TEMPLATE_WARNING_PRESET
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Template } from "@shared/schema";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 interface TemplateCardProps {
   template: Template;
@@ -20,24 +20,9 @@ export default function TemplateCard({ template }: TemplateCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Force re-render when customer data changes - CRITICAL FIX for live updates
-  useEffect(() => {
-    console.log('TemplateCard: Customer data changed:', customerData);
-    setRefreshKey(prev => prev + 1);
-  }, [customerData, customerData.customer_name, customerData.customer_phone, customerData.customer_email]);
-
-  const usageMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest('POST', `/api/templates/${template.id}/use`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
-    },
-  });
-
-  const handleCopyTemplate = () => {
+  // Use useMemo to compute processed content without causing re-renders
+  const processedContent = useMemo(() => {
     const selectedAgentName = localStorage.getItem('selectedAgentName') || 
                               `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
                               user?.email ||
@@ -73,20 +58,32 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         month: 'long', 
         day: 'numeric' 
       }),
-      company_name: 'Brands For Less',
-      COMPANY_NAME: 'Brands For Less',
-      support_email: 'support@brandsforless.com',
-      business_hours: '9 AM - 6 PM, Sunday - Thursday',
-      
-      // Custom fields
-      reason: '',
-      REASON: '',
+      current_time: new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
     };
 
-    // For live reply templates (chat), choose content based on customer language
-    const selectedContent = customerData.language === 'ar' ? template.contentAr : template.contentEn;
-    const processedContent = replaceVariables(selectedContent || '', variables);
-    
+    // Determine which content to use based on language
+    const currentLanguage = customerData.language || 'en';
+    const rawContent = currentLanguage === 'ar' && template.contentAr 
+      ? template.contentAr 
+      : template.contentEn || template.content;
+
+    // Replace variables with error handling
+    return replaceVariables(rawContent || '', variables);
+  }, [customerData, user, template]);
+
+  const usageMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest('POST', `/api/templates/${template.id}/use`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+    },
+  });
+
+  const handleCopyTemplate = () => {
     navigator.clipboard.writeText(processedContent);
     
     toast({
@@ -127,7 +124,6 @@ export default function TemplateCard({ template }: TemplateCardProps) {
 
   return (
     <Card 
-      key={`template-${template.id}-${refreshKey}`}
       className="template-card bg-white rounded-lg shadow-sm border border-slate-200 p-3 lg:p-4 hover:shadow-lg hover:border-blue-500 cursor-pointer transition-all duration-200 active:scale-95 active:shadow-sm"
       onClick={handleCopyTemplate}
     >
@@ -179,115 +175,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         <div className="text-sm text-slate-600 mb-3 leading-relaxed">
           <div className="text-xs bg-slate-50 p-3 rounded border-l-2 border-blue-500">
             <div className="font-medium text-slate-700 mb-2">Live Preview:</div>
-            {(() => {
-              const selectedAgentName = localStorage.getItem('selectedAgentName') || 
-                                        `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
-                                        user?.email ||
-                                        'Support Agent';
-              
-              const variables = {
-                // Customer name with ALL possible variants
-                customer_name: customerData.customer_name || '',
-                CUSTOMER_NAME: customerData.customer_name || '',
-                customername: customerData.customer_name || '',
-                CUSTOMERNAME: customerData.customer_name || '',
-                CustomerName: customerData.customer_name || '',
-                
-                // Email variants
-                customer_email: customerData.customer_email || '',
-                CUSTOMER_EMAIL: customerData.customer_email || '',
-                customeremail: customerData.customer_email || '',
-                CUSTOMEREMAIL: customerData.customer_email || '',
-                
-                // Phone variants
-                customer_phone: customerData.customer_phone || '',
-                CUSTOMER_PHONE: customerData.customer_phone || '',
-                customerphone: customerData.customer_phone || '',
-                CUSTOMERPHONE: customerData.customer_phone || '',
-                
-                // Country variants
-                customer_country: customerData.customer_country || '',
-                CUSTOMER_COUNTRY: customerData.customer_country || '',
-                customercountry: customerData.customer_country || '',
-                CUSTOMERCOUNTRY: customerData.customer_country || '',
-                
-                // Gender variants
-                gender: customerData.gender || '',
-                GENDER: customerData.gender || '',
-                
-                // Order data with all variants
-                order_id: customerData.order_id || '',
-                ORDER_ID: customerData.order_id || '',
-                orderid: customerData.order_id || '',
-                ORDERID: customerData.order_id || '',
-                order_number: customerData.order_number || '',
-                ORDER_NUMBER: customerData.order_number || '',
-                ordernumber: customerData.order_number || '',
-                ORDERNUMBER: customerData.order_number || '',
-                
-                // AWB variants
-                awb_number: customerData.awb_number || '',
-                AWB_NUMBER: customerData.awb_number || '',
-                awbnumber: customerData.awb_number || '',
-                AWBNUMBER: customerData.awb_number || '',
-                awb: customerData.awb_number || '',
-                AWB: customerData.awb_number || '',
-                
-                // Item variants
-                item_name: customerData.item_name || '',
-                ITEM_NAME: customerData.item_name || '',
-                itemname: customerData.item_name || '',
-                ITEMNAME: customerData.item_name || '',
-                
-                // Delivery variants
-                delivery_date: customerData.delivery_date || '',
-                DELIVERY_DATE: customerData.delivery_date || '',
-                deliverydate: customerData.delivery_date || '',
-                DELIVERYDATE: customerData.delivery_date || '',
-                
-                // Waiting time variants
-                waiting_time: customerData.waiting_time || '',
-                WAITING_TIME: customerData.waiting_time || '',
-                waitingtime: customerData.waiting_time || '',
-                WAITINGTIME: customerData.waiting_time || '',
-                
-                // Agent data with all variants
-                agent_name: selectedAgentName,
-                AGENT_NAME: selectedAgentName,
-                agentname: selectedAgentName,
-                AGENTNAME: selectedAgentName,
-                AgentName: selectedAgentName,
-                
-                // System data
-                company_name: 'Brands For Less',
-                COMPANY_NAME: 'Brands For Less',
-                companyname: 'Brands For Less',
-                COMPANYNAME: 'Brands For Less',
-                
-                // Time data
-                current_date: new Date().toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                }),
-                current_time: new Date().toLocaleTimeString('en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                }),
-                
-                // Custom fields
-                reason: '',
-                REASON: '',
-              };
-
-              const selectedContent = customerData.language === 'ar' ? template.contentAr : template.contentEn;
-              const livePreview = replaceVariables(selectedContent || '', variables);
-              const display = livePreview.slice(0, 200);
-              return display + (livePreview.length > 200 ? '...' : '');
-            })()}
-          </div>
-          <div className="text-xs text-blue-600 mt-2 font-medium border-t border-blue-200 pt-2">
-            ↑ Live preview with your customer data - updates instantly when you change customer info!
+            <div className="whitespace-pre-wrap">{processedContent}</div>
           </div>
         </div>
       </CardContent>
