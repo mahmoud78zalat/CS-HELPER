@@ -49,18 +49,48 @@ export function useAuth() {
 
   const handleUser = async (supabaseUser: any) => {
     try {
-      // Check if user exists in our database
-      const response = await fetch(`/api/users/${supabaseUser.id}`);
+      console.log('[Auth] Checking user in database:', supabaseUser.id);
       
-      if (response.ok) {
-        const userData = await response.json();
-        console.log('[Auth] User found in database:', userData.email, userData.role);
+      // Try API route first
+      const response = await fetch(`/api/user/${supabaseUser.id}`);
+      const responseText = await response.text();
+      
+      if (response.ok && !responseText.includes('<!DOCTYPE html>')) {
+        const userData = JSON.parse(responseText);
+        console.log('[Auth] User found via API:', userData.email, userData.role);
         setUser(userData);
       } else {
-        console.error('[Auth] User not found in our database');
-        // Sign out user if they're not in our system
-        await supabase.auth.signOut();
-        setUser(null);
+        console.log('[Auth] API route intercepted, querying Supabase directly...');
+        
+        // Query Supabase directly if API routes are being intercepted
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', supabaseUser.id)
+          .single();
+
+        if (error || !userData) {
+          console.error('[Auth] User not found in our database:', error);
+          await supabase.auth.signOut();
+          setUser(null);
+        } else {
+          console.log('[Auth] User found via Supabase:', userData.email, userData.role);
+          // Convert snake_case to camelCase to match frontend expectations
+          const user = {
+            id: userData.id,
+            email: userData.email,
+            firstName: userData.first_name,
+            lastName: userData.last_name,
+            profileImageUrl: userData.profile_image_url,
+            role: userData.role,
+            status: userData.status,
+            isOnline: userData.is_online,
+            lastSeen: userData.last_seen,
+            createdAt: userData.created_at,
+            updatedAt: userData.updated_at
+          };
+          setUser(user);
+        }
       }
     } catch (error) {
       console.error('[Auth] Error fetching user data:', error);

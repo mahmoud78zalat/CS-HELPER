@@ -26,16 +26,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get single user by ID (for authentication)
-  app.get('/api/users/:id', async (req, res) => {
+  // Get single user by ID (for authentication) - MUST come before the general /api/users route
+  app.get('/api/user/:id', async (req, res) => {
     try {
+      console.log('[API] Getting user by ID:', req.params.id);
       const { id } = req.params;
       const user = await storage.getUser(id);
       
       if (!user) {
+        console.log('[API] User not found:', id);
         return res.status(404).json({ message: "User not found" });
       }
       
+      console.log('[API] User found:', user.email, user.role);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -44,10 +47,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new user (for auto-registration)
-  app.post('/api/users', async (req, res) => {
+  app.post('/api/create-user', async (req, res) => {
     try {
+      console.log('[API] Creating user:', req.body.email);
       const userData = req.body;
       const user = await storage.upsertUser(userData);
+      console.log('[API] User created successfully:', user.email);
       res.status(201).json(user);
     } catch (error) {
       console.error("Error creating user:", error);
@@ -55,7 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User management routes (admin only)
+  // User management routes (admin only) - MUST come after the single user route
   app.get('/api/users', isAuthenticated, async (req: any, res) => {
     try {
       const currentUser = await storage.getUser(req.user.claims.sub);

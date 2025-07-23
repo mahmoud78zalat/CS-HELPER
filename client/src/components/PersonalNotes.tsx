@@ -17,9 +17,9 @@ export default function PersonalNotes() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Fetch user's personal notes
+  // Fetch user's personal notes (user-specific)
   const { data: notes = [], isLoading } = useQuery<PersonalNote[]>({
-    queryKey: ['/api/personal-notes'],
+    queryKey: ['/api/personal-notes', user?.id],
     enabled: !!user,
   });
 
@@ -35,7 +35,7 @@ export default function PersonalNotes() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       setNewNote('');
       toast({
         title: "Note Created",
@@ -63,7 +63,7 @@ export default function PersonalNotes() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       setEditingId(null);
       setEditContent('');
       toast({
@@ -90,7 +90,7 @@ export default function PersonalNotes() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       toast({
         title: "Note Deleted",
         description: "Your note has been deleted successfully.",

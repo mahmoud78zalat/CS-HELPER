@@ -36,10 +36,19 @@ export default function LoginPage() {
         console.log('[Login] User signed in:', data.user.email);
         
         // Check if user exists in our system
-        const response = await fetch(`/api/users/${data.user.id}`);
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('[Login] User data found:', userData.email, userData.role);
+        console.log('[Login] Checking user in database:', data.user.id);
+        const response = await fetch(`/api/user/${data.user.id}`, {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        console.log('[Login] Response status:', response.status);
+        const responseText = await response.text();
+        console.log('[Login] Response body:', responseText);
+        
+        if (response.ok && !responseText.includes('<!DOCTYPE html>')) {
+          const userData = JSON.parse(responseText);
+          console.log('[Login] User data found via API:', userData.email, userData.role);
           
           // Allow all authenticated users with valid roles
           if (userData.role === 'admin' || userData.role === 'agent') {
@@ -52,46 +61,74 @@ export default function LoginPage() {
             setError('Access denied. Please contact your administrator.');
             await signOut();
           }
-        } else if (response.status === 404) {
-          // User exists in Supabase Auth but not in our users table
-          console.log('[Login] User not in database, creating user record...');
+        } else {
+          // API routes being intercepted or user not found, check Supabase directly
+          console.log('[Login] API route failed, checking Supabase directly...');
           
-          // Try to create the user in our database
-          try {
-            const createResponse = await fetch('/api/users', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                id: data.user.id,
-                email: data.user.email,
-                firstName: data.user.user_metadata?.first_name || data.user.email?.split('@')[0],
-                lastName: data.user.user_metadata?.last_name || '',
-                profileImageUrl: data.user.user_metadata?.avatar_url || '',
-                role: 'agent', // Default role
-                status: 'active'
-              })
-            });
+          const { supabase } = await import('@/lib/supabase');
+          const { data: existingUser, error: fetchError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
 
-            if (createResponse.ok) {
-              const newUser = await createResponse.json();
+          if (existingUser && !fetchError) {
+            // User exists, convert snake_case to camelCase and proceed
+            console.log('[Login] User found in Supabase:', existingUser.email, existingUser.role);
+            
+            if (existingUser.role === 'admin' || existingUser.role === 'agent') {
               toast({
-                title: "Account Created",
-                description: `Welcome ${newUser.firstName || newUser.email}!`,
+                title: "Login Successful",
+                description: `Welcome back, ${existingUser.first_name || existingUser.email}!`,
               });
               setLocation('/');
             } else {
-              setError('Unable to create user account. Please contact administrator.');
+              setError('Access denied. Please contact your administrator.');
               await signOut();
             }
+            return;
+          }
+          
+          // User doesn't exist, create them
+          console.log('[Login] User not found, creating new user record...');
+          
+          try {
+            
+            const { error: upsertError } = await supabase
+              .from('users')
+              .upsert({
+                id: data.user.id,
+                email: data.user.email,
+                first_name: data.user.user_metadata?.first_name || data.user.email?.split('@')[0],
+                last_name: data.user.user_metadata?.last_name || '',
+                profile_image_url: data.user.user_metadata?.avatar_url || '',
+                role: 'agent', // Default role
+                status: 'active',
+                is_online: false,
+                last_seen: new Date().toISOString(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+
+            if (upsertError) {
+              console.error('[Login] Error creating user in Supabase:', upsertError);
+              setError('Unable to create user account. Please contact administrator.');
+              await signOut();
+              return;
+            }
+
+            console.log('[Login] User created successfully in Supabase');
+            toast({
+              title: "Account Created",
+              description: `Welcome ${data.user.email?.split('@')[0]}!`,
+            });
+            setLocation('/');
+            
           } catch (createError) {
-            console.error('[Login] Error creating user:', createError);
+            console.error('[Login] Error with direct Supabase creation:', createError);
             setError('Unable to create user account. Please contact administrator.');
             await signOut();
           }
-        } else {
-          console.error('[Login] Error fetching user data');
-          setError('Unable to verify user account. Please try again.');
-          await signOut();
         }
       }
     } catch (err) {
