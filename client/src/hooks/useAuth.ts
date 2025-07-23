@@ -8,16 +8,15 @@ export function useAuth() {
   const [authTimeout, setAuthTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Set authentication timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      console.log('[Auth] Authentication timeout - stopping loading state');
-      setIsLoading(false);
-      if (!user) {
-        console.log('[Auth] No user found after timeout');
-      }
-    }, 10000); // 10 second timeout
-    
-    setAuthTimeout(timeoutId);
+    // Disabled timeout as it was clearing authenticated users
+    // const timeoutId = setTimeout(() => {
+    //   if (!user) {
+    //     console.log('[Auth] Authentication timeout - stopping loading state');
+    //     setIsLoading(false);
+    //     console.log('[Auth] No user found after timeout');
+    //   }
+    // }, 10000);
+    // setAuthTimeout(timeoutId);
 
     // Check for existing session on mount
     const getSession = async () => {

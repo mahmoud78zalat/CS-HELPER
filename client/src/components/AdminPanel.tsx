@@ -62,29 +62,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     retry: false,
   });
 
-  // Only allow admin users to access the admin panel - check after all hooks are called
-  if (!currentUser || currentUser.role !== 'admin') {
-    return (
-      <Dialog open={true} onOpenChange={onClose}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Access Restricted</DialogTitle>
-          </DialogHeader>
-          <div className="p-6 text-center">
-            <Shield className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Admin Access Required</h3>
-            <p className="text-gray-600 mb-4">
-              This admin panel is only available to administrators. Please contact your system administrator for access.
-            </p>
-            <Button onClick={onClose} className="w-full">
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   // User status mutation
   const userStatusMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
@@ -320,6 +297,29 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
     },
   });
+
+  // Only allow admin users to access the admin panel - check after all hooks are called
+  if (!currentUser || currentUser.role !== 'admin') {
+    return (
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Access Restricted</DialogTitle>
+          </DialogHeader>
+          <div className="p-6 text-center">
+            <Shield className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Admin Access Required</h3>
+            <p className="text-gray-600 mb-4">
+              This admin panel is only available to administrators. Please contact your system administrator for access.
+            </p>
+            <Button onClick={onClose} className="w-full">
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const handleDeleteTemplate = (templateId: string) => {
     if (confirm('Are you sure you want to delete this template?')) {
