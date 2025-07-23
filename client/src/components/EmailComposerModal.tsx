@@ -112,10 +112,39 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       <DialogContent className="max-w-7xl h-[95vh] overflow-hidden">
         <div className="flex h-full">
           {/* Left Panel: Templates */}
-          <div className="w-1/3 border-r border-slate-200 p-6 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <DialogHeader>
-                <DialogTitle>Email Templates</DialogTitle>
+          <div className="w-1/3 border-r border-slate-200 flex flex-col">
+            {/* Fixed Search Header */}
+            <div className="p-6 border-b border-slate-200 bg-white sticky top-0 z-10">
+              <div className="flex items-center justify-between mb-4">
+                <DialogHeader>
+                  <DialogTitle>Email Templates</DialogTitle>
+                </DialogHeader>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClose}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Input
+                  type="text"
+                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  placeholder="Search email templates..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            {/* Scrollable Templates List */}
+            <div className="flex-1 overflow-y-auto">
+              {!filteredTemplates?.length ? (
               </DialogHeader>
               <Button
                 variant="ghost"

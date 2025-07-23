@@ -43,9 +43,9 @@ export function extractVariablesFromTemplate(content: string): string[] {
   const matches = content.match(variableRegex);
   if (!matches) return [];
   
-  return [...new Set(matches.map(match => 
+  return Array.from(new Set(matches.map(match => 
     match.replace(/[\[\{\}\]]/g, '').toUpperCase()
-  ))];
+  )));
 }
 
 export function replaceVariables(
