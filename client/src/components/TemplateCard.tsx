@@ -65,8 +65,8 @@ export default function TemplateCard({ template }: TemplateCardProps) {
       agentname: selectedAgentName,
       AGENTNAME: selectedAgentName,
       
-      // System data
-      concerned_team: template.concernedTeam || '',
+      // System data (only for email templates)
+      concerned_team: '',
       time_frame: customerData.waiting_time || '2-3 business days',
       current_date: new Date().toLocaleDateString('en-US', { 
         year: 'numeric', 
@@ -141,6 +141,11 @@ export default function TemplateCard({ template }: TemplateCardProps) {
               <Badge variant="secondary" className={`bg-${getCategoryColor(template.category)}-100 text-${getCategoryColor(template.category)}-700 text-xs px-2 py-1`}>
                 {template.category}
               </Badge>
+              {template.language && (
+                <Badge variant="outline" className="text-xs px-2 py-1">
+                  {template.language === 'ar' ? '🇴🇲 AR' : '🇬🇧 EN'}
+                </Badge>
+              )}
             </div>
           </div>
           {user?.role === 'admin' && (

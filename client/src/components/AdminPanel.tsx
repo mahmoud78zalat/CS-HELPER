@@ -18,7 +18,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { realTimeService } from "@/lib/realTimeService";
 import { 
   X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
-  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search
+  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload
 } from "lucide-react";
 import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
@@ -609,6 +609,229 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             </div>
           </TabsContent>
 
+          <TabsContent value="analytics" className="flex-1 overflow-y-auto">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Analytics Dashboard</h3>
+                <p className="text-sm text-slate-600">Monitor user activity and template usage</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Total Users</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{users?.length || 0}</div>
+                    <p className="text-xs text-slate-500">Active: {users?.filter(u => u.status === 'active').length || 0}</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Live Templates</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{templates?.length || 0}</div>
+                    <p className="text-xs text-slate-500">Customer-facing replies</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Email Templates</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{emailTemplates?.length || 0}</div>
+                    <p className="text-xs text-slate-500">Internal team communication</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Online Users</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{users?.filter(u => u.isOnline).length || 0}</div>
+                    <p className="text-xs text-slate-500">Currently active</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2 text-blue-900">System Status</h4>
+                <div className="text-sm text-blue-800">
+                  <p>✓ Beta testing mode active with automatic admin access</p>
+                  <p>✓ All template configurations stored locally</p>
+                  <p>✓ Real-time user presence tracking enabled</p>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="emailtemplates" className="flex-1 overflow-y-auto">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Email Template Management</h3>
+                <div className="flex items-center gap-2">
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                    <Input
+                      type="text"
+                      className="pl-10"
+                      placeholder="Search email templates..."
+                      value={emailTemplateSearchTerm}
+                      onChange={(e) => setEmailTemplateSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      setEditingTemplate(null);
+                      setIsEmailTemplate(true);
+                      setShowTemplateForm(true);
+                    }} 
+                    size="sm"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Email Template
+                  </Button>
+                </div>
+              </div>
+              
+              {emailTemplatesLoading ? (
+                <div>Loading email templates...</div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredEmailTemplates.map((template: any) => (
+                    <Card key={template.id} className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-medium">{template.name}</h4>
+                            <Badge variant="outline" className="text-xs">
+                              {template.genre || 'Standard'}
+                            </Badge>
+                            {template.concernedTeam && (
+                              <Badge variant="secondary" className="text-xs">
+                                {template.concernedTeam}
+                              </Badge>
+                            )}
+                          </div>
+                          {template.subject && (
+                            <p className="text-sm text-slate-600 mb-1">
+                              <strong>Subject:</strong> {template.subject}
+                            </p>
+                          )}
+                          <p className="text-sm text-slate-600">
+                            {template.content?.substring(0, 100)}...
+                          </p>
+                          {template.warningNote && (
+                            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                              <strong>Warning:</strong> {template.warningNote}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingTemplate(template);
+                              setIsEmailTemplate(true);
+                              setShowTemplateForm(true);
+                            }}
+                            title="Edit Template"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteTemplate(template.id)}
+                            className="text-red-600 hover:text-red-700"
+                            title="Delete Template"
+                          >
+                            <Trash className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings" className="flex-1 overflow-y-auto">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">System Settings</h3>
+                <p className="text-sm text-slate-600">Configure system preferences and security</p>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Beta Testing Configuration</CardTitle>
+                  <p className="text-sm text-slate-600">Current beta testing settings</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Auto-admin Access</p>
+                        <p className="text-sm text-slate-600">Automatic admin permissions for testing</p>
+                      </div>
+                      <Badge variant="secondary" className="bg-green-100 text-green-700">
+                        Enabled
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Memory Storage</p>
+                        <p className="text-sm text-slate-600">Using local memory instead of database</p>
+                      </div>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                        Active
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Real-time Updates</p>
+                        <p className="text-sm text-slate-600">WebSocket connection for live features</p>
+                      </div>
+                      <Badge variant="secondary" className="bg-green-100 text-green-700">
+                        Connected
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Data Management</CardTitle>
+                  <p className="text-sm text-slate-600">Manage local storage and configuration</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Button variant="outline" className="w-full justify-start">
+                      <Code className="h-4 w-4 mr-2" />
+                      Export Configuration
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Import Configuration
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Clear All Data
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
           <TabsContent value="sitecontent" className="flex-1 overflow-y-auto">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -705,15 +928,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Live Templates:</span>
-                        <span className="font-medium">{templatesData?.length || 0}</span>
+                        <span className="font-medium">{templates?.length || 0}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Email Templates:</span>
-                        <span className="font-medium">{emailTemplatesData?.length || 0}</span>
+                        <span className="font-medium">{emailTemplates?.length || 0}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Active Users:</span>
-                        <span className="font-medium">{usersData?.filter(u => u.status === 'active').length || 0}</span>
+                        <span className="font-medium">{users?.filter(u => u.status === 'active').length || 0}</span>
                       </div>
                     </div>
                     <Badge variant="secondary" className="w-full mt-4 justify-center">

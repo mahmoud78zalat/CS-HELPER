@@ -48,8 +48,9 @@ export class MemoryStorage implements IStorage {
   }
 
   private initializeSampleData() {
-    // Sample live reply templates
+    // Sample live reply templates - English and Arabic
     const sampleLiveTemplates: LiveReplyTemplate[] = [
+      // English Templates
       {
         id: nanoid(),
         name: "Welcome Greeting",
@@ -65,6 +66,7 @@ export class MemoryStorage implements IStorage {
         updatedAt: new Date(),
         supabaseId: null,
         lastSyncedAt: null,
+        language: "en",
       },
       {
         id: nanoid(),
@@ -81,6 +83,7 @@ export class MemoryStorage implements IStorage {
         updatedAt: new Date(),
         supabaseId: null,
         lastSyncedAt: null,
+        language: "en",
       },
       {
         id: nanoid(),
@@ -97,6 +100,59 @@ export class MemoryStorage implements IStorage {
         updatedAt: new Date(),
         supabaseId: null,
         lastSyncedAt: null,
+        language: "en",
+      },
+      // Arabic Templates
+      {
+        id: nanoid(),
+        name: "ترحيب - Welcome Greeting (AR)",
+        content: "مرحباً {customer_name}! أهلاً بك في براندز فور ليس. كيف يمكنني مساعدتك اليوم؟",
+        category: "General",
+        genre: "greeting",
+        variables: ["customer_name"],
+        stageOrder: 1,
+        isActive: true,
+        usageCount: 0,
+        createdBy: "admin-user",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+        language: "ar",
+      },
+      {
+        id: nanoid(),
+        name: "فحص حالة الطلب - Order Status Check (AR)",
+        content: "مرحباً {customer_name}، دعني أتحقق من حالة طلبك {order_id} على الفور.",
+        category: "Orders",
+        genre: "standard",
+        variables: ["customer_name", "order_id"],
+        stageOrder: 2,
+        isActive: true,
+        usageCount: 0,
+        createdBy: "admin-user",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+        language: "ar",
+      },
+      {
+        id: nanoid(),
+        name: "اعتذار عن التأخير - Apology for Delay (AR)",
+        content: "أعتذر بصدق عن التأخير في طلبك {order_id}، {customer_name}. دعني أحل هذه المشكلة فوراً.",
+        category: "Apology",
+        genre: "apology",
+        variables: ["order_id", "customer_name"],
+        stageOrder: 3,
+        isActive: true,
+        usageCount: 0,
+        createdBy: "admin-user",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+        language: "ar",
       },
     ];
 
@@ -279,6 +335,7 @@ export class MemoryStorage implements IStorage {
       content: template.content,
       category: template.category,
       genre: template.genre,
+      language: template.language || 'en',
       variables: template.variables || null,
       stageOrder: template.stageOrder || 1,
       isActive: template.isActive !== undefined ? template.isActive : true,

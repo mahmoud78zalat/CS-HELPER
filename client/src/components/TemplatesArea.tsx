@@ -18,10 +18,15 @@ export default function TemplatesArea() {
     setForceRefresh(prev => prev + 1);
   }, [customerData, customerData?.customer_name, customerData?.customer_phone, customerData?.customer_email]);
 
-  const { data: templates, isLoading } = useTemplates({
+  const { data: allTemplates, isLoading } = useTemplates({
     search: searchTerm || undefined,
     isActive: true,
   });
+
+  // Filter templates by selected language
+  const templates = allTemplates?.filter(template => 
+    template.language === (customerData.language || 'en')
+  ) || [];
 
 
 
@@ -78,9 +83,14 @@ export default function TemplatesArea() {
       <div className="flex-1 overflow-y-auto bg-slate-50 p-3 lg:p-6">
         <div className="max-w-6xl mx-auto">
           <div className="mb-4 lg:mb-6">
-            <h2 className="text-xl lg:text-2xl font-bold text-slate-800 mb-2">Reply Templates</h2>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl lg:text-2xl font-bold text-slate-800">Reply Templates</h2>
+              <div className="text-xs bg-slate-100 px-2 py-1 rounded-full">
+                {customerData.language === 'ar' ? '🇴🇲 Arabic' : '🇬🇧 English'}
+              </div>
+            </div>
             <p className="text-sm lg:text-base text-slate-600">
-              Click on any template to instantly copy it to your clipboard.
+              Click on any template to instantly copy it to your clipboard. Switch language in Customer Info to see different templates.
             </p>
           </div>
 

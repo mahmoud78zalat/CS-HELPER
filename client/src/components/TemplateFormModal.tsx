@@ -215,7 +215,7 @@ export default function TemplateFormModal({
                 )}
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="category">Category *</Label>
                   <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
@@ -251,6 +251,22 @@ export default function TemplateFormModal({
                     </SelectContent>
                   </Select>
                 </div>
+                
+                {/* Language selector - Only for Live Reply Templates */}
+                {!isEmailTemplate && (
+                  <div className="space-y-2">
+                    <Label htmlFor="language">Language *</Label>
+                    <Select value={formData.language || 'en'} onValueChange={(value) => handleInputChange('language', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">🇬🇧 English</SelectItem>
+                        <SelectItem value="ar">🇴🇲 Arabic</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
               
               {/* Email Subject - Only for Email Templates */}

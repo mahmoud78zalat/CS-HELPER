@@ -3,7 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useCustomerData } from "@/hooks/useCustomerData";
-import { Trash2 } from "lucide-react";
+import { Trash2, Languages } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CustomerInfoPanel() {
@@ -54,6 +55,37 @@ export default function CustomerInfoPanel() {
 
   return (
     <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+      {/* Language Switcher */}
+      <div className="mb-4 p-3 bg-white rounded-lg border border-slate-200">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Languages className="h-4 w-4 text-slate-600" />
+            <Label className="text-xs font-medium text-slate-600">Live Chat Language</Label>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant={customerData.language === 'en' ? 'default' : 'outline'}
+            size="sm"
+            className="flex-1 text-xs h-8"
+            onClick={() => updateCustomerData('language', 'en')}
+          >
+            🇬🇧 EN
+          </Button>
+          <Button
+            variant={customerData.language === 'ar' ? 'default' : 'outline'}
+            size="sm"
+            className="flex-1 text-xs h-8"
+            onClick={() => updateCustomerData('language', 'ar')}
+          >
+            🇴🇲 AR
+          </Button>
+        </div>
+        <p className="text-xs text-slate-500 mt-2">
+          Switch between English and Arabic templates for live chat responses
+        </p>
+      </div>
+
       <div className="space-y-3">
         <div>
           <Label className="text-xs font-medium text-slate-600 mb-1">Customer Name</Label>

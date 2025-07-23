@@ -15,6 +15,7 @@ interface CustomerData {
   item_name?: string;
   delivery_date?: string;
   waiting_time?: string;
+  language?: 'en' | 'ar'; // Add language preference for live chat templates
 }
 
 interface CustomerDataContextType {
@@ -32,7 +33,9 @@ interface CustomerDataProviderProps {
 }
 
 export function CustomerDataProvider({ children }: CustomerDataProviderProps) {
-  const [customerData, setCustomerData] = useState<CustomerData>({});
+  const [customerData, setCustomerData] = useState<CustomerData>({
+    language: 'en' // Default to English
+  });
   const [version, setVersion] = useState(0);
 
   // Load data from localStorage on mount

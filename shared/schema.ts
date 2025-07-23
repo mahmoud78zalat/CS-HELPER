@@ -47,6 +47,7 @@ export const liveReplyTemplates = pgTable("live_reply_templates", {
   content: text("content").notNull(),
   category: varchar("category").notNull(),
   genre: varchar("genre").notNull(),
+  language: varchar("language").default("en").notNull(),
   variables: text("variables").array(),
   stageOrder: integer("stage_order").default(1).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
