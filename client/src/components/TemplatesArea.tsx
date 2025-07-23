@@ -68,7 +68,7 @@ export default function TemplatesArea() {
 
       {/* Mobile-responsive Templates Content */}
       <div className="flex-1 overflow-y-auto bg-slate-50 p-3 lg:p-6">
-        <div className="max-w-6xl mx-auto">
+        <div className="w-full">
           <div className="mb-4 lg:mb-6">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl lg:text-2xl font-bold text-slate-800">Reply Templates</h2>
@@ -102,7 +102,7 @@ export default function TemplatesArea() {
                     <div className={`w-2 h-2 bg-${getGenreColor(genre)}-500 rounded-full mr-3`}></div>
                     {genre} Templates
                   </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
                     {genreTemplates.map((template) => (
                       <TemplateCard key={template.id} template={template} />
                     ))}

@@ -88,10 +88,16 @@ export default function TemplateCard({ template }: TemplateCardProps) {
 
   const usageMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest('POST', `/api/templates/${template.id}/use`);
+      if (!user?.id) {
+        throw new Error('User ID is required to record template usage');
+      }
+      await apiRequest('POST', `/api/templates/${template.id}/use`, { userId: user.id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+    },
+    onError: (error) => {
+      console.error('Failed to record template usage:', error);
     },
   });
 

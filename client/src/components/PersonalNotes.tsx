@@ -259,7 +259,7 @@ export default function PersonalNotes() {
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
                           <CardTitle className="text-sm font-semibold line-clamp-1">
-                            Note #{notes.indexOf(note) + 1}
+                            {note.content.split('\n')[0].substring(0, 50).trim() || `Note #${notes.indexOf(note) + 1}`}
                           </CardTitle>
                           <div className="flex gap-1">
                             <Button
@@ -290,7 +290,7 @@ export default function PersonalNotes() {
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <p className="text-sm text-gray-600 line-clamp-3">{note.content}</p>
+                        <p className="text-sm text-gray-600 line-clamp-2">{note.content.substring(0, 120)}{note.content.length > 120 ? '...' : ''}</p>
                         <div className="flex justify-between items-center mt-2">
                           <Badge variant="secondary" className="text-xs">
                             {note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'No date'}

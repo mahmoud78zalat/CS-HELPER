@@ -137,6 +137,15 @@ The system is designed to be deployed on Replit with automatic environment provi
 
 ## Recent Changes (January 23, 2025)
 
+**CRITICAL FIXES COMPLETED (January 23, 2025 - 8:30 PM)**:
+✓ **PERSONAL NOTES DISPLAY FIX**: Fixed notes showing actual content/subject instead of generic "Note#1, Note#2" format
+✓ **TEMPLATE USAGE TRACKING FIX**: Fixed template usage counter stuck at 0 - now properly increments when agents use templates
+✓ **ENHANCED ANALYTICS DASHBOARD**: Online users now show actual user names with green status indicators in admin panel
+✓ **UI SPACING OPTIMIZATION**: Templates now fill entire middle area without leaving empty space (4-column grid on XL screens)
+✓ **IMPROVED PERSONAL NOTES UI**: Notes display first 50 characters as title with 120-character preview and proper truncation
+✓ **RPC FUNCTIONS CREATED**: Added increment_live_reply_usage and increment_email_template_usage for accurate statistics
+✓ **COMPREHENSIVE TESTING**: All API endpoints verified working - personal notes, templates, users, and usage tracking
+
 **LATEST COMPLETE FIXES (January 23, 2025 - 7:50 PM)**:
 ✓ **PERSONAL NOTES FULLY WORKING**: Fixed Vite middleware intercepting API calls by moving personal notes routes to simple-routes.ts 
 ✓ **SITE CONTENT DATABASE SYNC**: Implemented complete database synchronization for admin panel site content management

@@ -743,8 +743,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     <CardTitle className="text-sm">Online Users</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{users?.filter(u => u.isOnline).length || 0}</div>
+                    <div className="text-2xl font-bold text-green-600">{users?.filter(u => u.isOnline).length || 0}</div>
                     <p className="text-xs text-slate-500">Currently active</p>
+                    <div className="mt-2">
+                      {users?.filter(u => u.isOnline).slice(0, 2).map(user => (
+                        <div key={user.id} className="text-xs text-slate-600 flex items-center gap-1">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          {user.firstName} {user.lastName}
+                        </div>
+                      ))}
+                      {users?.filter(u => u.isOnline).length > 2 && (
+                        <div className="text-xs text-slate-500">+{users?.filter(u => u.isOnline).length - 2} more</div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
