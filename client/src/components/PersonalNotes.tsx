@@ -23,20 +23,48 @@ export default function PersonalNotes() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Fetch user's personal notes (user-specific)
+  // Fetch user's personal notes using direct fetch to bypass Vite interception
   const { data: notes = [], isLoading } = useQuery<PersonalNote[]>({
     queryKey: ['/api/personal-notes', user?.id],
     enabled: !!user,
+    queryFn: async () => {
+      const response = await fetch('/api/personal-notes', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch notes');
+      }
+      
+      const data = await response.json();
+      console.log('Fetched notes:', data);
+      return data;
+    },
   });
 
-  // Create new note mutation using apiRequest to bypass Vite interception
+  // Create new note mutation using direct fetch to bypass Vite interception
   const createNoteMutation = useMutation({
     mutationFn: async ({ content }: { content: string }) => {
       console.log('Creating note with content:', content, 'userId:', user?.id);
-      return await apiRequest('POST', '/api/personal-notes', { 
-        content, 
-        userId: user?.id 
+      
+      const response = await fetch('/api/personal-notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ content }),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create note');
+      }
+      
+      return await response.json();
     },
     onSuccess: (data) => {
       console.log('Note created successfully:', data);
@@ -58,10 +86,23 @@ export default function PersonalNotes() {
     },
   });
 
-  // Update note mutation
+  // Update note mutation using direct fetch
   const updateNoteMutation = useMutation({
     mutationFn: async ({ id, content }: { id: string; content: string }) => {
-      return await apiRequest('PATCH', `/api/personal-notes/${id}`, { content });
+      const response = await fetch(`/api/personal-notes/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ content }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update note');
+      }
+      
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
@@ -82,10 +123,22 @@ export default function PersonalNotes() {
     },
   });
 
-  // Delete note mutation
+  // Delete note mutation using direct fetch
   const deleteNoteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest('DELETE', `/api/personal-notes/${id}`);
+      const response = await fetch(`/api/personal-notes/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete note');
+      }
+      
+      return response.status === 204 ? null : await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });

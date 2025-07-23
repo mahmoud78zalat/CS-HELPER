@@ -41,6 +41,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [emailTemplateSearchTerm, setEmailTemplateSearchTerm] = useState('');
   const [showConfigManager, setShowConfigManager] = useState(false);
   const [showVariableManager, setShowVariableManager] = useState(false);
+  const [siteContentValues, setSiteContentValues] = useState<{[key: string]: string}>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -60,6 +61,29 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const { data: emailTemplates = [], isLoading: emailTemplatesLoading } = useQuery<Template[]>({
     queryKey: ['/api/email-templates'],
     retry: false,
+  });
+
+  // Site content query
+  const { data: siteContent = [] } = useQuery({
+    queryKey: ['/api/site-content'],
+    retry: false,
+    queryFn: async () => {
+      const response = await fetch('/api/site-content', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch site content');
+      const data = await response.json();
+      
+      // Convert array to object for easier state management
+      const contentObject: {[key: string]: string} = {};
+      data.forEach((item: any) => {
+        contentObject[item.key] = item.content;
+      });
+      setSiteContentValues(contentObject);
+      return data;
+    },
   });
 
   // User status mutation
@@ -195,6 +219,54 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
     },
   });
+
+  // Site content update mutation
+  const updateSiteContentMutation = useMutation({
+    mutationFn: async ({ key, content }: { key: string; content: string }) => {
+      const response = await fetch('/api/site-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ key, content }),
+      });
+      if (!response.ok) throw new Error('Failed to update site content');
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/site-content'] });
+      toast({
+        title: "Site content updated",
+        description: "Changes have been saved to the database.",
+      });
+    },
+    onError: (error) => {
+      console.error('Update site content error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update site content. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Add timeout storage for debouncing
+  const timeoutRef = useState<NodeJS.Timeout | null>(null)[0];
+
+  const handleSiteContentChange = (key: string, value: string) => {
+    // Update local state immediately for responsive UI
+    setSiteContentValues(prev => ({ ...prev, [key]: value }));
+    
+    // Debounce the API call to avoid too many requests
+    if (timeoutRef) {
+      clearTimeout(timeoutRef);
+    }
+    
+    const newTimeout = setTimeout(() => {
+      updateSiteContentMutation.mutate({ key, content: value });
+    }, 1000);
+    
+    timeoutRef = newTimeout;
+  };
 
   const handleUserStatusChange = (userId: string, status: string) => {
     userStatusMutation.mutate({ userId, status });
@@ -884,7 +956,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       <Input
                         id="siteName"
                         placeholder="e.g., Customer Service Platform"
-                        defaultValue={localStorage.getItem('site_name') || ''}
+                        value={siteContentValues.site_name || ''}
+                        onChange={(e) => handleSiteContentChange('site_name', e.target.value)}
                       />
                     </div>
                     
@@ -893,7 +966,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       <Input
                         id="aboutTitle"
                         placeholder="e.g., Customer Service Helper"
-                        defaultValue={localStorage.getItem('about_title') || ''}
+                        value={siteContentValues.about_title || ''}
+                        onChange={(e) => handleSiteContentChange('about_title', e.target.value)}
                       />
                     </div>
                     
@@ -903,7 +977,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         id="aboutDescription"
                         placeholder="Brief description of your platform..."
                         rows={3}
-                        defaultValue={localStorage.getItem('about_description') || ''}
+                        value={siteContentValues.about_description || ''}
+                        onChange={(e) => handleSiteContentChange('about_description', e.target.value)}
                       />
                     </div>
                     
@@ -912,7 +987,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       <Input
                         id="versionLabel"
                         placeholder="e.g., Version 1.0.0 | Built for Company X"
-                        defaultValue={localStorage.getItem('version_label') || ''}
+                        value={siteContentValues.version_label || ''}
+                        onChange={(e) => handleSiteContentChange('version_label', e.target.value)}
                       />
                     </div>
                     
@@ -921,7 +997,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       <Input
                         id="footerText"
                         placeholder="e.g., © 2025 Your Company. All rights reserved."
-                        defaultValue={localStorage.getItem('footer_text') || ''}
+                        value={siteContentValues.footer_text || ''}
+                        onChange={(e) => handleSiteContentChange('footer_text', e.target.value)}
                       />
                     </div>
                     
@@ -969,21 +1046,21 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       <div className="flex justify-between text-sm">
                         <span>Categories:</span>
                         <span className="font-medium">{(() => {
-                          const categories = localStorage.getItem('template_categories');
+                          const categories = siteContentValues.template_categories;
                           return categories ? JSON.parse(categories).length : 8;
                         })()}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Genres:</span>
                         <span className="font-medium">{(() => {
-                          const genres = localStorage.getItem('template_genres');
+                          const genres = siteContentValues.template_genres;
                           return genres ? JSON.parse(genres).length : 14;
                         })()}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Concerned Teams:</span>
                         <span className="font-medium">{(() => {
-                          const teams = localStorage.getItem('template_concerned_teams');
+                          const teams = siteContentValues.template_concerned_teams;
                           return teams ? JSON.parse(teams).length : 7;
                         })()}</span>
                       </div>
