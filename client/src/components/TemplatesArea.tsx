@@ -1,13 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTemplates } from "@/hooks/useTemplates";
 import TemplateCard from "./TemplateCard";
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCustomerData } from "@/hooks/useCustomerData";
 
 export default function TemplatesArea() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [forceRefresh, setForceRefresh] = useState(0);
+  const { customerData } = useCustomerData();
+
+  // Force refresh when customer data changes
+  useEffect(() => {
+    setForceRefresh(prev => prev + 1);
+  }, [customerData]);
 
   const { data: templates, isLoading } = useTemplates({
     search: searchTerm || undefined,
@@ -96,9 +104,9 @@ export default function TemplatesArea() {
                     <div className={`w-2 h-2 bg-${getGenreColor(genre)}-500 rounded-full mr-3`}></div>
                     {genre} Templates
                   </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
+                  <div key={`genre-${genre}-${forceRefresh}`} className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
                     {genreTemplates.map((template) => (
-                      <TemplateCard key={template.id} template={template} />
+                      <TemplateCard key={`${template.id}-${forceRefresh}`} template={template} />
                     ))}
                   </div>
                 </div>

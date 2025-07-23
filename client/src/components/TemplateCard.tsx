@@ -179,41 +179,83 @@ export default function TemplateCard({ template }: TemplateCardProps) {
                                         'Support Agent';
               
               const variables = {
-                // Customer data with all variants - ensure all are included
+                // Customer name with ALL possible variants
                 customer_name: customerData.customer_name || '',
                 CUSTOMER_NAME: customerData.customer_name || '',
+                customername: customerData.customer_name || '',
+                CUSTOMERNAME: customerData.customer_name || '',
+                CustomerName: customerData.customer_name || '',
+                
+                // Email variants
                 customer_email: customerData.customer_email || '',
                 CUSTOMER_EMAIL: customerData.customer_email || '',
+                customeremail: customerData.customer_email || '',
+                CUSTOMEREMAIL: customerData.customer_email || '',
+                
+                // Phone variants
                 customer_phone: customerData.customer_phone || '',
                 CUSTOMER_PHONE: customerData.customer_phone || '',
+                customerphone: customerData.customer_phone || '',
+                CUSTOMERPHONE: customerData.customer_phone || '',
+                
+                // Country variants
                 customer_country: customerData.customer_country || '',
                 CUSTOMER_COUNTRY: customerData.customer_country || '',
+                customercountry: customerData.customer_country || '',
+                CUSTOMERCOUNTRY: customerData.customer_country || '',
+                
+                // Gender variants
                 gender: customerData.gender || '',
                 GENDER: customerData.gender || '',
                 
                 // Order data with all variants
                 order_id: customerData.order_id || '',
                 ORDER_ID: customerData.order_id || '',
+                orderid: customerData.order_id || '',
+                ORDERID: customerData.order_id || '',
                 order_number: customerData.order_number || '',
                 ORDER_NUMBER: customerData.order_number || '',
+                ordernumber: customerData.order_number || '',
+                ORDERNUMBER: customerData.order_number || '',
+                
+                // AWB variants
                 awb_number: customerData.awb_number || '',
                 AWB_NUMBER: customerData.awb_number || '',
+                awbnumber: customerData.awb_number || '',
+                AWBNUMBER: customerData.awb_number || '',
+                awb: customerData.awb_number || '',
+                AWB: customerData.awb_number || '',
+                
+                // Item variants
                 item_name: customerData.item_name || '',
                 ITEM_NAME: customerData.item_name || '',
+                itemname: customerData.item_name || '',
+                ITEMNAME: customerData.item_name || '',
+                
+                // Delivery variants
                 delivery_date: customerData.delivery_date || '',
                 DELIVERY_DATE: customerData.delivery_date || '',
+                deliverydate: customerData.delivery_date || '',
+                DELIVERYDATE: customerData.delivery_date || '',
+                
+                // Waiting time variants
                 waiting_time: customerData.waiting_time || '',
                 WAITING_TIME: customerData.waiting_time || '',
+                waitingtime: customerData.waiting_time || '',
+                WAITINGTIME: customerData.waiting_time || '',
                 
                 // Agent data with all variants
                 agent_name: selectedAgentName,
                 AGENT_NAME: selectedAgentName,
                 agentname: selectedAgentName,
                 AGENTNAME: selectedAgentName,
+                AgentName: selectedAgentName,
                 
                 // System data
                 company_name: 'Brands For Less',
                 COMPANY_NAME: 'Brands For Less',
+                companyname: 'Brands For Less',
+                COMPANYNAME: 'Brands For Less',
                 
                 // Time data
                 current_date: new Date().toLocaleDateString('en-US', { 
