@@ -9,6 +9,7 @@ import { replaceVariables, extractVariablesFromTemplate, TEMPLATE_WARNING_PRESET
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Template } from "@shared/schema";
+import { useEffect, useState } from "react";
 
 interface TemplateCardProps {
   template: Template;
@@ -19,6 +20,12 @@ export default function TemplateCard({ template }: TemplateCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Force re-render when customer data changes to ensure live updates
+  useEffect(() => {
+    setRefreshKey(prev => prev + 1);
+  }, [customerData]);
 
   const usageMutation = useMutation({
     mutationFn: async () => {
@@ -118,6 +125,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
 
   return (
     <Card 
+      key={`template-${template.id}-${refreshKey}`}
       className="template-card bg-white rounded-lg shadow-sm border border-slate-200 p-3 lg:p-4 hover:shadow-lg hover:border-blue-500 cursor-pointer transition-all duration-200 active:scale-95 active:shadow-sm"
       onClick={handleCopyTemplate}
     >
@@ -171,20 +179,31 @@ export default function TemplateCard({ template }: TemplateCardProps) {
                                         'Support Agent';
               
               const variables = {
-                ...customerData,
-                // Customer data with uppercase variants
+                // Customer data with all variants - ensure all are included
                 customer_name: customerData.customer_name || '',
                 CUSTOMER_NAME: customerData.customer_name || '',
                 customer_email: customerData.customer_email || '',
                 CUSTOMER_EMAIL: customerData.customer_email || '',
                 customer_phone: customerData.customer_phone || '',
                 CUSTOMER_PHONE: customerData.customer_phone || '',
+                customer_country: customerData.customer_country || '',
+                CUSTOMER_COUNTRY: customerData.customer_country || '',
+                gender: customerData.gender || '',
+                GENDER: customerData.gender || '',
                 
-                // Order data with uppercase variants
+                // Order data with all variants
                 order_id: customerData.order_id || '',
                 ORDER_ID: customerData.order_id || '',
+                order_number: customerData.order_number || '',
+                ORDER_NUMBER: customerData.order_number || '',
                 awb_number: customerData.awb_number || '',
                 AWB_NUMBER: customerData.awb_number || '',
+                item_name: customerData.item_name || '',
+                ITEM_NAME: customerData.item_name || '',
+                delivery_date: customerData.delivery_date || '',
+                DELIVERY_DATE: customerData.delivery_date || '',
+                waiting_time: customerData.waiting_time || '',
+                WAITING_TIME: customerData.waiting_time || '',
                 
                 // Agent data with all variants
                 agent_name: selectedAgentName,
@@ -195,6 +214,17 @@ export default function TemplateCard({ template }: TemplateCardProps) {
                 // System data
                 company_name: 'Brands For Less',
                 COMPANY_NAME: 'Brands For Less',
+                
+                // Time data
+                current_date: new Date().toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                }),
+                current_time: new Date().toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }),
                 
                 // Custom fields
                 reason: '',

@@ -9,8 +9,6 @@ import {
   ArrowLeftRight, 
   Info, 
   Search, 
-  Mail, 
-  Shield,
   HelpCircle,
   LogOut,
   ChevronRight
@@ -18,15 +16,11 @@ import {
 
 interface SidebarProps {
   onCheckOrder: () => void;
-  onEmailComposer: () => void;
-  onAdminPanel: () => void;
   onAbout: () => void;
 }
 
 export default function Sidebar({ 
   onCheckOrder, 
-  onEmailComposer, 
-  onAdminPanel, 
   onAbout 
 }: SidebarProps) {
   const { user } = useAuth();
@@ -131,28 +125,7 @@ export default function Sidebar({
               </div>
             </Button>
 
-            <Button 
-              onClick={onEmailComposer}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg p-2 lg:p-3 transition-colors duration-200 shadow-sm"
-            >
-              <div className="flex items-center justify-center lg:justify-start space-x-3">
-                <Mail className="h-4 w-4" />
-                <span className="hidden lg:block font-medium">Email Composer</span>
-              </div>
-            </Button>
 
-            {/* Show Admin Panel button only for admins */}
-            {(user?.role === 'admin' || user?.email === 'mahmoud78zalat@gmail.com' || user?.id === 'beta-admin-user') && (
-              <Button 
-                onClick={onAdminPanel}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-lg p-2 lg:p-3 transition-colors duration-200 shadow-sm"
-              >
-                <div className="flex items-center justify-center lg:justify-start space-x-3">
-                  <Shield className="h-4 w-4" />
-                  <span className="hidden lg:block font-medium">Admin Panel</span>
-                </div>
-              </Button>
-            )}
 
             <Button 
               onClick={onAbout}

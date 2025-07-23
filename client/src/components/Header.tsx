@@ -87,27 +87,8 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
 
           {/* Right: Action Buttons and User - Mobile responsive */}
           <div className="flex items-center space-x-1 lg:space-x-4">
-            {/* Mobile - Show icons only */}
+            {/* Mobile - Show info button only */}
             <div className="flex lg:hidden space-x-1">
-              <Button 
-                onClick={onEmailComposer}
-                size="sm"
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-2 rounded-lg hover:shadow-lg transition-all duration-200"
-              >
-                <Mail className="w-4 h-4" />
-              </Button>
-              
-              {isAdmin && (
-                <Button 
-                  onClick={onAdminPanel}
-                  size="sm"
-                  variant="secondary"
-                  className="bg-slate-600 text-white p-2 rounded-lg hover:bg-slate-700 transition-colors duration-200"
-                >
-                  <Settings className="w-4 h-4" />
-                </Button>
-              )}
-
               <Button 
                 onClick={onAbout}
                 size="sm"
@@ -118,27 +99,8 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
               </Button>
             </div>
 
-            {/* Desktop - Show with text */}
+            {/* Desktop - Show info button only */}
             <div className="hidden lg:flex space-x-4">
-              <Button 
-                onClick={onEmailComposer}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-200"
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Email Composer
-              </Button>
-              
-              {isAdmin && (
-                <Button 
-                  onClick={onAdminPanel}
-                  variant="secondary"
-                  className="bg-slate-600 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors duration-200"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Admin Panel
-                </Button>
-              )}
-
               <Button 
                 onClick={onAbout}
                 variant="outline"
