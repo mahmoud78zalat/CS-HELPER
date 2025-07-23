@@ -187,14 +187,14 @@ ON CONFLICT (id) DO UPDATE SET
 
 -- Insert some sample templates for testing
 INSERT INTO live_reply_templates (name, category, genre, content_en, content_ar, variables) VALUES
-('Order Status Inquiry', 'Orders', 'standard', 'Hello {customer_name}, let me check your order {order_id} status right away.', 'مرحباً {customer_name}، دعني أتحقق من حالة طلبك {order_id} الآن.', '["customer_name", "order_id"]'::jsonb),
-('General Greeting', 'General', 'greeting', 'Hello! Welcome to our customer service. How can I help you today?', 'مرحباً! أهلاً بك في خدمة العملاء. كيف يمكنني مساعدتك اليوم؟', '[]'::jsonb),
-('Apology Response', 'General', 'apology', 'I sincerely apologize for the inconvenience caused. Let me resolve this for you immediately.', 'أعتذر بصدق عن الإزعاج المُسبب. دعني أحل هذا الأمر لك على الفور.', '[]'::jsonb)
+('Order Status Inquiry', 'Orders', 'standard', 'Hello {customer_name}, let me check your order {order_id} status right away.', 'مرحباً {customer_name}، دعني أتحقق من حالة طلبك {order_id} الآن.', ARRAY['customer_name', 'order_id']),
+('General Greeting', 'General', 'greeting', 'Hello! Welcome to our customer service. How can I help you today?', 'مرحباً! أهلاً بك في خدمة العملاء. كيف يمكنني مساعدتك اليوم؟', ARRAY[]::text[]),
+('Apology Response', 'General', 'apology', 'I sincerely apologize for the inconvenience caused. Let me resolve this for you immediately.', 'أعتذر بصدق عن الإزعاج المُسبب. دعني أحل هذا الأمر لك على الفور.', ARRAY[]::text[])
 ON CONFLICT DO NOTHING;
 
 INSERT INTO email_templates (name, subject, category, genre, concerned_team, content_en, content_ar, variables) VALUES
-('Order Issue Escalation', 'Order Issue - Customer {customer_name}', 'Orders', 'urgent', 'Fulfillment', 'Customer {customer_name} has reported an issue with order {order_id}. Please investigate and respond within {time_frame}.', 'العميل {customer_name} أبلغ عن مشكلة في الطلب {order_id}. يرجى التحقيق والرد خلال {time_frame}.', '["customer_name", "order_id", "time_frame"]'::jsonb),
-('Technical Support Request', 'Technical Support - {issue_type}', 'Technical', 'standard', 'IT Support', 'A customer needs technical assistance with {issue_type}. Details: {issue_description}', 'يحتاج العميل لمساعدة تقنية مع {issue_type}. التفاصيل: {issue_description}', '["issue_type", "issue_description"]'::jsonb)
+('Order Issue Escalation', 'Order Issue - Customer {customer_name}', 'Orders', 'urgent', 'Fulfillment', 'Customer {customer_name} has reported an issue with order {order_id}. Please investigate and respond within {time_frame}.', 'العميل {customer_name} أبلغ عن مشكلة في الطلب {order_id}. يرجى التحقيق والرد خلال {time_frame}.', ARRAY['customer_name', 'order_id', 'time_frame']),
+('Technical Support Request', 'Technical Support - {issue_type}', 'Technical', 'standard', 'IT Support', 'A customer needs technical assistance with {issue_type}. Details: {issue_description}', 'يحتاج العميل لمساعدة تقنية مع {issue_type}. التفاصيل: {issue_description}', ARRAY['issue_type', 'issue_description'])
 ON CONFLICT DO NOTHING;
 
 COMMIT;
