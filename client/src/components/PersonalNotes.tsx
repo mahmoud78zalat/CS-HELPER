@@ -26,15 +26,30 @@ export default function PersonalNotes() {
   // Create new note mutation
   const createNoteMutation = useMutation({
     mutationFn: async (content: string) => {
+      console.log('Creating note with content:', content, 'userId:', user?.id);
       const response = await fetch('/api/personal-notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content, userId: user?.id }),
       });
-      if (!response.ok) throw new Error('Failed to create note');
-      return response.json();
+      
+      console.log('Create note response status:', response.status);
+      const responseText = await response.text();
+      console.log('Create note response text:', responseText);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to create note: ${response.status} - ${responseText}`);
+      }
+      
+      try {
+        return JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse response as JSON:', e);
+        throw new Error('Invalid response format');
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Note created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       setNewNote('');
       toast({
@@ -42,10 +57,11 @@ export default function PersonalNotes() {
         description: "Your personal note has been saved successfully.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Create note error:', error);
       toast({
         title: "Error",
-        description: "Failed to create note. Please try again.",
+        description: `Failed to create note: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -105,8 +121,10 @@ export default function PersonalNotes() {
     },
   });
 
-  const handleCreateNote = () => {
-    if (newNote.trim()) {
+  const handleCreateNote = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (newNote.trim() && !createNoteMutation.isPending) {
+      console.log('Creating note:', newNote.trim());
       createNoteMutation.mutate(newNote.trim());
     }
   };
@@ -159,22 +177,29 @@ export default function PersonalNotes() {
       {/* Add New Note */}
       <Card className="border-dashed border-2 border-purple-300 bg-purple-50/30">
         <CardContent className="pt-6">
-          <div className="space-y-3">
+          <form onSubmit={handleCreateNote} className="space-y-3">
             <Textarea
               placeholder="Write a quick note..."
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
               className="min-h-[80px] resize-none border-purple-200 focus:border-purple-400"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                  e.preventDefault();
+                  handleCreateNote();
+                }
+              }}
             />
             <Button
-              onClick={handleCreateNote}
+              type="button"
+              onClick={() => handleCreateNote()}
               disabled={!newNote.trim() || createNoteMutation.isPending}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 disabled:opacity-50"
             >
               <Plus className="h-4 w-4 mr-2" />
               {createNoteMutation.isPending ? 'Saving...' : 'Add Note'}
             </Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
 
