@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { PersonalNote } from "@shared/schema";
 import CustomerInfoPanel from "./CustomerInfoPanel";
 import OrderConverterPanel from "./OrderConverterPanel";
 import AdditionalInfoPanel from "./AdditionalInfoPanel";
@@ -13,7 +16,8 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
-  StickyNote
+  StickyNote,
+  Copy
 } from "lucide-react";
 
 interface SidebarProps {
@@ -27,6 +31,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const { user, signOut } = useAuth();
   const [expandedPanel, setExpandedPanel] = useState<string | null>(null);
+  const [notesSearchTerm, setNotesSearchTerm] = useState('');
 
   const togglePanel = (panelId: string) => {
     setExpandedPanel(expandedPanel === panelId ? null : panelId);
@@ -34,6 +39,38 @@ export default function Sidebar({
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  // Fetch personal notes for dropdown
+  const { data: personalNotes = [] } = useQuery<PersonalNote[]>({
+    queryKey: ['/api/personal-notes', user?.id],
+    enabled: !!user && expandedPanel === 'personal-notes',
+    queryFn: async () => {
+      const response = await fetch('/api/personal-notes', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user?.id || '',
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch notes');
+      }
+      
+      return response.json();
+    },
+  });
+
+  // Filter notes based on search term
+  const filteredPersonalNotes = personalNotes.filter(note => 
+    note.content.toLowerCase().includes(notesSearchTerm.toLowerCase()) ||
+    (note.subject && note.subject.toLowerCase().includes(notesSearchTerm.toLowerCase()))
+  );
+
+  const handleCopyNote = (note: PersonalNote) => {
+    navigator.clipboard.writeText(note.content);
   };
 
   return (
@@ -136,8 +173,52 @@ export default function Sidebar({
             </Button>
             
             {expandedPanel === 'personal-notes' && (
-              <div className="mt-2">
-                <PersonalNotes />
+              <div className="mt-2 space-y-3">
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-3 w-3" />
+                  <Input
+                    type="text"
+                    className="pl-8 text-xs h-8"
+                    placeholder="Search notes..."
+                    value={notesSearchTerm}
+                    onChange={(e) => setNotesSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                {/* Quick Notes List */}
+                <div className="max-h-40 overflow-y-auto space-y-2">
+                  {filteredPersonalNotes.length === 0 ? (
+                    <div className="text-center text-slate-500 py-4 text-xs">
+                      {notesSearchTerm ? 'No notes found' : 'No notes yet'}
+                    </div>
+                  ) : (
+                    filteredPersonalNotes.map((note) => (
+                      <div
+                        key={note.id}
+                        className="bg-slate-50 rounded p-2 hover:bg-slate-100 cursor-pointer group transition-colors"
+                        onClick={() => handleCopyNote(note)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-medium text-slate-700 truncate">
+                              {note.subject || 'Untitled'}
+                            </div>
+                            <div className="text-xs text-slate-500 mt-1 line-clamp-2">
+                              {note.content.substring(0, 60)}...
+                            </div>
+                          </div>
+                          <Copy className="h-3 w-3 text-slate-400 group-hover:text-slate-600 ml-2 flex-shrink-0" />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Full Notes Panel */}
+                <div className="border-t pt-2">
+                  <PersonalNotes />
+                </div>
               </div>
             )}
           </div>

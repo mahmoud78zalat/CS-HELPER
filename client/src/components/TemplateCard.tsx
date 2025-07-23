@@ -93,11 +93,35 @@ export default function TemplateCard({ template }: TemplateCardProps) {
       }
       await apiRequest('POST', `/api/templates/${template.id}/use`, { userId: user.id });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+    onMutate: async () => {
+      // Cancel any outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ['/api/templates'] });
+
+      // Snapshot the previous value
+      const previousTemplates = queryClient.getQueryData(['/api/templates']);
+
+      // Optimistically update the usage count immediately
+      queryClient.setQueryData(['/api/templates'], (old: Template[] | undefined) => {
+        if (!old) return old;
+        return old.map(t => 
+          t.id === template.id 
+            ? { ...t, usageCount: (t.usageCount || 0) + 1 }
+            : t
+        );
+      });
+
+      // Return context with previous value
+      return { previousTemplates };
     },
-    onError: (error) => {
-      console.error('Failed to record template usage:', error);
+    onError: (err, variables, context) => {
+      // If mutation fails, rollback to the previous value
+      if (context?.previousTemplates) {
+        queryClient.setQueryData(['/api/templates'], context.previousTemplates);
+      }
+    },
+    onSuccess: () => {
+      // Refetch to ensure consistency with server
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
     },
   });
 
