@@ -185,16 +185,16 @@ ON CONFLICT (id) DO UPDATE SET
     status = 'active',
     updated_at = NOW();
 
--- Insert some sample templates for testing
-INSERT INTO live_reply_templates (name, category, genre, content_en, content_ar, variables) VALUES
-('Order Status Inquiry', 'Orders', 'standard', 'Hello {customer_name}, let me check your order {order_id} status right away.', 'مرحباً {customer_name}، دعني أتحقق من حالة طلبك {order_id} الآن.', ARRAY['customer_name', 'order_id']),
-('General Greeting', 'General', 'greeting', 'Hello! Welcome to our customer service. How can I help you today?', 'مرحباً! أهلاً بك في خدمة العملاء. كيف يمكنني مساعدتك اليوم؟', ARRAY[]::text[]),
-('Apology Response', 'General', 'apology', 'I sincerely apologize for the inconvenience caused. Let me resolve this for you immediately.', 'أعتذر بصدق عن الإزعاج المُسبب. دعني أحل هذا الأمر لك على الفور.', ARRAY[]::text[])
+-- Insert some sample templates for testing (include created_by)
+INSERT INTO live_reply_templates (name, category, genre, content_en, content_ar, variables, created_by) VALUES
+('Order Status Inquiry', 'Orders', 'standard', 'Hello {customer_name}, let me check your order {order_id} status right away.', 'مرحباً {customer_name}، دعني أتحقق من حالة طلبك {order_id} الآن.', ARRAY['customer_name', 'order_id'], 'f765c1de-f9b5-4615-8c09-8cdde8152a07'),
+('General Greeting', 'General', 'greeting', 'Hello! Welcome to our customer service. How can I help you today?', 'مرحباً! أهلاً بك في خدمة العملاء. كيف يمكنني مساعدتك اليوم؟', ARRAY[]::text[], 'f765c1de-f9b5-4615-8c09-8cdde8152a07'),
+('Apology Response', 'General', 'apology', 'I sincerely apologize for the inconvenience caused. Let me resolve this for you immediately.', 'أعتذر بصدق عن الإزعاج المُسبب. دعني أحل هذا الأمر لك على الفور.', ARRAY[]::text[], 'f765c1de-f9b5-4615-8c09-8cdde8152a07')
 ON CONFLICT DO NOTHING;
 
-INSERT INTO email_templates (name, subject, category, genre, concerned_team, content_en, content_ar, variables) VALUES
-('Order Issue Escalation', 'Order Issue - Customer {customer_name}', 'Orders', 'urgent', 'Fulfillment', 'Customer {customer_name} has reported an issue with order {order_id}. Please investigate and respond within {time_frame}.', 'العميل {customer_name} أبلغ عن مشكلة في الطلب {order_id}. يرجى التحقيق والرد خلال {time_frame}.', ARRAY['customer_name', 'order_id', 'time_frame']),
-('Technical Support Request', 'Technical Support - {issue_type}', 'Technical', 'standard', 'IT Support', 'A customer needs technical assistance with {issue_type}. Details: {issue_description}', 'يحتاج العميل لمساعدة تقنية مع {issue_type}. التفاصيل: {issue_description}', ARRAY['issue_type', 'issue_description'])
+INSERT INTO email_templates (name, subject, category, genre, concerned_team, content_en, content_ar, variables, created_by) VALUES
+('Order Issue Escalation', 'Order Issue - Customer {customer_name}', 'Orders', 'urgent', 'Fulfillment', 'Customer {customer_name} has reported an issue with order {order_id}. Please investigate and respond within {time_frame}.', 'العميل {customer_name} أبلغ عن مشكلة في الطلب {order_id}. يرجى التحقيق والرد خلال {time_frame}.', ARRAY['customer_name', 'order_id', 'time_frame'], 'f765c1de-f9b5-4615-8c09-8cdde8152a07'),
+('Technical Support Request', 'Technical Support - {issue_type}', 'Technical', 'standard', 'IT Support', 'A customer needs technical assistance with {issue_type}. Details: {issue_description}', 'يحتاج العميل لمساعدة تقنية مع {issue_type}. التفاصيل: {issue_description}', ARRAY['issue_type', 'issue_description'], 'f765c1de-f9b5-4615-8c09-8cdde8152a07')
 ON CONFLICT DO NOTHING;
 
 COMMIT;
