@@ -394,8 +394,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   }
 
   const handleDeleteTemplate = (templateId: string) => {
-    if (confirm('Are you sure you want to delete this template?')) {
+    if (confirm('Are you sure you want to delete this live chat template?')) {
       deleteTemplateMutation.mutate(templateId);
+    }
+  }
+
+  const handleDeleteEmailTemplate = (templateId: string) => {
+    if (confirm('Are you sure you want to delete this email template?')) {
+      deleteEmailTemplateMutation.mutate(templateId);
     }
   };
 
@@ -849,9 +855,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDeleteTemplate(template.id)}
+                            onClick={() => handleDeleteEmailTemplate(template.id)}
                             className="text-red-600 hover:text-red-700"
-                            title="Delete Template"
+                            title="Delete Email Template"
                           >
                             <Trash className="h-3 w-3" />
                           </Button>
