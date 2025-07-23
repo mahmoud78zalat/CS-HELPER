@@ -19,12 +19,29 @@ export class SupabaseStorage implements IStorage {
   private client: SupabaseClient;
 
   constructor() {
-    // Use the provided Supabase URL
-    const supabaseUrl = 'https://lafldimdrginjqloihbh.supabase.co';
-    const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZmxkaW1kcmdpbmpxbG9paGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcxNDc0MzUsImV4cCI6MjA1MjcyMzQzNX0.hcAV8VXdYFZ7mQjUYQ9ot28DZpCbJvj0MWaYjkHj9lk';
+    // Environment variables seem to be swapped in Replit, let's handle both cases
+    let supabaseUrl = process.env.SUPABASE_URL;
+    let supabaseKey = process.env.SUPABASE_ANON_KEY;
+    
+    // Check if they're swapped (URL in ANON_KEY and key in URL)
+    if (supabaseKey && supabaseKey.startsWith('https://')) {
+      console.log('[SupabaseStorage] Environment variables appear swapped, correcting...');
+      const temp = supabaseUrl;
+      supabaseUrl = supabaseKey;
+      supabaseKey = temp;
+    }
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables');
+    }
+    
+    // Validate URL format
+    if (!supabaseUrl.startsWith('https://')) {
+      throw new Error('SUPABASE_URL must be a valid URL starting with https://');
+    }
     
     this.client = createClient(supabaseUrl, supabaseKey);
-    console.log('[SupabaseStorage] Connected to Supabase');
+    console.log('[SupabaseStorage] Connected to Supabase at:', supabaseUrl);
   }
 
   // User operations

@@ -14,7 +14,6 @@ import {
   extractVariablesFromTemplate, 
   validateTemplate, 
   getTemplateWarning, 
-  QUICK_TEMPLATE_STARTERS,
   type DynamicVariable 
 } from "@/lib/templateUtils";
 import { 
@@ -111,16 +110,7 @@ export default function TemplateFormModal({
 
 
 
-  const useTemplateStarter = (starterKey: string) => {
-    const starter = QUICK_TEMPLATE_STARTERS[starterKey as keyof typeof QUICK_TEMPLATE_STARTERS];
-    if (starter) {
-      setFormData(prev => ({ 
-        ...prev, 
-        contentEn: starter,
-        subject: `${starterKey} - {customer_name}`
-      }));
-    }
-  };
+  // Removed Quick Template Starters as requested
 
   const insertVariable = (variableName: string) => {
     const variable = `{${variableName.toLowerCase()}}`;
@@ -206,9 +196,12 @@ export default function TemplateFormModal({
                     id="name"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="e.g., Order Delay Apology"
+                    placeholder="e.g., Order {order_id} Follow-up"
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    💡 Admin tip: You can use variables in template names like {"{order_id}"} or {"{customer_name}"}
+                  </p>
                 </div>
                 
                 {/* Concerned Team - Only for Email Templates */}
@@ -304,30 +297,7 @@ export default function TemplateFormModal({
             
             <TabsContent value="content" className="space-y-4">
               <div className="space-y-4">
-                {/* Template Starters */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Wand2 size={16} />
-                      Quick Template Starters
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.keys(QUICK_TEMPLATE_STARTERS).map((key) => (
-                        <Button
-                          key={key}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => useTemplateStarter(key)}
-                        >
-                          {key}
-                        </Button>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Quick Template Starters removed as requested */}
                 
                 <div className="space-y-4">
                   {/* English Content */}

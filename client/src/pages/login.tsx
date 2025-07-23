@@ -1,71 +1,127 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, LogIn, Headphones } from "lucide-react";
+import { useState } from 'react';
+import { useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import { signInWithEmail, signOut } from '@/lib/supabase';
+import { Lock, Mail, AlertTriangle } from 'lucide-react';
 
-export default function Login() {
+export default function LoginPage() {
+  const [, setLocation] = useLocation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const { toast } = useToast();
 
-  const handleReplitLogin = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
-    // Development mode, redirect to home page
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 1000);
+    setError('');
+
+    try {
+      const { data, error } = await signInWithEmail(email, password);
+      
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      if (data.user) {
+        // Check if user exists in our system and has admin role
+        const response = await fetch(`/api/users/${data.user.id}`);
+        if (response.ok) {
+          const userData = await response.json();
+          if (userData.role === 'admin') {
+            toast({
+              title: "Login Successful",
+              description: "Welcome back, admin!",
+            });
+            setLocation('/');
+          } else {
+            setError('Access denied. Admin role required.');
+            await signOut();
+          }
+        } else {
+          setError('User not found in system. Please contact your administrator.');
+          await signOut();
+        }
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">BFL Customer Service</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Admin Login</CardTitle>
           <CardDescription className="text-center">
-            Beta Testing Mode - Admin Access Enabled
+            Sign in to access the customer service platform
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          <div className="text-center space-y-4">
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <Headphones className="h-8 w-8 text-green-600 mx-auto mb-2" />
-              <p className="text-sm text-green-700 font-medium">Beta Testing Active</p>
-              <p className="text-xs text-green-600 mt-1">
-                You have full admin access for testing purposes
-              </p>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
             
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <Button 
-              onClick={handleReplitLogin}
+              type="submit" 
+              className="w-full" 
               disabled={isLoading}
-              className="w-full"
-              size="lg"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Accessing Dashboard...
-                </>
-              ) : (
-                <>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Enter Dashboard (Beta Mode)
-                </>
-              )}
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
-            
-            <p className="text-xs text-muted-foreground">
-              Authentication is temporarily disabled for beta testing.
-              <br />
-              Contact your system administrator for production access.
+          </form>
+
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-semibold text-blue-900 mb-2">Admin Access Only</h4>
+            <p className="text-sm text-blue-700">
+              This platform is restricted to administrators only. Users must be manually created 
+              in the Supabase dashboard with admin role permissions.
             </p>
           </div>
         </CardContent>

@@ -74,6 +74,18 @@ export default function TemplateCard({ template }: TemplateCardProps) {
     return replaceVariables(rawContent || '', variables);
   }, [customerData, user, template]);
 
+  // Function to replace variables in template name
+  const replaceVariablesInTemplateName = (name: string) => {
+    const variables = {
+      ...customerData,
+      customer_name: customerData.customer_name || '',
+      order_id: customerData.order_id || '',
+      awb_number: customerData.awb_number || '',
+      agent_name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Support Agent',
+    };
+    return replaceVariables(name, variables);
+  };
+
   const usageMutation = useMutation({
     mutationFn: async () => {
       await apiRequest('POST', `/api/templates/${template.id}/use`);
