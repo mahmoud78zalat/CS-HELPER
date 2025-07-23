@@ -72,16 +72,18 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       // Broadcast user update to all connected users
       await realTimeService.broadcastUserUpdate();
       toast({
-        title: "Success",
-        description: "User status updated successfully!",
+        title: "User status updated",
+        description: "Changes applied successfully",
+        duration: 3000,
       });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: "Session expired",
+          description: "Redirecting to login...",
           variant: "destructive",
+          duration: 4000,
         });
         setTimeout(() => {
           window.location.href = "/api/login";
@@ -89,9 +91,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to update user status",
+        title: "Update failed",
+        description: "Unable to change user status. Please try again.",
         variant: "destructive",
+        duration: 4000,
       });
     },
   });
@@ -106,16 +109,18 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       // Broadcast user update to all connected users
       await realTimeService.broadcastUserUpdate();
       toast({
-        title: "Success",
-        description: "User role updated successfully!",
+        title: "Role updated",
+        description: "User permissions changed successfully",
+        duration: 3000,
       });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: "Session expired",
+          description: "Redirecting to login...",
           variant: "destructive",
+          duration: 4000,
         });
         setTimeout(() => {
           window.location.href = "/api/login";
@@ -123,9 +128,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to update user role",
+        title: "Role update failed",
+        description: "Unable to change user permissions. Please try again.",
         variant: "destructive",
+        duration: 4000,
       });
     },
   });
@@ -140,16 +146,18 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       // Broadcast template update to all connected users
       await realTimeService.broadcastTemplateUpdate();
       toast({
-        title: "Success",
-        description: "Template deleted successfully!",
+        title: "Template deleted",
+        description: "Removed from system successfully",
+        duration: 3000,
       });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: "Session expired",
+          description: "Redirecting to login...",
           variant: "destructive",
+          duration: 4000,
         });
         setTimeout(() => {
           window.location.href = "/api/login";
@@ -157,9 +165,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to delete template",
+        title: "Delete failed",
+        description: "Unable to remove template. Please try again.",
         variant: "destructive",
+        duration: 4000,
       });
     },
   });
@@ -172,15 +181,17 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
       toast({
-        title: "Success",
-        description: "Email template deleted successfully!",
+        title: "Email template deleted",
+        description: "Successfully removed from system",
+        duration: 3000,
       });
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: "Failed to delete email template",
+        title: "Delete failed",
+        description: "Unable to remove email template. Please try again.",
         variant: "destructive",
+        duration: 4000,
       });
     },
   });
@@ -906,8 +917,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         localStorage.setItem('footer_text', footerText || '');
                         
                         toast({
-                          title: "Success",
-                          description: "Site content changes saved successfully",
+                          title: "Changes saved successfully",
+                          description: "Your site branding updates have been applied",
+                          duration: 3000,
                         });
                         
                         // Force refresh the page to show changes
