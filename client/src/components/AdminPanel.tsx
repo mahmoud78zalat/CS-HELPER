@@ -51,7 +51,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // User status mutation
   const userStatusMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      await apiRequest('PATCH', `/api/users/${userId}/status`, { status });
+      await apiRequest('PUT', `/api/users/${userId}/status`, { status });
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -85,7 +85,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // User role mutation
   const userRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      await apiRequest('PATCH', `/api/users/${userId}/role`, { role });
+      await apiRequest('PUT', `/api/users/${userId}/role`, { role });
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -185,7 +185,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Template update mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      await apiRequest('PATCH', `/api/templates/${id}`, data);
+      await apiRequest('PUT', `/api/templates/${id}`, data);
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });

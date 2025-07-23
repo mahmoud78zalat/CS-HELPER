@@ -182,28 +182,6 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     });
   };
 
-  const getGenreColor = (genre: string) => {
-    const colors = {
-      'Urgent': 'red',
-      'Standard': 'blue',
-      'Follow-up': 'green',
-      'Escalation': 'orange',
-      'Resolution': 'emerald',
-      'Information Request': 'purple',
-      'Complaint Handling': 'yellow',
-      'Greeting': 'cyan',
-      'CSAT': 'indigo',
-      'Warning Abusive Language': 'red',
-      'Apology': 'amber',
-      'Thank You': 'pink',
-      'Farewell': 'teal',
-      'Confirmation': 'lime',
-      'Technical Support': 'violet',
-      'Holiday/Special Occasion': 'rose'
-    };
-    return colors[genre as keyof typeof colors] || 'gray';
-  };
-
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden">
