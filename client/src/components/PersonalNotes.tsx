@@ -373,7 +373,7 @@ export default function PersonalNotes() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleCopyNote(note.content)}
+                          onClick={() => handleCopyNote(note)}
                           className="h-8 w-8 p-0 hover:bg-blue-100"
                         >
                           <Copy className="h-4 w-4" />

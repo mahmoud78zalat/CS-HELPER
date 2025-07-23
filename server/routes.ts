@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { SupabasePersonalNotesStorage } from "./supabase-personal-notes";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertTemplateSchema, insertSiteContentSchema, insertPersonalNoteSchema } from "@shared/schema";
+import { insertLiveReplyTemplateSchema, insertEmailTemplateSchema, insertSiteContentSchema, insertPersonalNoteSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -162,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const templateData = insertTemplateSchema.parse({
+      const templateData = insertLiveReplyTemplateSchema.parse({
         ...req.body,
         createdBy: req.user.claims.sub,
       });
@@ -186,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { id } = req.params;
-      const updateData = insertTemplateSchema.partial().parse(req.body);
+      const updateData = insertLiveReplyTemplateSchema.partial().parse(req.body);
 
       const template = await storage.updateTemplate(id, updateData);
       res.json(template);
