@@ -22,21 +22,33 @@ interface EmailComposerModalProps {
 const TEMPLATE_VARIABLES = {
   customer: [
     { key: "customer_name", label: "Customer Name", placeholder: "John Doe" },
+    { key: "customername", label: "Customer Name", placeholder: "John Doe" },
+    { key: "CUSTOMER_NAME", label: "Customer Name (Uppercase)", placeholder: "JOHN DOE" },
     { key: "customer_email", label: "Customer Email", placeholder: "john@example.com" },
+    { key: "CUSTOMER_EMAIL", label: "Customer Email (Uppercase)", placeholder: "JOHN@EXAMPLE.COM" },
     { key: "customer_phone", label: "Customer Phone", placeholder: "+971501234567" },
+    { key: "CUSTOMER_PHONE", label: "Customer Phone (Uppercase)", placeholder: "+971501234567" },
     { key: "customer_address", label: "Customer Address", placeholder: "Dubai, UAE" },
+    { key: "gender", label: "Gender", placeholder: "Male/Female" },
+    { key: "GENDER", label: "Gender (Uppercase)", placeholder: "MALE/FEMALE" },
   ],
   order: [
     { key: "order_id", label: "Order ID", placeholder: "ORD123456" },
+    { key: "ORDER_ID", label: "Order ID (Uppercase)", placeholder: "ORD123456" },
     { key: "awb_number", label: "AWB Number", placeholder: "AWB789012" },
+    { key: "AWB_NUMBER", label: "AWB Number (Uppercase)", placeholder: "AWB789012" },
     { key: "order_status", label: "Order Status", placeholder: "Processing" },
+    { key: "ORDER_STATUS", label: "Order Status (Uppercase)", placeholder: "PROCESSING" },
     { key: "tracking_number", label: "Tracking Number", placeholder: "TRK345678" },
     { key: "delivery_date", label: "Delivery Date", placeholder: "2025-01-25" },
     { key: "waiting_time", label: "Waiting Time", placeholder: "2-3 business days" },
+    { key: "WAITING_TIME", label: "Waiting Time (Uppercase)", placeholder: "2-3 BUSINESS DAYS" },
+    { key: "item_name", label: "Item Name", placeholder: "Product Name" },
   ],
   system: [
     { key: "agent_name", label: "Agent Name", placeholder: "Support Agent" },
     { key: "agentname", label: "Agent Name", placeholder: "Support Agent" },
+    { key: "AGENTNAME", label: "Agent Name (Uppercase)", placeholder: "SUPPORT AGENT" },
     { key: "concerned_team", label: "Concerned Team", placeholder: "Finance Team" },
     { key: "company_name", label: "Company Name", placeholder: "Brands For Less" },
     { key: "support_email", label: "Support Email", placeholder: "support@brandsforless.com" },
@@ -49,7 +61,7 @@ const TEMPLATE_VARIABLES = {
   ],
   custom: [
     { key: "reason", label: "Reason", placeholder: "Enter reason here..." },
-    { key: "REASON", label: "Reason", placeholder: "Enter reason here..." },
+    { key: "REASON", label: "Reason (Uppercase)", placeholder: "ENTER REASON HERE..." },
   ]
 };
 
@@ -89,44 +101,62 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       minute: '2-digit'
     });
 
-    setVariableValues(prev => ({
-      ...prev,
-      // Customer data - updates automatically when customerData changes
-      customer_name: customerData.customer_name || '',
-      CUSTOMER_NAME: customerData.customer_name || '', // Uppercase version
-      customer_email: customerData.customer_email || '',
-      CUSTOMER_EMAIL: customerData.customer_email || '', // Uppercase version
-      customer_phone: customerData.customer_phone || '',
-      CUSTOMER_PHONE: customerData.customer_phone || '', // Uppercase version
-      
-      // Order data - updates automatically when customerData changes
-      order_id: customerData.order_id || '',
-      ORDER_ID: customerData.order_id || '', // Uppercase version
-      awb_number: customerData.awb_number || '',
-      AWB_NUMBER: customerData.awb_number || '', // Uppercase version
-      order_status: customerData.order_status || '',
-      ORDER_STATUS: customerData.order_status || '', // Uppercase version
-      waiting_time: '2-3 business days',
-      WAITING_TIME: '2-3 business days', // Uppercase version
-      
-      // System data
-      agent_name: selectedAgentName,
-      agentname: selectedAgentName, // Support both formats
-      AGENTNAME: selectedAgentName, // Support uppercase
-      company_name: 'Brands For Less',
-      support_email: 'support@brandsforless.com',
-      business_hours: '9 AM - 6 PM, Sunday - Thursday',
-      
-      // Time data - updates with current time
-      current_date: currentDate,
-      current_time: currentTime,
-      time_frame: '24-48 hours',
-      
-      // Custom fields - preserve existing values
-      reason: prev.reason || '',
-      REASON: prev.REASON || '',
-    }));
-  }, [customerData, user]);
+    setVariableValues(prev => {
+      const newValues = {
+        ...prev,
+        // Customer data - updates automatically when customerData changes
+        customer_name: customerData.customer_name || '',
+        customername: customerData.customer_name || '', // Support [customername] format
+        CUSTOMER_NAME: customerData.customer_name || '', // Uppercase version
+        customer_email: customerData.customer_email || '',
+        CUSTOMER_EMAIL: customerData.customer_email || '', // Uppercase version
+        customer_phone: customerData.customer_phone || '',
+        CUSTOMER_PHONE: customerData.customer_phone || '', // Uppercase version
+        gender: customerData.gender || '',
+        GENDER: customerData.gender || '', // Uppercase version
+        
+        // Order data - updates automatically when customerData changes
+        order_id: customerData.order_id || '',
+        ORDER_ID: customerData.order_id || '', // Uppercase version
+        awb_number: customerData.awb_number || '',
+        AWB_NUMBER: customerData.awb_number || '', // Uppercase version
+        order_status: customerData.order_status || '',
+        ORDER_STATUS: customerData.order_status || '', // Uppercase version
+        item_name: customerData.item_name || '',
+        delivery_date: customerData.delivery_date || '',
+        waiting_time: customerData.waiting_time || '2-3 business days',
+        WAITING_TIME: customerData.waiting_time || '2-3 business days', // Uppercase version
+        
+        // System data
+        agent_name: selectedAgentName,
+        agentname: selectedAgentName, // Support both formats
+        AGENTNAME: selectedAgentName, // Support uppercase
+        company_name: 'Brands For Less',
+        support_email: 'support@brandsforless.com',
+        business_hours: '9 AM - 6 PM, Sunday - Thursday',
+        
+        // Time data - updates with current time
+        current_date: currentDate,
+        current_time: currentTime,
+        time_frame: '24-48 hours',
+        
+        // Custom fields - preserve existing values
+        reason: prev.reason || '',
+        REASON: prev.REASON || '',
+      };
+
+      // If a template is selected, immediately update the displayed content with new variable values
+      if (selectedTemplate) {
+        const newSubject = replaceVariablesWithValues(selectedTemplate.subject || '', newValues);
+        const newBody = replaceVariablesWithValues(selectedTemplate.content || '', newValues);
+        
+        setEmailSubject(newSubject);
+        setEmailBody(newBody);
+      }
+
+      return newValues;
+    });
+  }, [customerData, user, selectedTemplate]);
 
   // Filter templates based on search
   const filteredTemplates = Array.isArray(templates) ? templates.filter((template: EmailTemplate) =>
@@ -138,34 +168,42 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
 
   // Replace variables in content - supports both {variable} and [variable] patterns
   const replaceVariables = (text: string) => {
+    return replaceVariablesWithValues(text, variableValues);
+  };
+
+  // Replace variables with specific values object
+  const replaceVariablesWithValues = (text: string, values: Record<string, string>) => {
     let result = text;
     
     // Replace {variable} patterns
     result = result.replace(/\{(\w+)\}/g, (match, key) => {
-      return variableValues[key] || 
-             variableValues[key.toLowerCase()] || 
-             variableValues[key.toUpperCase()] || 
+      return values[key] || 
+             values[key.toLowerCase()] || 
+             values[key.toUpperCase()] || 
              match;
     });
     
     // Replace [variable] patterns  
     result = result.replace(/\[(\w+)\]/g, (match, key) => {
-      return variableValues[key] || 
-             variableValues[key.toLowerCase()] || 
-             variableValues[key.toUpperCase()] || 
+      return values[key] || 
+             values[key.toLowerCase()] || 
+             values[key.toUpperCase()] || 
              match;
     });
     
     return result;
   };
 
-  // Handle template selection - preserve original template content
+  // Handle template selection - apply live variable replacement immediately
   const handleTemplateSelect = (template: EmailTemplate) => {
     setSelectedTemplate(template);
     
-    // Keep original template content in editing fields - NO variable replacement here
-    setEmailSubject(template.subject || '');
-    setEmailBody(template.content || '');
+    // Apply variable replacement immediately to show live content
+    const replacedSubject = replaceVariables(template.subject || '');
+    const replacedBody = replaceVariables(template.content || '');
+    
+    setEmailSubject(replacedSubject);
+    setEmailBody(replacedBody);
     setShowVariables(true);
     
     // Update concerned team in variables
@@ -175,12 +213,25 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     }));
   };
 
-  // Handle variable value change - NO template re-processing, just update values
+  // Handle variable value change - immediately update template content with live values
   const handleVariableChange = (key: string, value: string) => {
-    setVariableValues(prev => ({
-      ...prev,
-      [key]: value
-    }));
+    setVariableValues(prev => {
+      const newValues = {
+        ...prev,
+        [key]: value
+      };
+      
+      // Immediately update the template content with new variable values
+      if (selectedTemplate) {
+        const newSubject = replaceVariablesWithValues(selectedTemplate.subject || '', newValues);
+        const newBody = replaceVariablesWithValues(selectedTemplate.content || '', newValues);
+        
+        setEmailSubject(newSubject);
+        setEmailBody(newBody);
+      }
+      
+      return newValues;
+    });
   };
 
   // Get final email content with variables replaced - for preview/copy only
@@ -388,50 +439,27 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="subject" className="text-sm font-medium">Template Subject (Original)</Label>
+                  <Label htmlFor="subject" className="text-sm font-medium">Email Subject (Live Updates)</Label>
                   <Input
                     id="subject"
                     value={emailSubject}
                     onChange={(e) => setEmailSubject(e.target.value)}
                     placeholder="Select a template to see the subject..."
                     className="mt-1 font-mono text-sm"
-                    readOnly={!!selectedTemplate}
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="body" className="text-sm font-medium">Template Content (Original)</Label>
+                  <Label htmlFor="body" className="text-sm font-medium">Email Content (Live Updates)</Label>
                   <Textarea
                     id="body"
                     value={emailBody}
                     onChange={(e) => setEmailBody(e.target.value)}
                     placeholder="Select a template to see the content..."
-                    rows={14}
+                    rows={18}
                     className="mt-1 font-mono text-sm resize-none"
-                    readOnly={!!selectedTemplate}
                   />
                 </div>
-                
-                {/* Live Preview Section */}
-                {selectedTemplate && (
-                  <div className="border-t pt-4">
-                    <Label className="text-sm font-medium text-green-700">Live Preview (With Variables)</Label>
-                    <div className="bg-green-50 border border-green-200 rounded p-3 mt-2">
-                      <div className="mb-3">
-                        <div className="text-xs font-medium text-green-600 mb-1">Subject:</div>
-                        <div className="text-sm bg-white p-2 rounded border font-mono">
-                          {getFinalSubject()}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs font-medium text-green-600 mb-1">Content:</div>
-                        <div className="text-sm bg-white p-3 rounded border font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
-                          {getFinalBody()}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
                 
                 {selectedTemplate?.warningNote && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
@@ -475,7 +503,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                           <div className="space-y-3">
                             {categoryVariables.map((variable) => {
                               const hasValue = !!variableValues[variable.key];
-                              const isFromCustomerData = ['customer_name', 'customer_email', 'customer_phone', 'customer_country', 'gender', 'order_id', 'awb_number', 'order_status', 'tracking_number', 'item_name', 'delivery_date', 'waiting_time'].includes(variable.key);
+                              const isFromCustomerData = ['customer_name', 'customername', 'CUSTOMER_NAME', 'customer_email', 'CUSTOMER_EMAIL', 'customer_phone', 'CUSTOMER_PHONE', 'customer_country', 'gender', 'GENDER', 'order_id', 'ORDER_ID', 'awb_number', 'AWB_NUMBER', 'order_status', 'ORDER_STATUS', 'tracking_number', 'item_name', 'delivery_date', 'waiting_time', 'WAITING_TIME'].includes(variable.key);
                               
                               return (
                                 <div key={variable.key} className={`${hasValue ? 'bg-green-50 border border-green-200 rounded p-2' : ''}`}>
