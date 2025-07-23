@@ -200,8 +200,8 @@ export default function TemplateCard({ template }: TemplateCardProps) {
               };
 
               const processedContent = replaceVariables(template.content || '', variables);
-              const preview = processedContent.slice(0, 200);
-              return preview + (processedContent.length > 200 ? '...' : '');
+              const display = processedContent.slice(0, 200);
+              return display + (processedContent.length > 200 ? '...' : '');
             })()}
           </div>
         </div>

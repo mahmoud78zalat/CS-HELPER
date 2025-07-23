@@ -147,11 +147,16 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     });
   };
 
-  // Handle template selection
+  // Handle template selection - directly replace variables in content
   const handleTemplateSelect = (template: EmailTemplate) => {
     setSelectedTemplate(template);
-    setEmailSubject(template.subject || '');
-    setEmailBody(template.content || '');
+    
+    // Apply variable replacement immediately to the template content
+    const replacedSubject = replaceVariables(template.subject || '');
+    const replacedBody = replaceVariables(template.content || '');
+    
+    setEmailSubject(replacedSubject);
+    setEmailBody(replacedBody);
     setShowVariables(true);
     
     // Update concerned team in variables
@@ -161,12 +166,36 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     }));
   };
 
-  // Handle variable value change
+  // Handle variable value change - update template content immediately
   const handleVariableChange = (key: string, value: string) => {
-    setVariableValues(prev => ({
-      ...prev,
-      [key]: value
-    }));
+    setVariableValues(prev => {
+      const newValues = {
+        ...prev,
+        [key]: value
+      };
+      
+      // Immediately update the email content with new variables
+      if (selectedTemplate) {
+        const newSubject = selectedTemplate.subject?.replace(/\{(\w+)\}/g, (match, varKey) => {
+          return newValues[varKey] || 
+                 newValues[varKey.toLowerCase()] || 
+                 newValues[varKey.toUpperCase()] || 
+                 match;
+        }) || '';
+        
+        const newBody = selectedTemplate.content?.replace(/\{(\w+)\}/g, (match, varKey) => {
+          return newValues[varKey] || 
+                 newValues[varKey.toLowerCase()] || 
+                 newValues[varKey.toUpperCase()] || 
+                 match;
+        }) || '';
+        
+        setEmailSubject(newSubject);
+        setEmailBody(newBody);
+      }
+      
+      return newValues;
+    });
   };
 
   // Get final email content with variables replaced
@@ -249,7 +278,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           </div>
         </DialogHeader>
 
-        <div className="flex h-[calc(100vh-150px)] gap-6">
+        <div className="flex h-[calc(100vh-120px)] gap-4">
           {/* Left Panel: Template Selection */}
           <div className="w-80 border-r border-slate-200 flex flex-col">
             <div className="p-4 border-b border-slate-200">
@@ -358,63 +387,37 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="subject" className="text-sm font-medium">Subject Line</Label>
-                    <Input
-                      id="subject"
-                      value={emailSubject}
-                      onChange={(e) => setEmailSubject(e.target.value)}
-                      placeholder="Enter email subject..."
-                      className="mt-1"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="body" className="text-sm font-medium">Email Content</Label>
-                    <Textarea
-                      id="body"
-                      value={emailBody}
-                      onChange={(e) => setEmailBody(e.target.value)}
-                      placeholder="Enter email content..."
-                      rows={10}
-                      className="mt-1 font-mono text-sm resize-none"
-                    />
-                  </div>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="subject" className="text-sm font-medium">Subject Line</Label>
+                  <Input
+                    id="subject"
+                    value={getFinalSubject()}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    placeholder="Enter email subject..."
+                    className="mt-1"
+                  />
                 </div>
-
-                {/* Live Preview */}
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <h3 className="font-medium mb-3 flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-blue-500" />
-                    Live Preview
-                  </h3>
-                  
-                  <div className="bg-white rounded border p-4 space-y-4">
-                    <div className="border-l-4 border-blue-500 pl-3">
-                      <h4 className="font-medium text-slate-700 text-sm">Subject:</h4>
-                      <p className="text-sm text-slate-900 break-words">
-                        {getFinalSubject() || 'No subject entered'}
-                      </p>
-                    </div>
-                    
-                    {selectedTemplate?.warningNote && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
-                        <p className="text-xs text-yellow-800">
-                          ⚠️ {selectedTemplate.warningNote}
-                        </p>
-                      </div>
-                    )}
-                    
-                    <div className="border-t pt-3">
-                      <h4 className="font-medium text-slate-700 text-sm mb-2">Body:</h4>
-                      <div className="text-sm text-slate-900 whitespace-pre-wrap break-words max-h-60 overflow-y-auto">
-                        {getFinalBody() || 'No content entered'}
-                      </div>
-                    </div>
-                  </div>
+                
+                <div>
+                  <Label htmlFor="body" className="text-sm font-medium">Email Content</Label>
+                  <Textarea
+                    id="body"
+                    value={getFinalBody()}
+                    onChange={(e) => setEmailBody(e.target.value)}
+                    placeholder="Enter email content..."
+                    rows={16}
+                    className="mt-1 font-mono text-sm resize-none"
+                  />
                 </div>
+                
+                {selectedTemplate?.warningNote && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ {selectedTemplate.warningNote}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
