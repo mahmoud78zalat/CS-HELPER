@@ -134,9 +134,11 @@ export default function TemplateCard({ template }: TemplateCardProps) {
               </Badge>
             </div>
           </div>
-          <div className="text-xs text-slate-500 mt-2 lg:mt-0 lg:ml-2 flex-shrink-0">
-            Used {template.usageCount} times
-          </div>
+          {user?.role === 'admin' && (
+            <div className="text-xs text-slate-500 mt-2 lg:mt-0 lg:ml-2 flex-shrink-0">
+              Used {template.usageCount} times
+            </div>
+          )}
         </div>
 
 

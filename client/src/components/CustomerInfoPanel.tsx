@@ -3,11 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useCustomerData } from "@/hooks/useCustomerData";
-import { Copy } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CustomerInfoPanel() {
-  const { customerData, updateCustomerData } = useCustomerData();
+  const { customerData, updateCustomerData, clearCustomerData } = useCustomerData();
   const { toast } = useToast();
 
   const handleDetectCountry = () => {
@@ -50,20 +50,7 @@ export default function CustomerInfoPanel() {
     }
   };
 
-  const handleCopyInfo = () => {
-    const info = `Customer Information:
-Name: ${customerData.customer_name || 'N/A'}
-Phone: ${customerData.customer_phone || 'N/A'}
-Email: ${customerData.customer_email || 'N/A'}
-Country: ${customerData.customer_country || 'N/A'}
-Gender: ${customerData.gender || 'N/A'}`;
 
-    navigator.clipboard.writeText(info);
-    toast({
-      title: "Success",
-      description: "Customer information copied to clipboard!",
-    });
-  };
 
   return (
     <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
@@ -152,11 +139,12 @@ Gender: ${customerData.gender || 'N/A'}`;
         </div>
         
         <Button 
-          onClick={handleCopyInfo}
-          className="w-full mt-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-3 rounded-md text-sm hover:shadow-lg transition-all duration-200"
+          onClick={clearCustomerData}
+          variant="outline"
+          className="w-full mt-3 text-sm"
         >
-          <Copy className="w-4 h-4 mr-2" />
-          Copy Customer Info
+          <Trash2 className="w-4 h-4 mr-2" />
+          Clear All Info
         </Button>
       </div>
     </div>

@@ -275,7 +275,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[95vh] w-[95vw] h-[90vh] p-0" aria-describedby="admin-panel-description">
+      <DialogContent className="max-w-[98vw] max-h-[98vh] w-[98vw] h-[98vh] p-0" aria-describedby="admin-panel-description">
         <DialogHeader className="p-4 lg:p-6 border-b">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center space-x-2">
