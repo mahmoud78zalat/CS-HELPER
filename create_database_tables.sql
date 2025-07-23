@@ -168,12 +168,12 @@ CREATE POLICY "Allow site content management" ON site_content FOR ALL USING (tru
 -- RLS Policies for personal notes (user-specific)
 CREATE POLICY "Users can manage their own notes" ON personal_notes FOR ALL USING (auth.uid()::text = user_id::text);
 
--- Insert default site content
-INSERT INTO site_content (key, content, content_type) VALUES
-('site_name', 'BFL Customer Service Helper', 'text'),
-('about_content', 'A comprehensive customer service management tool', 'text'),
-('version_label', 'v2.1.0', 'text'),
-('footer_text', 'Made by Mahmoud Zalat', 'text')
+-- Insert default site content (only using columns that exist)
+INSERT INTO site_content (key, content) VALUES
+('site_name', 'BFL Customer Service Helper'),
+('about_content', 'A comprehensive customer service management tool'),
+('version_label', 'v2.1.0'),
+('footer_text', 'Made by Mahmoud Zalat')
 ON CONFLICT (key) DO NOTHING;
 
 -- Create your admin user (replace with your actual email)
