@@ -166,29 +166,19 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     }));
   };
 
-  // Handle variable value change - update template content immediately
+  // Handle variable value change - CRITICAL FIX: Keep variables visible and update templates
   const handleVariableChange = (key: string, value: string) => {
+    console.log('Variable changed - keeping visible:', key, value);
     setVariableValues(prev => {
       const newValues = {
         ...prev,
         [key]: value
       };
       
-      // Immediately update the email content with new variables
+      // Force immediate template update - variables stay visible
       if (selectedTemplate) {
-        const newSubject = selectedTemplate.subject?.replace(/\{(\w+)\}/g, (match, varKey) => {
-          return newValues[varKey] || 
-                 newValues[varKey.toLowerCase()] || 
-                 newValues[varKey.toUpperCase()] || 
-                 match;
-        }) || '';
-        
-        const newBody = selectedTemplate.content?.replace(/\{(\w+)\}/g, (match, varKey) => {
-          return newValues[varKey] || 
-                 newValues[varKey.toLowerCase()] || 
-                 newValues[varKey.toUpperCase()] || 
-                 match;
-        }) || '';
+        const newSubject = replaceVariables(selectedTemplate.subject || '');
+        const newBody = replaceVariables(selectedTemplate.content || '');
         
         setEmailSubject(newSubject);
         setEmailBody(newBody);
@@ -392,7 +382,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   <Label htmlFor="subject" className="text-sm font-medium">Subject Line</Label>
                   <Input
                     id="subject"
-                    value={getFinalSubject()}
+                    value={emailSubject}
                     onChange={(e) => setEmailSubject(e.target.value)}
                     placeholder="Enter email subject..."
                     className="mt-1"
@@ -403,7 +393,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   <Label htmlFor="body" className="text-sm font-medium">Email Content</Label>
                   <Textarea
                     id="body"
-                    value={getFinalBody()}
+                    value={emailBody}
                     onChange={(e) => setEmailBody(e.target.value)}
                     placeholder="Enter email content..."
                     rows={16}

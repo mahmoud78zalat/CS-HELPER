@@ -22,10 +22,11 @@ export default function TemplateCard({ template }: TemplateCardProps) {
   const queryClient = useQueryClient();
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Force re-render when customer data changes to ensure live updates
+  // Force re-render when customer data changes - CRITICAL FIX for live updates
   useEffect(() => {
+    console.log('TemplateCard: Customer data changed:', customerData);
     setRefreshKey(prev => prev + 1);
-  }, [customerData]);
+  }, [customerData, customerData.customer_name, customerData.customer_phone, customerData.customer_email]);
 
   const usageMutation = useMutation({
     mutationFn: async () => {

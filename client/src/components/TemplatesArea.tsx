@@ -12,10 +12,11 @@ export default function TemplatesArea() {
   const [forceRefresh, setForceRefresh] = useState(0);
   const { customerData } = useCustomerData();
 
-  // Force refresh when customer data changes
+  // Force refresh when customer data changes - CRITICAL FIX
   useEffect(() => {
+    console.log('TemplatesArea: Customer data changed, forcing refresh:', customerData);
     setForceRefresh(prev => prev + 1);
-  }, [customerData]);
+  }, [customerData, customerData?.customer_name, customerData?.customer_phone, customerData?.customer_email]);
 
   const { data: templates, isLoading } = useTemplates({
     search: searchTerm || undefined,
