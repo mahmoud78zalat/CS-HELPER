@@ -30,12 +30,35 @@ export default function TemplateCard({ template }: TemplateCardProps) {
   });
 
   const handleCopyTemplate = () => {
-    const agentName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
+    const selectedAgentName = localStorage.getItem('selectedAgentName') || 
+                              `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
+                              user?.email ||
+                              'Support Agent';
+    
     const variables = {
       ...customerData,
-      agent_name: agentName,
+      // Customer data with uppercase variants
+      customer_name: customerData.customer_name || '',
+      CUSTOMER_NAME: customerData.customer_name || '',
+      customer_email: customerData.customer_email || '',
+      CUSTOMER_EMAIL: customerData.customer_email || '',
+      customer_phone: customerData.customer_phone || '',
+      CUSTOMER_PHONE: customerData.customer_phone || '',
+      
+      // Order data with uppercase variants
+      order_id: customerData.order_id || '',
+      ORDER_ID: customerData.order_id || '',
+      awb_number: customerData.awb_number || '',
+      AWB_NUMBER: customerData.awb_number || '',
+      
+      // Agent data with all variants
+      agent_name: selectedAgentName,
+      AGENT_NAME: selectedAgentName,
+      agentname: selectedAgentName,
+      AGENTNAME: selectedAgentName,
+      
+      // System data
       concerned_team: template.concernedTeam || '',
-      // Add more dynamic variables
       time_frame: customerData.waiting_time || '2-3 business days',
       current_date: new Date().toLocaleDateString('en-US', { 
         year: 'numeric', 
@@ -43,8 +66,13 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         day: 'numeric' 
       }),
       company_name: 'Brands For Less',
+      COMPANY_NAME: 'Brands For Less',
       support_email: 'support@brandsforless.com',
-      business_hours: '9 AM - 6 PM, Sunday - Thursday'
+      business_hours: '9 AM - 6 PM, Sunday - Thursday',
+      
+      // Custom fields
+      reason: '',
+      REASON: '',
     };
 
     // For live reply templates (chat), only copy content without subject
@@ -54,7 +82,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
     
     toast({
       title: "Success",
-      description: "Live chat reply copied to clipboard!",
+      description: "Template copied with live customer data!",
     });
 
     // Record usage
@@ -134,8 +162,47 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         
         <div className="text-sm text-slate-600">
           <div className="text-xs bg-slate-50 p-3 rounded border-l-2 border-blue-500">
-            {template.content && template.content.slice(0, 200)}
-            {template.content && template.content.length > 200 && '...'}
+            {(() => {
+              const selectedAgentName = localStorage.getItem('selectedAgentName') || 
+                                        `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
+                                        user?.email ||
+                                        'Support Agent';
+              
+              const variables = {
+                ...customerData,
+                // Customer data with uppercase variants
+                customer_name: customerData.customer_name || '',
+                CUSTOMER_NAME: customerData.customer_name || '',
+                customer_email: customerData.customer_email || '',
+                CUSTOMER_EMAIL: customerData.customer_email || '',
+                customer_phone: customerData.customer_phone || '',
+                CUSTOMER_PHONE: customerData.customer_phone || '',
+                
+                // Order data with uppercase variants
+                order_id: customerData.order_id || '',
+                ORDER_ID: customerData.order_id || '',
+                awb_number: customerData.awb_number || '',
+                AWB_NUMBER: customerData.awb_number || '',
+                
+                // Agent data with all variants
+                agent_name: selectedAgentName,
+                AGENT_NAME: selectedAgentName,
+                agentname: selectedAgentName,
+                AGENTNAME: selectedAgentName,
+                
+                // System data
+                company_name: 'Brands For Less',
+                COMPANY_NAME: 'Brands For Less',
+                
+                // Custom fields
+                reason: '',
+                REASON: '',
+              };
+
+              const processedContent = replaceVariables(template.content || '', variables);
+              const preview = processedContent.slice(0, 200);
+              return preview + (processedContent.length > 200 ? '...' : '');
+            })()}
           </div>
         </div>
       </CardContent>

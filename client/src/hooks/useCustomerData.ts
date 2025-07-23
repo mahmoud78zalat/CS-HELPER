@@ -5,8 +5,13 @@ interface CustomerData {
   customer_phone?: string;
   customer_email?: string;
   customer_country?: string;
+  customer_address?: string;
   gender?: string;
+  order_id?: string;
   order_number?: string;
+  awb_number?: string;
+  order_status?: string;
+  tracking_number?: string;
   item_name?: string;
   delivery_date?: string;
   waiting_time?: string;

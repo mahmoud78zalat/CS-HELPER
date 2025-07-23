@@ -76,7 +76,6 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     // Get agent name from localStorage (set in Header) or fallback to user data
     const selectedAgentName = localStorage.getItem('selectedAgentName') || 
                               `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
-                              user?.user_metadata?.first_name ||
                               user?.email ||
                               'Support Agent';
     
@@ -94,17 +93,21 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       ...prev,
       // Customer data - updates automatically when customerData changes
       customer_name: customerData.customer_name || '',
+      CUSTOMER_NAME: customerData.customer_name || '', // Uppercase version
       customer_email: customerData.customer_email || '',
+      CUSTOMER_EMAIL: customerData.customer_email || '', // Uppercase version
       customer_phone: customerData.customer_phone || '',
-      customer_address: customerData.customer_address || '',
+      CUSTOMER_PHONE: customerData.customer_phone || '', // Uppercase version
       
       // Order data - updates automatically when customerData changes
       order_id: customerData.order_id || '',
+      ORDER_ID: customerData.order_id || '', // Uppercase version
       awb_number: customerData.awb_number || '',
+      AWB_NUMBER: customerData.awb_number || '', // Uppercase version
       order_status: customerData.order_status || '',
-      tracking_number: customerData.tracking_number || '',
-      delivery_date: customerData.delivery_date || '',
-      waiting_time: customerData.waiting_time || '2-3 business days',
+      ORDER_STATUS: customerData.order_status || '', // Uppercase version
+      waiting_time: '2-3 business days',
+      WAITING_TIME: '2-3 business days', // Uppercase version
       
       // System data
       agent_name: selectedAgentName,
@@ -133,10 +136,14 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     template.concernedTeam.toLowerCase().includes(searchTerm.toLowerCase())
   ) : [];
 
-  // Replace variables in template content
+  // Replace variables in template content with case-insensitive matching
   const replaceVariables = (text: string) => {
     return text.replace(/\{(\w+)\}/g, (match, key) => {
-      return variableValues[key] || match;
+      // Try exact match first, then lowercase, then uppercase
+      return variableValues[key] || 
+             variableValues[key.toLowerCase()] || 
+             variableValues[key.toUpperCase()] || 
+             match;
     });
   };
 
@@ -173,7 +180,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   };
 
   const allVariables = [...getTemplateVariables(emailSubject), ...getTemplateVariables(emailBody)];
-  const uniqueVariables = [...new Set(allVariables)];
+  const uniqueVariables = Array.from(new Set(allVariables));
 
   const handleCopyEmail = () => {
     const finalEmail = `Subject: ${getFinalSubject()}\n\n${getFinalBody()}`;
