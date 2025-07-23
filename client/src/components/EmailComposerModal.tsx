@@ -62,9 +62,9 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const [showVariables, setShowVariables] = useState(false);
   
   // Fetch email templates
-  const { data: templates } = useQuery({
+  const { data: templates = [], isLoading: templatesLoading } = useQuery({
     queryKey: ['/api/email-templates'],
-    queryFn: () => apiRequest('GET', '/api/email-templates?isActive=true'),
+    retry: false,
   });
 
   const { customerData } = useCustomerData();
@@ -126,12 +126,12 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   }, [customerData, user]);
 
   // Filter templates based on search
-  const filteredTemplates = templates?.filter((template: EmailTemplate) =>
+  const filteredTemplates = Array.isArray(templates) ? templates.filter((template: EmailTemplate) =>
     template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     template.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
     template.genre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     template.concernedTeam.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  ) : [];
 
   // Replace variables in template content
   const replaceVariables = (text: string) => {

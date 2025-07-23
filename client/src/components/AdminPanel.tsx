@@ -48,6 +48,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     retry: false,
   });
 
+  // Email Templates query
+  const { data: emailTemplates = [], isLoading: emailTemplatesLoading } = useQuery({
+    queryKey: ['/api/email-templates'],
+    retry: false,
+  });
+
   // User status mutation
   const userStatusMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
