@@ -38,8 +38,8 @@ export const AVAILABLE_VARIABLES: DynamicVariable[] = [
 ];
 
 export function extractVariablesFromTemplate(content: string): string[] {
-  // Match variables in format [VARIABLENAME] or {VARIABLENAME}
-  const variableRegex = /[\[\{]([A-Z][A-Z0-9_]*)[\]\}]/g;
+  // Match variables in format [VARIABLENAME] or {variablename} - accept both cases
+  const variableRegex = /[\[\{]([A-Za-z][A-Za-z0-9_]*)[\]\}]/g;
   const matches = content.match(variableRegex);
   if (!matches) return [];
   
@@ -91,12 +91,13 @@ export function validateTemplate(content: string): {
   const variables = extractVariablesFromTemplate(content);
   const issues: string[] = [];
   
-  // Check for unrecognized variables
+  // Check for unrecognized variables - but make it a warning, not an error
   const recognizedVariables = AVAILABLE_VARIABLES.map(v => v.name);
   const unrecognized = variables.filter(v => !recognizedVariables.includes(v));
   
   if (unrecognized.length > 0) {
-    issues.push(`Unrecognized variables: ${unrecognized.join(', ')}`);
+    // Convert to warning instead of blocking error
+    console.warn(`Note: Unrecognized variables found: ${unrecognized.join(', ')} - they will be left as-is in the template`);
   }
   
   // Check for empty template
@@ -104,11 +105,12 @@ export function validateTemplate(content: string): {
     issues.push('Template content cannot be empty');
   }
   
-  // Check for malformed variables
-  const malformedRegex = /[\[\{][a-z][^\[\{\]\}]*[\]\}]/g;
+  // Check for malformed variables - accept both uppercase and lowercase
+  // Only flag truly malformed patterns like incomplete brackets
+  const malformedRegex = /[\[\{][^\[\{\]\}]*[\[\{]|[\]\}][^\[\{\]\}]*[\]\}]/g;
   const malformed = content.match(malformedRegex);
   if (malformed) {
-    issues.push(`Variables should be in UPPERCASE: ${malformed.join(', ')}`);
+    issues.push(`Malformed variable brackets found: ${malformed.join(', ')} - Variables should use single brackets like [VARIABLE_NAME] or {variable_name}`);
   }
   
   return {
