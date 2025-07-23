@@ -83,7 +83,6 @@ CREATE TABLE IF NOT EXISTS email_template_usage (
 CREATE TABLE IF NOT EXISTS site_content (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     key VARCHAR(255) NOT NULL UNIQUE,
-    title VARCHAR(500),
     content TEXT,
     content_type VARCHAR(100) DEFAULT 'text',
     is_active BOOLEAN DEFAULT true,
@@ -170,11 +169,11 @@ CREATE POLICY "Allow site content management" ON site_content FOR ALL USING (tru
 CREATE POLICY "Users can manage their own notes" ON personal_notes FOR ALL USING (auth.uid()::text = user_id::text);
 
 -- Insert default site content
-INSERT INTO site_content (key, title, content, content_type) VALUES
-('site_name', 'Site Name', 'BFL Customer Service Helper', 'text'),
-('about_content', 'About Content', 'A comprehensive customer service management tool', 'text'),
-('version_label', 'Version Label', 'v2.1.0', 'text'),
-('footer_text', 'Footer Text', 'Made by Mahmoud Zalat', 'text')
+INSERT INTO site_content (key, content, content_type) VALUES
+('site_name', 'BFL Customer Service Helper', 'text'),
+('about_content', 'A comprehensive customer service management tool', 'text'),
+('version_label', 'v2.1.0', 'text'),
+('footer_text', 'Made by Mahmoud Zalat', 'text')
 ON CONFLICT (key) DO NOTHING;
 
 -- Create your admin user (replace with your actual email)
