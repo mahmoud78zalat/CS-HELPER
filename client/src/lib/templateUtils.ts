@@ -25,7 +25,7 @@ export const AVAILABLE_VARIABLES: DynamicVariable[] = [
   
   // System Variables  
   { name: 'TICKETNUMBER', description: 'Support ticket reference', category: 'system', example: 'TKT-2025-5678' },
-  { name: 'AGENTSTNAME', description: 'Customer service agent name', category: 'system', example: 'Sarah Johnson' },
+  { name: 'AGENTNAME', description: 'Customer service agent name', category: 'system', example: 'Sarah Johnson' },
   { name: 'COMPANYNAME', description: 'Company name (BFL)', category: 'system', example: 'Brands For Less' },
   { name: 'SUPPORTEMAIL', description: 'Customer support email', category: 'system', example: 'support@brandsforless.com' },
   { name: 'SUPPORTPHONE', description: 'Customer support phone', category: 'system', example: '+971-4-123-4567' },
@@ -50,20 +50,40 @@ export function extractVariablesFromTemplate(content: string): string[] {
 
 export function replaceVariables(
   template: string, 
-  customerData: Record<string, string> = {}
+  customerData: Record<string, string> = {},
+  systemData: Record<string, string> = {}
 ): string {
-  return replaceVariablesInTemplate(template, customerData);
+  return replaceVariablesInTemplate(template, customerData, {}, systemData);
 }
 
 export function replaceVariablesInTemplate(
   template: string, 
   customerData: Record<string, string> = {},
-  additionalData: Record<string, string> = {}
+  additionalData: Record<string, string> = {},
+  systemData: Record<string, string> = {}
 ): string {
   if (!template) return '';
   
   let result = template;
-  const allData = { ...customerData, ...additionalData };
+  
+  // Get current date/time for time variables
+  const currentDate = new Date();
+  const defaultSystemData = {
+    currentdate: currentDate.toLocaleDateString('en-US', { 
+      year: 'numeric', month: 'long', day: 'numeric' 
+    }),
+    companyname: 'Brands For Less',
+    supportemail: 'support@brandsforless.com',
+    supportphone: '+971-4-123-4567',
+    businesshours: '9 AM - 6 PM, Sunday - Thursday',
+    ...systemData
+  };
+  
+  const allData = { 
+    ...customerData, 
+    ...additionalData, 
+    ...defaultSystemData 
+  };
   
   // Replace variables in both [VARIABLE] and {VARIABLE} formats
   Object.entries(allData).forEach(([key, value]) => {

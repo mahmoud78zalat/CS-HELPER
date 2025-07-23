@@ -172,32 +172,34 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   ) : [];
 
   // Replace variables in content - supports both {variable} and [variable] patterns
+  const replaceVariablesWithValues = (text: string, values: Record<string, string> = variableValues) => {
+    if (!text) return '';
+    
+    let result = text;
+    Object.entries(values).forEach(([key, value]) => {
+      if (key && value) {
+        const patterns = [
+          new RegExp(`\\{${key}\\}`, 'g'),
+          new RegExp(`\\{${key.toUpperCase()}\\}`, 'g'),
+          new RegExp(`\\{${key.toLowerCase()}\\}`, 'g'),
+          new RegExp(`\\[${key}\\]`, 'g'),
+          new RegExp(`\\[${key.toUpperCase()}\\]`, 'g'),
+          new RegExp(`\\[${key.toLowerCase()}\\]`, 'g')
+        ];
+        patterns.forEach(pattern => {
+          result = result.replace(pattern, value);
+        });
+      }
+    });
+    return result;
+  };
+
+  // Replace variables in content - supports both {variable} and [variable] patterns  
   const replaceVariables = (text: string) => {
     return replaceVariablesWithValues(text, variableValues);
   };
 
-  // Replace variables with specific values object
-  const replaceVariablesWithValues = (text: string, values: Record<string, string>) => {
-    let result = text;
-    
-    // Replace {variable} patterns
-    result = result.replace(/\{(\w+)\}/g, (match, key) => {
-      return values[key] || 
-             values[key.toLowerCase()] || 
-             values[key.toUpperCase()] || 
-             match;
-    });
-    
-    // Replace [variable] patterns  
-    result = result.replace(/\[(\w+)\]/g, (match, key) => {
-      return values[key] || 
-             values[key.toLowerCase()] || 
-             values[key.toUpperCase()] || 
-             match;
-    });
-    
-    return result;
-  };
+
 
   // Handle template selection - apply live variable replacement immediately
   const handleTemplateSelect = (template: EmailTemplate) => {

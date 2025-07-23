@@ -32,6 +32,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState('templates');
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [showTemplateForm, setShowTemplateForm] = useState(false);
+  const [isEmailTemplate, setIsEmailTemplate] = useState(false); // Track template type
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [templateSearchTerm, setTemplateSearchTerm] = useState('');
   const [emailTemplateSearchTerm, setEmailTemplateSearchTerm] = useState('');
@@ -188,7 +189,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     userRoleMutation.mutate({ userId, role });
   };
 
-  // Template create mutation
+  // Live Chat Template create mutation
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData: any) => {
       await apiRequest('POST', '/api/templates', templateData);
@@ -200,19 +201,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       setEditingTemplate(null);
       toast({
         title: "Success",
-        description: "Template created successfully!",
+        description: "Live chat template created successfully!",
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to create template",
+        description: "Failed to create live chat template",
         variant: "destructive",
       });
     },
   });
 
-  // Template update mutation
+  // Live Chat Template update mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
       await apiRequest('PUT', `/api/templates/${id}`, data);
@@ -224,13 +225,59 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       setEditingTemplate(null);
       toast({
         title: "Success", 
-        description: "Template updated successfully!",
+        description: "Live chat template updated successfully!",
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update template",
+        description: "Failed to update live chat template",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Email Template create mutation  
+  const createEmailTemplateMutation = useMutation({
+    mutationFn: async (templateData: any) => {
+      await apiRequest('POST', '/api/email-templates', templateData);
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+      setShowTemplateForm(false);
+      setEditingTemplate(null);
+      toast({
+        title: "Success",
+        description: "Email template created successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create email template",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Email Template update mutation
+  const updateEmailTemplateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      await apiRequest('PUT', `/api/email-templates/${id}`, data);
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+      setShowTemplateForm(false);
+      setEditingTemplate(null);
+      toast({
+        title: "Success",
+        description: "Email template updated successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update email template",
         variant: "destructive",
       });
     },
@@ -456,12 +503,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   <Button 
                     onClick={() => {
                       setEditingTemplate(null);
+                      setIsEmailTemplate(false);
                       setShowTemplateForm(true);
                     }}
                     className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Template
+                    Create Live Chat Template
                   </Button>
                 </div>
               </div>
@@ -747,12 +795,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   <Button 
                     onClick={() => {
                       setEditingTemplate(null);
+                      setIsEmailTemplate(true);
                       setShowTemplateForm(true);
                     }}
                     className="bg-gradient-to-r from-purple-500 to-pink-600 text-white"
                   >
                     <Wand2 className="h-4 w-4 mr-2" />
-                    Create Magic Template
+                    Create Email Template
                   </Button>
                 </div>
               </div>
@@ -814,6 +863,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                               size="sm"
                               onClick={() => {
                                 setEditingTemplate(template);
+                                setIsEmailTemplate(true);
                                 setShowTemplateForm(true);
                               }}
                             >
@@ -878,15 +928,24 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         onClose={() => {
           setShowTemplateForm(false);
           setEditingTemplate(null);
+          setIsEmailTemplate(false);
         }}
         onSave={(templateData) => {
           if (editingTemplate) {
-            updateTemplateMutation.mutate({ id: editingTemplate.id, data: templateData });
+            if (isEmailTemplate) {
+              updateEmailTemplateMutation.mutate({ id: editingTemplate.id, data: templateData });
+            } else {
+              updateTemplateMutation.mutate({ id: editingTemplate.id, data: templateData });
+            }
           } else {
-            createTemplateMutation.mutate({ ...templateData, createdBy: currentUser?.id });
+            if (isEmailTemplate) {
+              createEmailTemplateMutation.mutate({ ...templateData, createdBy: currentUser?.id });
+            } else {
+              createTemplateMutation.mutate({ ...templateData, createdBy: currentUser?.id });
+            }
           }
         }}
-        isLoading={createTemplateMutation.isPending || updateTemplateMutation.isPending}
+        isLoading={createTemplateMutation.isPending || updateTemplateMutation.isPending || createEmailTemplateMutation.isPending || updateEmailTemplateMutation.isPending}
       />
       </DialogContent>
     </Dialog>
