@@ -44,10 +44,10 @@ export const users = pgTable("users", {
 export const liveReplyTemplates = pgTable("live_reply_templates", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name").notNull(),
-  content: text("content").notNull(),
+  contentEn: text("content_en").notNull(),
+  contentAr: text("content_ar").notNull(),
   category: varchar("category").notNull(),
   genre: varchar("genre").notNull(),
-  language: varchar("language").default("en").notNull(),
   variables: text("variables").array(),
   stageOrder: integer("stage_order").default(1).notNull(),
   isActive: boolean("is_active").default(true).notNull(),

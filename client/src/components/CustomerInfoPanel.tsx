@@ -145,7 +145,6 @@ export default function CustomerInfoPanel() {
               <SelectItem value="🇰🇼 Kuwait">🇰🇼 Kuwait</SelectItem>
               <SelectItem value="🇶🇦 Qatar">🇶🇦 Qatar</SelectItem>
               <SelectItem value="🇧🇭 Bahrain">🇧🇭 Bahrain</SelectItem>
-              <SelectItem value="🇴🇲 Oman">🇴🇲 Oman</SelectItem>
               <SelectItem value="🇪🇬 Egypt">🇪🇬 Egypt</SelectItem>
               <SelectItem value="🇯🇴 Jordan">🇯🇴 Jordan</SelectItem>
               <SelectItem value="🇱🇧 Lebanon">🇱🇧 Lebanon</SelectItem>

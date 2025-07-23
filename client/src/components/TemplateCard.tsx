@@ -83,8 +83,9 @@ export default function TemplateCard({ template }: TemplateCardProps) {
       REASON: '',
     };
 
-    // For live reply templates (chat), only copy content without subject
-    const processedContent = replaceVariables(template.content || '', variables);
+    // For live reply templates (chat), choose content based on customer language
+    const selectedContent = customerData.language === 'ar' ? template.contentAr : template.contentEn;
+    const processedContent = replaceVariables(selectedContent || '', variables);
     
     navigator.clipboard.writeText(processedContent);
     
@@ -141,11 +142,9 @@ export default function TemplateCard({ template }: TemplateCardProps) {
               <Badge variant="secondary" className={`bg-${getCategoryColor(template.category)}-100 text-${getCategoryColor(template.category)}-700 text-xs px-2 py-1`}>
                 {template.category}
               </Badge>
-              {template.language && (
-                <Badge variant="outline" className="text-xs px-2 py-1">
-                  {template.language === 'ar' ? '🇴🇲 AR' : '🇬🇧 EN'}
-                </Badge>
-              )}
+              <Badge variant="outline" className="text-xs px-2 py-1">
+                🌐 Bilingual
+              </Badge>
             </div>
           </div>
           {user?.role === 'admin' && (
@@ -281,7 +280,8 @@ export default function TemplateCard({ template }: TemplateCardProps) {
                 REASON: '',
               };
 
-              const livePreview = replaceVariables(template.content || '', variables);
+              const selectedContent = customerData.language === 'ar' ? template.contentAr : template.contentEn;
+              const livePreview = replaceVariables(selectedContent || '', variables);
               const display = livePreview.slice(0, 200);
               return display + (livePreview.length > 200 ? '...' : '');
             })()}

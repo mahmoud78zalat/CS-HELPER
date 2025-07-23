@@ -27,12 +27,12 @@ export class MemoryStorage implements IStorage {
   private siteContent = new Map<string, SiteContent>();
 
   constructor() {
-    // Initialize with default admin user for beta testing
+    // Initialize with default admin user
     const defaultAdmin: User = {
       id: "admin-user",
-      firstName: "Beta",
+      firstName: "System",
       lastName: "Admin",
-      email: "admin@bfl.com",
+      email: "admin@example.com",
       profileImageUrl: null,
       role: "admin",
       status: "active",
@@ -48,13 +48,13 @@ export class MemoryStorage implements IStorage {
   }
 
   private initializeSampleData() {
-    // Sample live reply templates - English and Arabic
+    // Sample live reply templates - Bilingual (English and Arabic in single template)
     const sampleLiveTemplates: LiveReplyTemplate[] = [
-      // English Templates
       {
         id: nanoid(),
         name: "Welcome Greeting",
-        content: "Hello {customer_name}! Welcome to BFL. How can I assist you today?",
+        contentEn: "Hello {customer_name}! Welcome to our service. How can I assist you today?",
+        contentAr: "مرحباً {customer_name}! أهلاً بك في خدمتنا. كيف يمكنني مساعدتك اليوم؟",
         category: "General",
         genre: "greeting",
         variables: ["customer_name"],
@@ -66,12 +66,12 @@ export class MemoryStorage implements IStorage {
         updatedAt: new Date(),
         supabaseId: null,
         lastSyncedAt: null,
-        language: "en",
       },
       {
         id: nanoid(),
         name: "Order Status Check",
-        content: "Hi {customer_name}, let me check the status of your order {order_id} right away.",
+        contentEn: "Hi {customer_name}, let me check the status of your order {order_id} right away.",
+        contentAr: "مرحباً {customer_name}، دعني أتحقق من حالة طلبك {order_id} فوراً.",
         category: "Orders",
         genre: "standard",
         variables: ["customer_name", "order_id"],
@@ -83,12 +83,12 @@ export class MemoryStorage implements IStorage {
         updatedAt: new Date(),
         supabaseId: null,
         lastSyncedAt: null,
-        language: "en",
       },
       {
         id: nanoid(),
         name: "Apology for Delay",
-        content: "I sincerely apologize for the delay with your order {order_id}, {customer_name}. Let me resolve this immediately.",
+        contentEn: "I sincerely apologize for the delay with your order {order_id}, {customer_name}. Let me resolve this immediately.",
+        contentAr: "أعتذر بصدق عن التأخير في طلبك {order_id}، {customer_name}. دعني أحل هذا الأمر فوراً.",
         category: "Apology",
         genre: "apology",
         variables: ["order_id", "customer_name"],
@@ -100,59 +100,6 @@ export class MemoryStorage implements IStorage {
         updatedAt: new Date(),
         supabaseId: null,
         lastSyncedAt: null,
-        language: "en",
-      },
-      // Arabic Templates
-      {
-        id: nanoid(),
-        name: "ترحيب - Welcome Greeting (AR)",
-        content: "مرحباً {customer_name}! أهلاً بك في براندز فور ليس. كيف يمكنني مساعدتك اليوم؟",
-        category: "General",
-        genre: "greeting",
-        variables: ["customer_name"],
-        stageOrder: 1,
-        isActive: true,
-        usageCount: 0,
-        createdBy: "admin-user",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        supabaseId: null,
-        lastSyncedAt: null,
-        language: "ar",
-      },
-      {
-        id: nanoid(),
-        name: "فحص حالة الطلب - Order Status Check (AR)",
-        content: "مرحباً {customer_name}، دعني أتحقق من حالة طلبك {order_id} على الفور.",
-        category: "Orders",
-        genre: "standard",
-        variables: ["customer_name", "order_id"],
-        stageOrder: 2,
-        isActive: true,
-        usageCount: 0,
-        createdBy: "admin-user",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        supabaseId: null,
-        lastSyncedAt: null,
-        language: "ar",
-      },
-      {
-        id: nanoid(),
-        name: "اعتذار عن التأخير - Apology for Delay (AR)",
-        content: "أعتذر بصدق عن التأخير في طلبك {order_id}، {customer_name}. دعني أحل هذه المشكلة فوراً.",
-        category: "Apology",
-        genre: "apology",
-        variables: ["order_id", "customer_name"],
-        stageOrder: 3,
-        isActive: true,
-        usageCount: 0,
-        createdBy: "admin-user",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        supabaseId: null,
-        lastSyncedAt: null,
-        language: "ar",
       },
     ];
 
@@ -308,7 +255,8 @@ export class MemoryStorage implements IStorage {
       const searchLower = filters.search.toLowerCase();
       templates = templates.filter(t => 
         t.name.toLowerCase().includes(searchLower) ||
-        t.content.toLowerCase().includes(searchLower) ||
+        t.contentEn.toLowerCase().includes(searchLower) ||
+        t.contentAr.toLowerCase().includes(searchLower) ||
         t.category.toLowerCase().includes(searchLower) ||
         t.genre.toLowerCase().includes(searchLower)
       );
@@ -332,10 +280,10 @@ export class MemoryStorage implements IStorage {
     const newTemplate: LiveReplyTemplate = {
       id,
       name: template.name,
-      content: template.content,
+      contentEn: template.contentEn,
+      contentAr: template.contentAr,
       category: template.category,
       genre: template.genre,
-      language: template.language || 'en',
       variables: template.variables || null,
       stageOrder: template.stageOrder || 1,
       isActive: template.isActive !== undefined ? template.isActive : true,

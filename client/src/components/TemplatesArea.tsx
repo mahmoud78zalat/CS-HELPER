@@ -23,10 +23,8 @@ export default function TemplatesArea() {
     isActive: true,
   });
 
-  // Filter templates by selected language
-  const templates = allTemplates?.filter(template => 
-    template.language === (customerData.language || 'en')
-  ) || [];
+  // All templates are now bilingual, no need to filter by language
+  const templates = allTemplates || [];
 
 
 

@@ -305,7 +305,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     template.name?.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
     template.category?.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
     template.genre?.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
-    template.content?.toLowerCase().includes(templateSearchTerm.toLowerCase())
+    template.contentEn?.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
+    template.contentAr?.toLowerCase().includes(templateSearchTerm.toLowerCase())
   );
 
   const filteredEmailTemplates = emailTemplates.filter((template: any) =>
@@ -321,11 +322,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   console.log('AdminPanel - User email:', currentUser?.email);
   console.log('AdminPanel - User role:', currentUser?.role);
   
-  // BETA TESTING: Allow all beta users admin access + production admin check
+  // Admin access check
   const isAdmin = currentUser?.role === 'admin' || 
-                  currentUser?.email === 'mahmoud78zalat@gmail.com' ||
-                  currentUser?.id === 'beta-admin-user'; // Beta testing access
-  console.log('AdminPanel - Is Admin:', isAdmin);
+                  currentUser?.email === 'mahmoud78zalat@gmail.com';
   
   if (!isAdmin) {
     return (
@@ -405,11 +404,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <span className="hidden lg:inline">Site Content</span>
                 <span className="lg:hidden">Content</span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className="text-xs lg:text-sm p-2 lg:p-3">
-                <Shield className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
-                <span className="hidden lg:inline">Settings</span>
-                <span className="lg:hidden">Settings</span>
-              </TabsTrigger>
+
             </TabsList>
 
           <TabsContent value="users" className="flex-1 overflow-y-auto">
@@ -642,7 +637,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     <CardTitle className="text-sm">Email Templates</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{emailTemplates?.length || 0}</div>
+                    <div className="text-2xl font-bold">{(emailTemplates as any[])?.length || 0}</div>
                     <p className="text-xs text-slate-500">Internal team communication</p>
                   </CardContent>
                 </Card>
@@ -661,7 +656,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="font-medium mb-2 text-blue-900">System Status</h4>
                 <div className="text-sm text-blue-800">
-                  <p>✓ Beta testing mode active with automatic admin access</p>
+                  <p>✓ Development mode active with automatic admin access</p>
                   <p>✓ All template configurations stored locally</p>
                   <p>✓ Real-time user presence tracking enabled</p>
                 </div>
@@ -932,7 +927,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Email Templates:</span>
-                        <span className="font-medium">{emailTemplates?.length || 0}</span>
+                        <span className="font-medium">{(emailTemplates as any[])?.length || 0}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Active Users:</span>
@@ -940,7 +935,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       </div>
                     </div>
                     <Badge variant="secondary" className="w-full mt-4 justify-center">
-                      Beta Testing Mode
+                      Development Mode
                     </Badge>
                   </CardContent>
                 </Card>

@@ -13,7 +13,7 @@ import { Loader2 } from "lucide-react";
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
 
-  console.log('App Router State:', { isAuthenticated, isLoading, user: !!user });
+
 
   if (isLoading) {
     return (

@@ -16,7 +16,7 @@ export default function Home() {
   // Enable real-time updates for all users
   useRealTimeUpdates();
 
-  console.log('Home component is rendering - user is authenticated');
+
 
   return (
     <Layout

@@ -12,7 +12,7 @@ export default function Login() {
 
   const handleReplitLogin = () => {
     setIsLoading(true);
-    // In beta mode, just redirect to home page
+    // Development mode, redirect to home page
     setTimeout(() => {
       window.location.href = '/';
     }, 1000);

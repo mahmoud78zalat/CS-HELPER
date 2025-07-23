@@ -43,7 +43,8 @@ export default function TemplateFormModal({
   const [formData, setFormData] = useState({
     name: '',
     subject: '',
-    content: '',
+    contentEn: '',
+    contentAr: '',
     category: '',
     genre: '',
     concernedTeam: '',
@@ -60,36 +61,39 @@ export default function TemplateFormModal({
     if (template) {
       setFormData({
         name: template.name || '',
-        subject: template.subject || '',
-        content: template.content || '',
+        subject: (template as any).subject || '',
+        contentEn: isEmailTemplate ? (template as any).content || '' : template.contentEn || '',
+        contentAr: isEmailTemplate ? '' : template.contentAr || '',
         category: template.category || '',
         genre: template.genre || '',
-        concernedTeam: template.concernedTeam || '',
-        warningNote: template.warningNote || ''
+        concernedTeam: (template as any).concernedTeam || '',
+        warningNote: (template as any).warningNote || ''
       });
     } else {
       // Reset form for new template
       setFormData({
         name: '',
         subject: '',
-        content: '',
+        contentEn: '',
+        contentAr: '',
         category: '',
         genre: '',
         concernedTeam: '',
         warningNote: ''
       });
     }
-  }, [template]);
+  }, [template, isEmailTemplate]);
 
   // Validate template content when it changes
   useEffect(() => {
-    if (formData.content) {
-      const validation = validateTemplate(formData.content);
+    const contentToValidate = isEmailTemplate ? formData.contentEn : (formData.contentEn + formData.contentAr);
+    if (contentToValidate) {
+      const validation = validateTemplate(contentToValidate);
       setTemplateValidation(validation);
     } else {
       setTemplateValidation(null);
     }
-  }, [formData.content]);
+  }, [formData.contentEn, formData.contentAr, isEmailTemplate]);
 
   // Auto-generate warning when category/genre changes
   useEffect(() => {
@@ -112,7 +116,7 @@ export default function TemplateFormModal({
     if (starter) {
       setFormData(prev => ({ 
         ...prev, 
-        content: starter,
+        contentEn: starter,
         subject: `${starterKey} - {customer_name}`
       }));
     }
@@ -120,14 +124,15 @@ export default function TemplateFormModal({
 
   const insertVariable = (variableName: string) => {
     const variable = `{${variableName.toLowerCase()}}`;
-    const textarea = document.getElementById('content') as HTMLTextAreaElement;
+    const textarea = document.getElementById('contentEn') as HTMLTextAreaElement;
     if (textarea) {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      const currentContent = formData.content;
+      const currentContent = formData.contentEn;
+      const currentContentAr = formData.contentAr;
       const newContent = currentContent.substring(0, start) + variable + currentContent.substring(end);
       
-      setFormData(prev => ({ ...prev, content: newContent }));
+      setFormData(prev => ({ ...prev, contentEn: newContent }));
       
       // Set cursor position after inserted variable
       setTimeout(() => {
@@ -139,13 +144,26 @@ export default function TemplateFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!templateValidation?.isValid && formData.content) {
+    if (!templateValidation?.isValid && (formData.contentEn || formData.contentAr)) {
       return;
     }
     
-    const templateData = {
-      ...formData,
-      variables: extractVariablesFromTemplate(formData.content)
+    const templateData = isEmailTemplate ? {
+      name: formData.name,
+      subject: formData.subject,
+      content: formData.contentEn,
+      category: formData.category,
+      genre: formData.genre,
+      concernedTeam: formData.concernedTeam,
+      warningNote: formData.warningNote,
+      variables: extractVariablesFromTemplate(formData.contentEn)
+    } : {
+      name: formData.name,
+      contentEn: formData.contentEn,
+      contentAr: formData.contentAr,
+      category: formData.category,
+      genre: formData.genre,
+      variables: extractVariablesFromTemplate(formData.contentEn + ' ' + formData.contentAr)
     };
     
     onSave(templateData);
@@ -252,21 +270,7 @@ export default function TemplateFormModal({
                   </Select>
                 </div>
                 
-                {/* Language selector - Only for Live Reply Templates */}
-                {!isEmailTemplate && (
-                  <div className="space-y-2">
-                    <Label htmlFor="language">Language *</Label>
-                    <Select value={formData.language || 'en'} onValueChange={(value) => handleInputChange('language', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">🇬🇧 English</SelectItem>
-                        <SelectItem value="ar">🇴🇲 Arabic</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+
               </div>
               
               {/* Email Subject - Only for Email Templates */}
@@ -325,19 +329,42 @@ export default function TemplateFormModal({
                   </CardContent>
                 </Card>
                 
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="content">Template Content *</Label>
+                <div className="space-y-4">
+                  {/* English Content */}
+                  <div className="space-y-2">
+                    <Label htmlFor="contentEn">English Content *</Label>
                     <Textarea
-                      id="content"
-                      name="content"
-                      value={formData.content}
-                      onChange={(e) => handleInputChange('content', e.target.value)}
-                      placeholder="Write your email template here. Use [VARIABLENAME] for dynamic content..."
-                      rows={12}
+                      id="contentEn"
+                      name="contentEn"
+                      value={formData.contentEn}
+                      onChange={(e) => handleInputChange('contentEn', e.target.value)}
+                      placeholder="Write your template content in English. Use {variable_name} for dynamic content..."
+                      rows={8}
                       required
                       className="font-mono text-sm"
                     />
+                  </div>
+                  
+                  {/* Arabic Content - Only for Live Reply Templates */}
+                  {!isEmailTemplate && (
+                    <div className="space-y-2">
+                      <Label htmlFor="contentAr">Arabic Content *</Label>
+                      <Textarea
+                        id="contentAr"
+                        name="contentAr"
+                        value={formData.contentAr}
+                        onChange={(e) => handleInputChange('contentAr', e.target.value)}
+                        placeholder="اكتب محتوى القالب باللغة العربية. استخدم {variable_name} للمحتوى المتغير..."
+                        rows={8}
+                        required
+                        className="font-mono text-sm"
+                        dir="rtl"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-2">
                     
                     {templateValidation && (
                       <Alert variant={templateValidation.isValid ? "default" : "destructive"}>
@@ -413,6 +440,7 @@ export default function TemplateFormModal({
                   </div>
                 </div>
               </div>
+            </div>
             </TabsContent>
             
             <TabsContent value="preview" className="space-y-4">
@@ -439,7 +467,14 @@ export default function TemplateFormModal({
                     
                     <div className="border rounded p-4 bg-muted/20">
                       <pre className="whitespace-pre-wrap text-sm">
-                        {formData.content || 'No content yet...'}
+                        <strong>English:</strong><br />
+                        {formData.contentEn || 'No English content yet...'}<br />
+                        {!isEmailTemplate && (
+                          <>
+                            <br /><strong>Arabic:</strong><br />
+                            {formData.contentAr || 'No Arabic content yet...'}
+                          </>
+                        )}
                       </pre>
                     </div>
                     

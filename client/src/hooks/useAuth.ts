@@ -6,13 +6,12 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // BETA TESTING MODE: Auto-login as admin
-    // TODO: Remove this block and uncomment the fetch logic below when ready for production
+    // Auto-login as admin for development
     setTimeout(() => {
-      const betaUser: User = {
-        id: "beta-admin-user",
-        email: "admin@bfl.com",
-        firstName: "Beta",
+      const adminUser: User = {
+        id: "admin-user",
+        email: "admin@example.com",
+        firstName: "System",
         lastName: "Admin",
         role: "admin",
         status: "active",
@@ -22,10 +21,9 @@ export function useAuth() {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      console.log('Beta testing: Auto-login as admin');
-      setUser(betaUser);
+      setUser(adminUser);
       setIsLoading(false);
-    }, 50); // Further reduced timeout for faster loading
+    }, 50);
 
     /* 
     // PRODUCTION CODE: Uncomment this block when ready to enable real authentication

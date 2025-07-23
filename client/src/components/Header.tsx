@@ -18,9 +18,8 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
   // Initialize agent name from user data
   useEffect(() => {
     const name = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 
-                 user?.user_metadata?.first_name || 
                  user?.email || 
-                 'Beta User';
+                 'User';
     setAgentName(name);
   }, [user]);
 
@@ -40,10 +39,9 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
     localStorage.setItem('selectedAgentName', agentName);
   };
 
-  // Check if user is admin - including beta testing
+  // Check if user is admin
   const isAdmin = user?.role === 'admin' || 
-                  user?.email === 'mahmoud78zalat@gmail.com' ||
-                  user?.id === 'beta-admin-user';
+                  user?.email === 'mahmoud78zalat@gmail.com';
 
   return (
     <header className="bg-white shadow-sm border-b border-slate-200 fixed top-0 left-0 right-0 z-40">
@@ -139,14 +137,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
                 </Button>
               )}
 
-              <Button 
-                onClick={onAbout}
-                variant="outline"
-                className="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors duration-200"
-              >
-                <Info className="w-4 h-4 mr-2" />
-                About Tool
-              </Button>
+
             </div>
 
             {/* User Badge - Responsive */}
@@ -154,19 +145,19 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
               <div className="flex items-center space-x-1 lg:space-x-2">
                 <div className="w-6 lg:w-8 h-6 lg:h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs lg:text-sm font-semibold">
-                    {user?.firstName?.[0] || user?.user_metadata?.first_name?.[0] || user?.email?.[0] || 'B'}
+                    {user?.firstName?.[0] || user?.email?.[0] || 'U'}
                   </span>
                 </div>
                 <div className="hidden lg:flex flex-col">
                   <span className="text-xs lg:text-sm font-medium text-slate-800">
-                    {user?.user_metadata?.first_name || user?.email} {user?.user_metadata?.last_name || ''}
+                    {user?.firstName || user?.email} {user?.lastName || ''}
                   </span>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    (user?.user_metadata?.role === 'admin' || user?.email === 'mahmoud78zalat@gmail.com')
+                    (user?.role === 'admin' || user?.email === 'mahmoud78zalat@gmail.com')
                       ? 'text-blue-600 bg-blue-50' 
                       : 'text-green-600 bg-green-50'
                   }`}>
-                    {(user?.user_metadata?.role === 'admin' || user?.email === 'mahmoud78zalat@gmail.com') ? 'Admin' : 'Agent'}
+                    {(user?.role === 'admin' || user?.email === 'mahmoud78zalat@gmail.com') ? 'Admin' : 'Agent'}
                   </span>
                 </div>
               </div>
