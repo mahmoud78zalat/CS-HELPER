@@ -304,7 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/personal-notes', async (req, res) => {
     try {
       const userId = req.headers['x-user-id'] as string;
-      const { content } = req.body;
+      const { subject, content } = req.body;
       
       if (!userId) {
         return res.status(400).json({ message: 'User ID is required' });
@@ -312,6 +312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const noteData = insertPersonalNoteSchema.parse({
         userId,
+        subject,
         content
       });
 
@@ -326,9 +327,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/personal-notes/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const { content } = req.body;
+      const { subject, content } = req.body;
       
-      const note = await personalNotesStorage.updatePersonalNote(id, content);
+      const note = await personalNotesStorage.updatePersonalNote(id, { subject, content });
       res.json(note);
     } catch (error) {
       console.error('Error updating personal note:', error);

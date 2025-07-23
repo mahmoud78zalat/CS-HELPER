@@ -226,6 +226,7 @@ export type SiteContent = typeof siteContent.$inferSelect;
 export const personalNotes = pgTable("personal_notes", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: varchar("user_id").notNull().references(() => users.id),
+  subject: text("subject").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

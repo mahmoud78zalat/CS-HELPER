@@ -49,8 +49,8 @@ export default function PersonalNotes() {
 
   // Create new note mutation using direct fetch to bypass Vite interception
   const createNoteMutation = useMutation({
-    mutationFn: async ({ content }: { content: string }) => {
-      console.log('Creating note with content:', content, 'userId:', user?.id);
+    mutationFn: async ({ subject, content }: { subject: string; content: string }) => {
+      console.log('Creating note with subject:', subject, 'content:', content, 'userId:', user?.id);
       
       const response = await fetch('/api/personal-notes', {
         method: 'POST',
@@ -59,7 +59,7 @@ export default function PersonalNotes() {
           'x-user-id': user?.id || '',
         },
         credentials: 'include',
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ subject, content }),
       });
       
       if (!response.ok) {
@@ -72,6 +72,7 @@ export default function PersonalNotes() {
       console.log('Note created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       setNewNote('');
+      setNewSubject('');
       toast({
         title: "Note Created",
         description: "Your personal note has been saved successfully.",
@@ -89,14 +90,14 @@ export default function PersonalNotes() {
 
   // Update note mutation using direct fetch
   const updateNoteMutation = useMutation({
-    mutationFn: async ({ id, content }: { id: string; content: string }) => {
+    mutationFn: async ({ id, subject, content }: { id: string; subject: string; content: string }) => {
       const response = await fetch(`/api/personal-notes/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ subject, content }),
       });
       
       if (!response.ok) {
@@ -109,6 +110,7 @@ export default function PersonalNotes() {
       queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       setEditingId(null);
       setEditContent('');
+      setEditSubject('');
       toast({
         title: "Note Updated",
         description: "Your note has been updated successfully.",
@@ -158,42 +160,43 @@ export default function PersonalNotes() {
 
   const handleCreateNote = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (newNote.trim() && !createNoteMutation.isPending) {
-      console.log('Creating note:', newNote.trim());
-      // Only use the note content, don't duplicate subject
-      createNoteMutation.mutate({ content: newNote.trim() });
+    if (newSubject.trim() && newNote.trim() && !createNoteMutation.isPending) {
+      console.log('Creating note:', newSubject.trim(), newNote.trim());
+      createNoteMutation.mutate({ subject: newSubject.trim(), content: newNote.trim() });
     }
   };
 
   const handleUpdateNote = (id: string) => {
-    if (editContent.trim()) {
-      // Only use the note content, don't duplicate subject
-      updateNoteMutation.mutate({ id, content: editContent.trim() });
+    if (editSubject.trim() && editContent.trim()) {
+      updateNoteMutation.mutate({ id, subject: editSubject.trim(), content: editContent.trim() });
     }
   };
 
   const handleCopyNote = (note: PersonalNote) => {
-    navigator.clipboard.writeText(note.content);
+    const fullText = `${note.subject || 'Untitled'}\n\n${note.content}`;
+    navigator.clipboard.writeText(fullText);
     toast({
       title: "Copied!",
-      description: "Note content copied to clipboard.",
+      description: "Complete note copied to clipboard.",
     });
   };
 
   const startEditing = (note: PersonalNote) => {
     setEditingId(note.id);
-    setEditSubject(''); 
+    setEditSubject(note.subject || ''); 
     setEditContent(note.content);
   };
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditContent('');
+    setEditSubject('');
   };
 
   // Filter notes based on search term
   const filteredNotes = notes.filter(note => 
-    note.content.toLowerCase().includes(searchTerm.toLowerCase())
+    note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (note.subject && note.subject.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -253,7 +256,7 @@ export default function PersonalNotes() {
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
                           <CardTitle className="text-sm font-semibold line-clamp-1">
-                            {note.content.split('\n')[0].substring(0, 50).trim() || `Note #${notes.indexOf(note) + 1}`}
+                            {note.subject || `Note #${notes.indexOf(note) + 1}`}
                           </CardTitle>
                           <div className="flex gap-1">
                             <Button
@@ -306,13 +309,22 @@ export default function PersonalNotes() {
 
                 <form onSubmit={handleCreateNote} className="flex-1 flex flex-col">
                   <div className="space-y-4 flex-1">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Subject (Note Title)</label>
+                      <Input
+                        placeholder="Enter note subject/title..."
+                        value={editingId ? editSubject : newSubject}
+                        onChange={(e) => editingId ? setEditSubject(e.target.value) : setNewSubject(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
                     <div className="flex-1 flex flex-col">
                       <label className="text-sm font-medium mb-2 block">Note Content</label>
                       <Textarea
                         placeholder="Write your note content..."
                         value={editingId ? editContent : newNote}
                         onChange={(e) => editingId ? setEditContent(e.target.value) : setNewNote(e.target.value)}
-                        className="flex-1 resize-none min-h-[350px]"
+                        className="flex-1 resize-none min-h-[300px]"
                       />
                     </div>
                   </div>
@@ -323,7 +335,7 @@ export default function PersonalNotes() {
                         <Button
                           type="button"
                           onClick={() => handleUpdateNote(editingId)}
-                          disabled={!editContent.trim() || updateNoteMutation.isPending}
+                          disabled={!editSubject.trim() || !editContent.trim() || updateNoteMutation.isPending}
                           className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
                         >
                           <Edit3 className="h-4 w-4 mr-2" />
@@ -341,7 +353,7 @@ export default function PersonalNotes() {
                       <Button
                         type="button"
                         onClick={() => handleCreateNote()}
-                        disabled={!newNote.trim() || createNoteMutation.isPending}
+                        disabled={!newSubject.trim() || !newNote.trim() || createNoteMutation.isPending}
                         className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
                       >
                         <Plus className="h-4 w-4 mr-2" />

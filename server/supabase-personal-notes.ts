@@ -40,6 +40,7 @@ export class SupabasePersonalNotesStorage {
       .from('personal_notes')
       .insert({
         user_id: note.userId,
+        subject: note.subject,
         content: note.content,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -57,13 +58,14 @@ export class SupabasePersonalNotesStorage {
   }
 
   // Update personal note
-  async updatePersonalNote(id: string, content: string): Promise<PersonalNote> {
-    console.log('[SupabaseStorage] 📝 Updating personal note:', id);
+  async updatePersonalNote(id: string, updates: { subject: string; content: string }): Promise<PersonalNote> {
+    console.log('[SupabaseStorage] 📝 Updating personal note:', id, updates);
     
     const { data, error } = await supabase
       .from('personal_notes')
       .update({
-        content,
+        subject: updates.subject,
+        content: updates.content,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -102,6 +104,7 @@ export class SupabasePersonalNotesStorage {
     return {
       id: data.id,
       userId: data.user_id,
+      subject: data.subject || '',
       content: data.content,
       createdAt: data.created_at ? new Date(data.created_at) : null,
       updatedAt: data.updated_at ? new Date(data.updated_at) : null,
