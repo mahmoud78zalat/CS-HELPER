@@ -40,7 +40,27 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const templates = pgTable("templates", {
+// Live chat reply templates for customer interactions
+export const liveReplyTemplates = pgTable("live_reply_templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").notNull(),
+  content: text("content").notNull(),
+  category: varchar("category").notNull(),
+  genre: varchar("genre").notNull(),
+  variables: text("variables").array(),
+  stageOrder: integer("stage_order").default(1).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  usageCount: integer("usage_count").default(0).notNull(),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(), // Maps to Supabase record
+  lastSyncedAt: timestamp("last_synced_at"),
+});
+
+// Email templates for internal team communication  
+export const emailTemplates = pgTable("email_templates", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name").notNull(),
   subject: text("subject").notNull(),
@@ -56,11 +76,21 @@ export const templates = pgTable("templates", {
   createdBy: varchar("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(), // Maps to Supabase record
+  lastSyncedAt: timestamp("last_synced_at"),
 });
 
-export const templateUsage = pgTable("template_usage", {
+export const liveReplyUsage = pgTable("live_reply_usage", {
   id: uuid("id").primaryKey().defaultRandom(),
-  templateId: uuid("template_id").references(() => templates.id).notNull(),
+  templateId: uuid("template_id").references(() => liveReplyTemplates.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  usedAt: timestamp("used_at").defaultNow(),
+});
+
+export const emailTemplateUsage = pgTable("email_template_usage", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  templateId: uuid("template_id").references(() => emailTemplates.id).notNull(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   usedAt: timestamp("used_at").defaultNow(),
 });
@@ -71,30 +101,54 @@ export const siteContent = pgTable("site_content", {
   content: text("content").notNull(),
   updatedBy: varchar("updated_by").references(() => users.id).notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(), // Maps to Supabase record
+  lastSyncedAt: timestamp("last_synced_at"),
 });
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
-  templates: many(templates),
-  templateUsage: many(templateUsage),
+  liveReplyTemplates: many(liveReplyTemplates),
+  emailTemplates: many(emailTemplates),
+  liveReplyUsage: many(liveReplyUsage),
+  emailTemplateUsage: many(emailTemplateUsage),
   siteContentUpdates: many(siteContent),
 }));
 
-export const templatesRelations = relations(templates, ({ one, many }) => ({
+export const liveReplyTemplatesRelations = relations(liveReplyTemplates, ({ one, many }) => ({
   createdBy: one(users, {
-    fields: [templates.createdBy],
+    fields: [liveReplyTemplates.createdBy],
     references: [users.id],
   }),
-  usage: many(templateUsage),
+  usage: many(liveReplyUsage),
 }));
 
-export const templateUsageRelations = relations(templateUsage, ({ one }) => ({
-  template: one(templates, {
-    fields: [templateUsage.templateId],
-    references: [templates.id],
+export const emailTemplatesRelations = relations(emailTemplates, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [emailTemplates.createdBy],
+    references: [users.id],
+  }),
+  usage: many(emailTemplateUsage),
+}));
+
+export const liveReplyUsageRelations = relations(liveReplyUsage, ({ one }) => ({
+  template: one(liveReplyTemplates, {
+    fields: [liveReplyUsage.templateId],
+    references: [liveReplyTemplates.id],
   }),
   user: one(users, {
-    fields: [templateUsage.userId],
+    fields: [liveReplyUsage.userId],
+    references: [users.id],
+  }),
+}));
+
+export const emailTemplateUsageRelations = relations(emailTemplateUsage, ({ one }) => ({
+  template: one(emailTemplates, {
+    fields: [emailTemplateUsage.templateId],
+    references: [emailTemplates.id],
+  }),
+  user: one(users, {
+    fields: [emailTemplateUsage.userId],
     references: [users.id],
   }),
 }));
@@ -113,14 +167,30 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
-export const insertTemplateSchema = createInsertSchema(templates).omit({
+export const insertLiveReplyTemplateSchema = createInsertSchema(liveReplyTemplates).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
   usageCount: true,
+  supabaseId: true,
+  lastSyncedAt: true,
 });
 
-export const insertTemplateUsageSchema = createInsertSchema(templateUsage).omit({
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usageCount: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
+export const insertLiveReplyUsageSchema = createInsertSchema(liveReplyUsage).omit({
+  id: true,
+  usedAt: true,
+});
+
+export const insertEmailTemplateUsageSchema = createInsertSchema(emailTemplateUsage).omit({
   id: true,
   usedAt: true,
 });
@@ -128,14 +198,29 @@ export const insertTemplateUsageSchema = createInsertSchema(templateUsage).omit(
 export const insertSiteContentSchema = createInsertSchema(siteContent).omit({
   id: true,
   updatedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
 });
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
-export type InsertTemplate = z.infer<typeof insertTemplateSchema>;
-export type Template = typeof templates.$inferSelect;
-export type InsertTemplateUsage = z.infer<typeof insertTemplateUsageSchema>;
-export type TemplateUsage = typeof templateUsage.$inferSelect;
+
+export type InsertLiveReplyTemplate = z.infer<typeof insertLiveReplyTemplateSchema>;
+export type LiveReplyTemplate = typeof liveReplyTemplates.$inferSelect;
+
+export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+
+export type InsertLiveReplyUsage = z.infer<typeof insertLiveReplyUsageSchema>;
+export type LiveReplyUsage = typeof liveReplyUsage.$inferSelect;
+
+export type InsertEmailTemplateUsage = z.infer<typeof insertEmailTemplateUsageSchema>;
+export type EmailTemplateUsage = typeof emailTemplateUsage.$inferSelect;
+
 export type InsertSiteContent = z.infer<typeof insertSiteContentSchema>;
 export type SiteContent = typeof siteContent.$inferSelect;
+
+// Legacy template type for backward compatibility (will remove after migration)
+export type Template = LiveReplyTemplate;
+export type InsertTemplate = InsertLiveReplyTemplate;

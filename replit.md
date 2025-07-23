@@ -12,6 +12,12 @@ Fix all bugs and ensure dropdown components work correctly.
 Extensive template genres including greeting, CSAT, warning abusive language, apology, thank you, farewell, confirmation, technical support, and holiday/special occasion.
 BETA TESTING MODE: Authentication temporarily disabled with auto-admin access for testing purposes.
 
+**Template System Requirements (January 2025)**:
+- Live reply templates for direct customer chat interactions
+- Email templates for internal team escalations and communication
+- Supabase integration ready - all admin panel changes should sync when configured
+- Clear separation between customer-facing and internal communication templates
+
 ## System Architecture
 
 ### Frontend Architecture
@@ -40,10 +46,14 @@ BETA TESTING MODE: Authentication temporarily disabled with auto-admin access fo
 
 ### Database Schema
 1. **Users Table**: Stores user profiles with roles, status, and presence data
-2. **Templates Table**: Email template management with categories, genres, and team assignments
-3. **Template Usage Table**: Tracks template usage statistics for analytics
-4. **Site Content Table**: Dynamic content management for customizable elements
-5. **Sessions Table**: Secure session storage for authentication
+2. **Live Reply Templates Table**: Quick responses for customer live chat interactions
+3. **Email Templates Table**: Internal team communication for escalations and requests  
+4. **Live Reply Usage Table**: Tracks live chat template usage statistics
+5. **Email Template Usage Table**: Tracks internal email template usage statistics
+6. **Site Content Table**: Dynamic content management for customizable elements
+7. **Sessions Table**: Secure session storage for authentication
+
+**Supabase Integration**: All tables include `supabase_id` and `last_synced_at` fields for automatic synchronization when Supabase is configured.
 
 ### Enhanced Admin Panel Features (Latest Update)
 1. **User Management**: Complete control over user roles and status
@@ -59,13 +69,26 @@ BETA TESTING MODE: Authentication temporarily disabled with auto-admin access fo
 4. **Admin Panel**: User management and template administration
 5. **Real-time Presence**: WebSocket-powered online status tracking
 
-### Template System
-- **Variable Replacement**: Dynamic content insertion using `{variable_name}` syntax
-- **Categorization**: Templates organized by category (Order Issues, Delivery Problems, etc.)
-- **Enhanced Genre Classification**: Extended genres including Greeting, CSAT, Warning Abusive Language, Apology, Thank You, Farewell, Confirmation, Technical Support, Holiday/Special Occasion
-- **Usage Analytics**: Track which templates are most frequently used
-- **Template Starters**: Pre-built template starters with common use cases
-- **Smart Variable System**: Automatic variable detection and validation
+### Dual Template System (Updated January 2025)
+**Live Reply Templates** - For direct customer interactions in live chat:
+- Quick copy-to-clipboard functionality for instant responses
+- Variable substitution (customer_name, order_id, time_frame, etc.)
+- Category-based organization (Orders, General, Apology, Technical)
+- Usage tracking and analytics for optimization
+- No subject line (chat-focused content only)
+
+**Email Templates** - For internal team communication:
+- Subject + body content with variable support
+- Team routing (Finance, IT Support, Fulfillment, Customer Service)
+- Escalation workflows with priority levels (Standard, Urgent)
+- Warning notes for sensitive communications
+- Concerned team assignment for proper routing
+
+**Shared Features**:
+- Variable replacement using `{variable_name}` syntax
+- Enhanced genre classification (Standard, Urgent, Greeting, CSAT, etc.)
+- Usage analytics and performance tracking
+- Supabase synchronization for data consistency
 
 ## Data Flow
 
