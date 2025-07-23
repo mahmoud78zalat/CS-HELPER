@@ -50,17 +50,12 @@ export default function LoginPage() {
           const userData = JSON.parse(responseText);
           console.log('[Login] User data found via API:', userData.email, userData.role);
           
-          // Allow all authenticated users with valid roles
-          if (userData.role === 'admin' || userData.role === 'agent') {
-            toast({
-              title: "Login Successful",
-              description: `Welcome back, ${userData.firstName || userData.email}!`,
-            });
-            setLocation('/');
-          } else {
-            setError('Access denied. Please contact your administrator.');
-            await signOut();
-          }
+          // Allow all authenticated users regardless of role
+          toast({
+            title: "Login Successful",
+            description: `Welcome back, ${userData.firstName || userData.email}!`,
+          });
+          setLocation('/');
         } else {
           // API routes being intercepted or user not found, check Supabase directly
           console.log('[Login] API route failed, checking Supabase directly...');
@@ -73,19 +68,14 @@ export default function LoginPage() {
             .single();
 
           if (existingUser && !fetchError) {
-            // User exists, convert snake_case to camelCase and proceed
+            // User exists, allow login regardless of role
             console.log('[Login] User found in Supabase:', existingUser.email, existingUser.role);
             
-            if (existingUser.role === 'admin' || existingUser.role === 'agent') {
-              toast({
-                title: "Login Successful",
-                description: `Welcome back, ${existingUser.first_name || existingUser.email}!`,
-              });
-              setLocation('/');
-            } else {
-              setError('Access denied. Please contact your administrator.');
-              await signOut();
-            }
+            toast({
+              title: "Login Successful",
+              description: `Welcome back, ${existingUser.first_name || existingUser.email}!`,
+            });
+            setLocation('/');
             return;
           }
           

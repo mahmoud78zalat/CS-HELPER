@@ -24,13 +24,14 @@ import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
 import CustomVariableManager from "@/components/CustomVariableManager";
-import { QUICK_TEMPLATE_STARTERS } from "@/lib/templateUtils";
+// Removed QUICK_TEMPLATE_STARTERS import as it's no longer needed
 
 interface AdminPanelProps {
   onClose: () => void;
 }
 
 export default function AdminPanel({ onClose }: AdminPanelProps) {
+  const { user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('templates');
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [showTemplateForm, setShowTemplateForm] = useState(false);
@@ -41,8 +42,30 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [showConfigManager, setShowConfigManager] = useState(false);
   const [showVariableManager, setShowVariableManager] = useState(false);
   const { toast } = useToast();
-  const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
+
+  // Only allow admin users to access the admin panel
+  if (!currentUser || currentUser.role !== 'admin') {
+    return (
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Access Restricted</DialogTitle>
+          </DialogHeader>
+          <div className="p-6 text-center">
+            <Shield className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Admin Access Required</h3>
+            <p className="text-gray-600 mb-4">
+              This admin panel is only available to administrators. Please contact your system administrator for access.
+            </p>
+            <Button onClick={onClose} className="w-full">
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   // Users query - always call hooks at top level
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
@@ -56,8 +79,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     retry: false,
   });
 
-  // Email Templates query
-  const { data: emailTemplates = [], isLoading: emailTemplatesLoading } = useQuery({
+  // Email Templates query with proper typing
+  const { data: emailTemplates = [], isLoading: emailTemplatesLoading } = useQuery<Template[]>({
     queryKey: ['/api/email-templates'],
     retry: false,
   });
