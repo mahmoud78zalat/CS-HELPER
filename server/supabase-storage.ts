@@ -23,8 +23,8 @@ export class SupabaseStorage implements IStorage {
     console.log('[SupabaseStorage] DEBUG: SUPABASE_URL =', process.env.SUPABASE_URL);
     console.log('[SupabaseStorage] DEBUG: SUPABASE_ANON_KEY =', process.env.SUPABASE_ANON_KEY ? '***PRESENT***' : 'MISSING');
     
-    let supabaseUrl = process.env.SUPABASE_URL;
-    let supabaseKey = process.env.SUPABASE_ANON_KEY;
+    let supabaseUrl = process.env.SUPABASE_URL || 'https://lafldimdrginjqloihbh.supabase.co';
+    let supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZmxkaW1kcmdpbmpxbG9paWJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyODk0MzcsImV4cCI6MjA2ODg2NTQzN30.odt1bQ6leB_wWSVV4emTt5bpNts-d0NeZZ-cnBT3SYU';
     
     // Check if they're swapped (URL in ANON_KEY and key in URL)
     if (supabaseKey && supabaseKey.startsWith('https://')) {

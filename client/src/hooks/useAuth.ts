@@ -87,58 +87,61 @@ export function useAuth() {
           .single();
 
         if (error || !userData) {
-          console.log('[Auth] User not found in database, creating new user...');
+          console.log('[Auth] User not found in database, error:', error);
+          console.log('[Auth] Creating new user for:', supabaseUser.email);
           
           try {
             // Create user automatically if they don't exist
-            const { error: createError } = await supabase
+            const newUserData = {
+              id: supabaseUser.id,
+              email: supabaseUser.email,
+              first_name: supabaseUser.user_metadata?.first_name || supabaseUser.email?.split('@')[0],
+              last_name: supabaseUser.user_metadata?.last_name || '',
+              profile_image_url: supabaseUser.user_metadata?.avatar_url || '',
+              role: 'agent', // Default role for new users
+              status: 'active',
+              is_online: false,
+              last_seen: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            console.log('[Auth] Inserting user data:', newUserData);
+            const { error: createError, data: insertedData } = await supabase
               .from('users')
-              .insert({
-                id: supabaseUser.id,
-                email: supabaseUser.email,
-                first_name: supabaseUser.user_metadata?.first_name || supabaseUser.email?.split('@')[0],
-                last_name: supabaseUser.user_metadata?.last_name || '',
-                profile_image_url: supabaseUser.user_metadata?.avatar_url || '',
-                role: 'agent', // Default role for new users
-                status: 'active',
-                is_online: false,
-                last_seen: new Date().toISOString(),
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
+              .insert(newUserData)
+              .select()
+              .single();
 
             if (createError) {
               console.error('[Auth] Failed to create user:', createError);
+              console.error('[Auth] Error details:', createError.message, createError.details, createError.hint);
               // Don't sign out - just set loading to false and let timeout handle it
               setUser(null);
               return;
             }
+            
+            console.log('[Auth] User created successfully:', insertedData);
 
-            // Fetch the newly created user
-            const { data: newUserData, error: fetchError } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', supabaseUser.id)
-              .single();
-
-            if (newUserData && !fetchError) {
+            // Use the inserted data directly
+            if (insertedData) {
               const user = {
-                id: newUserData.id,
-                email: newUserData.email,
-                firstName: newUserData.first_name,
-                lastName: newUserData.last_name,
-                profileImageUrl: newUserData.profile_image_url,
-                role: newUserData.role,
-                status: newUserData.status,
-                isOnline: newUserData.is_online,
-                lastSeen: newUserData.last_seen,
-                createdAt: newUserData.created_at,
-                updatedAt: newUserData.updated_at
+                id: insertedData.id,
+                email: insertedData.email,
+                firstName: insertedData.first_name,
+                lastName: insertedData.last_name,
+                profileImageUrl: insertedData.profile_image_url,
+                role: insertedData.role as "admin" | "agent",
+                status: insertedData.status as "active" | "blocked" | "banned",
+                isOnline: insertedData.is_online,
+                lastSeen: insertedData.last_seen ? new Date(insertedData.last_seen) : null,
+                createdAt: insertedData.created_at ? new Date(insertedData.created_at) : null,
+                updatedAt: insertedData.updated_at ? new Date(insertedData.updated_at) : null
               };
               console.log('[Auth] New user created:', user.email, user.role);
               setUser(user);
             } else {
-              console.error('[Auth] Failed to fetch newly created user:', fetchError);
+              console.error('[Auth] No data returned from user creation');
               setUser(null);
             }
           } catch (createError) {
