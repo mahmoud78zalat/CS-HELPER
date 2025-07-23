@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS site_content (
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_by UUID REFERENCES users(id),
     supabase_id VARCHAR(255),
     last_synced_at TIMESTAMP WITH TIME ZONE
 );
@@ -168,12 +169,12 @@ CREATE POLICY "Allow site content management" ON site_content FOR ALL USING (tru
 -- RLS Policies for personal notes (user-specific)
 CREATE POLICY "Users can manage their own notes" ON personal_notes FOR ALL USING (auth.uid()::text = user_id::text);
 
--- Insert default site content (only using columns that exist)
-INSERT INTO site_content (key, content) VALUES
-('site_name', 'BFL Customer Service Helper'),
-('about_content', 'A comprehensive customer service management tool'),
-('version_label', 'v2.1.0'),
-('footer_text', 'Made by Mahmoud Zalat')
+-- Insert default site content (include updated_by with admin user ID)
+INSERT INTO site_content (key, content, updated_by) VALUES
+('site_name', 'BFL Customer Service Helper', 'f765c1de-f9b5-4615-8c09-8cdde8152a07'),
+('about_content', 'A comprehensive customer service management tool', 'f765c1de-f9b5-4615-8c09-8cdde8152a07'),
+('version_label', 'v2.1.0', 'f765c1de-f9b5-4615-8c09-8cdde8152a07'),
+('footer_text', 'Made by Mahmoud Zalat', 'f765c1de-f9b5-4615-8c09-8cdde8152a07')
 ON CONFLICT (key) DO NOTHING;
 
 -- Create your admin user (replace with your actual email)
