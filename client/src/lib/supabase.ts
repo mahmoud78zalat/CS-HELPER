@@ -1,17 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Handle environment variables which might be swapped in Replit
-let supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-let supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Get environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Fallback to non-VITE prefixed vars if VITE ones don't exist
-if (!supabaseUrl && !supabaseAnonKey) {
-  // Use window.location to access env vars that might be available
-  supabaseUrl = 'https://lafldimdrginjqloihbh.supabase.co';
-  supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZmxkaW1kcmdpbmpxbG9paGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyODk0MzcsImV4cCI6MjA2ODg2NTQzN30.odt1bQ6leB_wWSVV4emTt5bpNts-d0NeZZ-cnBT3SYU';
-}
+console.log('[Frontend Supabase] URL:', supabaseUrl ? 'SET' : 'MISSING');
+console.log('[Frontend Supabase] Key:', supabaseAnonKey ? 'SET' : 'MISSING');
 
 if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('[Frontend Supabase] Missing environment variables!');
+  console.log('[Frontend Supabase] Available env vars:', Object.keys(import.meta.env));
   throw new Error('Missing Supabase environment variables');
 }
 

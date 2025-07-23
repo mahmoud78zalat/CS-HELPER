@@ -45,22 +45,47 @@ export class SupabaseStorage implements IStorage {
     
     this.client = createClient(supabaseUrl, supabaseKey);
     console.log('[SupabaseStorage] Connected to Supabase at:', supabaseUrl);
+    
+    // Test connection by counting users
+    this.testConnection();
+  }
+
+  private async testConnection() {
+    try {
+      console.log('[SupabaseStorage] Testing connection...');
+      const { data, error, count } = await this.client
+        .from('users')
+        .select('*', { count: 'exact' });
+      
+      console.log('[SupabaseStorage] Connection test - Users count:', count, 'Error:', error);
+      if (data) {
+        console.log('[SupabaseStorage] Sample users:', data.slice(0, 2));
+      }
+    } catch (err) {
+      console.error('[SupabaseStorage] Connection test failed:', err);
+    }
   }
 
   // User operations
   async getUser(id: string): Promise<User | undefined> {
+    console.log('[SupabaseStorage] Querying user with ID:', id);
+    
     const { data, error } = await this.client
       .from('users')
       .select('*')
       .eq('id', id)
       .single();
 
+    console.log('[SupabaseStorage] Query result - data:', data, 'error:', error);
+
     if (error) {
-      console.error('[SupabaseStorage] Error fetching user:', error);
+      console.error('[SupabaseStorage] Error fetching user:', error.message, error.details, error.hint);
       return undefined;
     }
 
-    return data ? this.mapSupabaseUser(data) : undefined;
+    const mappedUser = data ? this.mapSupabaseUser(data) : undefined;
+    console.log('[SupabaseStorage] Mapped user:', mappedUser);
+    return mappedUser;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
