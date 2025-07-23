@@ -459,25 +459,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-[98vw] max-h-[98vh] w-[98vw] h-[98vh] p-0" aria-describedby="admin-panel-description">
         <DialogHeader className="p-4 lg:p-6 border-b">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center space-x-2">
-              <Settings className="h-5 w-5" />
-              <span className="text-base lg:text-lg">Admin Panel</span>
-              <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
-                Beta Mode
-              </Badge>
-            </DialogTitle>
-            <div id="admin-panel-description" className="sr-only">
-              Admin panel for managing users, templates, and site content
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-600"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+          <DialogTitle className="flex items-center space-x-2">
+            <Settings className="h-5 w-5" />
+            <span className="text-base lg:text-lg">Admin Panel</span>
+            <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
+              Beta Mode
+            </Badge>
+          </DialogTitle>
+          <div id="admin-panel-description" className="sr-only">
+            Admin panel for managing users, templates, and site content
           </div>
         </DialogHeader>
 

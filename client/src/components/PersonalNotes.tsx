@@ -223,17 +223,12 @@ export default function PersonalNotes() {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-6xl h-[90vh] overflow-hidden">
           <DialogHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
-                  <StickyNote className="h-4 w-4 text-white" />
-                </div>
-                Personal Notes ✦
-              </DialogTitle>
-              <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+                <StickyNote className="h-4 w-4 text-white" />
+              </div>
+              Personal Notes ✦
+            </DialogTitle>
           </DialogHeader>
 
           <div className="flex h-full overflow-hidden">
