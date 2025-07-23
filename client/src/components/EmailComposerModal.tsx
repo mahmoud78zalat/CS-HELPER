@@ -36,6 +36,7 @@ const TEMPLATE_VARIABLES = {
   ],
   system: [
     { key: "agent_name", label: "Agent Name", placeholder: "Support Agent" },
+    { key: "agentname", label: "Agent Name", placeholder: "Support Agent" },
     { key: "concerned_team", label: "Concerned Team", placeholder: "Finance Team" },
     { key: "company_name", label: "Company Name", placeholder: "Brands For Less" },
     { key: "support_email", label: "Support Email", placeholder: "support@brandsforless.com" },
@@ -45,6 +46,10 @@ const TEMPLATE_VARIABLES = {
     { key: "current_date", label: "Current Date", placeholder: "January 23, 2025" },
     { key: "current_time", label: "Current Time", placeholder: "2:30 PM" },
     { key: "time_frame", label: "Time Frame", placeholder: "24-48 hours" },
+  ],
+  custom: [
+    { key: "reason", label: "Reason", placeholder: "Enter reason here..." },
+    { key: "REASON", label: "Reason", placeholder: "Enter reason here..." },
   ]
 };
 
@@ -68,7 +73,13 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
 
   // Initialize variable values with customer data and system defaults
   useEffect(() => {
-    const agentName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
+    // Get agent name from localStorage (set in Header) or fallback to user data
+    const selectedAgentName = localStorage.getItem('selectedAgentName') || 
+                              `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
+                              user?.user_metadata?.first_name ||
+                              user?.email ||
+                              'Support Agent';
+    
     const currentDate = new Date().toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
@@ -95,7 +106,10 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       waiting_time: customerData.waiting_time || '2-3 business days',
       
       // System data
-      agent_name: agentName,
+      agent_name: selectedAgentName,
+      agentname: selectedAgentName, // Support both formats
+      AGENTNAME: selectedAgentName, // Support uppercase
+      concerned_team: '',
       company_name: 'Brands For Less',
       support_email: 'support@brandsforless.com',
       business_hours: '9 AM - 6 PM, Sunday - Thursday',
@@ -104,6 +118,10 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       current_date: currentDate,
       current_time: currentTime,
       time_frame: '24-48 hours',
+      
+      // Custom fields
+      reason: '',
+      REASON: '', // Support uppercase
     });
   }, [customerData, user]);
 
@@ -406,6 +424,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               <div className="flex-1 overflow-y-auto p-4">
                 {uniqueVariables.length > 0 ? (
                   <div className="space-y-4">
+                    {/* Known Variables */}
                     {Object.entries(TEMPLATE_VARIABLES).map(([category, variables]) => {
                       const categoryVariables = variables.filter(v => 
                         uniqueVariables.includes(v.key)
@@ -437,6 +456,38 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                         </div>
                       );
                     })}
+                    
+                    {/* Unrecognized Variables */}
+                    {(() => {
+                      const allKnownVariables = Object.values(TEMPLATE_VARIABLES).flat().map(v => v.key);
+                      const unrecognizedVariables = uniqueVariables.filter(v => !allKnownVariables.includes(v));
+                      
+                      if (unrecognizedVariables.length === 0) return null;
+                      
+                      return (
+                        <div>
+                          <h4 className="font-medium text-sm text-slate-700 mb-2">
+                            Custom Variables
+                          </h4>
+                          <div className="space-y-2">
+                            {unrecognizedVariables.map((variable) => (
+                              <div key={variable}>
+                                <Label htmlFor={variable} className="text-xs">
+                                  {variable.toUpperCase()}
+                                </Label>
+                                <Input
+                                  id={variable}
+                                  value={variableValues[variable] || ''}
+                                  onChange={(e) => handleVariableChange(variable, e.target.value)}
+                                  placeholder={`Enter ${variable.toLowerCase()} here...`}
+                                  className="text-xs"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-slate-500">

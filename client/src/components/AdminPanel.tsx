@@ -150,6 +150,27 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     },
   });
 
+  // Email template deletion mutation
+  const deleteEmailTemplateMutation = useMutation({
+    mutationFn: async (templateId: string) => {
+      await apiRequest('DELETE', `/api/email-templates/${templateId}`);
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+      toast({
+        title: "Success",
+        description: "Email template deleted successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete email template",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleUserStatusChange = (userId: string, status: string) => {
     userStatusMutation.mutate({ userId, status });
   };
@@ -655,7 +676,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
           <TabsContent value="emailtemplates" className="flex-1 overflow-y-auto">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Email Template Wizard</h3>
+                <h3 className="text-lg font-semibold">Email Template Management</h3>
                 <Button 
                   onClick={() => {
                     setEditingTemplate(null);
@@ -668,45 +689,85 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(QUICK_TEMPLATE_STARTERS).map(([name, template]) => (
-                  <Card key={name} className="hover:shadow-lg transition-shadow cursor-pointer">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Wand2 size={16} className="text-purple-600" />
-                        {name}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-xs text-slate-600 mb-3 line-clamp-3">
-                        {template.substring(0, 100)}...
-                      </p>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setEditingTemplate(null);
-                          setShowTemplateForm(true);
-                          // Pre-fill with starter template
-                          setTimeout(() => {
-                            const event = new CustomEvent('useTemplateStarter', { detail: name });
-                            window.dispatchEvent(event);
-                          }, 100);
-                        }}
-                        className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white"
-                      >
-                        Use This Template
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              <Alert>
-                <Wand2 className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Pro Tip:</strong> These template starters include smart variables that automatically populate with customer data. You can customize them further after selection.
-                </AlertDescription>
-              </Alert>
+              {/* Current Email Templates */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Current Email Templates</CardTitle>
+                  <p className="text-sm text-slate-600">Manage your email templates - create, edit, or remove them easily</p>
+                </CardHeader>
+                <CardContent>
+                  {emailTemplatesLoading ? (
+                    <div>Loading email templates...</div>
+                  ) : !emailTemplates?.length ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <p className="text-sm">No email templates created yet</p>
+                      <p className="text-xs mt-1">Click "Create Magic Template" to add your first template</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {emailTemplates.map((template: any) => (
+                        <div key={template.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-medium text-slate-800">{template.name}</h4>
+                              <Badge variant="secondary" className="text-xs">
+                                {template.genre}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {template.concernedTeam}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-slate-600 mb-2">{template.subject}</p>
+                            <p className="text-xs text-slate-500 line-clamp-2">
+                              {template.content.substring(0, 150)}...
+                            </p>
+                            {template.variables && template.variables.length > 0 && (
+                              <div className="flex gap-1 mt-2">
+                                {template.variables.slice(0, 3).map((variable: string) => (
+                                  <Badge key={variable} variant="outline" className="text-xs px-1 py-0">
+                                    {variable}
+                                  </Badge>
+                                ))}
+                                {template.variables.length > 3 && (
+                                  <Badge variant="outline" className="text-xs px-1 py-0">
+                                    +{template.variables.length - 3} more
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-2 ml-4">
+                            <Badge variant="outline" className="text-xs">
+                              {template.usageCount || 0} uses
+                            </Badge>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingTemplate(template);
+                                setShowTemplateForm(true);
+                              }}
+                            >
+                              <Edit3 className="h-3 w-3 mr-1" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteEmailTemplateMutation.mutate(template.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
               <Card>
                 <CardHeader>

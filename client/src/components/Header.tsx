@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
-import { Headphones, Mail, Settings, Info, LogOut } from "lucide-react";
+import { Headphones, Mail, Settings, Info, LogOut, Edit3 } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface HeaderProps {
   onEmailComposer: () => void;
@@ -10,9 +12,32 @@ interface HeaderProps {
 
 export default function Header({ onEmailComposer, onAdminPanel, onAbout }: HeaderProps) {
   const { user, signOut } = useAuth();
+  const [agentName, setAgentName] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+
+  // Initialize agent name from user data
+  useEffect(() => {
+    const name = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 
+                 user?.user_metadata?.first_name || 
+                 user?.email || 
+                 'Beta User';
+    setAgentName(name);
+  }, [user]);
+
+  // Save agent name to localStorage for use in templates
+  useEffect(() => {
+    if (agentName) {
+      localStorage.setItem('selectedAgentName', agentName);
+    }
+  }, [agentName]);
 
   const handleSignOut = () => {
     window.location.href = '/api/logout';
+  };
+
+  const handleNameSave = () => {
+    setIsEditingName(false);
+    localStorage.setItem('selectedAgentName', agentName);
   };
 
   // Check if user is admin - including beta testing
@@ -31,9 +56,29 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
             </div>
             <div className="hidden sm:block">
               <h1 className="text-lg lg:text-xl font-bold text-slate-800">BFL Customer Service</h1>
-              <p className="text-xs lg:text-sm text-slate-600">
-                Welcome, {user?.firstName || user?.user_metadata?.first_name || user?.email || 'Beta User'}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs lg:text-sm text-slate-600">Agent:</p>
+                {isEditingName ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={agentName}
+                      onChange={(e) => setAgentName(e.target.value)}
+                      className="h-6 text-xs w-32"
+                      onBlur={handleNameSave}
+                      onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
+                      autoFocus
+                    />
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsEditingName(true)}
+                    className="text-xs lg:text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  >
+                    {agentName}
+                    <Edit3 className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
             </div>
             <div className="sm:hidden">
               <h1 className="text-base font-bold text-slate-800">BFL CS</h1>
