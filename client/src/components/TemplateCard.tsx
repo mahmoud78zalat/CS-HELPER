@@ -170,8 +170,10 @@ export default function TemplateCard({ template }: TemplateCardProps) {
           </div>
         )}
         
-        <div className="text-sm text-slate-600">
+        {/* LIVE Template Preview with Real Customer Data */}
+        <div className="text-sm text-slate-600 mb-3 leading-relaxed">
           <div className="text-xs bg-slate-50 p-3 rounded border-l-2 border-blue-500">
+            <div className="font-medium text-slate-700 mb-2">Live Preview:</div>
             {(() => {
               const selectedAgentName = localStorage.getItem('selectedAgentName') || 
                                         `${user?.firstName || ''} ${user?.lastName || ''}`.trim() ||
@@ -273,10 +275,13 @@ export default function TemplateCard({ template }: TemplateCardProps) {
                 REASON: '',
               };
 
-              const processedContent = replaceVariables(template.content || '', variables);
-              const display = processedContent.slice(0, 200);
-              return display + (processedContent.length > 200 ? '...' : '');
+              const livePreview = replaceVariables(template.content || '', variables);
+              const display = livePreview.slice(0, 200);
+              return display + (livePreview.length > 200 ? '...' : '');
             })()}
+          </div>
+          <div className="text-xs text-blue-600 mt-2 font-medium border-t border-blue-200 pt-2">
+            ↑ Live preview with your customer data - updates instantly when you change customer info!
           </div>
         </div>
       </CardContent>

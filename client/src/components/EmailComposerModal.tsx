@@ -260,12 +260,12 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-[98vw] max-h-[98vh] w-[98vw] h-[98vh] overflow-hidden p-0">
+        <DialogHeader className="p-6 pb-4 border-b bg-white">
           <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5" />
-              Email Template Composer
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Send className="h-6 w-6" />
+              Email Template Composer - Full Screen
             </DialogTitle>
             <Button
               variant="ghost"
@@ -422,18 +422,17 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             </div>
           </div>
 
-          {/* Right Panel: Variable Management */}
-          {showVariables && (
-            <div className="w-80 border-l border-slate-200 flex flex-col">
-              <div className="p-4 border-b border-slate-200">
-                <h3 className="font-medium flex items-center gap-2">
-                  <Edit3 className="h-4 w-4" />
-                  Template Variables
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Changes update the preview instantly
-                </p>
-              </div>
+          {/* Right Panel: Variable Management - ALWAYS VISIBLE */}
+          <div className="w-80 border-l border-slate-200 flex flex-col bg-blue-50">
+            <div className="p-4 border-b border-slate-200 bg-blue-100">
+              <h3 className="font-medium flex items-center gap-2 text-blue-800">
+                <Edit3 className="h-4 w-4" />
+                Live Template Variables
+              </h3>
+              <p className="text-xs text-blue-600 mt-1">
+                Always visible - Updates templates instantly
+              </p>
+            </div>
               
               <div className="flex-1 overflow-y-auto p-4">
                 {uniqueVariables.length > 0 ? (
@@ -511,7 +510,6 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 )}
               </div>
             </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
