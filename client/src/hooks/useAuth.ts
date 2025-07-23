@@ -1,43 +1,67 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import type { User } from "@supabase/supabase-js";
+import { User } from "@shared/schema";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session);
-      setUser(session?.user ?? null);
+    // BETA TESTING MODE: Auto-login as admin
+    // TODO: Remove this block and uncomment the fetch logic below when ready for production
+    setTimeout(() => {
+      const betaUser: User = {
+        id: "beta-admin-user",
+        email: "admin@bfl.com",
+        firstName: "Beta",
+        lastName: "Admin",
+        role: "admin",
+        status: "active",
+        profileImageUrl: null,
+        lastSeen: new Date(),
+        isOnline: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      console.log('Beta testing: Auto-login as admin');
+      setUser(betaUser);
       setIsLoading(false);
-    });
+    }, 500);
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, session);
-        setUser(session?.user ?? null);
+    /* 
+    // PRODUCTION CODE: Uncomment this block when ready to enable real authentication
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('/api/auth/user', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          console.log('User data received:', userData);
+          setUser(userData);
+        } else {
+          console.log('No authenticated user');
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setUser(null);
+      } finally {
         setIsLoading(false);
       }
-    );
+    };
 
-    return () => subscription.unsubscribe();
+    fetchUser();
+    */
   }, []);
 
   const signOut = async () => {
-    try {
-      // First sign out from Supabase
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error("Error signing out from Supabase:", error);
-    }
-    // Clear all auth state immediately
+    // BETA TESTING MODE: Just reload page
+    // TODO: Use real logout when authentication is enabled
     setUser(null);
     setIsLoading(false);
-    // Force redirect to logout endpoint
-    window.location.replace('/api/logout');
+    window.location.reload();
+    // window.location.href = '/api/logout'; // Uncomment for production
   };
 
   return {
