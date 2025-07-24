@@ -3,65 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <style>
-      /* Hide chatbase for non-authenticated users */
-      [id*="chatbase"],
-      [class*="chatbase"],
-      iframe[src*="chatbase"],
-      [data-chatbase-id] {
-        display: none !important;
-      }
-      
-      /* Show chatbase for authenticated users */
-      body.user-authenticated [id*="chatbase"],
-      body.user-authenticated [class*="chatbase"],
-      body.user-authenticated iframe[src*="chatbase"],
-      body.user-authenticated [data-chatbase-id] {
-        display: initial !important;
-      }
-    </style>
+
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- Chatbase Integration - Normal Implementation -->
-    <script>
-      let chatbaseLoaded = false;
-      
-      const loadChatbaseForAuthenticated = () => {
-        const currentUser = window.getCurrentUser && window.getCurrentUser();
-        
-        if (currentUser && currentUser.id && !chatbaseLoaded) {
-          // Load normal chatbase - no special configuration
-          const script = document.createElement('script');
-          script.src = 'https://www.chatbase.co/embed.min.js';
-          script.setAttribute('chatbotId', 'rG3h170PKdOsKKTC078sk');
-          script.setAttribute('domain', 'www.chatbase.co');
-          script.defer = true;
-          document.head.appendChild(script);
-          
-          document.body.classList.add('user-authenticated');
-          chatbaseLoaded = true;
-          
-          console.log('Chatbase loaded normally for authenticated user:', currentUser.email);
-        } else if (!currentUser || !currentUser.id) {
-          document.body.classList.remove('user-authenticated');
-        }
-      };
-      
-      // Check for authentication until user is found
-      const authInterval = setInterval(() => {
-        const currentUser = window.getCurrentUser && window.getCurrentUser();
-        if (currentUser && currentUser.id) {
-          loadChatbaseForAuthenticated();
-          clearInterval(authInterval);
-        }
-      }, 2000);
-      
-      // Initial check
-      setTimeout(loadChatbaseForAuthenticated, 1000);
-    </script>
     
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
