@@ -12,38 +12,38 @@ import { useToast } from "@/hooks/use-toast";
 interface CustomVariable {
   name: string;
   description: string;
-  category: 'customer' | 'order' | 'system' | 'time' | 'custom';
+  category: string; // Use dynamic categories from TemplateConfigManager
   example: string;
   defaultValue?: string;
 }
 
 const DEFAULT_SYSTEM_VARIABLES: CustomVariable[] = [
-  // Customer Variables
-  { name: 'customer_name', description: 'Customer full name', category: 'customer', example: 'John Smith', defaultValue: '' },
-  { name: 'customer_phone', description: 'Customer phone number', category: 'customer', example: '+971501234567', defaultValue: '' },
-  { name: 'customer_country', description: 'Customer country', category: 'customer', example: '🇦🇪 United Arab Emirates', defaultValue: '' },
-  { name: 'gender', description: 'Customer gender', category: 'customer', example: 'Male/Female', defaultValue: '' },
+  // General Support Variables
+  { name: 'customer_name', description: 'Customer full name', category: 'General Support', example: 'John Smith', defaultValue: '' },
+  { name: 'customer_phone', description: 'Customer phone number', category: 'General Support', example: '+971501234567', defaultValue: '' },
+  { name: 'customer_country', description: 'Customer country', category: 'General Support', example: '🇦🇪 United Arab Emirates', defaultValue: '' },
+  { name: 'gender', description: 'Customer gender', category: 'General Support', example: 'Male/Female', defaultValue: '' },
   
-  // Order Variables
-  { name: 'order_id', description: 'Order identifier', category: 'order', example: 'ORD-12345', defaultValue: '' },
-  { name: 'awb_number', description: 'AWB tracking number', category: 'order', example: 'AWB-67890', defaultValue: '' },
-  { name: 'item_name', description: 'Product or item name', category: 'order', example: 'Wireless Headphones', defaultValue: '' },
-  { name: 'delivery_date', description: 'Expected delivery date', category: 'order', example: '2025-01-25', defaultValue: '' },
+  // Order Issues Variables
+  { name: 'order_id', description: 'Order identifier', category: 'Order Issues', example: 'ORD-12345', defaultValue: '' },
+  { name: 'awb_number', description: 'AWB tracking number', category: 'Order Issues', example: 'AWB-67890', defaultValue: '' },
+  { name: 'item_name', description: 'Product or item name', category: 'Product Inquiry', example: 'Wireless Headphones', defaultValue: '' },
+  { name: 'delivery_date', description: 'Expected delivery date', category: 'Delivery Problems', example: '2025-01-25', defaultValue: '' },
   
-  // Agent Variables  
-  { name: 'agent_name', description: 'Agent full name', category: 'system', example: 'Sarah Johnson', defaultValue: '' },
-  { name: 'agentarabicname', description: 'Agent name in Arabic', category: 'system', example: 'سارة جونسون', defaultValue: '' },
-  { name: 'agentarabiclastname', description: 'Agent last name in Arabic', category: 'system', example: 'جونسون', defaultValue: '' },
+  // Technical Support Variables  
+  { name: 'agent_name', description: 'Agent full name', category: 'Technical Support', example: 'Sarah Johnson', defaultValue: '' },
+  { name: 'agentarabicname', description: 'Agent name in Arabic', category: 'Technical Support', example: 'سارة جونسون', defaultValue: '' },
+  { name: 'agentarabiclastname', description: 'Agent last name in Arabic', category: 'Technical Support', example: 'جونسون', defaultValue: '' },
   
-  // Time Variables
-  { name: 'current_date', description: 'Current date', category: 'time', example: new Date().toLocaleDateString(), defaultValue: new Date().toLocaleDateString() },
-  { name: 'current_time', description: 'Current time', category: 'time', example: new Date().toLocaleTimeString(), defaultValue: new Date().toLocaleTimeString() },
-  { name: 'waiting_time', description: 'Customer waiting time', category: 'time', example: '10 minutes', defaultValue: '' },
+  // General Support Variables
+  { name: 'current_date', description: 'Current date', category: 'General Support', example: new Date().toLocaleDateString(), defaultValue: new Date().toLocaleDateString() },
+  { name: 'current_time', description: 'Current time', category: 'General Support', example: new Date().toLocaleTimeString(), defaultValue: new Date().toLocaleTimeString() },
+  { name: 'waiting_time', description: 'Customer waiting time', category: 'General Support', example: '10 minutes', defaultValue: '' },
   
-  // Custom Variables
-  { name: 'reason', description: 'Specific reason for contact or issue', category: 'custom', example: 'Package damaged during delivery', defaultValue: '' },
-  { name: 'resolution', description: 'Proposed solution or resolution', category: 'custom', example: 'Full refund processed', defaultValue: '' },
-  { name: 'timeframe', description: 'Expected timeframe for resolution', category: 'custom', example: '2-3 business days', defaultValue: '2-3 business days' }
+  // Returns & Refunds Variables
+  { name: 'reason', description: 'Specific reason for contact or issue', category: 'Returns & Refunds', example: 'Package damaged during delivery', defaultValue: '' },
+  { name: 'resolution', description: 'Proposed solution or resolution', category: 'Escalation', example: 'Full refund processed', defaultValue: '' },
+  { name: 'timeframe', description: 'Expected timeframe for resolution', category: 'General Support', example: '2-3 business days', defaultValue: '2-3 business days' }
 ];
 
 interface VariableManagerProps {
@@ -53,19 +53,33 @@ interface VariableManagerProps {
 
 export default function VariableManager({ isOpen, onClose }: VariableManagerProps) {
   const [variables, setVariables] = useState<CustomVariable[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState<CustomVariable>({
     name: '',
     description: '',
-    category: 'custom',
+    category: '',
     example: '',
     defaultValue: ''
   });
   const { toast } = useToast();
 
   useEffect(() => {
-    // Load from localStorage or use defaults
+    // Load categories from TemplateConfigManager
+    const categoriesData = localStorage.getItem('template_categories');
+    if (categoriesData) {
+      try {
+        const categories = JSON.parse(categoriesData);
+        setAvailableCategories(categories);
+      } catch {
+        setAvailableCategories(['Order Issues', 'Delivery Problems', 'Payment Issues', 'Returns & Refunds', 'Product Inquiry', 'General Support', 'Technical Support', 'Escalation']);
+      }
+    } else {
+      setAvailableCategories(['Order Issues', 'Delivery Problems', 'Payment Issues', 'Returns & Refunds', 'Product Inquiry', 'General Support', 'Technical Support', 'Escalation']);
+    }
+    
+    // Load variables from localStorage or use defaults
     const saved = localStorage.getItem('system_template_variables');
     if (saved) {
       try {
@@ -87,7 +101,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
     setFormData({
       name: '',
       description: '',
-      category: 'custom',
+      category: availableCategories[0] || 'General Support',
       example: '',
       defaultValue: ''
     });
@@ -194,14 +208,17 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
 
 
   const getCategoryColor = (category: string) => {
-    const colors = {
-      customer: 'bg-blue-100 text-blue-800',
-      order: 'bg-green-100 text-green-800',
-      system: 'bg-purple-100 text-purple-800',
-      time: 'bg-orange-100 text-orange-800',
-      custom: 'bg-gray-100 text-gray-800'
+    const categoryColors = {
+      'Order Issues': 'bg-red-100 text-red-800',
+      'Delivery Problems': 'bg-orange-100 text-orange-800', 
+      'Payment Issues': 'bg-yellow-100 text-yellow-800',
+      'Returns & Refunds': 'bg-blue-100 text-blue-800',
+      'Product Inquiry': 'bg-green-100 text-green-800',
+      'General Support': 'bg-purple-100 text-purple-800',
+      'Technical Support': 'bg-indigo-100 text-indigo-800',
+      'Escalation': 'bg-red-100 text-red-800'
     };
-    return colors[category as keyof typeof colors] || colors.custom;
+    return categoryColors[category as keyof typeof categoryColors] || 'bg-gray-100 text-gray-800';
   };
 
   return (
@@ -239,16 +256,16 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
                   
                   <div>
                     <label className="text-sm font-medium">Category</label>
-                    <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as any }))}>
+                    <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="customer">Customer</SelectItem>
-                        <SelectItem value="order">Order</SelectItem>
-                        <SelectItem value="system">System</SelectItem>
-                        <SelectItem value="time">Time</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
+                        {availableCategories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

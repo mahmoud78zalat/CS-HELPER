@@ -52,36 +52,85 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Helper function to convert hex color to closest Tailwind color
+  // Helper function to convert hex color to closest Tailwind color with accurate color matching
   const hexToTailwindColor = (hex: string): { background: string; text: string; border: string } => {
-    // Simple mapping for common colors - in a real app, you'd use a more sophisticated color matching algorithm
-    const colorMap: Record<string, { bg: string; text: string; border: string }> = {
-      '#ef4444': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' },
-      '#f97316': { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
-      '#eab308': { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
-      '#22c55e': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },
-      '#3b82f6': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
-      '#8b5cf6': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
-      '#ec4899': { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200' },
-      '#06b6d4': { bg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-200' },
-      '#84cc16': { bg: 'bg-lime-100', text: 'text-lime-800', border: 'border-lime-200' },
-      '#f59e0b': { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200' },
-      '#10b981': { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
-      '#6366f1': { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' },
-      '#14b8a6': { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
-      '#e11d48': { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-200' },
-      '#7c3aed': { bg: 'bg-violet-100', text: 'text-violet-800', border: 'border-violet-200' },
-      '#6b7280': { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' },
+    // Comprehensive color mapping with RGB values for accurate matching
+    const colorMap: Record<string, { bg: string; text: string; border: string; rgb: [number, number, number] }> = {
+      // Red family
+      '#fee2e2': { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-100', rgb: [254, 226, 226] },
+      '#fecaca': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200', rgb: [254, 202, 202] },
+      '#ef4444': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200', rgb: [239, 68, 68] },
+      '#dc2626': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200', rgb: [220, 38, 38] },
+      '#e11d48': { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-200', rgb: [225, 29, 72] },
+      
+      // Orange family
+      '#fed7aa': { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200', rgb: [254, 215, 170] },
+      '#f97316': { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200', rgb: [249, 115, 22] },
+      '#f59e0b': { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200', rgb: [245, 158, 11] },
+      
+      // Yellow family
+      '#fef3c7': { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200', rgb: [254, 243, 199] },
+      '#eab308': { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200', rgb: [234, 179, 8] },
+      '#84cc16': { bg: 'bg-lime-100', text: 'text-lime-800', border: 'border-lime-200', rgb: [132, 204, 22] },
+      
+      // Green family
+      '#dcfce7': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200', rgb: [220, 252, 231] },
+      '#22c55e': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200', rgb: [34, 197, 94] },
+      '#10b981': { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200', rgb: [16, 185, 129] },
+      '#14b8a6': { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200', rgb: [20, 184, 166] },
+      
+      // Blue family
+      '#dbeafe': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200', rgb: [219, 234, 254] },
+      '#3b82f6': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200', rgb: [59, 130, 246] },
+      '#06b6d4': { bg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-200', rgb: [6, 182, 212] },
+      '#6366f1': { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200', rgb: [99, 102, 241] },
+      
+      // Purple family
+      '#e9d5ff': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200', rgb: [233, 213, 255] },
+      '#8b5cf6': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200', rgb: [139, 92, 246] },
+      '#7c3aed': { bg: 'bg-violet-100', text: 'text-violet-800', border: 'border-violet-200', rgb: [124, 58, 237] },
+      
+      // Pink family
+      '#fce7f3': { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200', rgb: [252, 231, 243] },
+      '#ec4899': { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200', rgb: [236, 72, 153] },
+      
+      // Gray family
+      '#f3f4f6': { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200', rgb: [243, 244, 246] },
+      '#6b7280': { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200', rgb: [107, 114, 128] },
     };
 
-    // Find closest color (simplified)
-    const closest = Object.keys(colorMap).reduce((closest, color) => {
-      const distance = Math.abs(parseInt(hex.slice(1), 16) - parseInt(color.slice(1), 16));
-      const closestDistance = Math.abs(parseInt(hex.slice(1), 16) - parseInt(closest.slice(1), 16));
-      return distance < closestDistance ? color : closest;
+    // Convert hex to RGB
+    const hexToRgb = (hex: string): [number, number, number] => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? [
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16)
+      ] : [0, 0, 0];
+    };
+
+    // Calculate color distance using RGB values
+    const colorDistance = (rgb1: [number, number, number], rgb2: [number, number, number]): number => {
+      return Math.sqrt(
+        Math.pow(rgb1[0] - rgb2[0], 2) +
+        Math.pow(rgb1[1] - rgb2[1], 2) +
+        Math.pow(rgb1[2] - rgb2[2], 2)
+      );
+    };
+
+    const targetRgb = hexToRgb(hex);
+    let closestColor = Object.keys(colorMap)[0];
+    let minDistance = colorDistance(targetRgb, colorMap[closestColor].rgb);
+
+    Object.entries(colorMap).forEach(([color, config]) => {
+      const distance = colorDistance(targetRgb, config.rgb);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestColor = color;
+      }
     });
 
-    const colorConfig = colorMap[closest] || { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' };
+    const colorConfig = colorMap[closestColor];
     return {
       background: colorConfig.bg,
       text: colorConfig.text,
