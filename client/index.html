@@ -4,27 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <style>
-      /* Hide Chatbase by default until user authentication is verified */
-      #chatbase-bubble-button,
-      [id*="chatbase"]:not([id*="close"]):not([id*="x"]):not([class*="close"]),
-      [class*="chatbase"]:not([class*="close"]):not([class*="x"]),
+      /* Simple approach: Hide chatbase completely for non-authenticated users */
+      [id*="chatbase"],
+      [class*="chatbase"],
       iframe[src*="chatbase"],
       [data-chatbase-id] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
-        pointer-events: none !important;
       }
       
-      /* Show only Chatbase bubble button when authenticated - hide the chat window */
-      body.user-authenticated #chatbase-bubble-button {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-      }
-      
-      /* Allow chatbase to function normally when authenticated */
+      /* Show chatbase normally for authenticated users */
       body.user-authenticated [id*="chatbase"],
       body.user-authenticated [class*="chatbase"],
       body.user-authenticated iframe[src*="chatbase"],
@@ -32,20 +22,6 @@
         display: initial !important;
         visibility: visible !important;
         opacity: 1 !important;
-        pointer-events: auto !important;
-      }
-      
-      /* Special handling for chat window - start hidden */
-      body.user-authenticated [id*="chatbase-bubble-window"],
-      body.user-authenticated [class*="window"],
-      body.user-authenticated [class*="chatbase-window"] {
-        transition: all 0.3s ease !important;
-      }
-      
-      /* Ensure close buttons always work */
-      [id*="close"], [class*="close"], [id*="x"], [class*="x"] {
-        pointer-events: auto !important;
-        z-index: 999999 !important;
       }
     </style>
   </head>
@@ -53,11 +29,10 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Chatbase Integration -->
+    <!-- Chatbase Integration - Simple Approach -->
     <script>
     (function(){
       let chatbaseLoaded = false;
-      let userCheckInterval = null;
       
       // Initialize chatbase proxy
       if(!window.chatbase){
@@ -73,93 +48,40 @@
         })
       }
       
-      const loadChatbaseScript = () => {
-        if (chatbaseLoaded) return;
-        
-        const script = document.createElement("script");
-        script.src = "https://www.chatbase.co/embed.min.js";
-        script.id = "rG3h170PKdOsKKTC078sk";
-        script.domain = "www.chatbase.co";
-        
-        // Only close if it auto-opens, but allow manual opening
-        script.onload = function() {
-          let hasAutoOpened = false;
-          
-          const preventAutoOpen = () => {
-            if (window.chatbase) {
-              try {
-                // Check if chat window is visible without user interaction
-                const chatWindow = document.querySelector('[id*="chatbase-bubble-window"], [class*="chatbase-window"]');
-                const button = document.querySelector('#chatbase-bubble-button');
-                
-                if (chatWindow && button) {
-                  const windowRect = chatWindow.getBoundingClientRect();
-                  const isVisible = windowRect.width > 0 && windowRect.height > 0;
-                  
-                  // If visible but user hasn't clicked yet, close it
-                  if (isVisible && !hasAutoOpened) {
-                    window.chatbase('close');
-                    hasAutoOpened = true;
-                    console.log('Auto-opened chatbase window closed');
-                  }
-                }
-              } catch (e) {
-                console.log('Chatbase close command:', e.message);
-              }
-            }
-          };
-          
-          // Check for auto-opening only initially
-          setTimeout(preventAutoOpen, 500);
-          setTimeout(preventAutoOpen, 1500);
-        };
-        
-        document.body.appendChild(script);
-        chatbaseLoaded = true;
-        
-        console.log('Chatbase script loaded with auto-close');
-      };
-      
-      const checkUserAndShowChatbase = () => {
+      const loadChatbaseForAuthenticatedUser = () => {
         const currentUser = window.getCurrentUser && window.getCurrentUser();
         
-        if (currentUser && currentUser.id) {
-          // User is authenticated
-          if (!chatbaseLoaded) {
-            loadChatbaseScript();
-          }
-          document.body.classList.add('user-authenticated');
-          console.log('User authenticated - Chatbase visible');
+        if (currentUser && currentUser.id && !chatbaseLoaded) {
+          // User is authenticated - load chatbase normally
+          const script = document.createElement("script");
+          script.src = "https://www.chatbase.co/embed.min.js";
+          script.id = "rG3h170PKdOsKKTC078sk";
+          script.domain = "www.chatbase.co";
+          document.body.appendChild(script);
           
-          // Clear the interval once user is found
-          if (userCheckInterval) {
-            clearInterval(userCheckInterval);
-            userCheckInterval = null;
-          }
-        } else {
-          // User not authenticated
+          // Show chatbase
+          document.body.classList.add('user-authenticated');
+          chatbaseLoaded = true;
+          
+          console.log('Chatbase loaded for authenticated user:', currentUser.email);
+        } else if (!currentUser || !currentUser.id) {
+          // No user - hide chatbase
           document.body.classList.remove('user-authenticated');
         }
       };
       
-      // Start checking for user authentication
-      const startUserCheck = () => {
-        checkUserAndShowChatbase();
+      // Check for authentication periodically until user is found
+      const authCheckInterval = setInterval(() => {
+        loadChatbaseForAuthenticatedUser();
         
-        // Set up interval to check for user authentication
-        if (!userCheckInterval) {
-          userCheckInterval = setInterval(checkUserAndShowChatbase, 2000);
+        // Stop checking once chatbase is loaded
+        if (chatbaseLoaded) {
+          clearInterval(authCheckInterval);
         }
-      };
+      }, 2000);
       
-      // Start when DOM is ready
-      if (document.readyState === "complete") {
-        setTimeout(startUserCheck, 1000);
-      } else {
-        window.addEventListener("load", () => {
-          setTimeout(startUserCheck, 1000);
-        });
-      }
+      // Initial check
+      setTimeout(loadChatbaseForAuthenticatedUser, 1000);
     })();
     </script>
     
