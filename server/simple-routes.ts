@@ -439,7 +439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(announcements);
     } catch (error) {
       console.error('[ANNOUNCEMENTS] Error fetching announcements:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -449,7 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(announcement || null);
     } catch (error) {
       console.error('[ANNOUNCEMENTS] Error fetching active announcement:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -460,7 +460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(announcements);
     } catch (error) {
       console.error('[ANNOUNCEMENTS] Error fetching unacknowledged announcements:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -470,7 +470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(announcement);
     } catch (error) {
       console.error('[ANNOUNCEMENTS] Error creating announcement:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -481,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(announcement);
     } catch (error) {
       console.error('[ANNOUNCEMENTS] Error updating announcement:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -492,7 +492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       console.error('[ANNOUNCEMENTS] Error deleting announcement:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -504,7 +504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       console.error('[ANNOUNCEMENTS] Error acknowledging announcement:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

@@ -50,6 +50,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
   const [tempColor, setTempColor] = useState<string>('#3b82f6');
   const [editingColorType, setEditingColorType] = useState<'genre' | 'category'>('genre');
+  
+  // Announcement form state
+  const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
+  const [announcementForm, setAnnouncementForm] = useState({
+    title: '',
+    content: '',
+    backgroundColor: '#3b82f6',
+    textColor: '#ffffff',
+    borderColor: '#1d4ed8',
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    isActive: true
+  });
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -263,6 +276,68 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
       setSiteContentValues(contentObject);
       return data;
+    },
+  });
+
+  // Announcements query
+  const { data: announcements = [], isLoading: announcementsLoading, refetch: refetchAnnouncements } = useQuery<any[]>({
+    queryKey: ['/api/announcements'],
+    retry: false,
+    enabled: !!currentUser && currentUser.role === 'admin',
+  });
+
+  // Create announcement mutation
+  const createAnnouncementMutation = useMutation({
+    mutationFn: async (announcementData: any) => {
+      return apiRequest('POST', '/api/announcements', {
+        ...announcementData,
+        createdBy: currentUser?.id,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Announcement Created",
+        description: "Your announcement has been created successfully.",
+      });
+      setShowAnnouncementForm(false);
+      setAnnouncementForm({
+        title: '',
+        content: '',
+        backgroundColor: '#3b82f6',
+        textColor: '#ffffff',
+        borderColor: '#1d4ed8',
+        priority: 'medium',
+        isActive: true
+      });
+      refetchAnnouncements();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error Creating Announcement",
+        description: error.message || "Failed to create announcement",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete announcement mutation
+  const deleteAnnouncementMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest('DELETE', `/api/announcements/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Announcement Deleted",
+        description: "The announcement has been deleted successfully.",
+      });
+      refetchAnnouncements();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error Deleting Announcement",
+        description: error.message || "Failed to delete announcement",
+        variant: "destructive",
+      });
     },
   });
   
@@ -526,6 +601,33 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     setTimeoutRef(newTimeout);
   };
 
+  // Announcement form handlers
+  const handleAnnouncementSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!announcementForm.title.trim() || !announcementForm.content.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Title and content are required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createAnnouncementMutation.mutate(announcementForm);
+  };
+
+  const handleAnnouncementFormChange = (field: string, value: any) => {
+    setAnnouncementForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleDeleteAnnouncement = (id: string) => {
+    deleteAnnouncementMutation.mutate(id);
+  };
+
 
 
   const handleUserRoleChange = (userId: string, role: string) => {
@@ -758,9 +860,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Announcement Management</h3>
                 <Button
-                  onClick={() => {
-                    console.log('Create new announcement');
-                  }}
+                  onClick={() => setShowAnnouncementForm(true)}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -774,7 +874,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   <div>
                     <h4 className="font-medium text-blue-900 dark:text-blue-100">How Announcements Work</h4>
                     <ul className="text-sm text-blue-700 dark:text-blue-200 mt-2 space-y-1">
-                      <li>• Announcements appear as banners at the top of all user screens</li>
+                      <li>• Announcements appear as centered modals to all users</li>
                       <li>• Users must click "Got it" to acknowledge and dismiss announcements</li>
                       <li>• Priority levels determine display order (urgent, high, medium, low)</li>
                       <li>• Only active announcements are shown to users</li>
@@ -788,19 +888,260 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Megaphone className="h-5 w-5" />
-                    Active Announcements
+                    All Announcements
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <Megaphone className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-600">No announcements created yet.</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Database tables need to be created for announcement functionality.
-                    </p>
-                  </div>
+                  {announcementsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading announcements...</p>
+                    </div>
+                  ) : announcements.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Megaphone className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                      <p className="text-gray-600">No announcements created yet.</p>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Create your first announcement to broadcast messages to all users.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {announcements.map((announcement: any) => (
+                        <div
+                          key={announcement.id}
+                          className="border rounded-lg p-4"
+                          style={{
+                            backgroundColor: announcement.backgroundColor + '10',
+                            borderColor: announcement.borderColor,
+                          }}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-lg">{announcement.title}</h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge 
+                                  variant={announcement.priority === 'urgent' ? 'destructive' : 
+                                          announcement.priority === 'high' ? 'default' : 'secondary'}
+                                >
+                                  {announcement.priority}
+                                </Badge>
+                                <Badge variant={announcement.isActive ? 'default' : 'secondary'}>
+                                  {announcement.isActive ? 'Active' : 'Inactive'}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setAnnouncementForm({
+                                    title: announcement.title,
+                                    content: announcement.content,
+                                    backgroundColor: announcement.backgroundColor,
+                                    textColor: announcement.textColor,
+                                    borderColor: announcement.borderColor,
+                                    priority: announcement.priority,
+                                    isActive: !announcement.isActive
+                                  });
+                                  setShowAnnouncementForm(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteAnnouncement(announcement.id)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div 
+                            className="prose prose-sm max-w-none text-gray-700"
+                            dangerouslySetInnerHTML={{ __html: announcement.content }}
+                          />
+                          <div className="text-xs text-gray-500 mt-2">
+                            Created: {new Date(announcement.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
+
+              {/* Announcement Form Dialog */}
+              <Dialog open={showAnnouncementForm} onOpenChange={setShowAnnouncementForm}>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Create New Announcement</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleAnnouncementSubmit} className="space-y-4">
+                    <div>
+                      <Label htmlFor="title">Title *</Label>
+                      <Input
+                        id="title"
+                        value={announcementForm.title}
+                        onChange={(e) => handleAnnouncementFormChange('title', e.target.value)}
+                        placeholder="Enter announcement title"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="content">Content *</Label>
+                      <Textarea
+                        id="content"
+                        value={announcementForm.content}
+                        onChange={(e) => handleAnnouncementFormChange('content', e.target.value)}
+                        placeholder="Enter announcement content (HTML supported)"
+                        rows={4}
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="backgroundColor">Background Color</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="backgroundColor"
+                            type="color"
+                            value={announcementForm.backgroundColor}
+                            onChange={(e) => handleAnnouncementFormChange('backgroundColor', e.target.value)}
+                            className="w-16 h-10"
+                          />
+                          <Input
+                            type="text"
+                            value={announcementForm.backgroundColor}
+                            onChange={(e) => handleAnnouncementFormChange('backgroundColor', e.target.value)}
+                            placeholder="#3b82f6"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="textColor">Text Color</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="textColor"
+                            type="color"
+                            value={announcementForm.textColor}
+                            onChange={(e) => handleAnnouncementFormChange('textColor', e.target.value)}
+                            className="w-16 h-10"
+                          />
+                          <Input
+                            type="text"
+                            value={announcementForm.textColor}
+                            onChange={(e) => handleAnnouncementFormChange('textColor', e.target.value)}
+                            placeholder="#ffffff"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="borderColor">Border Color</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="borderColor"
+                            type="color"
+                            value={announcementForm.borderColor}
+                            onChange={(e) => handleAnnouncementFormChange('borderColor', e.target.value)}
+                            className="w-16 h-10"
+                          />
+                          <Input
+                            type="text"
+                            value={announcementForm.borderColor}
+                            onChange={(e) => handleAnnouncementFormChange('borderColor', e.target.value)}
+                            placeholder="#1d4ed8"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="priority">Priority</Label>
+                        <Select value={announcementForm.priority} onValueChange={(value) => handleAnnouncementFormChange('priority', value)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="urgent">Urgent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center space-x-2 mt-6">
+                        <input
+                          type="checkbox"
+                          id="isActive"
+                          checked={announcementForm.isActive}
+                          onChange={(e) => handleAnnouncementFormChange('isActive', e.target.checked)}
+                          className="rounded"
+                        />
+                        <Label htmlFor="isActive">Active (show to users immediately)</Label>
+                      </div>
+                    </div>
+
+                    {/* Preview */}
+                    <div className="border rounded-lg p-4">
+                      <Label className="text-sm font-medium mb-2 block">Preview:</Label>
+                      <div
+                        className="rounded-lg p-4 border-2"
+                        style={{
+                          backgroundColor: announcementForm.backgroundColor,
+                          color: announcementForm.textColor,
+                          borderColor: announcementForm.borderColor,
+                        }}
+                      >
+                        <h4 className="font-bold text-lg mb-2">
+                          {announcementForm.title || 'Announcement Title'}
+                        </h4>
+                        <div 
+                          dangerouslySetInnerHTML={{ 
+                            __html: announcementForm.content || 'Your announcement content will appear here...' 
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowAnnouncementForm(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={createAnnouncementMutation.isPending}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        {createAnnouncementMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-transparent mr-2"></div>
+                            Creating...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Create Announcement
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </TabsContent>
 
