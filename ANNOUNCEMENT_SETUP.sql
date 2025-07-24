@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS public.announcements (
     text_color TEXT DEFAULT '#ffffff' NOT NULL,
     border_color TEXT DEFAULT '#1d4ed8' NOT NULL,
     priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')) NOT NULL,
-    created_by TEXT REFERENCES public.users(id) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_by TEXT NOT NULL REFERENCES public.users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ==========================================
@@ -26,11 +26,9 @@ CREATE TABLE IF NOT EXISTS public.announcements (
 -- ==========================================
 CREATE TABLE IF NOT EXISTS public.user_announcement_acks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id TEXT REFERENCES public.users(id) NOT NULL,
-    announcement_id UUID REFERENCES public.announcements(id) ON DELETE CASCADE NOT NULL,
-    acknowledged_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    -- Unique constraint to prevent duplicate acknowledgments
+    user_id TEXT NOT NULL REFERENCES public.users(id),
+    announcement_id UUID NOT NULL REFERENCES public.announcements(id) ON DELETE CASCADE,
+    acknowledged_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(user_id, announcement_id)
 );
 
@@ -46,6 +44,19 @@ CREATE INDEX IF NOT EXISTS idx_user_acks_announcement_id ON public.user_announce
 -- ==========================================
 -- 4. ADD UPDATE TRIGGERS FOR TIMESTAMPS
 -- ==========================================
+
+-- First, ensure the trigger function exists (or create it)
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Then, create the trigger
+DROP TRIGGER IF EXISTS trigger_update_announcements_updated_at ON public.announcements;
+
 CREATE TRIGGER trigger_update_announcements_updated_at
     BEFORE UPDATE ON public.announcements
     FOR EACH ROW
@@ -55,28 +66,32 @@ CREATE TRIGGER trigger_update_announcements_updated_at
 -- 5. ROW LEVEL SECURITY (RLS) POLICIES
 -- ==========================================
 
--- Enable RLS on announcement tables
+-- Enable RLS
 ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_announcement_acks ENABLE ROW LEVEL SECURITY;
 
--- Announcements policies
+-- Policies for Announcements
 CREATE POLICY "Users can view active announcements" ON public.announcements
-    FOR SELECT USING (is_active = true);
+    FOR SELECT
+    USING (is_active = true);
 
 CREATE POLICY "Admin users can manage announcements" ON public.announcements
-    FOR ALL USING (
+    FOR ALL
+    USING (
         EXISTS (
             SELECT 1 FROM public.users 
             WHERE id = auth.uid()::text AND role = 'admin'
         )
     );
 
--- User acknowledgment policies
+-- Policies for Acknowledgments
 CREATE POLICY "Users can manage their own acknowledgments" ON public.user_announcement_acks
-    FOR ALL USING (user_id = auth.uid()::text);
+    FOR ALL
+    USING (user_id = auth.uid()::text);
 
 CREATE POLICY "Admin can view all acknowledgments" ON public.user_announcement_acks
-    FOR SELECT USING (
+    FOR SELECT
+    USING (
         EXISTS (
             SELECT 1 FROM public.users 
             WHERE id = auth.uid()::text AND role = 'admin'
@@ -84,33 +99,38 @@ CREATE POLICY "Admin can view all acknowledgments" ON public.user_announcement_a
     );
 
 -- ==========================================
--- 6. SAMPLE ANNOUNCEMENT DATA
+-- 6. SAMPLE ANNOUNCEMENT DATA (Optional)
 -- ==========================================
-
--- Insert a sample announcement (you can delete this after testing)
-INSERT INTO public.announcements (title, content, is_active, background_color, text_color, priority, created_by)
-VALUES (
+-- This inserts one active announcement using the first admin found in users table.
+-- You can delete this after testing.
+INSERT INTO public.announcements (
+    title,
+    content,
+    is_active,
+    background_color,
+    text_color,
+    priority,
+    created_by
+)
+SELECT
     'Welcome to the Enhanced Platform!',
     'We''ve added a new announcement system to keep you informed about important updates and news. Click "Got it" to dismiss this message.',
     true,
     '#10b981',
     '#ffffff',
     'medium',
-    (SELECT id FROM public.users WHERE role = 'admin' LIMIT 1)
-) ON CONFLICT DO NOTHING;
+    id
+FROM public.users
+WHERE role = 'admin'
+LIMIT 1
+ON CONFLICT DO NOTHING;
 
 -- ==========================================
--- 7. VERIFICATION
+-- 7. VERIFICATION - Count rows
 -- ==========================================
-
--- Verify tables were created successfully
-SELECT 'Announcements table created' as status, count(*) as record_count FROM public.announcements
+SELECT 'Announcements table created' AS status, COUNT(*) AS record_count FROM public.announcements
 UNION ALL
-SELECT 'User acknowledgments table created' as status, count(*) as record_count FROM public.user_announcement_acks;
+SELECT 'User acknowledgments table created' AS status, COUNT(*) AS record_count FROM public.user_announcement_acks;
 
--- Show announcement table structure
-\d public.announcements;
-\d public.user_announcement_acks;
-
--- Success message
-SELECT 'Announcement system setup completed successfully!' as message;
+-- Final success message
+SELECT '✅ Announcement system setup completed successfully!' AS message;
