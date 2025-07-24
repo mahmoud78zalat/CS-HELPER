@@ -122,6 +122,8 @@ export const announcements = pgTable("announcements", {
   textColor: varchar("text_color").default("#ffffff").notNull(),
   borderColor: varchar("border_color").default("#1d4ed8").notNull(),
   priority: announcementPriorityEnum("priority").default("medium").notNull(),
+  version: integer("version").default(1).notNull(), // Version for re-announce functionality
+  lastAnnouncedAt: timestamp("last_announced_at").defaultNow(), // Track when last announced
   createdBy: varchar("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -260,6 +262,8 @@ export const insertSiteContentSchema = createInsertSchema(siteContent).omit({
 
 export const insertAnnouncementSchema = createInsertSchema(announcements).omit({
   id: true,
+  version: true,
+  lastAnnouncedAt: true,
   createdAt: true,
   updatedAt: true,
   supabaseId: true,

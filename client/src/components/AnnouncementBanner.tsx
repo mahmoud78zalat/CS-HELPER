@@ -17,6 +17,8 @@ interface Announcement {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+  version?: number;
+  lastAnnouncedAt?: Date;
 }
 
 const priorityIcons = {
@@ -52,11 +54,27 @@ export function AnnouncementBanner() {
           if (announcements && announcements.length > 0) {
             const firstAnnouncement = announcements[0];
             
-            // Check if this announcement was already acknowledged locally
+            // Check if this announcement was already acknowledged locally (version-aware)
             const localKey = `announcement_ack_${user.id}_${firstAnnouncement.id}`;
-            const wasAcknowledged = localStorage.getItem(localKey);
+            const localAckData = localStorage.getItem(localKey);
             
-            if (!wasAcknowledged) {
+            let shouldShow = true;
+            
+            if (localAckData) {
+              try {
+                const ackData = JSON.parse(localAckData);
+                const localVersion = ackData.version || 1;
+                const currentVersion = firstAnnouncement.version || 1;
+                
+                // Show announcement if it's been re-announced (version bumped)
+                shouldShow = currentVersion > localVersion;
+              } catch (e) {
+                // If parsing fails, treat as not acknowledged
+                shouldShow = true;
+              }
+            }
+            
+            if (shouldShow) {
               setAnnouncement(firstAnnouncement);
               setIsVisible(true);
             }
@@ -78,38 +96,75 @@ export function AnnouncementBanner() {
     setIsAcknowledging(true);
 
     try {
-      // Store acknowledgment in localStorage immediately for instant feedback
+      // Store acknowledgment in localStorage immediately for instant feedback with version tracking
       const localKey = `announcement_ack_${user.id}_${announcement.id}`;
-      localStorage.setItem(localKey, Date.now().toString());
+      const ackData = {
+        userId: user.id,
+        announcementId: announcement.id,
+        acknowledgedAt: new Date().toISOString(),
+        version: announcement.version || 1,
+        synced: false
+      };
+      localStorage.setItem(localKey, JSON.stringify(ackData));
 
       // Hide the modal immediately
       setIsVisible(false);
       setAnnouncement(null);
 
-      // Send acknowledgment to server (non-blocking)
-      const response = await fetch(`/api/announcements/${announcement.id}/acknowledge`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId: user.id }),
-      });
+      // Try to sync to database with retry mechanism
+      let syncAttempts = 0;
+      const maxRetries = 2;
+      
+      const attemptSync = async (): Promise<boolean> => {
+        try {
+          syncAttempts++;
+          const response = await fetch(`/api/announcements/${announcement.id}/acknowledge`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: user.id }),
+          });
 
-      if (!response.ok) {
-        // If server acknowledgment fails, show a toast but don't re-show the modal
+          if (response.ok) {
+            // Mark as synced in localStorage
+            const updatedAckData = { ...ackData, synced: true };
+            localStorage.setItem(localKey, JSON.stringify(updatedAckData));
+            return true;
+          } else {
+            const errorText = await response.text();
+            throw new Error(`Server responded with ${response.status}: ${errorText}`);
+          }
+        } catch (syncError) {
+          console.error(`Sync attempt ${syncAttempts} failed:`, syncError);
+          
+          if (syncAttempts < maxRetries) {
+            // Wait 1 second before retry
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return attemptSync();
+          }
+          return false;
+        }
+      };
+
+      const syncSuccess = await attemptSync();
+      
+      if (!syncSuccess) {
         toast({
           title: "Acknowledgment recorded locally",
-          description: "Your acknowledgment was saved but couldn't sync to server.",
+          description: "Your acknowledgment was saved but couldn't sync to server after 2 attempts.",
           variant: "default",
         });
       }
     } catch (error) {
       console.error('Error acknowledging announcement:', error);
       toast({
-        title: "Acknowledgment recorded locally",
-        description: "Your acknowledgment was saved locally.",
-        variant: "default",
+        title: "Error saving acknowledgment",
+        description: "There was an issue saving your acknowledgment. Please try again.",
+        variant: "destructive",
       });
+      // If even localStorage fails, show the announcement again
+      setIsVisible(true);
     } finally {
       setIsAcknowledging(false);
     }

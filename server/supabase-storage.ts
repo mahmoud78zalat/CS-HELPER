@@ -702,6 +702,37 @@ export class SupabaseStorage implements IStorage {
     return data.map(this.mapSupabaseAnnouncement);
   }
 
+  async reAnnounce(announcementId: string): Promise<void> {
+    // First get the current version
+    const { data: currentData, error: fetchError } = await this.client
+      .from('announcements')
+      .select('version')
+      .eq('id', announcementId)
+      .single();
+
+    if (fetchError) {
+      console.error('[SupabaseStorage] Error fetching current version:', fetchError);
+      throw new Error(`Failed to fetch current version: ${fetchError.message}`);
+    }
+
+    const currentVersion = currentData?.version || 1;
+
+    // Update with incremented version
+    const { error } = await this.client
+      .from('announcements')
+      .update({
+        version: currentVersion + 1,
+        last_announced_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', announcementId);
+
+    if (error) {
+      console.error('[SupabaseStorage] Error re-announcing:', error);
+      throw new Error(`Failed to re-announce: ${error.message}`);
+    }
+  }
+
   // Mapping functions
   private mapSupabaseUser(data: any): User {
     return {
@@ -815,6 +846,8 @@ export class SupabaseStorage implements IStorage {
       textColor: data.text_color,
       borderColor: data.border_color,
       priority: data.priority,
+      version: data.version || 1,
+      lastAnnouncedAt: data.last_announced_at ? new Date(data.last_announced_at) : null,
       createdBy: data.created_by,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),

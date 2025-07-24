@@ -490,4 +490,20 @@ export class MemoryStorage implements IStorage {
              new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime();
     });
   }
+
+  async reAnnounce(announcementId: string): Promise<void> {
+    const existing = this.announcements.get(announcementId);
+    if (!existing) {
+      throw new Error("Announcement not found");
+    }
+
+    const updated: Announcement = {
+      ...existing,
+      version: (existing.version || 1) + 1,
+      lastAnnouncedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.announcements.set(announcementId, updated);
+  }
 }

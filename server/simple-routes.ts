@@ -508,6 +508,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/announcements/:id/re-announce', async (req, res) => {
+    try {
+      const announcementId = req.params.id;
+      await storage.reAnnounce(announcementId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error re-announcing:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // Personal Notes Routes
   const personalNotesStorage = new SupabasePersonalNotesStorage();
 

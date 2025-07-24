@@ -102,6 +102,7 @@ export interface IStorage {
   acknowledgeAnnouncement(userId: string, announcementId: string): Promise<void>;
   getUserAnnouncementAck(userId: string, announcementId: string): Promise<UserAnnouncementAck | undefined>;
   getUnacknowledgedAnnouncements(userId: string): Promise<Announcement[]>;
+  reAnnounce(announcementId: string): Promise<void>;
 }
 
 // DatabaseStorage class commented out for beta testing

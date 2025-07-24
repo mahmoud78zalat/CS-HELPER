@@ -340,6 +340,27 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
     },
   });
+
+  // Re-announce mutation
+  const reAnnounceMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest('POST', `/api/announcements/${id}/re-announce`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Re-announcement Successful",
+        description: "The announcement will now show to all users again.",
+      });
+      refetchAnnouncements();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error Re-announcing",
+        description: error.message || "Failed to re-announce",
+        variant: "destructive",
+      });
+    },
+  });
   
   // Effect to automatically detect and add new genres/categories
   useEffect(() => {
@@ -628,7 +649,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     deleteAnnouncementMutation.mutate(id);
   };
 
-
+  const handleReAnnounce = (id: string) => {
+    reAnnounceMutation.mutate(id);
+  };
 
   const handleUserRoleChange = (userId: string, role: string) => {
     userRoleMutation.mutate({ userId, role });
@@ -935,6 +958,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                               <Button
                                 variant="outline"
                                 size="sm"
+                                onClick={() => handleReAnnounce(announcement.id)}
+                                className="text-blue-600 hover:text-blue-700"
+                                title="Re-announce to all users (even those who clicked 'Got it')"
+                              >
+                                <Megaphone className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={() => {
                                   setAnnouncementForm({
                                     title: announcement.title,
@@ -943,7 +975,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                                     textColor: announcement.textColor,
                                     borderColor: announcement.borderColor,
                                     priority: announcement.priority,
-                                    isActive: !announcement.isActive
+                                    isActive: announcement.isActive
                                   });
                                   setShowAnnouncementForm(true);
                                 }}
