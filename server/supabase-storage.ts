@@ -140,18 +140,30 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateUserRole(id: string, role: "admin" | "agent"): Promise<void> {
-    const { error } = await this.client
+    console.log('[SupabaseStorage] Updating user role for ID:', id, 'to role:', role);
+    
+    const { data, error } = await this.client
       .from('users')
       .update({ 
         role, 
         updated_at: new Date().toISOString() 
       })
-      .eq('id', id);
+      .eq('id', id)
+      .select();
+
+    console.log('[SupabaseStorage] Role update result - data:', data, 'error:', error);
 
     if (error) {
       console.error('[SupabaseStorage] Error updating user role:', error);
       throw error;
     }
+
+    if (!data || data.length === 0) {
+      console.warn('[SupabaseStorage] No user found with ID:', id);
+      throw new Error(`User with ID ${id} not found`);
+    }
+
+    console.log('[SupabaseStorage] Successfully updated user role:', data[0]);
   }
 
   // Live reply template operations

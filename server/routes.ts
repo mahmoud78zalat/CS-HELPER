@@ -110,23 +110,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/users/:id/role', isAuthenticated, async (req: any, res) => {
     try {
+      console.log('[RoleUpdate] Request received for user:', req.params.id, 'with role:', req.body.role);
+      
       const currentUser = await storage.getUser(req.user.claims.sub);
+      console.log('[RoleUpdate] Current user:', currentUser?.email, 'with role:', currentUser?.role);
+      
       if (currentUser?.role !== 'admin') {
+        console.log('[RoleUpdate] Access denied - user is not admin');
         return res.status(403).json({ message: "Admin access required" });
       }
 
       const { id } = req.params;
       const { role } = req.body;
 
+      console.log('[RoleUpdate] Updating user ID:', id, 'to role:', role);
+
       if (!['admin', 'agent'].includes(role)) {
+        console.log('[RoleUpdate] Invalid role provided:', role);
         return res.status(400).json({ message: "Invalid role" });
       }
 
+      // Check if target user exists
+      const targetUser = await storage.getUser(id);
+      if (!targetUser) {
+        console.log('[RoleUpdate] Target user not found:', id);
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log('[RoleUpdate] Target user found:', targetUser.email, 'current role:', targetUser.role);
+
       await storage.updateUserRole(id, role);
-      res.json({ message: "User role updated" });
+      console.log('[RoleUpdate] Role update completed successfully');
+      
+      res.json({ message: "User role updated", user: { ...targetUser, role } });
     } catch (error) {
-      console.error("Error updating user role:", error);
-      res.status(500).json({ message: "Failed to update user role" });
+      console.error("[RoleUpdate] Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
