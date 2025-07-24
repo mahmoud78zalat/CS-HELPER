@@ -10,6 +10,7 @@ import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Template } from "@shared/schema";
 import { useEffect, useState, useMemo } from "react";
+import { getGenreBadgeClasses, getCategoryBadgeClasses } from '@/lib/templateColors';
 
 interface TemplateCardProps {
   template: Template;
@@ -156,32 +157,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
     usageMutation.mutate();
   };
 
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      'Order Issues': 'blue',
-      'Delivery Problems': 'orange',
-      'Payment Issues': 'yellow', 
-      'Product Complaints': 'red',
-      'Returns & Refunds': 'indigo',
-      'Technical Support': 'green',
-      'General Inquiry': 'gray',
-      'Escalation': 'red'
-    };
-    return colors[category as keyof typeof colors] || 'gray';
-  };
 
-  const getGenreColor = (genre: string) => {
-    const colors = {
-      'Urgent': 'red',
-      'Standard': 'blue',
-      'Follow-up': 'green', 
-      'Escalation': 'orange',
-      'Resolution': 'emerald',
-      'Information Request': 'purple',
-      'Complaint Handling': 'yellow'
-    };
-    return colors[genre as keyof typeof colors] || 'gray';
-  };
 
   return (
     <Card 
@@ -193,10 +169,10 @@ export default function TemplateCard({ template }: TemplateCardProps) {
           <div className="flex-1">
             <h4 className="font-semibold text-slate-800 text-sm lg:text-base leading-tight">{replaceVariablesInTemplateName(template.name)}</h4>
             <div className="flex items-center flex-wrap gap-1 lg:gap-2 mt-2">
-              <Badge variant="secondary" className={`bg-${getGenreColor(template.genre)}-100 text-${getGenreColor(template.genre)}-700 text-xs px-2 py-1`}>
+              <Badge variant="secondary" className={`${getGenreBadgeClasses(template.genre)} text-xs px-2 py-1 border`}>
                 {template.genre}
               </Badge>
-              <Badge variant="secondary" className={`bg-${getCategoryColor(template.category)}-100 text-${getCategoryColor(template.category)}-700 text-xs px-2 py-1`}>
+              <Badge variant="secondary" className={`${getCategoryBadgeClasses(template.category)} text-xs px-2 py-1 border`}>
                 {template.category}
               </Badge>
               <Badge variant="outline" className="text-xs px-2 py-1">

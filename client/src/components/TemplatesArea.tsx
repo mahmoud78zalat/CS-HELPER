@@ -5,6 +5,7 @@ import { useTemplates } from "@/hooks/useTemplates";
 import TemplateCard from "./TemplateCard";
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getGenreColor } from '@/lib/templateColors';
 
 export default function TemplatesArea() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,28 +25,6 @@ export default function TemplatesArea() {
     acc[template.genre].push(template);
     return acc;
   }, {} as Record<string, typeof templates>) || {};
-
-  const getGenreColor = (genre: string) => {
-    const colors = {
-      'Urgent': 'red',
-      'Standard': 'blue', 
-      'Follow-up': 'green',
-      'Escalation': 'orange',
-      'Resolution': 'emerald',
-      'Information Request': 'purple',
-      'Complaint Handling': 'yellow',
-      'Greeting': 'cyan',
-      'CSAT': 'indigo',
-      'Warning Abusive Language': 'red',
-      'Apology': 'amber',
-      'Thank You': 'pink',
-      'Farewell': 'teal',
-      'Confirmation': 'lime',
-      'Technical Support': 'violet',
-      'Holiday/Special Occasion': 'rose'
-    };
-    return colors[genre as keyof typeof colors] || 'gray';
-  };
 
   return (
     <>
@@ -99,7 +78,7 @@ export default function TemplatesArea() {
               {Object.entries(groupedTemplates).map(([genre, genreTemplates]) => (
                 <div key={genre} className="template-category">
                   <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                    <div className={`w-2 h-2 bg-${getGenreColor(genre)}-500 rounded-full mr-3`}></div>
+                    <div className={`w-2 h-2 rounded-full mr-3 ${getGenreColor(genre).background.replace('100', '500')}`}></div>
                     {genre} Templates
                   </h3>
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">

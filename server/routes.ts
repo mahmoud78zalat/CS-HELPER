@@ -320,6 +320,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Template colors configuration endpoint
+  app.post('/api/template-colors', async (req, res) => {
+    try {
+      // Accept color configuration and store it in site content for admin management
+      const colorConfig = req.body;
+      console.log('[API] Received template colors sync:', colorConfig.lastUpdated);
+      
+      // For now, just acknowledge the sync - colors are managed client-side
+      // In future, we could store these in a dedicated colors table in Supabase
+      res.json({ success: true, message: 'Template colors synced successfully' });
+    } catch (error) {
+      console.error("Error syncing template colors:", error);
+      res.status(500).json({ message: "Failed to sync template colors" });
+    }
+  });
+
   // Chatbase verification hash endpoint
   app.get('/api/chatbase/verify-hash/:userId', async (req, res) => {
     try {

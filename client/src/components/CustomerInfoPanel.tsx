@@ -15,7 +15,7 @@ export default function CustomerInfoPanel() {
     const phone = customerData.customer_phone || '';
     let detectedCountry = '';
     
-    // Arab countries phone code detection
+    // Phone code detection for multiple regions
     if (phone.startsWith('+971') || phone.startsWith('971')) {
       detectedCountry = '🇦🇪 United Arab Emirates';
     } else if (phone.startsWith('+966') || phone.startsWith('966')) {
@@ -34,6 +34,8 @@ export default function CustomerInfoPanel() {
       detectedCountry = '🇯🇴 Jordan';
     } else if (phone.startsWith('+961') || phone.startsWith('961')) {
       detectedCountry = '🇱🇧 Lebanon';
+    } else if (phone.startsWith('+65') || phone.startsWith('65')) {
+      detectedCountry = '🇸🇬 Singapore';
     }
     
     if (detectedCountry) {
@@ -128,9 +130,11 @@ export default function CustomerInfoPanel() {
               <SelectItem value="🇰🇼 Kuwait">🇰🇼 Kuwait</SelectItem>
               <SelectItem value="🇶🇦 Qatar">🇶🇦 Qatar</SelectItem>
               <SelectItem value="🇧🇭 Bahrain">🇧🇭 Bahrain</SelectItem>
+              <SelectItem value="🇴🇲 Oman">🇴🇲 Oman</SelectItem>
               <SelectItem value="🇪🇬 Egypt">🇪🇬 Egypt</SelectItem>
               <SelectItem value="🇯🇴 Jordan">🇯🇴 Jordan</SelectItem>
               <SelectItem value="🇱🇧 Lebanon">🇱🇧 Lebanon</SelectItem>
+              <SelectItem value="🇸🇬 Singapore">🇸🇬 Singapore</SelectItem>
             </SelectContent>
           </Select>
         </div>

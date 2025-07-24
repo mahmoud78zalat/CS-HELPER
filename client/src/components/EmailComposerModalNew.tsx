@@ -157,7 +157,6 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     setSelectedTemplate(template);
     setEmailSubject(template.subject || '');
     setEmailBody(template.content || '');
-    setShowVariables(true);
     
     // Update concerned team in variables
     setVariableValues(prev => ({
@@ -294,17 +293,6 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 <Badge className="bg-purple-100 text-purple-700 px-3 py-1 text-sm">
                   To: {selectedTemplate?.concernedTeam || 'Select template first'}
                 </Badge>
-                {selectedTemplate && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowVariables(!showVariables)}
-                    className="h-9"
-                  >
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    Variables Panel
-                  </Button>
-                )}
               </div>
               
               <div className="space-y-6">
@@ -434,7 +422,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           </div>
 
           {/* Right Panel: Variable Management */}
-          {showVariables && (
+          {selectedTemplate && (
             <div className="w-96 border-l border-slate-200 flex flex-col bg-slate-50">
               <div className="p-6 border-b border-slate-200 bg-white">
                 <h3 className="font-semibold text-lg flex items-center gap-2 text-slate-800">
