@@ -22,14 +22,16 @@ export class SupabaseStorage implements IStorage {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
     
-    console.log('[SupabaseStorage] Initializing with URL:', supabaseUrl);
-    console.log('[SupabaseStorage] Key status:', supabaseKey ? 'PRESENT' : 'MISSING');
+    console.log('[SupabaseStorage] Initializing with URL:', supabaseUrl ? 'URL_PRESENT' : 'URL_MISSING');
+    console.log('[SupabaseStorage] Key status:', supabaseKey ? 'KEY_PRESENT' : 'KEY_MISSING');
+    console.log('[SupabaseStorage] URL length:', supabaseUrl?.length || 0);
+    console.log('[SupabaseStorage] Key length:', supabaseKey?.length || 0);
     
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error(`Missing Supabase credentials - URL: ${!!supabaseUrl}, Key: ${!!supabaseKey}`);
+    if (!supabaseUrl || !supabaseKey || supabaseUrl.trim() === '' || supabaseKey.trim() === '') {
+      throw new Error(`Missing or empty Supabase credentials - URL: ${!!supabaseUrl && supabaseUrl.trim() !== ''}, Key: ${!!supabaseKey && supabaseKey.trim() !== ''}`);
     }
     
-    this.client = createClient(supabaseUrl, supabaseKey);
+    this.client = createClient(supabaseUrl.trim(), supabaseKey.trim());
     console.log('[SupabaseStorage] ✅ Successfully connected to Supabase');
     
     // Test connection asynchronously
