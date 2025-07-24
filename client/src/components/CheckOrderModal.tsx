@@ -48,7 +48,7 @@ export default function CheckOrderModal({ onClose }: CheckOrderModalProps) {
         });
         return;
       }
-      url = `https://new-panel.brandsforlessuae.com/dashboard/orders/${input}`;
+      url = `https://new-panel.brandsforlessuae.com/apps/customercare/orders/${input}`;
     }
 
     // Open in new tab
