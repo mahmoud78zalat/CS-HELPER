@@ -6,24 +6,38 @@
     <style>
       /* Hide Chatbase by default until user authentication is verified */
       #chatbase-bubble-button,
-      [id*="chatbase"]:not([id*="close"]):not([id*="minimize"]),
-      [class*="chatbase"]:not([class*="close"]):not([class*="minimize"]),
+      [id*="chatbase"]:not([id*="close"]):not([id*="x"]):not([class*="close"]),
+      [class*="chatbase"]:not([class*="close"]):not([class*="x"]),
       iframe[src*="chatbase"],
       [data-chatbase-id] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
+        pointer-events: none !important;
       }
       
-      /* Show Chatbase only when authenticated */
-      body.user-authenticated #chatbase-bubble-button,
-      body.user-authenticated [id*="chatbase"]:not([id*="close"]):not([id*="minimize"]),
-      body.user-authenticated [class*="chatbase"]:not([class*="close"]):not([class*="minimize"]),
-      body.user-authenticated iframe[src*="chatbase"],
-      body.user-authenticated [data-chatbase-id] {
-        display: initial !important;
+      /* Show Chatbase only when authenticated - but keep it closed by default */
+      body.user-authenticated #chatbase-bubble-button {
+        display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+      
+      body.user-authenticated [id*="chatbase"]:not([id*="close"]):not([id*="x"]):not([class*="close"]),
+      body.user-authenticated [class*="chatbase"]:not([class*="close"]):not([class*="x"]),
+      body.user-authenticated iframe[src*="chatbase"],
+      body.user-authenticated [data-chatbase-id] {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+      
+      /* Ensure close buttons always work */
+      [id*="close"], [class*="close"], [id*="x"], [class*="x"] {
+        pointer-events: auto !important;
+        z-index: 999999 !important;
       }
     </style>
   </head>
@@ -31,13 +45,81 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Chatbase Integration - Temporarily Disabled to Fix Auto-Opening Issue -->
-    <!-- 
+    <!-- Chatbase Integration -->
     <script>
-    // Chatbase will be re-enabled after fixing the auto-opening issue
-    console.log('Chatbase temporarily disabled to prevent auto-opening');
+    (function(){
+      let chatbaseLoaded = false;
+      let userCheckInterval = null;
+      
+      // Initialize chatbase proxy
+      if(!window.chatbase){
+        window.chatbase=(...arguments)=>{
+          if(!window.chatbase.q){window.chatbase.q=[]}
+          window.chatbase.q.push(arguments)
+        };
+        window.chatbase=new Proxy(window.chatbase,{
+          get(target,prop){
+            if(prop==="q"){return target.q}
+            return(...args)=>target(prop,...args)
+          }
+        })
+      }
+      
+      const loadChatbaseScript = () => {
+        if (chatbaseLoaded) return;
+        
+        const script = document.createElement("script");
+        script.src = "https://www.chatbase.co/embed.min.js";
+        script.id = "rG3h170PKdOsKKTC078sk";
+        script.domain = "www.chatbase.co";
+        document.body.appendChild(script);
+        chatbaseLoaded = true;
+        
+        console.log('Chatbase script loaded');
+      };
+      
+      const checkUserAndShowChatbase = () => {
+        const currentUser = window.getCurrentUser && window.getCurrentUser();
+        
+        if (currentUser && currentUser.id) {
+          // User is authenticated
+          if (!chatbaseLoaded) {
+            loadChatbaseScript();
+          }
+          document.body.classList.add('user-authenticated');
+          console.log('User authenticated - Chatbase visible');
+          
+          // Clear the interval once user is found
+          if (userCheckInterval) {
+            clearInterval(userCheckInterval);
+            userCheckInterval = null;
+          }
+        } else {
+          // User not authenticated
+          document.body.classList.remove('user-authenticated');
+        }
+      };
+      
+      // Start checking for user authentication
+      const startUserCheck = () => {
+        checkUserAndShowChatbase();
+        
+        // Set up interval to check for user authentication
+        if (!userCheckInterval) {
+          userCheckInterval = setInterval(checkUserAndShowChatbase, 2000);
+        }
+      };
+      
+      // Start when DOM is ready
+      if (document.readyState === "complete") {
+        setTimeout(startUserCheck, 1000);
+      } else {
+        window.addEventListener("load", () => {
+          setTimeout(startUserCheck, 1000);
+        });
+      }
+    })();
     </script>
-    -->
     
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
