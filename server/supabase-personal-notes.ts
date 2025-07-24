@@ -1,23 +1,40 @@
 import { PersonalNote, InsertPersonalNote } from '@shared/schema';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-// Create service role client that bypasses RLS
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 export class SupabasePersonalNotesStorage {
+  private supabase: SupabaseClient | null = null;
+
+  private getClient(): SupabaseClient {
+    if (!this.supabase) {
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('[SupabasePersonalNotes] Missing environment variables:', {
+          hasUrl: !!supabaseUrl,
+          hasKey: !!supabaseKey
+        });
+        throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables');
+      }
+
+      // Create service role client that bypasses RLS
+      this.supabase = createClient(supabaseUrl, supabaseKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      });
+
+      console.log('[SupabasePersonalNotes] Client initialized successfully');
+    }
+
+    return this.supabase;
+  }
   // Get all personal notes for a user
   async getPersonalNotes(userId: string): Promise<PersonalNote[]> {
     console.log('[SupabaseStorage] 📝 Fetching personal notes for user:', userId);
     
-    const { data, error } = await supabase
+    const { data, error } = await this.getClient()
       .from('personal_notes')
       .select('*')
       .eq('user_id', userId)
@@ -36,7 +53,7 @@ export class SupabasePersonalNotesStorage {
   async createPersonalNote(note: InsertPersonalNote): Promise<PersonalNote> {
     console.log('[SupabaseStorage] 📝 Creating personal note:', note);
     
-    const { data, error } = await supabase
+    const { data, error } = await this.getClient()
       .from('personal_notes')
       .insert({
         user_id: note.userId,
@@ -61,7 +78,7 @@ export class SupabasePersonalNotesStorage {
   async updatePersonalNote(id: string, updates: { subject: string; content: string }): Promise<PersonalNote> {
     console.log('[SupabaseStorage] 📝 Updating personal note:', id, updates);
     
-    const { data, error } = await supabase
+    const { data, error } = await this.getClient()
       .from('personal_notes')
       .update({
         subject: updates.subject,
@@ -85,7 +102,7 @@ export class SupabasePersonalNotesStorage {
   async deletePersonalNote(id: string): Promise<void> {
     console.log('[SupabaseStorage] 🗑️ Deleting personal note:', id);
     
-    const { data, error } = await supabase
+    const { data, error } = await this.getClient()
       .from('personal_notes')
       .delete()
       .eq('id', id)
