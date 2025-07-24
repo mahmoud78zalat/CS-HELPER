@@ -16,7 +16,7 @@
         pointer-events: none !important;
       }
       
-      /* Show Chatbase only when authenticated - but keep it closed by default */
+      /* Show only Chatbase bubble button when authenticated - hide the chat window */
       body.user-authenticated #chatbase-bubble-button {
         display: block !important;
         visibility: visible !important;
@@ -24,14 +24,21 @@
         pointer-events: auto !important;
       }
       
-      body.user-authenticated [id*="chatbase"]:not([id*="close"]):not([id*="x"]):not([class*="close"]),
-      body.user-authenticated [class*="chatbase"]:not([class*="close"]):not([class*="x"]),
+      /* Aggressively hide all chatbase elements except the button */
+      body.user-authenticated [id*="chatbase"]:not([id="chatbase-bubble-button"]),
+      body.user-authenticated [class*="chatbase"]:not([id="chatbase-bubble-button"]),
       body.user-authenticated iframe[src*="chatbase"],
-      body.user-authenticated [data-chatbase-id] {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
+      body.user-authenticated div[class*="widget"],
+      body.user-authenticated div[id*="window"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
+        overflow: hidden !important;
       }
       
       /* Ensure close buttons always work */
@@ -72,10 +79,42 @@
         script.src = "https://www.chatbase.co/embed.min.js";
         script.id = "rG3h170PKdOsKKTC078sk";
         script.domain = "www.chatbase.co";
+        
+        // Prevent auto-opening by setting config before loading
+        script.onload = function() {
+          // Force chatbase to stay closed on load and prevent auto-opening
+          const forceClose = () => {
+            if (window.chatbase) {
+              try {
+                window.chatbase('close');
+                window.chatbase('minimize');
+                
+                // Hide all chatbase elements aggressively
+                const chatbaseElements = document.querySelectorAll('[id*="chatbase"]:not([id="chatbase-bubble-button"]), [class*="chatbase"]:not([id="chatbase-bubble-button"]), iframe[src*="chatbase"]');
+                chatbaseElements.forEach(el => {
+                  el.style.display = 'none';
+                  el.style.visibility = 'hidden';
+                  el.style.opacity = '0';
+                  el.style.pointerEvents = 'none';
+                });
+                
+              } catch (e) {
+                console.log('Chatbase commands not available:', e.message);
+              }
+            }
+          };
+          
+          // Apply force close immediately and repeatedly
+          forceClose();
+          setTimeout(forceClose, 500);
+          setTimeout(forceClose, 1000);
+          setTimeout(forceClose, 2000);
+        };
+        
         document.body.appendChild(script);
         chatbaseLoaded = true;
         
-        console.log('Chatbase script loaded');
+        console.log('Chatbase script loaded with auto-close');
       };
       
       const checkUserAndShowChatbase = () => {
