@@ -174,10 +174,11 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     setTempColor('#3b82f6'); // Default blue
   };
 
-  // Users query - always call hooks at top level
-  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
+  // Users query - use apiRequest from the query client to ensure proper authentication
+  const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery<User[]>({
     queryKey: ['/api/users'],
     retry: false,
+    enabled: !!currentUser && currentUser.role === 'admin', // Only fetch if user is admin
   });
 
   // Templates query
@@ -246,6 +247,24 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       user.role?.toLowerCase().includes(searchTerm)
     );
   });
+
+  // Debug logging - only log when values change to avoid spam
+  useEffect(() => {
+    console.log('[AdminPanel] Users data changed:', { 
+      count: users.length, 
+      loading: usersLoading, 
+      error: usersError?.message,
+      currentUser: currentUser?.email,
+      isAdmin: currentUser?.role === 'admin'
+    });
+    if (users.length > 0) {
+      console.log('[AdminPanel] Sample user:', { 
+        id: users[0].id, 
+        email: users[0].email, 
+        role: users[0].role 
+      });
+    }
+  }, [users, usersLoading, usersError, currentUser]);
 
   // Filter templates based on search term
   const filteredTemplates = templates.filter((template: any) => {
@@ -701,6 +720,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
               
               {usersLoading ? (
                 <div>Loading users...</div>
+              ) : usersError ? (
+                <div className="text-red-600">Error loading users: {usersError.message}</div>
+              ) : users.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-600">No users found in the system.</p>
+                </div>
               ) : (
                 <Table>
                   <TableHeader>

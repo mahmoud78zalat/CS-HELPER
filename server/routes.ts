@@ -64,12 +64,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User management routes (admin only) - MUST come after the single user route
   app.get('/api/users', isAuthenticated, async (req: any, res) => {
     try {
+      console.log('[API] /api/users called by user:', req.user?.claims?.sub);
       const currentUser = await storage.getUser(req.user.claims.sub);
+      console.log('[API] Current user role:', currentUser?.role);
+      
       if (currentUser?.role !== 'admin') {
+        console.log('[API] Access denied - user is not admin');
         return res.status(403).json({ message: "Admin access required" });
       }
       
+      console.log('[API] Fetching all users from storage...');
       const users = await storage.getAllUsers();
+      console.log('[API] Fetched', users.length, 'users from storage');
+      console.log('[API] Sample user data:', users[0] ? { id: users[0].id, email: users[0].email, role: users[0].role } : 'No users');
+      
+      res.setHeader('Content-Type', 'application/json');
       res.json(users);
     } catch (error) {
       console.error("Error fetching users:", error);
