@@ -191,16 +191,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
     setIsAdding(false);
   };
 
-  const resetToDefaults = () => {
-    if (confirm('Reset variables to defaults? This will remove all custom variables.')) {
-      saveToStorage(DEFAULT_SYSTEM_VARIABLES);
-      cancelEdit();
-      toast({
-        title: "Success",
-        description: "Reset variables to defaults",
-      });
-    }
-  };
+
 
   const getCategoryColor = (category: string) => {
     const colors = {
@@ -315,9 +306,6 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
               <Button onClick={() => setIsAdding(true)} size="sm">
                 <Plus className="h-4 w-4 mr-1" />
                 Add Custom Variable
-              </Button>
-              <Button onClick={resetToDefaults} variant="outline" size="sm">
-                Reset to Defaults
               </Button>
             </div>
           )}

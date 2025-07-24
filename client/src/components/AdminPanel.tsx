@@ -1087,7 +1087,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
                       <Code className="h-5 w-5" />
-                      Universal Variables
+                      Variable Manager
                     </CardTitle>
                     <p className="text-sm text-slate-600">Manage all template variables system-wide</p>
                   </CardHeader>

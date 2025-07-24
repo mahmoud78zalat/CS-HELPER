@@ -8,18 +8,11 @@ console.log('[Frontend Supabase] URL:', supabaseUrl || 'MISSING');
 console.log('[Frontend Supabase] Key:', supabaseAnonKey ? 'SET' : 'MISSING');
 console.log('[Frontend Supabase] Available env vars:', Object.keys(import.meta.env));
 
-// Fallback values in case env vars are not properly loaded
-const fallbackUrl = 'https://lafldimdrginjqloihbh.supabase.co';
-const fallbackKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZmxkaW1kcmdpbmpxbG9paGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyODk0MzcsImV4cCI6MjA2ODg2NTQzN0.odt1bQ6leB_wWSVV4emTt5bpNts-d0NeZZ-cnBT3SYU';
-
-const finalUrl = supabaseUrl || fallbackUrl;
-const finalKey = supabaseAnonKey || fallbackKey;
-
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.log('[Frontend Supabase] Using fallback values from server...');
+  throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY environment variables. Please set these in your Replit secrets.');
 }
 
-export const supabase = createClient(finalUrl, finalKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Auth helper functions
 export const signInWithEmail = async (email: string, password: string) => {
