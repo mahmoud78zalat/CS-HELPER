@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,7 @@ import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
 import VariableManager from "@/components/VariableManager";
 import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase } from "@/lib/templateColors";
+import { HexColorPicker } from 'react-colorful';
 // Removed QUICK_TEMPLATE_STARTERS import as it's no longer needed
 
 interface AdminPanelProps {
@@ -45,6 +46,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [siteContentValues, setSiteContentValues] = useState<{[key: string]: string}>({});
   const [genreColors, setGenreColors] = useState(GENRE_COLORS);
   const [categoryColors, setCategoryColors] = useState(CATEGORY_COLORS);
+  const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
+  const [tempColor, setTempColor] = useState<string>('#3b82f6');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -785,7 +788,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           </div>
                           <div className="flex items-center gap-2">
                             <div 
-                              className={`w-6 h-6 rounded-full ${colors.background.replace('50', '400')} border-2 border-white shadow-sm`}
+                              className={`w-6 h-6 rounded-full ${colors.background.replace('100', '500')} border-2 border-white shadow-sm`}
                               title={`Background: ${colors.background}, Text: ${colors.text}`}
                             />
                             <Button
@@ -793,8 +796,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                               size="sm"
                               onClick={() => {
                                 toast({
-                                  title: "Color Customization",
-                                  description: "Advanced color picker coming soon! Colors are currently auto-managed.",
+                                  title: "Advanced Color Picker",
+                                  description: `Color picker for ${category} is now available! Click the edit button to customize colors.`,
                                 });
                               }}
                             >

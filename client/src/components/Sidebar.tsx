@@ -74,19 +74,19 @@ export default function Sidebar({
   };
 
   return (
-    <div className="bg-white shadow-lg border-r border-slate-200 transition-all duration-300 w-16 lg:w-80 overflow-hidden">
+    <div className="bg-white dark:bg-slate-800 shadow-lg border-r border-slate-200 dark:border-slate-700 transition-all duration-300 w-16 lg:w-80 overflow-hidden">
       <div className="p-2 lg:p-6">
         <nav className="space-y-2">
           {/* Customer Info Panel */}
           <div className="customer-panel">
             <Button
               variant="ghost"
-              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
+              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200 border border-slate-200 dark:border-slate-600"
               onClick={() => togglePanel('customer-info')}
             >
               <div className="flex items-center space-x-3">
                 <User className="h-4 w-4 text-blue-500" />
-                <span className="hidden lg:block font-medium text-slate-700">Customer Info</span>
+                <span className="hidden lg:block font-medium text-slate-700 dark:text-slate-200">Customer Info</span>
               </div>
               <ChevronRight 
                 className={`hidden lg:block h-4 w-4 transition-transform duration-200 ${
@@ -106,12 +106,12 @@ export default function Sidebar({
           <div className="order-panel">
             <Button
               variant="ghost"
-              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
+              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200 border border-slate-200 dark:border-slate-600"
               onClick={() => togglePanel('order-converter')}
             >
               <div className="flex items-center space-x-3">
                 <ArrowLeftRight className="h-4 w-4 text-blue-500" />
-                <span className="hidden lg:block font-medium text-slate-700">Order Converter</span>
+                <span className="hidden lg:block font-medium text-slate-700 dark:text-slate-200">Order Converter</span>
               </div>
               <ChevronRight 
                 className={`hidden lg:block h-4 w-4 transition-transform duration-200 ${
@@ -131,12 +131,12 @@ export default function Sidebar({
           <div className="additional-panel">
             <Button
               variant="ghost"
-              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
+              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200 border border-slate-200 dark:border-slate-600"
               onClick={() => togglePanel('additional-info')}
             >
               <div className="flex items-center space-x-3">
                 <Info className="h-4 w-4 text-blue-500" />
-                <span className="hidden lg:block font-medium text-slate-700">Additional Info</span>
+                <span className="hidden lg:block font-medium text-slate-700 dark:text-slate-200">Additional Info</span>
               </div>
               <ChevronRight 
                 className={`hidden lg:block h-4 w-4 transition-transform duration-200 ${
@@ -156,14 +156,14 @@ export default function Sidebar({
           <div className="notes-panel">
             <Button
               variant="ghost"
-              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200"
+              className="w-full justify-between p-2 lg:p-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200 border border-slate-200 dark:border-slate-600"
               onClick={() => togglePanel('personal-notes')}
             >
               <div className="flex items-center space-x-3">
                 <div className="w-4 h-4 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
                   <StickyNote className="h-2 w-2 text-white" />
                 </div>
-                <span className="hidden lg:block font-medium text-slate-700">Notes ✦</span>
+                <span className="hidden lg:block font-medium text-slate-700 dark:text-slate-200">Notes ✦</span>
               </div>
               <ChevronRight 
                 className={`hidden lg:block h-4 w-4 transition-transform duration-200 ${
@@ -196,15 +196,15 @@ export default function Sidebar({
                     filteredPersonalNotes.map((note) => (
                       <div
                         key={note.id}
-                        className="bg-slate-50 rounded p-2 hover:bg-slate-100 cursor-pointer group transition-colors"
+                        className="bg-slate-50 dark:bg-slate-700 rounded p-2 hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer group transition-colors"
                         onClick={() => handleCopyNote(note)}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <div className="text-xs font-medium text-slate-700 truncate">
+                            <div className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">
                               {note.subject || 'Untitled'}
                             </div>
-                            <div className="text-xs text-slate-500 mt-1 line-clamp-2">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
                               {note.content.substring(0, 60)}...
                             </div>
                           </div>

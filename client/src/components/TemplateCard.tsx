@@ -161,13 +161,13 @@ export default function TemplateCard({ template }: TemplateCardProps) {
 
   return (
     <Card 
-      className="template-card bg-white rounded-lg shadow-sm border border-slate-200 p-3 lg:p-4 hover:shadow-lg hover:border-blue-500 cursor-pointer transition-all duration-200 active:scale-95 active:shadow-sm"
+      className="template-card bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-3 lg:p-4 hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer transition-all duration-200 active:scale-95 active:shadow-sm"
       onClick={handleCopyTemplate}
     >
       <CardContent className="p-0">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-3">
           <div className="flex-1">
-            <h4 className="font-semibold text-slate-800 text-sm lg:text-base leading-tight">{replaceVariablesInTemplateName(template.name)}</h4>
+            <h4 className="font-semibold text-slate-800 dark:text-white text-sm lg:text-base leading-tight">{replaceVariablesInTemplateName(template.name)}</h4>
             <div className="flex items-center flex-wrap gap-1 lg:gap-2 mt-2">
               <Badge variant="secondary" className={`${getGenreBadgeClasses(template.genre)} text-xs px-2 py-1 border`}>
                 {template.genre}
@@ -181,7 +181,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
             </div>
           </div>
           {user?.role === 'admin' && (
-            <div className="text-xs text-slate-500 mt-2 lg:mt-0 lg:ml-2 flex-shrink-0">
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 lg:mt-0 lg:ml-2 flex-shrink-0">
               Used {template.usageCount} times
             </div>
           )}
@@ -192,7 +192,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         {/* Dynamic Variables */}
         {template.variables && template.variables.length > 0 && (
           <div className="mb-3">
-            <p className="text-xs font-medium text-slate-600 mb-1">Variables:</p>
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Variables:</p>
             <div className="flex flex-wrap gap-1">
               {template.variables.slice(0, 3).map((variable) => (
                 <Badge key={variable} variant="outline" className="text-xs px-2 py-0">
@@ -209,10 +209,10 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         )}
         
         {/* LIVE Template Preview with Real Customer Data */}
-        <div className="text-sm text-slate-600 mb-3 leading-relaxed">
-          <div className="text-xs bg-slate-50 p-3 rounded border-l-2 border-blue-500">
-            <div className="font-medium text-slate-700 mb-2">Live Preview:</div>
-            <div className="whitespace-pre-wrap">{processedContent}</div>
+        <div className="text-sm text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">
+          <div className="text-xs bg-slate-50 dark:bg-slate-700 p-3 rounded border-l-2 border-blue-500 dark:border-blue-400">
+            <div className="font-medium text-slate-700 dark:text-slate-200 mb-2">Live Preview:</div>
+            <div className="whitespace-pre-wrap text-slate-600 dark:text-slate-300">{processedContent}</div>
           </div>
         </div>
       </CardContent>
