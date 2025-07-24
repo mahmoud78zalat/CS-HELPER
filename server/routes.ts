@@ -61,6 +61,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Heartbeat endpoint for advanced online status detection
+  app.post('/api/user/heartbeat', isAuthenticated, async (req: any, res) => {
+    try {
+      const { userId, isOnline, lastActivity } = req.body;
+      const currentUserId = req.user.claims.sub;
+      
+      // Security: Users can only update their own heartbeat
+      if (userId !== currentUserId) {
+        return res.status(403).json({ message: "Can only update own status" });
+      }
+      
+      console.log(`[Heartbeat] User ${userId} status: ${isOnline ? 'online' : 'offline'}, activity: ${lastActivity}`);
+      
+      await storage.updateUserOnlineStatus(userId, isOnline);
+      
+      res.json({ 
+        message: "Heartbeat updated",
+        userId,
+        isOnline,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error updating heartbeat:", error);
+      res.status(500).json({ message: "Failed to update heartbeat" });
+    }
+  });
+
   // User management routes (admin only) - MUST come after the single user route
   app.get('/api/users', isAuthenticated, async (req: any, res) => {
     try {
@@ -109,6 +136,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.patch('/api/users/:id/role', isAuthenticated, async (req: any, res) => {
+    console.log('[RoleUpdate] === ROLE UPDATE REQUEST START ===');
+    console.log('[RoleUpdate] Raw request body:', req.body);
+    console.log('[RoleUpdate] Request params:', req.params);
+    console.log('[RoleUpdate] Content-Type:', req.headers['content-type']);
+    
     try {
       console.log('[RoleUpdate] Request received for user:', req.params.id, 'with role:', req.body.role);
       
@@ -123,7 +155,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { role } = req.body;
 
-      console.log('[RoleUpdate] Updating user ID:', id, 'to role:', role);
+      console.log('[RoleUpdate] Processing - User ID:', id, 'Target role:', role);
+
+      if (!role) {
+        console.log('[RoleUpdate] Missing role in request body');
+        return res.status(400).json({ message: "Role is required" });
+      }
 
       if (!['admin', 'agent'].includes(role)) {
         console.log('[RoleUpdate] Invalid role provided:', role);
@@ -139,14 +176,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('[RoleUpdate] Target user found:', targetUser.email, 'current role:', targetUser.role);
 
+      if (targetUser.role === role) {
+        console.log('[RoleUpdate] User already has this role, skipping update');
+        return res.json({ message: "User already has this role", user: targetUser });
+      }
+
+      console.log('[RoleUpdate] Calling storage.updateUserRole...');
       await storage.updateUserRole(id, role);
-      console.log('[RoleUpdate] Role update completed successfully');
+      console.log('[RoleUpdate] Storage update completed');
       
-      res.json({ message: "User role updated", user: { ...targetUser, role } });
+      // Verify the update by fetching the user again
+      const updatedUser = await storage.getUser(id);
+      console.log('[RoleUpdate] Verification - Updated user role:', updatedUser?.role);
+      
+      res.json({ 
+        message: "User role updated successfully", 
+        user: updatedUser,
+        previousRole: targetUser.role,
+        newRole: role
+      });
     } catch (error) {
       console.error("[RoleUpdate] Error updating user role:", error);
       res.status(500).json({ message: "Failed to update user role", error: error instanceof Error ? error.message : 'Unknown error' });
     }
+    
+    console.log('[RoleUpdate] === ROLE UPDATE REQUEST END ===');
   });
 
   // Template routes

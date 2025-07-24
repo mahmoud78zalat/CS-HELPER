@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { User } from "@shared/schema";
 import { supabase } from "@/lib/supabase";
 
@@ -6,6 +6,8 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authTimeout, setAuthTimeout] = useState<NodeJS.Timeout | null>(null);
+  const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
+  const lastActivityTime = useRef<number>(Date.now());
 
   useEffect(() => {
     // Disabled timeout as it was clearing authenticated users
@@ -49,9 +51,11 @@ export function useAuth() {
       
       if (session?.user) {
         await handleUser(session.user);
+        startHeartbeat();
       } else {
         setUser(null);
         setIsLoading(false);
+        stopHeartbeat();
       }
     });
 
@@ -60,6 +64,7 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe();
       if (authTimeout) clearTimeout(authTimeout);
+      stopHeartbeat();
     };
   }, []);
 
@@ -119,8 +124,81 @@ export function useAuth() {
     }
   };
 
+  // Advanced online status management with heartbeat
+  const startHeartbeat = () => {
+    if (heartbeatInterval.current) return;
+    
+    console.log('[Auth] Starting heartbeat for user presence');
+    
+    heartbeatInterval.current = setInterval(async () => {
+      if (!user) return;
+      
+      try {
+        const now = Date.now();
+        const timeSinceActivity = now - lastActivityTime.current;
+        
+        // Consider user offline if no activity for 5 minutes
+        const isUserActive = timeSinceActivity < 5 * 60 * 1000;
+        
+        console.log(`[Auth] Heartbeat - User active: ${isUserActive}, Time since activity: ${Math.round(timeSinceActivity / 1000)}s`);
+        
+        // Update online status in database
+        await fetch('/api/user/heartbeat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            userId: user.id,
+            isOnline: isUserActive,
+            lastActivity: new Date(lastActivityTime.current).toISOString()
+          }),
+        });
+      } catch (error) {
+        console.error('[Auth] Heartbeat error:', error);
+      }
+    }, 30000); // Update every 30 seconds
+    
+    // Track user activity
+    const updateActivity = () => {
+      lastActivityTime.current = Date.now();
+    };
+    
+    // Listen for user activity
+    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+      document.addEventListener(event, updateActivity, { passive: true });
+    });
+  };
+  
+  const stopHeartbeat = () => {
+    if (heartbeatInterval.current) {
+      console.log('[Auth] Stopping heartbeat');
+      clearInterval(heartbeatInterval.current);
+      heartbeatInterval.current = null;
+    }
+    
+    // Update status to offline when stopping heartbeat
+    if (user) {
+      fetch('/api/user/heartbeat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          userId: user.id,
+          isOnline: false,
+          lastActivity: new Date().toISOString()
+        }),
+      }).catch(console.error);
+    }
+  };
+
   const signOut = async () => {
     console.log('[Auth] Signing out user...');
+    stopHeartbeat();
+    
     const { error } = await supabase.auth.signOut();
     
     if (error) {
