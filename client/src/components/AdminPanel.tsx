@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -369,6 +370,41 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       toast({
         title: "Role update failed",
         description: "Unable to change user permissions. Please try again.",
+        variant: "destructive",
+        duration: 4000,
+      });
+    },
+  });
+
+  // User delete mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      await apiRequest('DELETE', `/api/users/${userId}`);
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({
+        title: "User deleted",
+        description: "User has been permanently removed from the system",
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Session expired",
+          description: "Redirecting to login...",
+          variant: "destructive",
+          duration: 4000,
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Delete failed",
+        description: "Unable to delete user. Please try again.",
         variant: "destructive",
         duration: 4000,
       });
@@ -745,6 +781,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Online Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -778,6 +815,37 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                               Last seen: {new Date(user.lastSeen).toLocaleDateString()}
                             </div>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                disabled={user.id === currentUser?.id}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete User</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to permanently delete {user.firstName} {user.lastName}? 
+                                  This action cannot be undone and will remove all their data from the system.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => deleteUserMutation.mutate(user.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete User
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -1093,7 +1161,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{users?.length || 0}</div>
-                    <p className="text-xs text-slate-500">Active: {users?.filter(u => u.status === 'active').length || 0}</p>
+                    <p className="text-xs text-slate-500">Registered in system</p>
                   </CardContent>
                 </Card>
 
@@ -1154,12 +1222,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         <span className="text-sm">Total Users:</span>
                         <Badge variant="secondary">{users?.length || 0}</Badge>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Active Users:</span>
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                          {users?.filter(u => u.status === 'active').length || 0}
-                        </Badge>
-                      </div>
+
                       <div className="flex justify-between items-center">
                         <span className="text-sm">Online Now:</span>
                         <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
@@ -1250,15 +1313,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 </Card>
               )}
 
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                <h4 className="font-medium mb-2 text-blue-900 dark:text-blue-100">System Status</h4>
-                <div className="text-sm text-blue-800 dark:text-blue-200">
-                  <p>✓ Supabase database connected and synchronized</p>
-                  <p>✓ Real-time user presence tracking enabled</p>
-                  <p>✓ Template color management system active</p>
-                  <p>✓ Analytics dashboard updating in real-time</p>
-                </div>
-              </div>
+
             </div>
           </TabsContent>
 

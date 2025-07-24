@@ -98,7 +98,8 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await this.client
       .from('users')
       .select('*')
-      .order('first_name', { ascending: true });
+      .order('is_online', { ascending: false }) // Online users first
+      .order('first_name', { ascending: true }); // Then by name
 
     if (error) {
       console.error('[SupabaseStorage] Error fetching users:', error);
@@ -106,6 +107,22 @@ export class SupabaseStorage implements IStorage {
     }
 
     return data.map(this.mapSupabaseUser);
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    console.log('[SupabaseStorage] Deleting user with ID:', id);
+    
+    const { error } = await this.client
+      .from('users')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('[SupabaseStorage] Error deleting user:', error);
+      throw error;
+    }
+
+    console.log('[SupabaseStorage] Successfully deleted user:', id);
   }
 
   async updateUserStatus(id: string, status: "active" | "blocked" | "banned"): Promise<void> {

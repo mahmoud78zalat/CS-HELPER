@@ -363,6 +363,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('[DirectStatusUpdate] === DIRECT STATUS UPDATE REQUEST END ===');
   });
 
+  app.delete('/api/users/:id', async (req, res) => {
+    console.log('[DirectUserDelete] === DIRECT USER DELETE REQUEST START ===');
+    
+    try {
+      const { id } = req.params;
+
+      console.log('[DirectUserDelete] Processing delete for user ID:', id);
+
+      // Check if target user exists
+      const targetUser = await storage.getUser(id);
+      if (!targetUser) {
+        console.log('[DirectUserDelete] Target user not found:', id);
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log('[DirectUserDelete] Target user found:', targetUser.email, 'proceeding with deletion');
+
+      await storage.deleteUser(id);
+      console.log('[DirectUserDelete] User deletion completed successfully');
+      
+      res.json({ 
+        message: "User deleted successfully", 
+        deletedUser: {
+          id: targetUser.id,
+          email: targetUser.email,
+          firstName: targetUser.firstName,
+          lastName: targetUser.lastName
+        }
+      });
+    } catch (error) {
+      console.error("[DirectUserDelete] Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+    
+    console.log('[DirectUserDelete] === DIRECT USER DELETE REQUEST END ===');
+  });
+
   // Admin routes that bypass Vite interception
   app.get('/api/admin/users', async (req, res) => {
     try {

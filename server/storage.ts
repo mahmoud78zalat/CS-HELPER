@@ -36,6 +36,7 @@ export interface IStorage {
   updateUserStatus(id: string, status: "active" | "blocked" | "banned"): Promise<void>;
   updateUserOnlineStatus(id: string, isOnline: boolean): Promise<void>;
   updateUserRole(id: string, role: "admin" | "agent"): Promise<void>;
+  deleteUser(id: string): Promise<void>;
 
   // Live reply template operations (for live chat)
   getLiveReplyTemplates(filters?: {

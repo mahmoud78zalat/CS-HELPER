@@ -85,6 +85,12 @@ export class MemoryStorage implements IStorage {
     }
   }
 
+  async deleteUser(id: string): Promise<void> {
+    console.log('[MemoryStorage] Deleting user with ID:', id);
+    this.users.delete(id);
+    console.log('[MemoryStorage] Successfully deleted user:', id);
+  }
+
   async updateUserRole(id: string, role: "admin" | "agent"): Promise<void> {
     const user = this.users.get(id);
     if (user) {
