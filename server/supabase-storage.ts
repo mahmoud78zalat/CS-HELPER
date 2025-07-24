@@ -11,7 +11,11 @@ import type {
   LiveReplyUsage,
   EmailTemplateUsage,
   InsertSiteContent,
-  SiteContent
+  SiteContent,
+  Announcement,
+  InsertAnnouncement,
+  UserAnnouncementAck,
+  InsertUserAnnouncementAck
 } from '@shared/schema';
 import { IStorage } from './storage';
 
@@ -546,6 +550,158 @@ export class SupabaseStorage implements IStorage {
     return this.mapSupabaseSiteContent(data);
   }
 
+  // Announcement operations
+  async getAnnouncements(): Promise<Announcement[]> {
+    const { data, error } = await this.client
+      .from('announcements')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[SupabaseStorage] Error fetching announcements:', error);
+      throw new Error(`Failed to fetch announcements: ${error.message}`);
+    }
+
+    return data.map(this.mapSupabaseAnnouncement);
+  }
+
+  async getActiveAnnouncement(): Promise<Announcement | undefined> {
+    const { data, error } = await this.client
+      .from('announcements')
+      .select('*')
+      .eq('is_active', true)
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return undefined; // No rows found
+      console.error('[SupabaseStorage] Error fetching active announcement:', error);
+      throw new Error(`Failed to fetch active announcement: ${error.message}`);
+    }
+
+    return this.mapSupabaseAnnouncement(data);
+  }
+
+  async createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement> {
+    const { data, error } = await this.client
+      .from('announcements')
+      .insert({
+        title: announcement.title,
+        content: announcement.content,
+        is_active: announcement.isActive,
+        background_color: announcement.backgroundColor,
+        text_color: announcement.textColor,
+        border_color: announcement.borderColor,
+        priority: announcement.priority,
+        created_by: announcement.createdBy,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] Error creating announcement:', error);
+      throw new Error(`Failed to create announcement: ${error.message}`);
+    }
+
+    return this.mapSupabaseAnnouncement(data);
+  }
+
+  async updateAnnouncement(id: string, announcement: Partial<InsertAnnouncement>): Promise<Announcement> {
+    const updateData: any = {};
+    
+    if (announcement.title !== undefined) updateData.title = announcement.title;
+    if (announcement.content !== undefined) updateData.content = announcement.content;
+    if (announcement.isActive !== undefined) updateData.is_active = announcement.isActive;
+    if (announcement.backgroundColor !== undefined) updateData.background_color = announcement.backgroundColor;
+    if (announcement.textColor !== undefined) updateData.text_color = announcement.textColor;
+    if (announcement.borderColor !== undefined) updateData.border_color = announcement.borderColor;
+    if (announcement.priority !== undefined) updateData.priority = announcement.priority;
+    
+    updateData.updated_at = new Date().toISOString();
+
+    const { data, error } = await this.client
+      .from('announcements')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] Error updating announcement:', error);
+      throw new Error(`Failed to update announcement: ${error.message}`);
+    }
+
+    return this.mapSupabaseAnnouncement(data);
+  }
+
+  async deleteAnnouncement(id: string): Promise<void> {
+    const { error } = await this.client
+      .from('announcements')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('[SupabaseStorage] Error deleting announcement:', error);
+      throw new Error(`Failed to delete announcement: ${error.message}`);
+    }
+  }
+
+  async acknowledgeAnnouncement(userId: string, announcementId: string): Promise<void> {
+    const { error } = await this.client
+      .from('user_announcement_acks')
+      .upsert({
+        user_id: userId,
+        announcement_id: announcementId,
+        acknowledged_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id,announcement_id'
+      });
+
+    if (error) {
+      console.error('[SupabaseStorage] Error acknowledging announcement:', error);
+      throw new Error(`Failed to acknowledge announcement: ${error.message}`);
+    }
+  }
+
+  async getUserAnnouncementAck(userId: string, announcementId: string): Promise<UserAnnouncementAck | undefined> {
+    const { data, error } = await this.client
+      .from('user_announcement_acks')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('announcement_id', announcementId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return undefined; // No rows found
+      console.error('[SupabaseStorage] Error fetching user announcement ack:', error);
+      throw new Error(`Failed to fetch user announcement ack: ${error.message}`);
+    }
+
+    return this.mapSupabaseUserAnnouncementAck(data);
+  }
+
+  async getUnacknowledgedAnnouncements(userId: string): Promise<Announcement[]> {
+    const { data, error } = await this.client
+      .from('announcements')
+      .select(`
+        *,
+        user_announcement_acks!left(user_id)
+      `)
+      .eq('is_active', true)
+      .is('user_announcement_acks.user_id', null)
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[SupabaseStorage] Error fetching unacknowledged announcements:', error);
+      throw new Error(`Failed to fetch unacknowledged announcements: ${error.message}`);
+    }
+
+    return data.map(this.mapSupabaseAnnouncement);
+  }
+
   // Mapping functions
   private mapSupabaseUser(data: any): User {
     return {
@@ -646,6 +802,35 @@ export class SupabaseStorage implements IStorage {
       updatedAt: data.updated_at ? new Date(data.updated_at) : null,
       supabaseId: data.id, // Supabase ID is the same as the record ID
       lastSyncedAt: new Date(), // Always synced since this is from Supabase
+    };
+  }
+
+  private mapSupabaseAnnouncement(data: any): Announcement {
+    return {
+      id: data.id,
+      title: data.title,
+      content: data.content,
+      isActive: data.is_active,
+      backgroundColor: data.background_color,
+      textColor: data.text_color,
+      borderColor: data.border_color,
+      priority: data.priority,
+      createdBy: data.created_by,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+      supabaseId: data.supabase_id,
+      lastSyncedAt: data.last_synced_at ? new Date(data.last_synced_at) : null,
+    };
+  }
+
+  private mapSupabaseUserAnnouncementAck(data: any): UserAnnouncementAck {
+    return {
+      id: data.id,
+      userId: data.user_id,
+      announcementId: data.announcement_id,
+      acknowledgedAt: new Date(data.acknowledged_at),
+      supabaseId: data.supabase_id,
+      lastSyncedAt: data.last_synced_at ? new Date(data.last_synced_at) : null,
     };
   }
 }

@@ -25,6 +25,11 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
+// Enums
+export const userRoleEnum = pgEnum("user_role", ["admin", "agent"]);
+export const userStatusEnum = pgEnum("user_status", ["active", "blocked", "banned"]);
+export const announcementPriorityEnum = pgEnum("announcement_priority", ["low", "medium", "high", "urgent"]);
+
 // User storage table (mandatory for Replit Auth)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
@@ -32,8 +37,8 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: pgEnum("user_role", ["admin", "agent"])("role").default("agent").notNull(),
-  status: pgEnum("user_status", ["active", "blocked", "banned"])("status").default("active").notNull(),
+  role: userRoleEnum("role").default("agent").notNull(),
+  status: userStatusEnum("status").default("active").notNull(),
   isOnline: boolean("is_online").default(false).notNull(),
   lastSeen: timestamp("last_seen").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -107,6 +112,35 @@ export const siteContent = pgTable("site_content", {
   lastSyncedAt: timestamp("last_synced_at"),
 });
 
+// Global announcements table for admin broadcast messages
+export const announcements = pgTable("announcements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: varchar("title").notNull(),
+  content: text("content").notNull(), // Rich HTML/Markdown content
+  isActive: boolean("is_active").default(false).notNull(),
+  backgroundColor: varchar("background_color").default("#3b82f6").notNull(),
+  textColor: varchar("text_color").default("#ffffff").notNull(),
+  borderColor: varchar("border_color").default("#1d4ed8").notNull(),
+  priority: announcementPriorityEnum("priority").default("medium").notNull(),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(),
+  lastSyncedAt: timestamp("last_synced_at"),
+});
+
+// User announcement acknowledgments to track who has seen announcements
+export const userAnnouncementAcks = pgTable("user_announcement_acks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  announcementId: uuid("announcement_id").references(() => announcements.id).notNull(),
+  acknowledgedAt: timestamp("acknowledged_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(),
+  lastSyncedAt: timestamp("last_synced_at"),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   liveReplyTemplates: many(liveReplyTemplates),
@@ -114,6 +148,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   liveReplyUsage: many(liveReplyUsage),
   emailTemplateUsage: many(emailTemplateUsage),
   siteContentUpdates: many(siteContent),
+  announcements: many(announcements),
+  announcementAcks: many(userAnnouncementAcks),
 }));
 
 export const liveReplyTemplatesRelations = relations(liveReplyTemplates, ({ one, many }) => ({
@@ -161,6 +197,25 @@ export const siteContentRelations = relations(siteContent, ({ one }) => ({
   }),
 }));
 
+export const announcementsRelations = relations(announcements, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [announcements.createdBy],
+    references: [users.id],
+  }),
+  acknowledgments: many(userAnnouncementAcks),
+}));
+
+export const userAnnouncementAcksRelations = relations(userAnnouncementAcks, ({ one }) => ({
+  user: one(users, {
+    fields: [userAnnouncementAcks.userId],
+    references: [users.id],
+  }),
+  announcement: one(announcements, {
+    fields: [userAnnouncementAcks.announcementId],
+    references: [announcements.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -203,6 +258,21 @@ export const insertSiteContentSchema = createInsertSchema(siteContent).omit({
   lastSyncedAt: true,
 });
 
+export const insertAnnouncementSchema = createInsertSchema(announcements).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
+export const insertUserAnnouncementAckSchema = createInsertSchema(userAnnouncementAcks).omit({
+  id: true,
+  acknowledgedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -221,6 +291,12 @@ export type EmailTemplateUsage = typeof emailTemplateUsage.$inferSelect;
 
 export type InsertSiteContent = z.infer<typeof insertSiteContentSchema>;
 export type SiteContent = typeof siteContent.$inferSelect;
+
+export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
+export type Announcement = typeof announcements.$inferSelect;
+
+export type InsertUserAnnouncementAck = z.infer<typeof insertUserAnnouncementAckSchema>;
+export type UserAnnouncementAck = typeof userAnnouncementAcks.$inferSelect;
 
 // Personal Notes Schema
 export const personalNotes = pgTable("personal_notes", {

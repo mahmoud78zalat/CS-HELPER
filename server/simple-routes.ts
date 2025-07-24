@@ -432,6 +432,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Announcement routes
+  app.get('/api/announcements', async (req, res) => {
+    try {
+      const announcements = await storage.getAnnouncements();
+      res.json(announcements);
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error fetching announcements:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/announcements/active', async (req, res) => {
+    try {
+      const announcement = await storage.getActiveAnnouncement();
+      res.json(announcement || null);
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error fetching active announcement:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/announcements/unacknowledged/:userId', async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const announcements = await storage.getUnacknowledgedAnnouncements(userId);
+      res.json(announcements);
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error fetching unacknowledged announcements:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/announcements', async (req, res) => {
+    try {
+      const announcement = await storage.createAnnouncement(req.body);
+      res.json(announcement);
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error creating announcement:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch('/api/announcements/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const announcement = await storage.updateAnnouncement(id, req.body);
+      res.json(announcement);
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error updating announcement:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete('/api/announcements/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      await storage.deleteAnnouncement(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error deleting announcement:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/announcements/:id/acknowledge', async (req, res) => {
+    try {
+      const announcementId = req.params.id;
+      const { userId } = req.body;
+      await storage.acknowledgeAnnouncement(userId, announcementId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error acknowledging announcement:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Personal Notes Routes
   const personalNotesStorage = new SupabasePersonalNotesStorage();
 

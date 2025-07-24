@@ -11,6 +11,10 @@ import {
   type EmailTemplateUsage,
   type InsertSiteContent,
   type SiteContent,
+  type Announcement,
+  type InsertAnnouncement,
+  type UserAnnouncementAck,
+  type InsertUserAnnouncementAck,
   // Legacy types for backward compatibility
   type Template,
   type InsertTemplate,
@@ -25,6 +29,8 @@ export class MemoryStorage implements IStorage {
   private liveReplyUsage = new Map<string, LiveReplyUsage>();
   private emailTemplateUsage = new Map<string, EmailTemplateUsage>();
   private siteContent = new Map<string, SiteContent>();
+  private announcements = new Map<string, Announcement>();
+  private userAnnouncementAcks = new Map<string, UserAnnouncementAck>();
 
   constructor() {
     console.log('[MemoryStorage] ⚠️  Using memory storage - data will not persist!');
@@ -386,5 +392,102 @@ export class MemoryStorage implements IStorage {
     
     this.siteContent.set(newContent.id, newContent);
     return newContent;
+  }
+
+  // Announcement operations (stub implementation for memory storage)
+  async getAnnouncements(): Promise<Announcement[]> {
+    return Array.from(this.announcements.values()).sort((a, b) => 
+      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    );
+  }
+
+  async getActiveAnnouncement(): Promise<Announcement | undefined> {
+    return Array.from(this.announcements.values())
+      .filter(a => a.isActive)
+      .sort((a, b) => {
+        const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+        return priorityOrder[b.priority] - priorityOrder[a.priority] || 
+               new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime();
+      })[0];
+  }
+
+  async createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement> {
+    const now = new Date();
+    const newAnnouncement: Announcement = {
+      id: nanoid(),
+      title: announcement.title,
+      content: announcement.content,
+      isActive: announcement.isActive || false,
+      backgroundColor: announcement.backgroundColor || "#3b82f6",
+      textColor: announcement.textColor || "#ffffff",
+      borderColor: announcement.borderColor || "#1d4ed8",
+      priority: announcement.priority || "medium",
+      createdBy: announcement.createdBy,
+      createdAt: now,
+      updatedAt: now,
+      supabaseId: null,
+      lastSyncedAt: null,
+    };
+    
+    this.announcements.set(newAnnouncement.id, newAnnouncement);
+    return newAnnouncement;
+  }
+
+  async updateAnnouncement(id: string, announcement: Partial<InsertAnnouncement>): Promise<Announcement> {
+    const existing = this.announcements.get(id);
+    if (!existing) {
+      throw new Error("Announcement not found");
+    }
+
+    const updated: Announcement = {
+      ...existing,
+      ...announcement,
+      updatedAt: new Date(),
+    };
+    
+    this.announcements.set(id, updated);
+    return updated;
+  }
+
+  async deleteAnnouncement(id: string): Promise<void> {
+    this.announcements.delete(id);
+    // Also delete related acknowledgments
+    for (const [ackId, ack] of this.userAnnouncementAcks.entries()) {
+      if (ack.announcementId === id) {
+        this.userAnnouncementAcks.delete(ackId);
+      }
+    }
+  }
+
+  async acknowledgeAnnouncement(userId: string, announcementId: string): Promise<void> {
+    const ackId = nanoid();
+    const ack: UserAnnouncementAck = {
+      id: ackId,
+      userId,
+      announcementId,
+      acknowledgedAt: new Date(),
+      supabaseId: null,
+      lastSyncedAt: null,
+    };
+    
+    this.userAnnouncementAcks.set(ackId, ack);
+  }
+
+  async getUserAnnouncementAck(userId: string, announcementId: string): Promise<UserAnnouncementAck | undefined> {
+    return Array.from(this.userAnnouncementAcks.values())
+      .find(ack => ack.userId === userId && ack.announcementId === announcementId);
+  }
+
+  async getUnacknowledgedAnnouncements(userId: string): Promise<Announcement[]> {
+    const activeAnnouncements = Array.from(this.announcements.values()).filter(a => a.isActive);
+    const userAcks = Array.from(this.userAnnouncementAcks.values()).filter(ack => ack.userId === userId);
+    
+    return activeAnnouncements.filter(announcement => 
+      !userAcks.some(ack => ack.announcementId === announcement.id)
+    ).sort((a, b) => {
+      const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+      return priorityOrder[b.priority] - priorityOrder[a.priority] || 
+             new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime();
+    });
   }
 }

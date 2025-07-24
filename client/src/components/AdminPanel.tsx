@@ -19,7 +19,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { realTimeService } from "@/lib/realTimeService";
 import { 
   X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
-  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette
+  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save
 } from "lucide-react";
 import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
@@ -35,7 +35,7 @@ interface AdminPanelProps {
 
 export default function AdminPanel({ onClose }: AdminPanelProps) {
   const { user: currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState('templates');
+  const [activeTab, setActiveTab] = useState('announcements');
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [isEmailTemplate, setIsEmailTemplate] = useState(false); // Track template type
@@ -714,7 +714,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         <div className="flex-1 overflow-hidden p-4 lg:p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
             {/* Mobile-responsive tabs */}
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-4">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 mb-4">
+              <TabsTrigger value="announcements" className="text-xs lg:text-sm p-2 lg:p-3">
+                <Megaphone className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+                <span className="hidden lg:inline">Announcements</span>
+                <span className="lg:hidden">News</span>
+              </TabsTrigger>
               <TabsTrigger value="users" className="text-xs lg:text-sm p-2 lg:p-3">
                 <Users className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
                 <span className="hidden lg:inline">User Management</span>
@@ -747,6 +752,57 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
               </TabsTrigger>
 
             </TabsList>
+
+          <TabsContent value="announcements" className="flex-1 overflow-y-auto">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Announcement Management</h3>
+                <Button
+                  onClick={() => {
+                    console.log('Create new announcement');
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Announcement
+                </Button>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100">How Announcements Work</h4>
+                    <ul className="text-sm text-blue-700 dark:text-blue-200 mt-2 space-y-1">
+                      <li>• Announcements appear as banners at the top of all user screens</li>
+                      <li>• Users must click "Got it" to acknowledge and dismiss announcements</li>
+                      <li>• Priority levels determine display order (urgent, high, medium, low)</li>
+                      <li>• Only active announcements are shown to users</li>
+                      <li>• Rich HTML content is supported with custom colors</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Megaphone className="h-5 w-5" />
+                    Active Announcements
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Megaphone className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-600">No announcements created yet.</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Database tables need to be created for announcement functionality.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           <TabsContent value="users" className="flex-1 overflow-y-auto">
             <div className="space-y-4">

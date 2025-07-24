@@ -5,6 +5,8 @@ import {
   liveReplyUsage,
   emailTemplateUsage,
   siteContent,
+  announcements,
+  userAnnouncementAcks,
   type User,
   type UpsertUser,
   type LiveReplyTemplate,
@@ -17,6 +19,10 @@ import {
   type EmailTemplateUsage,
   type InsertSiteContent,
   type SiteContent,
+  type Announcement,
+  type InsertAnnouncement,
+  type UserAnnouncementAck,
+  type InsertUserAnnouncementAck,
   // Legacy types for backward compatibility
   type Template,
   type InsertTemplate,
@@ -84,6 +90,18 @@ export interface IStorage {
   // Site content operations
   getSiteContent(key?: string): Promise<SiteContent[]>;
   upsertSiteContent(content: InsertSiteContent): Promise<SiteContent>;
+
+  // Announcement operations (for admin broadcast messages)
+  getAnnouncements(): Promise<Announcement[]>;
+  getActiveAnnouncement(): Promise<Announcement | undefined>;
+  createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
+  updateAnnouncement(id: string, announcement: Partial<InsertAnnouncement>): Promise<Announcement>;
+  deleteAnnouncement(id: string): Promise<void>;
+  
+  // User announcement acknowledgment operations
+  acknowledgeAnnouncement(userId: string, announcementId: string): Promise<void>;
+  getUserAnnouncementAck(userId: string, announcementId: string): Promise<UserAnnouncementAck | undefined>;
+  getUnacknowledgedAnnouncements(userId: string): Promise<Announcement[]>;
 }
 
 // DatabaseStorage class commented out for beta testing
