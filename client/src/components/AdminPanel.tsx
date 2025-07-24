@@ -236,6 +236,40 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     }
   }, [templates, emailTemplates, toast]);
 
+  // Filter users based on search term
+  const filteredUsers = users.filter((user: User) => {
+    const searchTerm = userSearchTerm.toLowerCase();
+    return (
+      user.firstName?.toLowerCase().includes(searchTerm) ||
+      user.lastName?.toLowerCase().includes(searchTerm) ||
+      user.email?.toLowerCase().includes(searchTerm) ||
+      user.role?.toLowerCase().includes(searchTerm)
+    );
+  });
+
+  // Filter templates based on search term
+  const filteredTemplates = templates.filter((template: any) => {
+    const searchTerm = templateSearchTerm.toLowerCase();
+    return (
+      template.name?.toLowerCase().includes(searchTerm) ||
+      template.category?.toLowerCase().includes(searchTerm) ||
+      template.genre?.toLowerCase().includes(searchTerm) ||
+      template.concernedTeam?.toLowerCase().includes(searchTerm)
+    );
+  });
+
+  // Filter email templates based on search term
+  const filteredEmailTemplates = emailTemplates.filter((template: any) => {
+    const searchTerm = emailTemplateSearchTerm.toLowerCase();
+    return (
+      template.name?.toLowerCase().includes(searchTerm) ||
+      template.category?.toLowerCase().includes(searchTerm) ||
+      template.genre?.toLowerCase().includes(searchTerm) ||
+      template.concernedTeam?.toLowerCase().includes(searchTerm) ||
+      template.subject?.toLowerCase().includes(searchTerm)
+    );
+  });
+
   // User status mutation
   const userStatusMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
@@ -562,29 +596,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     }
   };
 
-  // Filter functions for search
-  const filteredUsers = users.filter((user: User) =>
-    user.firstName?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-    user.lastName?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-    user.email?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-    user.role?.toLowerCase().includes(userSearchTerm.toLowerCase())
-  );
 
-  const filteredTemplates = templates.filter((template: any) =>
-    template.name?.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
-    template.category?.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
-    template.genre?.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
-    template.contentEn?.toLowerCase().includes(templateSearchTerm.toLowerCase()) ||
-    template.contentAr?.toLowerCase().includes(templateSearchTerm.toLowerCase())
-  );
-
-  const filteredEmailTemplates = emailTemplates.filter((template: any) =>
-    template.name?.toLowerCase().includes(emailTemplateSearchTerm.toLowerCase()) ||
-    template.subject?.toLowerCase().includes(emailTemplateSearchTerm.toLowerCase()) ||
-    template.content?.toLowerCase().includes(emailTemplateSearchTerm.toLowerCase()) ||
-    template.concernedTeam?.toLowerCase().includes(emailTemplateSearchTerm.toLowerCase()) ||
-    template.genre?.toLowerCase().includes(emailTemplateSearchTerm.toLowerCase())
-  );
 
   // Check admin access AFTER all hooks are called
   console.log('AdminPanel - Current user:', currentUser);
