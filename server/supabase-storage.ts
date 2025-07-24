@@ -21,13 +21,16 @@ import { IStorage } from './storage';
 
 export class SupabaseStorage implements IStorage {
   private client: SupabaseClient;
+  private serviceClient: SupabaseClient;
 
   constructor() {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
     console.log('[SupabaseStorage] Initializing with URL:', supabaseUrl ? 'URL_PRESENT' : 'URL_MISSING');
     console.log('[SupabaseStorage] Key status:', supabaseKey ? 'KEY_PRESENT' : 'KEY_MISSING');
+    console.log('[SupabaseStorage] Service Key status:', serviceRoleKey ? 'SERVICE_KEY_PRESENT' : 'SERVICE_KEY_MISSING');
     console.log('[SupabaseStorage] URL length:', supabaseUrl?.length || 0);
     console.log('[SupabaseStorage] Key length:', supabaseKey?.length || 0);
     
@@ -35,7 +38,18 @@ export class SupabaseStorage implements IStorage {
       throw new Error(`Missing or empty Supabase credentials - URL: ${!!supabaseUrl && supabaseUrl.trim() !== ''}, Key: ${!!supabaseKey && supabaseKey.trim() !== ''}`);
     }
     
+    // Regular client for read operations
     this.client = createClient(supabaseUrl.trim(), supabaseKey.trim());
+    
+    // Service role client for admin operations (bypasses RLS)
+    if (serviceRoleKey && serviceRoleKey.trim() !== '') {
+      this.serviceClient = createClient(supabaseUrl.trim(), serviceRoleKey.trim());
+      console.log('[SupabaseStorage] ✅ Service role client initialized for admin operations');
+    } else {
+      console.warn('[SupabaseStorage] ⚠️ No service role key - using anon client for all operations');
+      this.serviceClient = this.client;
+    }
+    
     console.log('[SupabaseStorage] ✅ Successfully connected to Supabase');
     
     // Test connection asynchronously
@@ -585,7 +599,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement> {
-    const { data, error } = await this.client
+    const { data, error } = await this.serviceClient
       .from('announcements')
       .insert({
         title: announcement.title,
@@ -621,7 +635,7 @@ export class SupabaseStorage implements IStorage {
     
     updateData.updated_at = new Date().toISOString();
 
-    const { data, error } = await this.client
+    const { data, error } = await this.serviceClient
       .from('announcements')
       .update(updateData)
       .eq('id', id)
@@ -637,7 +651,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async deleteAnnouncement(id: string): Promise<void> {
-    const { error } = await this.client
+    const { error } = await this.serviceClient
       .from('announcements')
       .delete()
       .eq('id', id);
@@ -649,7 +663,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async acknowledgeAnnouncement(userId: string, announcementId: string): Promise<void> {
-    const { error } = await this.client
+    const { error } = await this.serviceClient
       .from('user_announcement_acks')
       .upsert({
         user_id: userId,
@@ -704,7 +718,7 @@ export class SupabaseStorage implements IStorage {
 
   async reAnnounce(announcementId: string): Promise<void> {
     // First get the current version
-    const { data: currentData, error: fetchError } = await this.client
+    const { data: currentData, error: fetchError } = await this.serviceClient
       .from('announcements')
       .select('version')
       .eq('id', announcementId)
@@ -718,7 +732,7 @@ export class SupabaseStorage implements IStorage {
     const currentVersion = currentData?.version || 1;
 
     // Update with incremented version
-    const { error } = await this.client
+    const { error } = await this.serviceClient
       .from('announcements')
       .update({
         version: currentVersion + 1,
