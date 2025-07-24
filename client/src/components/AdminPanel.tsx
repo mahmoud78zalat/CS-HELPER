@@ -336,42 +336,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     );
   });
 
-  // User status mutation
-  const userStatusMutation = useMutation({
-    mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      await apiRequest('PATCH', `/api/users/${userId}/status`, { status });
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
-      // Broadcast user update to all connected users
-      await realTimeService.broadcastUserUpdate();
-      toast({
-        title: "User status updated",
-        description: "Changes applied successfully",
-        duration: 3000,
-      });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Session expired",
-          description: "Redirecting to login...",
-          variant: "destructive",
-          duration: 4000,
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Update failed",
-        description: "Unable to change user status. Please try again.",
-        variant: "destructive",
-        duration: 4000,
-      });
-    },
-  });
+
 
   // User role mutation
   const userRoleMutation = useMutation({
@@ -379,7 +344,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       await apiRequest('PATCH', `/api/users/${userId}/role`, { role });
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       // Broadcast user update to all connected users
       await realTimeService.broadcastUserUpdate();
       toast({
@@ -525,9 +490,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     setTimeoutRef(newTimeout);
   };
 
-  const handleUserStatusChange = (userId: string, status: string) => {
-    userStatusMutation.mutate({ userId, status });
-  };
+
 
   const handleUserRoleChange = (userId: string, role: string) => {
     userRoleMutation.mutate({ userId, role });
@@ -781,9 +744,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Online</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>Online Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -806,29 +767,17 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           </Select>
                         </TableCell>
                         <TableCell>
-                          <Select 
-                            value={user.status} 
-                            onValueChange={(status) => handleUserStatusChange(user.id, status)}
-                          >
-                            <SelectTrigger className="w-24">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="blocked">Blocked</SelectItem>
-                              <SelectItem value="banned">Banned</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.isOnline ? "default" : "secondary"}>
-                            {user.isOnline ? 'Online' : 'Offline'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-xs text-slate-500">
-                            Last seen: {user.lastSeen ? new Date(user.lastSeen).toLocaleDateString() : 'Never'}
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={user.isOnline ? "default" : "secondary"} className="flex items-center space-x-1">
+                              <div className={`h-2 w-2 rounded-full ${user.isOnline ? 'bg-green-400' : 'bg-gray-400'}`}></div>
+                              <span>{user.isOnline ? 'Online' : 'Offline'}</span>
+                            </Badge>
                           </div>
+                          {user.lastSeen && (
+                            <div className="text-xs text-slate-500 mt-1">
+                              Last seen: {new Date(user.lastSeen).toLocaleDateString()}
+                            </div>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

@@ -299,8 +299,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
+      // Update current user's online status first
+      await storage.updateUserOnlineStatus(userId, true);
+      
+      // Fetch updated users data
       const users = await storage.getAllUsers();
       console.log('[AdminAPI] Retrieved', users.length, 'users');
+      console.log('[AdminAPI] Online users:', users.filter(u => u.isOnline).length);
       
       res.setHeader('Content-Type', 'application/json');
       res.json(users);
