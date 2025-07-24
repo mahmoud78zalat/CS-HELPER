@@ -228,14 +228,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Site content routes (admin only)
+  // Site content routes (accessible to all authenticated users for reading)
   app.get('/api/site-content', isAuthenticated, async (req: any, res) => {
     try {
-      const currentUser = await storage.getUser(req.user.claims.sub);
-      if (currentUser?.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
       const { key } = req.query;
       const content = await storage.getSiteContent(key as string);
       res.json(content);

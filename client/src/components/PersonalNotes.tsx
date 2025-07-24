@@ -23,10 +23,13 @@ export default function PersonalNotes() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Fetch user's personal notes using direct fetch to bypass Vite interception
+  // Fetch user's personal notes with auto-refresh and smooth updates
   const { data: notes = [], isLoading } = useQuery<PersonalNote[]>({
     queryKey: ['/api/personal-notes', user?.id],
     enabled: !!user,
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    refetchOnWindowFocus: true,
+    staleTime: 10000, // Consider data fresh for 10 seconds
     queryFn: async () => {
       const response = await fetch('/api/personal-notes', {
         method: 'GET',
@@ -42,7 +45,6 @@ export default function PersonalNotes() {
       }
       
       const data = await response.json();
-      console.log('Fetched notes:', data);
       return data;
     },
   });

@@ -1,3 +1,4 @@
+import React from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -12,6 +13,15 @@ import { Loader2 } from "lucide-react";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
+
+  // Expose current user to window object for Chatbase integration
+  React.useEffect(() => {
+    if (user) {
+      (window as any).getCurrentUser = () => user;
+    } else {
+      (window as any).getCurrentUser = () => null;
+    }
+  }, [user]);
 
   if (isLoading) {
     return (

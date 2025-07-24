@@ -129,6 +129,9 @@ export function useAuth() {
     
     setUser(null);
     setIsLoading(false);
+    
+    // Redirect to login page after sign out
+    window.location.href = '/login';
   };
 
   return {

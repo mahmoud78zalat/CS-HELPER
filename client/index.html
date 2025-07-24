@@ -7,6 +7,53 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Chatbase Integration -->
+    <script>
+    (function(){
+      if(!window.chatbase||window.chatbase("getState")!=="initialized"){
+        window.chatbase=(...arguments)=>{
+          if(!window.chatbase.q){window.chatbase.q=[]}
+          window.chatbase.q.push(arguments)
+        };
+        window.chatbase=new Proxy(window.chatbase,{
+          get(target,prop){
+            if(prop==="q"){return target.q}
+            return(...args)=>target(prop,...args)
+          }
+        })
+      }
+      
+      const onLoad=function(){
+        const script=document.createElement("script");
+        script.src="https://www.chatbase.co/embed.min.js";
+        script.id="rG3h170PKdOsKKTC078sk";
+        script.domain="www.chatbase.co";
+        document.body.appendChild(script);
+        
+        // Initialize user data when chatbase loads (without verification for now)
+        script.onload = function() {
+          setTimeout(() => {
+            const currentUser = window.getCurrentUser && window.getCurrentUser();
+            if (currentUser && currentUser.id) {
+              window.chatbase('setUserData', {
+                userId: currentUser.id,
+                email: currentUser.email,
+                name: `${currentUser.firstName} ${currentUser.lastName}`
+              });
+            }
+          }, 1000);
+        };
+      };
+      
+      if(document.readyState==="complete"){
+        onLoad()
+      }else{
+        window.addEventListener("load",onLoad)
+      }
+    })();
+    </script>
+    
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>
