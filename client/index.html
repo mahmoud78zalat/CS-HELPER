@@ -24,21 +24,22 @@
         pointer-events: auto !important;
       }
       
-      /* Aggressively hide all chatbase elements except the button */
-      body.user-authenticated [id*="chatbase"]:not([id="chatbase-bubble-button"]),
-      body.user-authenticated [class*="chatbase"]:not([id="chatbase-bubble-button"]),
+      /* Allow chatbase to function normally when authenticated */
+      body.user-authenticated [id*="chatbase"],
+      body.user-authenticated [class*="chatbase"],
       body.user-authenticated iframe[src*="chatbase"],
-      body.user-authenticated div[class*="widget"],
-      body.user-authenticated div[id*="window"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        width: 0 !important;
-        height: 0 !important;
-        max-width: 0 !important;
-        max-height: 0 !important;
-        overflow: hidden !important;
+      body.user-authenticated [data-chatbase-id] {
+        display: initial !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+      
+      /* Special handling for chat window - start hidden */
+      body.user-authenticated [id*="chatbase-bubble-window"],
+      body.user-authenticated [class*="window"],
+      body.user-authenticated [class*="chatbase-window"] {
+        transition: all 0.3s ease !important;
       }
       
       /* Ensure close buttons always work */
@@ -80,35 +81,37 @@
         script.id = "rG3h170PKdOsKKTC078sk";
         script.domain = "www.chatbase.co";
         
-        // Prevent auto-opening by setting config before loading
+        // Only close if it auto-opens, but allow manual opening
         script.onload = function() {
-          // Force chatbase to stay closed on load and prevent auto-opening
-          const forceClose = () => {
+          let hasAutoOpened = false;
+          
+          const preventAutoOpen = () => {
             if (window.chatbase) {
               try {
-                window.chatbase('close');
-                window.chatbase('minimize');
+                // Check if chat window is visible without user interaction
+                const chatWindow = document.querySelector('[id*="chatbase-bubble-window"], [class*="chatbase-window"]');
+                const button = document.querySelector('#chatbase-bubble-button');
                 
-                // Hide all chatbase elements aggressively
-                const chatbaseElements = document.querySelectorAll('[id*="chatbase"]:not([id="chatbase-bubble-button"]), [class*="chatbase"]:not([id="chatbase-bubble-button"]), iframe[src*="chatbase"]');
-                chatbaseElements.forEach(el => {
-                  el.style.display = 'none';
-                  el.style.visibility = 'hidden';
-                  el.style.opacity = '0';
-                  el.style.pointerEvents = 'none';
-                });
-                
+                if (chatWindow && button) {
+                  const windowRect = chatWindow.getBoundingClientRect();
+                  const isVisible = windowRect.width > 0 && windowRect.height > 0;
+                  
+                  // If visible but user hasn't clicked yet, close it
+                  if (isVisible && !hasAutoOpened) {
+                    window.chatbase('close');
+                    hasAutoOpened = true;
+                    console.log('Auto-opened chatbase window closed');
+                  }
+                }
               } catch (e) {
-                console.log('Chatbase commands not available:', e.message);
+                console.log('Chatbase close command:', e.message);
               }
             }
           };
           
-          // Apply force close immediately and repeatedly
-          forceClose();
-          setTimeout(forceClose, 500);
-          setTimeout(forceClose, 1000);
-          setTimeout(forceClose, 2000);
+          // Check for auto-opening only initially
+          setTimeout(preventAutoOpen, 500);
+          setTimeout(preventAutoOpen, 1500);
         };
         
         document.body.appendChild(script);
