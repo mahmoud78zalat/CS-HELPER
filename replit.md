@@ -137,6 +137,15 @@ The system is designed to be deployed on Replit with automatic environment provi
 
 ## Recent Changes (January 24, 2025)
 
+**CRITICAL FIXES COMPLETED (January 24, 2025 - 11:10 AM)**:
+✓ **ROLE UPDATE ISSUE RESOLVED**: Fixed role update by adding direct routes to simple-routes.ts bypassing Vite interception
+✓ **ADVANCED ONLINE STATUS DETECTION**: Implemented comprehensive user activity tracking with heartbeat mechanism
+✓ **ENHANCED ACTIVITY MONITORING**: Added mouse, keyboard, scroll, touch, focus, blur, and visibility change detection
+✓ **IMPROVED ACCURACY**: Reduced inactivity timeout to 2 minutes and heartbeat to 15 seconds for real-time status
+✓ **PAGE VISIBILITY TRACKING**: Users automatically marked offline when tab is hidden or window minimized
+✓ **COMPREHENSIVE DEBUGGING**: Added detailed logging for role updates to troubleshoot any future issues
+✓ **DUAL ROUTE SYSTEM**: Role updates now work through both main routes.ts and simple-routes.ts for reliability
+
 **LATEST CRITICAL FIXES (January 24, 2025 - 7:32 AM)**:
 ✓ **USER MANAGEMENT SYSTEM FULLY RESTORED**: Fixed missing filteredUsers variable causing empty user management table
 ✓ **ANALYTICS DASHBOARD ENHANCED**: Added comprehensive user activity breakdown with real-time statistics

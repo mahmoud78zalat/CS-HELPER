@@ -283,6 +283,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Management API routes (bypassing Vite interception)
+  app.patch('/api/users/:id/role', async (req, res) => {
+    console.log('[DirectRoleUpdate] === DIRECT ROLE UPDATE REQUEST START ===');
+    console.log('[DirectRoleUpdate] Raw request body:', req.body);
+    console.log('[DirectRoleUpdate] Request params:', req.params);
+    console.log('[DirectRoleUpdate] Content-Type:', req.headers['content-type']);
+    
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+
+      console.log('[DirectRoleUpdate] Processing - User ID:', id, 'Target role:', role);
+
+      if (!role) {
+        console.log('[DirectRoleUpdate] Missing role in request body');
+        return res.status(400).json({ message: "Role is required" });
+      }
+
+      if (!['admin', 'agent'].includes(role)) {
+        console.log('[DirectRoleUpdate] Invalid role provided:', role);
+        return res.status(400).json({ message: "Invalid role" });
+      }
+
+      // Check if target user exists
+      const targetUser = await storage.getUser(id);
+      if (!targetUser) {
+        console.log('[DirectRoleUpdate] Target user not found:', id);
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log('[DirectRoleUpdate] Target user found:', targetUser.email, 'current role:', targetUser.role);
+
+      if (targetUser.role === role) {
+        console.log('[DirectRoleUpdate] User already has this role, skipping update');
+        return res.json({ message: "User already has this role", user: targetUser });
+      }
+
+      console.log('[DirectRoleUpdate] Calling storage.updateUserRole...');
+      await storage.updateUserRole(id, role);
+      console.log('[DirectRoleUpdate] Storage update completed');
+      
+      // Verify the update by fetching the user again
+      const updatedUser = await storage.getUser(id);
+      console.log('[DirectRoleUpdate] Verification - Updated user role:', updatedUser?.role);
+      
+      res.json({ 
+        message: "User role updated successfully", 
+        user: updatedUser,
+        previousRole: targetUser.role,
+        newRole: role
+      });
+    } catch (error) {
+      console.error("[DirectRoleUpdate] Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+    
+    console.log('[DirectRoleUpdate] === DIRECT ROLE UPDATE REQUEST END ===');
+  });
+
+  app.patch('/api/users/:id/status', async (req, res) => {
+    console.log('[DirectStatusUpdate] === DIRECT STATUS UPDATE REQUEST START ===');
+    
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!['active', 'blocked', 'banned'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      await storage.updateUserStatus(id, status);
+      res.json({ message: "User status updated" });
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      res.status(500).json({ message: "Failed to update user status" });
+    }
+    
+    console.log('[DirectStatusUpdate] === DIRECT STATUS UPDATE REQUEST END ===');
+  });
+
   // Admin routes that bypass Vite interception
   app.get('/api/admin/users', async (req, res) => {
     try {

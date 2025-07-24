@@ -137,8 +137,8 @@ export function useAuth() {
         const now = Date.now();
         const timeSinceActivity = now - lastActivityTime.current;
         
-        // Consider user offline if no activity for 5 minutes
-        const isUserActive = timeSinceActivity < 5 * 60 * 1000;
+        // Consider user offline if no activity for 2 minutes (more accurate)
+        const isUserActive = timeSinceActivity < 2 * 60 * 1000;
         
         console.log(`[Auth] Heartbeat - User active: ${isUserActive}, Time since activity: ${Math.round(timeSinceActivity / 1000)}s`);
         
@@ -158,17 +158,32 @@ export function useAuth() {
       } catch (error) {
         console.error('[Auth] Heartbeat error:', error);
       }
-    }, 30000); // Update every 30 seconds
+    }, 15000); // Update every 15 seconds for more accuracy
     
     // Track user activity
     const updateActivity = () => {
       lastActivityTime.current = Date.now();
     };
     
-    // Listen for user activity
-    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+    // Listen for user activity with better detection
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click', 'focus', 'blur'];
+    activityEvents.forEach(event => {
       document.addEventListener(event, updateActivity, { passive: true });
     });
+    
+    // Handle visibility change to mark user offline when tab is hidden
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // User switched tabs or minimized window - consider them potentially inactive
+        console.log('[Auth] Page hidden - user may be inactive');
+      } else {
+        // User came back to tab
+        updateActivity();
+        console.log('[Auth] Page visible - user is active');
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
   };
   
   const stopHeartbeat = () => {
