@@ -130,7 +130,7 @@ export class SupabaseStorage implements IStorage {
   async deleteUser(id: string): Promise<void> {
     console.log('[SupabaseStorage] Deleting user with ID:', id);
     
-    const { error } = await this.client
+    const { error } = await this.serviceClient
       .from('users')
       .delete()
       .eq('id', id);
@@ -144,7 +144,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateUserStatus(id: string, status: "active" | "blocked" | "banned"): Promise<void> {
-    const { error } = await this.client
+    const { error } = await this.serviceClient
       .from('users')
       .update({ 
         status, 
@@ -177,7 +177,7 @@ export class SupabaseStorage implements IStorage {
   async updateUserRole(id: string, role: "admin" | "agent"): Promise<void> {
     console.log('[SupabaseStorage] Updating user role for ID:', id, 'to role:', role);
     
-    const { data, error } = await this.client
+    const { data, error } = await this.serviceClient
       .from('users')
       .update({ 
         role, 
