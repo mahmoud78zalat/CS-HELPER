@@ -29,60 +29,41 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Chatbase Integration - Simple Approach -->
+    <!-- Chatbase Integration - Only for Authenticated Users -->
     <script>
-    (function(){
-      let chatbaseLoaded = false;
-      
-      // Initialize chatbase proxy
-      if(!window.chatbase){
-        window.chatbase=(...arguments)=>{
-          if(!window.chatbase.q){window.chatbase.q=[]}
-          window.chatbase.q.push(arguments)
-        };
-        window.chatbase=new Proxy(window.chatbase,{
-          get(target,prop){
-            if(prop==="q"){return target.q}
-            return(...args)=>target(prop,...args)
-          }
-        })
-      }
-      
-      const loadChatbaseForAuthenticatedUser = () => {
+      // Only load chatbase for authenticated users
+      const loadChatbaseForAuth = () => {
         const currentUser = window.getCurrentUser && window.getCurrentUser();
-        
-        if (currentUser && currentUser.id && !chatbaseLoaded) {
+        if (currentUser && currentUser.id) {
           // User is authenticated - load chatbase normally
-          const script = document.createElement("script");
-          script.src = "https://www.chatbase.co/embed.min.js";
-          script.id = "rG3h170PKdOsKKTC078sk";
-          script.domain = "www.chatbase.co";
-          document.body.appendChild(script);
+          console.log('Loading chatbase for authenticated user');
           
-          // Show chatbase
+          const script = document.createElement('script');
+          script.src = 'https://www.chatbase.co/embed.min.js';
+          script.setAttribute('chatbotId', 'rG3h170PKdOsKKTC078sk');
+          script.setAttribute('domain', 'www.chatbase.co');
+          script.defer = true;
+          document.head.appendChild(script);
+          
+          // Show chatbase elements
           document.body.classList.add('user-authenticated');
-          chatbaseLoaded = true;
-          
-          console.log('Chatbase loaded for authenticated user:', currentUser.email);
-        } else if (!currentUser || !currentUser.id) {
-          // No user - hide chatbase
+        } else {
+          // Not authenticated - hide chatbase
           document.body.classList.remove('user-authenticated');
         }
       };
       
-      // Check for authentication periodically until user is found
-      const authCheckInterval = setInterval(() => {
-        loadChatbaseForAuthenticatedUser();
-        
-        // Stop checking once chatbase is loaded
-        if (chatbaseLoaded) {
-          clearInterval(authCheckInterval);
+      // Check for authentication every 2 seconds until found
+      const authCheck = setInterval(() => {
+        const currentUser = window.getCurrentUser && window.getCurrentUser();
+        if (currentUser && currentUser.id) {
+          loadChatbaseForAuth();
+          clearInterval(authCheck);
         }
       }, 2000);
       
       // Initial check
-      setTimeout(loadChatbaseForAuthenticatedUser, 1000);
-    })();
+      setTimeout(loadChatbaseForAuth, 1000);
     </script>
     
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
