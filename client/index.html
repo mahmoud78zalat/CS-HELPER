@@ -4,24 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <style>
-      /* Simple approach: Hide chatbase completely for non-authenticated users */
-      [id*="chatbase"],
-      [class*="chatbase"],
-      iframe[src*="chatbase"],
-      [data-chatbase-id] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
+      /* Hide chatbase iframe for non-authenticated users */
+      #chatbase-iframe {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 400px;
+        height: 600px;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
       }
       
-      /* Show chatbase normally for authenticated users */
-      body.user-authenticated [id*="chatbase"],
-      body.user-authenticated [class*="chatbase"],
-      body.user-authenticated iframe[src*="chatbase"],
-      body.user-authenticated [data-chatbase-id] {
-        display: initial !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+      /* Show chatbase iframe for authenticated users */
+      body.user-authenticated #chatbase-iframe {
+        display: block;
       }
     </style>
   </head>
@@ -29,41 +28,36 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Chatbase Integration - Only for Authenticated Users -->
+    <!-- Chatbase iframe - Only shown for authenticated users -->
+    <iframe
+      id="chatbase-iframe"
+      src="https://www.chatbase.co/chatbot-iframe/rG3h170PKdOsKKTC078sk"
+      frameborder="0">
+    </iframe>
+    
+    <!-- Authentication check for chatbase visibility -->
     <script>
-      // Only load chatbase for authenticated users
-      const loadChatbaseForAuth = () => {
+      const checkAuthAndShowChatbase = () => {
         const currentUser = window.getCurrentUser && window.getCurrentUser();
         if (currentUser && currentUser.id) {
-          // User is authenticated - load chatbase normally
-          console.log('Loading chatbase for authenticated user');
-          
-          const script = document.createElement('script');
-          script.src = 'https://www.chatbase.co/embed.min.js';
-          script.setAttribute('chatbotId', 'rG3h170PKdOsKKTC078sk');
-          script.setAttribute('domain', 'www.chatbase.co');
-          script.defer = true;
-          document.head.appendChild(script);
-          
-          // Show chatbase elements
           document.body.classList.add('user-authenticated');
+          console.log('User authenticated - Chatbase iframe visible');
         } else {
-          // Not authenticated - hide chatbase
           document.body.classList.remove('user-authenticated');
         }
       };
       
       // Check for authentication every 2 seconds until found
-      const authCheck = setInterval(() => {
+      const authCheckInterval = setInterval(() => {
         const currentUser = window.getCurrentUser && window.getCurrentUser();
         if (currentUser && currentUser.id) {
-          loadChatbaseForAuth();
-          clearInterval(authCheck);
+          checkAuthAndShowChatbase();
+          clearInterval(authCheckInterval);
         }
       }, 2000);
       
       // Initial check
-      setTimeout(loadChatbaseForAuth, 1000);
+      setTimeout(checkAuthAndShowChatbase, 1000);
     </script>
     
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
