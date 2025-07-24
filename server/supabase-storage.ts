@@ -19,25 +19,20 @@ export class SupabaseStorage implements IStorage {
   private client: SupabaseClient;
 
   constructor() {
-    console.log('[SupabaseStorage] DEBUG: SUPABASE_URL =', process.env.SUPABASE_URL);
-    console.log('[SupabaseStorage] DEBUG: SUPABASE_ANON_KEY =', process.env.SUPABASE_ANON_KEY ? '***PRESENT***' : 'MISSING');
-    
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
     
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables. Please set these in your environment.');
-    }
+    console.log('[SupabaseStorage] Initializing with URL:', supabaseUrl);
+    console.log('[SupabaseStorage] Key status:', supabaseKey ? 'PRESENT' : 'MISSING');
     
-    // Validate URL format
-    if (!supabaseUrl.startsWith('https://')) {
-      throw new Error('SUPABASE_URL must be a valid URL starting with https://');
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error(`Missing Supabase credentials - URL: ${!!supabaseUrl}, Key: ${!!supabaseKey}`);
     }
     
     this.client = createClient(supabaseUrl, supabaseKey);
-    console.log('[SupabaseStorage] Connected to Supabase at:', supabaseUrl);
+    console.log('[SupabaseStorage] ✅ Successfully connected to Supabase');
     
-    // Test connection by counting users
+    // Test connection asynchronously
     this.testConnection();
   }
 
