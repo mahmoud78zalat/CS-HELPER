@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/context/ThemeContext";
 import { Headphones, Mail, Settings, Info, LogOut, Edit3, Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 interface HeaderProps {
   onEmailComposer: () => void;
@@ -16,6 +17,40 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
   const { theme, toggleTheme } = useTheme();
   const [agentName, setAgentName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
+  const [siteName, setSiteName] = useState('Customer Service Platform');
+
+  // Fetch site content from Supabase
+  const { data: siteContent } = useQuery({
+    queryKey: ['/api/site-content'],
+    queryFn: async () => {
+      const response = await fetch('/api/site-content', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch site content');
+      return await response.json();
+    },
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Update site name when site content is fetched
+  useEffect(() => {
+    if (siteContent && Array.isArray(siteContent)) {
+      const siteNameItem = siteContent.find((item: any) => item.key === 'site_name');
+      if (siteNameItem?.content) {
+        setSiteName(siteNameItem.content);
+        localStorage.setItem('site_name', siteNameItem.content);
+      } else {
+        // Fallback to localStorage if not found in database
+        const localSiteName = localStorage.getItem('site_name');
+        if (localSiteName) {
+          setSiteName(localSiteName);
+        }
+      }
+    }
+  }, [siteContent]);
 
   // Initialize agent name from user data
   useEffect(() => {
@@ -56,10 +91,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
             </div>
             <div className="hidden sm:block">
               <h1 className="text-lg lg:text-xl font-bold text-slate-800 dark:text-white">
-                {(() => {
-                  const siteName = localStorage.getItem('site_name');
-                  return siteName || 'Customer Service Platform';
-                })()}
+                {siteName}
               </h1>
               <div className="flex items-center gap-2">
                 <p className="text-xs lg:text-sm text-slate-600 dark:text-gray-300">Agent:</p>
@@ -87,10 +119,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
             </div>
             <div className="sm:hidden">
               <h1 className="text-base font-bold text-slate-800 dark:text-white">
-                {(() => {
-                  const siteName = localStorage.getItem('site_name');
-                  return siteName ? siteName.split(' ').map(w => w.charAt(0)).join('').toUpperCase() : 'CS';
-                })()}
+                {siteName ? siteName.split(' ').map(w => w.charAt(0)).join('').toUpperCase() : 'CS'}
               </h1>
             </div>
           </div>

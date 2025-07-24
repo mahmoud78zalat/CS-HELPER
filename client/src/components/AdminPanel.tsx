@@ -209,6 +209,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       const contentObject: {[key: string]: string} = {};
       data.forEach((item: any) => {
         contentObject[item.key] = item.content;
+        // Sync to localStorage for immediate access across the app
+        localStorage.setItem(item.key, item.content);
       });
       setSiteContentValues(contentObject);
       return data;
@@ -361,11 +363,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       if (!response.ok) throw new Error('Failed to update site content');
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Update localStorage for immediate UI consistency
+      localStorage.setItem(variables.key, variables.content);
+      
       queryClient.invalidateQueries({ queryKey: ['/api/site-content'] });
       toast({
         title: "Site content updated",
-        description: "Changes have been saved to the database.",
+        description: "Changes synced to database and all users.",
       });
     },
     onError: (error) => {

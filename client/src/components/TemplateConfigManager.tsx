@@ -115,15 +115,7 @@ function ConfigTypeManager({ type }: { type: 'categories' | 'genres' | 'concerne
     setEditingValue('');
   };
 
-  const resetToDefaults = () => {
-    if (confirm(`Reset ${type} to default values? This will remove all custom items.`)) {
-      saveToStorage(DEFAULT_VALUES[type]);
-      toast({
-        title: "Success",
-        description: `Reset ${type} to defaults`,
-      });
-    }
-  };
+
 
   const getDisplayName = () => {
     switch (type) {
@@ -156,9 +148,6 @@ function ConfigTypeManager({ type }: { type: 'categories' | 'genres' | 'concerne
             <Button onClick={addItem} size="sm">
               <Plus className="h-4 w-4 mr-1" />
               Add
-            </Button>
-            <Button onClick={resetToDefaults} variant="outline" size="sm">
-              Reset to Defaults
             </Button>
           </div>
 
