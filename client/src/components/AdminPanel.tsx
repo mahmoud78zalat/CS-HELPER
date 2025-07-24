@@ -358,7 +358,11 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ key, content }),
+        body: JSON.stringify({ 
+          key, 
+          content, 
+          updatedBy: currentUser?.id 
+        }),
       });
       if (!response.ok) throw new Error('Failed to update site content');
       return await response.json();
