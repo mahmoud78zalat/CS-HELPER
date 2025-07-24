@@ -55,7 +55,12 @@ export function CustomerDataProvider({ children }: CustomerDataProviderProps) {
     const savedData = localStorage.getItem('bfl-customer-data');
     if (savedData) {
       try {
-        setCustomerData(JSON.parse(savedData));
+        const parsedData = JSON.parse(savedData);
+        // Ensure language defaults to 'en' if not set
+        setCustomerData({
+          language: 'en',
+          ...parsedData
+        });
       } catch (error) {
         console.error('Failed to parse saved customer data:', error);
       }
@@ -77,7 +82,7 @@ export function CustomerDataProvider({ children }: CustomerDataProviderProps) {
   };
 
   const clearCustomerData = () => {
-    setCustomerData({});
+    setCustomerData({ language: 'en' });
     localStorage.removeItem('bfl-customer-data');
     setVersion(prev => prev + 1);
   };

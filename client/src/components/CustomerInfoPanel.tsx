@@ -67,16 +67,24 @@ export default function CustomerInfoPanel() {
         </div>
         <div className="flex gap-2">
           <Button
-            variant="default"
+            variant={customerData.language === 'en' ? 'default' : 'outline'}
             size="sm"
             className="flex-1 text-xs h-8"
             onClick={() => updateCustomerData('language', 'en')}
           >
-            🇬🇧 English
+            🇬🇧 EN
+          </Button>
+          <Button
+            variant={customerData.language === 'ar' ? 'default' : 'outline'}
+            size="sm"
+            className="flex-1 text-xs h-8"
+            onClick={() => updateCustomerData('language', 'ar')}
+          >
+            🇸🇦 AR
           </Button>
         </div>
         <p className="text-xs text-slate-500 mt-2">
-          All templates are in English
+          Templates will show in {customerData.language === 'ar' ? 'Arabic' : 'English'} language
         </p>
       </div>
 

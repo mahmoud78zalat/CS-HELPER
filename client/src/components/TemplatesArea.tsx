@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTemplates } from "@/hooks/useTemplates";
+import { useCustomerData } from "@/hooks/useCustomerData";
 import TemplateCard from "./TemplateCard";
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +10,7 @@ import { getGenreColor } from '@/lib/templateColors';
 
 export default function TemplatesArea() {
   const [searchTerm, setSearchTerm] = useState('');
+  const { customerData } = useCustomerData();
 
   const { data: allTemplates, isLoading } = useTemplates({
     search: searchTerm || undefined,
@@ -52,11 +54,11 @@ export default function TemplatesArea() {
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl lg:text-2xl font-bold text-slate-800">Reply Templates</h2>
               <div className="text-xs bg-slate-100 px-2 py-1 rounded-full">
-                {localStorage.getItem('selectedLanguage') === 'ar' ? '🇸🇦 Arabic' : '🇬🇧 English'}
+                {customerData.language === 'ar' ? '🇸🇦 Arabic' : '🇬🇧 English'}
               </div>
             </div>
             <p className="text-sm lg:text-base text-slate-600">
-              Click on any template to instantly copy it to your clipboard. Switch language in Customer Info to see different templates.
+              Click on any template to instantly copy it to your clipboard. Switch language in Customer Info to see templates in {customerData.language === 'ar' ? 'Arabic' : 'English'}.
             </p>
           </div>
 
