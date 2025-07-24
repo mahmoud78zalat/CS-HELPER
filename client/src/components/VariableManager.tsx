@@ -17,36 +17,41 @@ interface CustomVariable {
   defaultValue?: string;
 }
 
-const DEFAULT_CUSTOM_VARIABLES: CustomVariable[] = [
-  { 
-    name: 'REASON', 
-    description: 'Specific reason for contact or issue', 
-    category: 'custom', 
-    example: 'Package damaged during delivery',
-    defaultValue: ''
-  },
-  { 
-    name: 'RESOLUTION', 
-    description: 'Proposed solution or resolution', 
-    category: 'custom', 
-    example: 'Full refund processed',
-    defaultValue: ''
-  },
-  { 
-    name: 'TIMEFRAME', 
-    description: 'Expected timeframe for resolution', 
-    category: 'custom', 
-    example: '2-3 business days',
-    defaultValue: '2-3 business days'
-  }
+const DEFAULT_SYSTEM_VARIABLES: CustomVariable[] = [
+  // Customer Variables
+  { name: 'customer_name', description: 'Customer full name', category: 'customer', example: 'John Smith', defaultValue: '' },
+  { name: 'customer_phone', description: 'Customer phone number', category: 'customer', example: '+971501234567', defaultValue: '' },
+  { name: 'customer_country', description: 'Customer country', category: 'customer', example: '🇦🇪 United Arab Emirates', defaultValue: '' },
+  { name: 'gender', description: 'Customer gender', category: 'customer', example: 'Male/Female', defaultValue: '' },
+  
+  // Order Variables
+  { name: 'order_id', description: 'Order identifier', category: 'order', example: 'ORD-12345', defaultValue: '' },
+  { name: 'awb_number', description: 'AWB tracking number', category: 'order', example: 'AWB-67890', defaultValue: '' },
+  { name: 'item_name', description: 'Product or item name', category: 'order', example: 'Wireless Headphones', defaultValue: '' },
+  { name: 'delivery_date', description: 'Expected delivery date', category: 'order', example: '2025-01-25', defaultValue: '' },
+  
+  // Agent Variables  
+  { name: 'agent_name', description: 'Agent full name', category: 'system', example: 'Sarah Johnson', defaultValue: '' },
+  { name: 'agentarabicname', description: 'Agent name in Arabic', category: 'system', example: 'سارة جونسون', defaultValue: '' },
+  { name: 'agentarabiclastname', description: 'Agent last name in Arabic', category: 'system', example: 'جونسون', defaultValue: '' },
+  
+  // Time Variables
+  { name: 'current_date', description: 'Current date', category: 'time', example: new Date().toLocaleDateString(), defaultValue: new Date().toLocaleDateString() },
+  { name: 'current_time', description: 'Current time', category: 'time', example: new Date().toLocaleTimeString(), defaultValue: new Date().toLocaleTimeString() },
+  { name: 'waiting_time', description: 'Customer waiting time', category: 'time', example: '10 minutes', defaultValue: '' },
+  
+  // Custom Variables
+  { name: 'reason', description: 'Specific reason for contact or issue', category: 'custom', example: 'Package damaged during delivery', defaultValue: '' },
+  { name: 'resolution', description: 'Proposed solution or resolution', category: 'custom', example: 'Full refund processed', defaultValue: '' },
+  { name: 'timeframe', description: 'Expected timeframe for resolution', category: 'custom', example: '2-3 business days', defaultValue: '2-3 business days' }
 ];
 
-interface CustomVariableManagerProps {
+interface VariableManagerProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function CustomVariableManager({ isOpen, onClose }: CustomVariableManagerProps) {
+export default function VariableManager({ isOpen, onClose }: VariableManagerProps) {
   const [variables, setVariables] = useState<CustomVariable[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -61,20 +66,20 @@ export default function CustomVariableManager({ isOpen, onClose }: CustomVariabl
 
   useEffect(() => {
     // Load from localStorage or use defaults
-    const saved = localStorage.getItem('custom_template_variables');
+    const saved = localStorage.getItem('system_template_variables');
     if (saved) {
       try {
         setVariables(JSON.parse(saved));
       } catch {
-        setVariables(DEFAULT_CUSTOM_VARIABLES);
+        setVariables(DEFAULT_SYSTEM_VARIABLES);
       }
     } else {
-      setVariables(DEFAULT_CUSTOM_VARIABLES);
+      setVariables(DEFAULT_SYSTEM_VARIABLES);
     }
   }, []);
 
   const saveToStorage = (newVariables: CustomVariable[]) => {
-    localStorage.setItem('custom_template_variables', JSON.stringify(newVariables));
+    localStorage.setItem('system_template_variables', JSON.stringify(newVariables));
     setVariables(newVariables);
   };
 
@@ -187,8 +192,8 @@ export default function CustomVariableManager({ isOpen, onClose }: CustomVariabl
   };
 
   const resetToDefaults = () => {
-    if (confirm('Reset custom variables to defaults? This will remove all custom variables.')) {
-      saveToStorage(DEFAULT_CUSTOM_VARIABLES);
+    if (confirm('Reset variables to defaults? This will remove all custom variables.')) {
+      saveToStorage(DEFAULT_SYSTEM_VARIABLES);
       cancelEdit();
       toast({
         title: "Success",
@@ -214,7 +219,7 @@ export default function CustomVariableManager({ isOpen, onClose }: CustomVariabl
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Variable className="h-5 w-5" />
-            Custom Variable Manager
+            Universal Variable Manager
           </DialogTitle>
         </DialogHeader>
         

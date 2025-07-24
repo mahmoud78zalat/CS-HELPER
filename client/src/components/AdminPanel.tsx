@@ -23,7 +23,7 @@ import {
 import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
-import CustomVariableManager from "@/components/CustomVariableManager";
+import VariableManager from "@/components/VariableManager";
 // Removed QUICK_TEMPLATE_STARTERS import as it's no longer needed
 
 interface AdminPanelProps {
@@ -1082,22 +1082,22 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </CardContent>
                 </Card>
 
-                {/* Custom Variables Card */}
+                {/* Universal Variables Card */}
                 <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowVariableManager(true)}>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
                       <Code className="h-5 w-5" />
-                      Custom Variables
+                      Universal Variables
                     </CardTitle>
-                    <p className="text-sm text-slate-600">Manage custom template variables</p>
+                    <p className="text-sm text-slate-600">Manage all template variables system-wide</p>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Total Variables:</span>
                         <span className="font-medium">{(() => {
-                          const variables = localStorage.getItem('custom_template_variables');
-                          return variables ? JSON.parse(variables).length : 3;
+                          const variables = localStorage.getItem('system_template_variables');
+                          return variables ? JSON.parse(variables).length : 18;
                         })()}</span>
                       </div>
                       <div className="text-xs text-slate-500">
@@ -1190,8 +1190,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       {/* Template Config Manager */}
       <TemplateConfigManager isOpen={showConfigManager} onClose={() => setShowConfigManager(false)} />
 
-      {/* Custom Variable Manager */}
-      <CustomVariableManager isOpen={showVariableManager} onClose={() => setShowVariableManager(false)} />
+      {/* Universal Variable Manager */}
+      <VariableManager isOpen={showVariableManager} onClose={() => setShowVariableManager(false)} />
       </DialogContent>
     </Dialog>
   );

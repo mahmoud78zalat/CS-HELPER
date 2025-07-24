@@ -65,24 +65,16 @@ export default function CustomerInfoPanel() {
         </div>
         <div className="flex gap-2">
           <Button
-            variant={customerData.language === 'en' ? 'default' : 'outline'}
+            variant="default"
             size="sm"
             className="flex-1 text-xs h-8"
             onClick={() => updateCustomerData('language', 'en')}
           >
-            🇬🇧 EN
-          </Button>
-          <Button
-            variant={customerData.language === 'ar' ? 'default' : 'outline'}
-            size="sm"
-            className="flex-1 text-xs h-8"
-            onClick={() => updateCustomerData('language', 'ar')}
-          >
-            🇴🇲 AR
+            🇬🇧 English
           </Button>
         </div>
         <p className="text-xs text-slate-500 mt-2">
-          Switch between English and Arabic templates for live chat responses
+          All templates are in English
         </p>
       </div>
 
@@ -119,16 +111,7 @@ export default function CustomerInfoPanel() {
           </div>
         </div>
         
-        <div>
-          <Label className="text-xs font-medium text-slate-600 mb-1">Email</Label>
-          <Input
-            type="email"
-            className="w-full text-sm"
-            placeholder="customer@email.com"
-            value={customerData.customer_email || ''}
-            onChange={(e) => updateCustomerData('customer_email', e.target.value)}
-          />
-        </div>
+
         
         <div>
           <Label className="text-xs font-medium text-slate-600 mb-1">Country</Label>
@@ -178,7 +161,7 @@ export default function CustomerInfoPanel() {
               <Input
                 type="text"
                 className="w-full text-sm"
-                placeholder="الاسم الأول للوكيل"
+                placeholder="Agent Arabic first name"
                 value={customerData.agentarabicfirstname || ''}
                 onChange={(e) => updateCustomerData('agentarabicfirstname', e.target.value)}
               />
@@ -189,7 +172,7 @@ export default function CustomerInfoPanel() {
               <Input
                 type="text"
                 className="w-full text-sm"
-                placeholder="اسم العائلة للوكيل"
+                placeholder="Agent Arabic last name"
                 value={customerData.agentarabiclastname || ''}
                 onChange={(e) => updateCustomerData('agentarabiclastname', e.target.value)}
               />
