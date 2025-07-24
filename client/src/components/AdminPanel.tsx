@@ -174,11 +174,58 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     setTempColor('#3b82f6'); // Default blue
   };
 
-  // Users query - use apiRequest from the query client to ensure proper authentication
+  // Users query - use admin endpoint that bypasses Vite interception
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery<User[]>({
-    queryKey: ['/api/users'],
+    queryKey: ['/api/admin/users'],
     retry: false,
     enabled: !!currentUser && currentUser.role === 'admin', // Only fetch if user is admin
+    queryFn: async () => {
+      console.log('[AdminPanel] Fetching users via admin endpoint...');
+      
+      // Try direct backend request first, fallback to normal API
+      const urls = [
+        `${window.location.protocol}//${window.location.hostname}:5000/api/admin/users`,
+        '/api/admin/users'
+      ];
+      
+      for (const url of urls) {
+        try {
+          console.log('[AdminPanel] Trying URL:', url);
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'x-user-id': currentUser?.id || '',
+            },
+            credentials: 'include',
+          });
+          
+          console.log('[AdminPanel] Response status:', response.status);
+          console.log('[AdminPanel] Response content-type:', response.headers.get('content-type'));
+          
+          if (!response.ok) {
+            console.log('[AdminPanel] Request failed with status:', response.status);
+            continue;
+          }
+          
+          const contentType = response.headers.get('content-type');
+          if (!contentType?.includes('application/json')) {
+            console.log('[AdminPanel] Non-JSON response from:', url);
+            continue;
+          }
+          
+          const data = await response.json();
+          console.log('[AdminPanel] Users fetched successfully from:', url, '- Count:', data.length);
+          return data;
+        } catch (error) {
+          console.log('[AdminPanel] Error with URL:', url, error);
+          continue;
+        }
+      }
+      
+      throw new Error('Failed to fetch users from all endpoints');
+    },
   });
 
   // Templates query

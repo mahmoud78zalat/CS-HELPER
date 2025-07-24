@@ -283,6 +283,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes that bypass Vite interception
+  app.get('/api/admin/users', async (req, res) => {
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID required' });
+      }
+
+      console.log('[AdminAPI] Fetching users for admin user:', userId);
+      const currentUser = await storage.getUser(userId);
+      
+      if (currentUser?.role !== 'admin') {
+        console.log('[AdminAPI] Access denied - user is not admin');
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const users = await storage.getAllUsers();
+      console.log('[AdminAPI] Retrieved', users.length, 'users');
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.json(users);
+    } catch (error) {
+      console.error('[AdminAPI] Error fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
   // Personal Notes Routes
   const personalNotesStorage = new SupabasePersonalNotesStorage();
 
