@@ -61,6 +61,13 @@ export default function TemplateCard({ template }: TemplateCardProps) {
       AGENTFIRSTNAME: (customerData.agentfirstname || user?.firstName || selectedAgentName.split(' ')[0] || '').toUpperCase(),
       AGENTLASTNAME: (customerData.agentlastname || user?.lastName || selectedAgentName.split(' ').slice(1).join(' ') || '').toUpperCase(),
       agent_email: customerData.agent_email || user?.email || '',
+      // Arabic agent data
+      agentarabicname: `${customerData.agentarabicfirstname || ''} ${customerData.agentarabiclastname || ''}`.trim(),
+      agentarabicfirstname: customerData.agentarabicfirstname || '',
+      agentarabiclastname: customerData.agentarabiclastname || '',
+      AGENTARABICNAME: `${customerData.agentarabicfirstname || ''} ${customerData.agentarabiclastname || ''}`.trim().toUpperCase(),
+      AGENTARABICFIRSTNAME: (customerData.agentarabicfirstname || '').toUpperCase(),
+      AGENTARABICLASTNAME: (customerData.agentarabiclastname || '').toUpperCase(),
       
       // System data (only for email templates)
       concerned_team: '',

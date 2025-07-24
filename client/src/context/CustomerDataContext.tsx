@@ -25,6 +25,9 @@ interface CustomerData {
   agentfirstname?: string;
   agentlastname?: string;
   agent_email?: string;
+  agentarabicname?: string;
+  agentarabicfirstname?: string;
+  agentarabiclastname?: string;
 }
 
 interface CustomerDataContextType {

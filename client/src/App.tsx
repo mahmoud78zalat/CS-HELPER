@@ -18,8 +18,12 @@ function Router() {
   React.useEffect(() => {
     if (user) {
       (window as any).getCurrentUser = () => user;
+      // Add authenticated class to body for Chatbase visibility
+      document.body.classList.add('user-authenticated');
     } else {
       (window as any).getCurrentUser = () => null;
+      // Remove authenticated class to hide Chatbase
+      document.body.classList.remove('user-authenticated');
     }
   }, [user]);
 

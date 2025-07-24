@@ -137,12 +137,14 @@ The system is designed to be deployed on Replit with automatic environment provi
 
 ## Recent Changes (January 24, 2025)
 
-**LATEST IMPROVEMENTS (January 24, 2025 - 5:00 AM)**:
+**LATEST IMPROVEMENTS (January 24, 2025 - 5:15 AM)**:
+✓ **AGENT ARABIC VARIABLES**: Updated agent information to use Arabic names with variables {agentarabicname}, {agentarabicfirstname}, {agentarabiclastname}
+✓ **SIMPLIFIED AGENT FIELDS**: Removed Agent Email and Agent Last Name fields as requested, kept only Arabic name fields
+✓ **CHATBASE AUTHENTICATION FIX**: Implemented comprehensive hiding for non-authenticated users using CSS classes and body authentication state
+✓ **VARIABLE SYSTEM ENHANCEMENT**: Added full support for all customer and agent variable formats including Arabic variants
 ✓ **PERSONAL NOTES SMOOTH FETCHING**: Enhanced auto-refresh with 30-second intervals and reduced re-rendering
 ✓ **SITE CONTENT SYNC**: Made site content accessible to all authenticated users for reading (admin-only for editing)
 ✓ **SIGN OUT FIX**: Fixed redirect to login page instead of 404 error after sign out
-✓ **CHATBASE INTEGRATION**: Added Chatbase chat widget with user identification for enhanced support
-✓ **SUPABASE PERSONAL NOTES**: Fixed lazy initialization preventing startup crashes
 
 **CRITICAL FIXES COMPLETED (January 23, 2025 - 8:30 PM)**:
 ✓ **PERSONAL NOTES DISPLAY FIX**: Fixed notes showing actual content/subject instead of generic "Note#1, Note#2" format

@@ -3,6 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <style>
+      /* Hide Chatbase by default until user authentication is verified */
+      [id*="chatbase"], 
+      [class*="chatbase"], 
+      iframe[src*="chatbase"],
+      [data-chatbase-id],
+      #chatbase-bubble-window,
+      #chatbase-bubble-button {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+      }
+      
+      /* Show Chatbase only when authenticated */
+      body.user-authenticated [id*="chatbase"], 
+      body.user-authenticated [class*="chatbase"], 
+      body.user-authenticated iframe[src*="chatbase"],
+      body.user-authenticated [data-chatbase-id],
+      body.user-authenticated #chatbase-bubble-window,
+      body.user-authenticated #chatbase-bubble-button {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
@@ -37,6 +62,8 @@
           const checkUserAndInit = () => {
             const currentUser = window.getCurrentUser && window.getCurrentUser();
             if (currentUser && currentUser.id) {
+              // User is authenticated - show chatbase
+              document.body.classList.add('user-authenticated');
               window.chatbase('setUserData', {
                 userId: currentUser.id,
                 email: currentUser.email,
@@ -44,11 +71,8 @@
               });
               console.log('Chatbase initialized for user:', currentUser.email);
             } else {
-              // Hide chatbase widget if no user
-              const chatbaseWidget = document.querySelector('#chatbase-widget, [id*="chatbase"]');
-              if (chatbaseWidget) {
-                chatbaseWidget.style.display = 'none';
-              }
+              // User is not authenticated - hide chatbase
+              document.body.classList.remove('user-authenticated');
             }
           };
           

@@ -174,41 +174,30 @@ export default function CustomerInfoPanel() {
           
           <div className="space-y-3">
             <div>
-              <Label className="text-xs font-medium text-slate-600 mb-1">Agent First Name</Label>
+              <Label className="text-xs font-medium text-slate-600 mb-1">Agent Arabic First Name</Label>
               <Input
                 type="text"
                 className="w-full text-sm"
-                placeholder="Agent first name"
-                value={customerData.agentfirstname || ''}
-                onChange={(e) => updateCustomerData('agentfirstname', e.target.value)}
+                placeholder="الاسم الأول للوكيل"
+                value={customerData.agentarabicfirstname || ''}
+                onChange={(e) => updateCustomerData('agentarabicfirstname', e.target.value)}
               />
             </div>
             
             <div>
-              <Label className="text-xs font-medium text-slate-600 mb-1">Agent Last Name</Label>
+              <Label className="text-xs font-medium text-slate-600 mb-1">Agent Arabic Last Name</Label>
               <Input
                 type="text"
                 className="w-full text-sm"
-                placeholder="Agent last name"
-                value={customerData.agentlastname || ''}
-                onChange={(e) => updateCustomerData('agentlastname', e.target.value)}
-              />
-            </div>
-            
-            <div>
-              <Label className="text-xs font-medium text-slate-600 mb-1">Agent Email</Label>
-              <Input
-                type="email"
-                className="w-full text-sm"
-                placeholder="agent@company.com"
-                value={customerData.agent_email || ''}
-                onChange={(e) => updateCustomerData('agent_email', e.target.value)}
+                placeholder="اسم العائلة للوكيل"
+                value={customerData.agentarabiclastname || ''}
+                onChange={(e) => updateCustomerData('agentarabiclastname', e.target.value)}
               />
             </div>
           </div>
           
           <p className="text-xs text-blue-600 mt-2">
-            These fields populate {'{agentfirstname}'}, {'{agentlastname}'}, and {'{agent_email}'} variables in templates
+            These fields populate {'{agentarabicfirstname}'}, {'{agentarabiclastname}'}, and {'{agentarabicname}'} variables in templates
           </p>
         </div>
         
