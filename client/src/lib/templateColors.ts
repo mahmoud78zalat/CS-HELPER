@@ -155,23 +155,110 @@ export const CATEGORY_COLORS: Record<string, TemplateColorConfig> = {
   }
 };
 
-// Helper functions
+// Helper functions with dynamic color assignment
 export function getGenreColor(genre: string): TemplateColorConfig {
   const normalizedGenre = genre.toLowerCase().trim();
-  return GENRE_COLORS[normalizedGenre] || {
-    background: 'bg-gray-100',
-    text: 'text-gray-800',
-    border: 'border-gray-200'
-  };
+  if (GENRE_COLORS[normalizedGenre]) {
+    return GENRE_COLORS[normalizedGenre];
+  }
+  
+  // Auto-assign colors for new genres
+  const newColor = generateColorForNewItem(normalizedGenre, 'genre');
+  GENRE_COLORS[normalizedGenre] = newColor;
+  
+  // Sync to Supabase automatically
+  syncColorsToSupabase();
+  
+  return newColor;
 }
 
 export function getCategoryColor(category: string): TemplateColorConfig {
   const normalizedCategory = category.toLowerCase().trim();
-  return CATEGORY_COLORS[normalizedCategory] || {
-    background: 'bg-slate-100',
-    text: 'text-slate-700',
-    border: 'border-slate-200'
+  if (CATEGORY_COLORS[normalizedCategory]) {
+    return CATEGORY_COLORS[normalizedCategory];
+  }
+  
+  // Auto-assign colors for new categories
+  const newColor = generateColorForNewItem(normalizedCategory, 'category');
+  CATEGORY_COLORS[normalizedCategory] = newColor;
+  
+  // Sync to Supabase automatically
+  syncColorsToSupabase();
+  
+  return newColor;
+}
+
+// Generate dynamic colors for new items
+function generateColorForNewItem(itemName: string, type: 'genre' | 'category'): TemplateColorConfig {
+  const colorPalette = [
+    { bg: 'bg-sky-100', text: 'text-sky-800', border: 'border-sky-200' },
+    { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
+    { bg: 'bg-violet-100', text: 'text-violet-800', border: 'border-violet-200' },
+    { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
+    { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
+    { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-200' },
+    { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200' },
+    { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' },
+    { bg: 'bg-lime-100', text: 'text-lime-800', border: 'border-lime-200' },
+    { bg: 'bg-fuchsia-100', text: 'text-fuchsia-800', border: 'border-fuchsia-200' }
+  ];
+  
+  // Use hash of item name to deterministically assign colors
+  const hash = itemName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const colorIndex = hash % colorPalette.length;
+  
+  return {
+    background: colorPalette[colorIndex].bg,
+    text: colorPalette[colorIndex].text,
+    border: colorPalette[colorIndex].border
   };
+}
+
+// Get all unique genres and categories from current color maps
+export function getAllGenres(): string[] {
+  return Object.keys(GENRE_COLORS);
+}
+
+export function getAllCategories(): string[] {
+  return Object.keys(CATEGORY_COLORS);
+}
+
+// Function to detect and register new genres/categories from templates
+export function updateColorsFromTemplates(templates: any[] = [], emailTemplates: any[] = []) {
+  let updated = false;
+  
+  // Check for new genres
+  const allGenres = new Set([
+    ...templates.map(t => t.genre?.toLowerCase().trim()).filter(Boolean),
+    ...emailTemplates.map(t => t.genre?.toLowerCase().trim()).filter(Boolean)
+  ]);
+  
+  allGenres.forEach(genre => {
+    if (!GENRE_COLORS[genre]) {
+      GENRE_COLORS[genre] = generateColorForNewItem(genre, 'genre');
+      updated = true;
+    }
+  });
+  
+  // Check for new categories
+  const allCategories = new Set([
+    ...templates.map(t => t.category?.toLowerCase().trim()).filter(Boolean),
+    ...emailTemplates.map(t => t.category?.toLowerCase().trim()).filter(Boolean)
+  ]);
+  
+  allCategories.forEach(category => {
+    if (!CATEGORY_COLORS[category]) {
+      CATEGORY_COLORS[category] = generateColorForNewItem(category, 'category');
+      updated = true;
+    }
+  });
+  
+  // Sync to Supabase if any new colors were added
+  if (updated) {
+    syncColorsToSupabase();
+  }
+  
+  return { updated, newGenres: allGenres.size, newCategories: allCategories.size };
 }
 
 // Function to get Tailwind color classes for badges

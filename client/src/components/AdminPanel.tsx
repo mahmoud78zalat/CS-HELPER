@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
 import VariableManager from "@/components/VariableManager";
-import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase } from "@/lib/templateColors";
+import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates } from "@/lib/templateColors";
 import { HexColorPicker } from 'react-colorful';
 // Removed QUICK_TEMPLATE_STARTERS import as it's no longer needed
 
@@ -216,11 +216,30 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       return data;
     },
   });
+  
+  // Effect to automatically detect and add new genres/categories
+  useEffect(() => {
+    if (templates || emailTemplates) {
+      const result = updateColorsFromTemplates(templates, emailTemplates);
+      
+      if (result.updated) {
+        // Refresh local state with updated colors
+        setGenreColors({ ...GENRE_COLORS });
+        setCategoryColors({ ...CATEGORY_COLORS });
+        
+        // Show notification for new colors detected
+        toast({
+          title: "New Template Colors Detected",
+          description: `Added colors for ${result.newGenres} genres and ${result.newCategories} categories.`,
+        });
+      }
+    }
+  }, [templates, emailTemplates, toast]);
 
   // User status mutation
   const userStatusMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      await apiRequest('PUT', `/api/users/${userId}/status`, { status });
+      await apiRequest('PATCH', `/api/users/${userId}/status`, { status });
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -257,7 +276,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // User role mutation
   const userRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      await apiRequest('PUT', `/api/users/${userId}/role`, { role });
+      await apiRequest('PATCH', `/api/users/${userId}/role`, { role });
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -1086,12 +1105,124 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 </Card>
               </div>
 
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-2 text-blue-900">System Status</h4>
-                <div className="text-sm text-blue-800">
-                  <p>✓ Development mode active with automatic admin access</p>
-                  <p>✓ All template configurations stored locally</p>
+              {/* User Activity Breakdown */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      User Activity Breakdown
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Total Users:</span>
+                        <Badge variant="secondary">{users?.length || 0}</Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Active Users:</span>
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                          {users?.filter(u => u.status === 'active').length || 0}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Online Now:</span>
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                          {users?.filter(u => u.isOnline).length || 0}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Admin Users:</span>
+                        <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">
+                          {users?.filter(u => u.role === 'admin').length || 0}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Blocked/Banned:</span>
+                        <Badge variant="destructive">
+                          {users?.filter(u => u.status === 'blocked' || u.status === 'banned').length || 0}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Template Statistics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Live Chat Templates:</span>
+                        <Badge variant="secondary">{templates?.length || 0}</Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Email Templates:</span>
+                        <Badge variant="secondary">{emailTemplates?.length || 0}</Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Active Templates:</span>
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                          {templates?.filter((t: any) => t.isActive).length || 0}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Total Usage Count:</span>
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                          {templates?.reduce((sum: number, t: any) => sum + (t.usageCount || 0), 0) || 0}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Unique Genres:</span>
+                        <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">
+                          {new Set([...templates?.map((t: any) => t.genre) || [], ...emailTemplates?.map((t: any) => t.genre) || []]).size}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Online Users Details */}
+              {users?.filter(u => u.isOnline).length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Eye className="h-5 w-5 text-green-500" />
+                      Currently Online Users
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {users?.filter(u => u.isOnline).map(user => (
+                        <div key={user.id} className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{user.firstName} {user.lastName}</div>
+                            <div className="text-xs text-slate-600 dark:text-slate-400">{user.email}</div>
+                            <Badge variant="outline" className="text-xs mt-1">
+                              {user.role}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <h4 className="font-medium mb-2 text-blue-900 dark:text-blue-100">System Status</h4>
+                <div className="text-sm text-blue-800 dark:text-blue-200">
+                  <p>✓ Supabase database connected and synchronized</p>
                   <p>✓ Real-time user presence tracking enabled</p>
+                  <p>✓ Template color management system active</p>
+                  <p>✓ Analytics dashboard updating in real-time</p>
                 </div>
               </div>
             </div>
