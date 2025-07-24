@@ -495,7 +495,9 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await this.client
       .from('site_content')
       .upsert({
-        ...content,
+        key: content.key,
+        content: content.content,
+        updated_by: content.updatedBy,
         updated_at: new Date().toISOString()
       })
       .select()
