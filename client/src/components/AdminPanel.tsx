@@ -18,12 +18,13 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { realTimeService } from "@/lib/realTimeService";
 import { 
   X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
-  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare
+  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette
 } from "lucide-react";
 import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
 import VariableManager from "@/components/VariableManager";
+import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase } from "@/lib/templateColors";
 // Removed QUICK_TEMPLATE_STARTERS import as it's no longer needed
 
 interface AdminPanelProps {
@@ -42,6 +43,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [showConfigManager, setShowConfigManager] = useState(false);
   const [showVariableManager, setShowVariableManager] = useState(false);
   const [siteContentValues, setSiteContentValues] = useState<{[key: string]: string}>({});
+  const [genreColors, setGenreColors] = useState(GENRE_COLORS);
+  const [categoryColors, setCategoryColors] = useState(CATEGORY_COLORS);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -491,6 +494,11 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <span className="hidden lg:inline">Template Management</span>
                 <span className="lg:hidden">Templates</span>
               </TabsTrigger>
+              <TabsTrigger value="colors" className="text-xs lg:text-sm p-2 lg:p-3">
+                <div className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2 bg-gradient-to-r from-red-400 to-blue-400 rounded-full"></div>
+                <span className="hidden lg:inline">Colors</span>
+                <span className="lg:hidden">Colors</span>
+              </TabsTrigger>
               <TabsTrigger value="analytics" className="text-xs lg:text-sm p-2 lg:p-3">
                 <Crown className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
                 <span className="hidden lg:inline">Analytics</span>
@@ -703,6 +711,152 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </Table>
                 </div>
               )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="colors" className="flex-1 overflow-y-auto">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Template Color Management</h3>
+                <p className="text-sm text-slate-600">Customize badge colors for genres and categories</p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Genre Colors */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      Genre Colors
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Configure colors for template genres</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {Object.entries(genreColors).map(([genre, colors]) => (
+                        <div key={genre} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <Badge className={`${colors.background} ${colors.text} ${colors.border} border`}>
+                              {genre}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className={`w-6 h-6 rounded-full ${colors.background.replace('100', '500')} border-2 border-white shadow-sm`}
+                              title={`Background: ${colors.background}, Text: ${colors.text}`}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                // Color picker functionality - would need a color picker component
+                                toast({
+                                  title: "Color Customization",
+                                  description: "Advanced color picker coming soon! Colors are currently auto-managed.",
+                                });
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Category Colors */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      Category Colors
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Configure colors for template categories</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {Object.entries(categoryColors).map(([category, colors]) => (
+                        <div key={category} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <Badge className={`${colors.background} ${colors.text} ${colors.border} border`}>
+                              {category}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className={`w-6 h-6 rounded-full ${colors.background.replace('50', '400')} border-2 border-white shadow-sm`}
+                              title={`Background: ${colors.background}, Text: ${colors.text}`}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                toast({
+                                  title: "Color Customization",
+                                  description: "Advanced color picker coming soon! Colors are currently auto-managed.",
+                                });
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
+                <Button
+                  onClick={async () => {
+                    const success = await syncColorsToSupabase();
+                    if (success) {
+                      toast({
+                        title: "Colors Synced",
+                        description: "Template colors have been synced to Supabase successfully.",
+                      });
+                    } else {
+                      toast({
+                        title: "Sync Failed",
+                        description: "Failed to sync colors to Supabase. Please try again.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Globe className="h-4 w-4" />
+                  Sync to Supabase
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Reset to default colors
+                    setGenreColors(GENRE_COLORS);
+                    setCategoryColors(CATEGORY_COLORS);
+                    toast({
+                      title: "Colors Reset",
+                      description: "Template colors have been reset to defaults.",
+                    });
+                  }}
+                >
+                  Reset to Defaults
+                </Button>
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Color System Information</h4>
+                <ul className="text-sm text-slate-600 space-y-1">
+                  <li>• Genre colors are used for template type badges (urgent, standard, greeting, etc.)</li>
+                  <li>• Category colors are used for template category badges (orders, delivery, technical, etc.)</li>
+                  <li>• Colors automatically sync to Supabase for consistency across all users</li>
+                  <li>• Changes apply immediately to all template cards and displays</li>
+                </ul>
+              </div>
             </div>
           </TabsContent>
 
