@@ -5,35 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <style>
       /* Hide Chatbase by default until user authentication is verified */
-      [id*="chatbase"], 
-      [class*="chatbase"], 
-      iframe[src*="chatbase"],
-      [data-chatbase-id],
-      #chatbase-bubble-window,
       #chatbase-bubble-button,
-      .chatbase-chat-iframe,
-      .chatbase-widget,
-      [data-widget="chatbase"] {
+      [id*="chatbase"]:not([id*="close"]):not([id*="minimize"]),
+      [class*="chatbase"]:not([class*="close"]):not([class*="minimize"]),
+      iframe[src*="chatbase"],
+      [data-chatbase-id] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
-        pointer-events: none !important;
       }
       
       /* Show Chatbase only when authenticated */
-      body.user-authenticated [id*="chatbase"], 
-      body.user-authenticated [class*="chatbase"], 
-      body.user-authenticated iframe[src*="chatbase"],
-      body.user-authenticated [data-chatbase-id],
-      body.user-authenticated #chatbase-bubble-window,
       body.user-authenticated #chatbase-bubble-button,
-      body.user-authenticated .chatbase-chat-iframe,
-      body.user-authenticated .chatbase-widget,
-      body.user-authenticated [data-widget="chatbase"] {
-        display: block !important;
+      body.user-authenticated [id*="chatbase"]:not([id*="close"]):not([id*="minimize"]),
+      body.user-authenticated [class*="chatbase"]:not([class*="close"]):not([class*="minimize"]),
+      body.user-authenticated iframe[src*="chatbase"],
+      body.user-authenticated [data-chatbase-id] {
+        display: initial !important;
         visibility: visible !important;
         opacity: 1 !important;
-        pointer-events: auto !important;
       }
     </style>
   </head>
@@ -41,87 +31,13 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Chatbase Integration -->
+    <!-- Chatbase Integration - Temporarily Disabled to Fix Auto-Opening Issue -->
+    <!-- 
     <script>
-    (function(){
-      if(!window.chatbase||window.chatbase("getState")!=="initialized"){
-        window.chatbase=(...arguments)=>{
-          if(!window.chatbase.q){window.chatbase.q=[]}
-          window.chatbase.q.push(arguments)
-        };
-        window.chatbase=new Proxy(window.chatbase,{
-          get(target,prop){
-            if(prop==="q"){return target.q}
-            return(...args)=>target(prop,...args)
-          }
-        })
-      }
-      
-      const onLoad=function(){
-        const script=document.createElement("script");
-        script.src="https://www.chatbase.co/embed.min.js";
-        script.id="rG3h170PKdOsKKTC078sk";
-        script.domain="www.chatbase.co";
-        document.body.appendChild(script);
-        
-        // Initialize user data when chatbase loads - only for signed-in users
-        script.onload = function() {
-          // Check if user is authenticated before initializing chatbase
-          const checkUserAndInit = () => {
-            const currentUser = window.getCurrentUser && window.getCurrentUser();
-            if (currentUser && currentUser.id) {
-              // User is authenticated - show chatbase
-              document.body.classList.add('user-authenticated');
-              
-              // Additional forced showing of chatbase elements
-              setTimeout(() => {
-                const chatbaseElements = document.querySelectorAll('[id*="chatbase"], [class*="chatbase"], iframe[src*="chatbase"], [data-chatbase-id], #chatbase-bubble-window, #chatbase-bubble-button, .chatbase-chat-iframe, .chatbase-widget, [data-widget="chatbase"]');
-                chatbaseElements.forEach(el => {
-                  el.style.display = 'block';
-                  el.style.visibility = 'visible';
-                  el.style.opacity = '1';
-                  el.style.pointerEvents = 'auto';
-                });
-              }, 500);
-              
-              window.chatbase('setUserData', {
-                userId: currentUser.id,
-                email: currentUser.email,
-                name: `${currentUser.firstName} ${currentUser.lastName}`
-              });
-              console.log('Chatbase initialized for user:', currentUser.email);
-            } else {
-              // User is not authenticated - hide chatbase
-              document.body.classList.remove('user-authenticated');
-              
-              // Additional forced hiding of chatbase elements
-              setTimeout(() => {
-                const chatbaseElements = document.querySelectorAll('[id*="chatbase"], [class*="chatbase"], iframe[src*="chatbase"], [data-chatbase-id], #chatbase-bubble-window, #chatbase-bubble-button, .chatbase-chat-iframe, .chatbase-widget, [data-widget="chatbase"]');
-                chatbaseElements.forEach(el => {
-                  el.style.display = 'none';
-                  el.style.visibility = 'hidden';
-                  el.style.opacity = '0';
-                  el.style.pointerEvents = 'none';
-                });
-              }, 100);
-            }
-          };
-          
-          // Initial check
-          setTimeout(checkUserAndInit, 1000);
-          
-          // Re-check every 5 seconds to catch authentication changes
-          setInterval(checkUserAndInit, 5000);
-        };
-      };
-      
-      if(document.readyState==="complete"){
-        onLoad()
-      }else{
-        window.addEventListener("load",onLoad)
-      }
-    })();
+    // Chatbase will be re-enabled after fixing the auto-opening issue
+    console.log('Chatbase temporarily disabled to prevent auto-opening');
     </script>
+    -->
     
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
