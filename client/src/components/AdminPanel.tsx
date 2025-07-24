@@ -48,8 +48,82 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [categoryColors, setCategoryColors] = useState(CATEGORY_COLORS);
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
   const [tempColor, setTempColor] = useState<string>('#3b82f6');
+  const [editingColorType, setEditingColorType] = useState<'genre' | 'category'>('genre');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Helper function to convert hex color to closest Tailwind color
+  const hexToTailwindColor = (hex: string): { background: string; text: string; border: string } => {
+    // Simple mapping for common colors - in a real app, you'd use a more sophisticated color matching algorithm
+    const colorMap: Record<string, { bg: string; text: string; border: string }> = {
+      '#ef4444': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' },
+      '#f97316': { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
+      '#eab308': { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
+      '#22c55e': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },
+      '#3b82f6': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
+      '#8b5cf6': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
+      '#ec4899': { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200' },
+      '#06b6d4': { bg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-200' },
+      '#84cc16': { bg: 'bg-lime-100', text: 'text-lime-800', border: 'border-lime-200' },
+      '#f59e0b': { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200' },
+      '#10b981': { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
+      '#6366f1': { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' },
+      '#14b8a6': { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
+      '#e11d48': { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-200' },
+      '#7c3aed': { bg: 'bg-violet-100', text: 'text-violet-800', border: 'border-violet-200' },
+      '#6b7280': { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' },
+    };
+
+    // Find closest color (simplified)
+    const closest = Object.keys(colorMap).reduce((closest, color) => {
+      const distance = Math.abs(parseInt(hex.slice(1), 16) - parseInt(color.slice(1), 16));
+      const closestDistance = Math.abs(parseInt(hex.slice(1), 16) - parseInt(closest.slice(1), 16));
+      return distance < closestDistance ? color : closest;
+    });
+
+    const colorConfig = colorMap[closest] || { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' };
+    return {
+      background: colorConfig.bg,
+      text: colorConfig.text,
+      border: colorConfig.border
+    };
+  };
+
+  // Function to update genre color
+  const updateGenreColor = (genre: string, color: string) => {
+    const tailwindColors = hexToTailwindColor(color);
+    setGenreColors(prev => ({
+      ...prev,
+      [genre]: tailwindColors
+    }));
+    setColorPickerOpen(null);
+    toast({
+      title: "Color Updated",
+      description: `${genre} color has been updated successfully.`,
+    });
+  };
+
+  // Function to update category color
+  const updateCategoryColor = (category: string, color: string) => {
+    const tailwindColors = hexToTailwindColor(color);
+    setCategoryColors(prev => ({
+      ...prev,
+      [category]: tailwindColors
+    }));
+    setColorPickerOpen(null);
+    toast({
+      title: "Color Updated", 
+      description: `${category} color has been updated successfully.`,
+    });
+  };
+
+  // Function to open color picker
+  const openColorPicker = (key: string, type: 'genre' | 'category') => {
+    setEditingColorType(type);
+    setColorPickerOpen(key);
+    // Set initial color based on current color
+    setTempColor('#3b82f6'); // Default blue
+  };
 
   // Users query - always call hooks at top level
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
@@ -737,7 +811,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   <CardContent>
                     <div className="space-y-3">
                       {Object.entries(genreColors).map(([genre, colors]) => (
-                        <div key={genre} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div key={genre} className="flex items-center justify-between p-3 border dark:border-slate-600 rounded-lg">
                           <div className="flex items-center gap-3">
                             <Badge className={`${colors.background} ${colors.text} ${colors.border} border`}>
                               {genre}
@@ -745,19 +819,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           </div>
                           <div className="flex items-center gap-2">
                             <div 
-                              className={`w-6 h-6 rounded-full ${colors.background.replace('100', '500')} border-2 border-white shadow-sm`}
+                              className={`w-6 h-6 rounded-full ${colors.background.replace('100', '500')} border-2 border-white dark:border-slate-300 shadow-sm`}
                               title={`Background: ${colors.background}, Text: ${colors.text}`}
                             />
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                // Color picker functionality - would need a color picker component
-                                toast({
-                                  title: "Color Customization",
-                                  description: "Advanced color picker coming soon! Colors are currently auto-managed.",
-                                });
-                              }}
+                              onClick={() => openColorPicker(genre, 'genre')}
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
@@ -780,7 +848,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   <CardContent>
                     <div className="space-y-3">
                       {Object.entries(categoryColors).map(([category, colors]) => (
-                        <div key={category} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div key={category} className="flex items-center justify-between p-3 border dark:border-slate-600 rounded-lg">
                           <div className="flex items-center gap-3">
                             <Badge className={`${colors.background} ${colors.text} ${colors.border} border`}>
                               {category}
@@ -788,18 +856,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           </div>
                           <div className="flex items-center gap-2">
                             <div 
-                              className={`w-6 h-6 rounded-full ${colors.background.replace('100', '500')} border-2 border-white shadow-sm`}
+                              className={`w-6 h-6 rounded-full ${colors.background.replace('100', '500')} border-2 border-white dark:border-slate-300 shadow-sm`}
                               title={`Background: ${colors.background}, Text: ${colors.text}`}
                             />
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                toast({
-                                  title: "Advanced Color Picker",
-                                  description: `Color picker for ${category} is now available! Click the edit button to customize colors.`,
-                                });
-                              }}
+                              onClick={() => openColorPicker(category, 'category')}
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
@@ -812,29 +875,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
-                <Button
-                  onClick={async () => {
-                    const success = await syncColorsToSupabase();
-                    if (success) {
-                      toast({
-                        title: "Colors Synced",
-                        description: "Template colors have been synced to Supabase successfully.",
-                      });
-                    } else {
-                      toast({
-                        title: "Sync Failed",
-                        description: "Failed to sync colors to Supabase. Please try again.",
-                        variant: "destructive",
-                      });
-                    }
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <Globe className="h-4 w-4" />
-                  Sync to Supabase
-                </Button>
-                
+              <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -851,15 +892,79 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 </Button>
               </div>
 
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Color System Information</h4>
-                <ul className="text-sm text-slate-600 space-y-1">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <h4 className="font-medium mb-2 dark:text-blue-100">Color System Information</h4>
+                <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1">
                   <li>• Genre colors are used for template type badges (urgent, standard, greeting, etc.)</li>
                   <li>• Category colors are used for template category badges (orders, delivery, technical, etc.)</li>
-                  <li>• Colors automatically sync to Supabase for consistency across all users</li>
+                  <li>• Colors sync automatically when changed - no manual sync required</li>
                   <li>• Changes apply immediately to all template cards and displays</li>
+                  <li>• Use the color picker to customize any badge color to match your brand</li>
                 </ul>
               </div>
+
+              {/* Color Picker Modal */}
+              {colorPickerOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold dark:text-white">
+                        Choose Color for "{colorPickerOpen}"
+                      </h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setColorPickerOpen(null)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        <HexColorPicker
+                          color={tempColor}
+                          onChange={setTempColor}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-8 h-8 rounded border-2 border-gray-300"
+                          style={{ backgroundColor: tempColor }}
+                        />
+                        <Input
+                          value={tempColor}
+                          onChange={(e) => setTempColor(e.target.value)}
+                          placeholder="#3b82f6"
+                          className="font-mono text-sm"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => {
+                            if (editingColorType === 'genre') {
+                              updateGenreColor(colorPickerOpen, tempColor);
+                            } else {
+                              updateCategoryColor(colorPickerOpen, tempColor);
+                            }
+                          }}
+                          className="flex-1"
+                        >
+                          Apply Color
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setColorPickerOpen(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </TabsContent>
 
