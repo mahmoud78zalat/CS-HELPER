@@ -9,6 +9,83 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
+    <!-- Chatbase Integration with User Verification -->
+    <script>
+      let chatbaseLoaded = false;
+      
+      const loadChatbaseForAuthenticated = () => {
+        const currentUser = window.getCurrentUser && window.getCurrentUser();
+        
+        if (currentUser && currentUser.id && !chatbaseLoaded) {
+          // Load chatbase with user verification
+          (function(){
+            if(!window.chatbase||window.chatbase("getState")!=="initialized"){
+              window.chatbase=(...arguments)=>{
+                if(!window.chatbase.q){window.chatbase.q=[]}
+                window.chatbase.q.push(arguments)
+              };
+              window.chatbase=new Proxy(window.chatbase,{
+                get(target,prop){
+                  if(prop==="q"){return target.q}
+                  return(...args)=>target(prop,...args)
+                }
+              })
+            }
+            
+            const onLoad = async function(){
+              // Get verification hash from backend
+              try {
+                const response = await fetch(`/api/chatbase/verify-hash/${currentUser.id}`);
+                const { hash } = await response.json();
+                
+                const script = document.createElement("script");
+                script.src = "https://www.chatbase.co/embed.min.js";
+                script.id = "rG3h170PKdOsKKTC078sk";
+                script.domain = "www.chatbase.co";
+                document.body.appendChild(script);
+                
+                // Set user identification with hash after script loads
+                setTimeout(() => {
+                  if (window.chatbase) {
+                    window.chatbase("setUserId", currentUser.id, hash);
+                    console.log('Chatbase loaded with verified user ID:', currentUser.id);
+                  }
+                }, 1000);
+              } catch (error) {
+                console.error('Failed to get chatbase verification hash:', error);
+                // Fallback to load without verification
+                const script = document.createElement("script");
+                script.src = "https://www.chatbase.co/embed.min.js";
+                script.id = "rG3h170PKdOsKKTC078sk";
+                script.domain = "www.chatbase.co";
+                document.body.appendChild(script);
+              }
+            };
+            
+            if(document.readyState==="complete"){
+              onLoad();
+            } else {
+              window.addEventListener("load", onLoad);
+            }
+          })();
+          
+          chatbaseLoaded = true;
+        }
+      };
+      
+      // Check for authentication until user is found
+      const authInterval = setInterval(() => {
+        const currentUser = window.getCurrentUser && window.getCurrentUser();
+        if (currentUser && currentUser.id) {
+          loadChatbaseForAuthenticated();
+          clearInterval(authInterval);
+        }
+      }, 2000);
+      
+      // Initial check
+      setTimeout(loadChatbaseForAuthenticated, 1000);
+    </script>
+    
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>

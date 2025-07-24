@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
+import { createHmac } from "crypto";
 import { storage } from "./storage";
 import { SupabasePersonalNotesStorage } from "./supabase-personal-notes";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -316,6 +317,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting personal note:', error);
       res.status(500).json({ message: 'Failed to delete note' });
+    }
+  });
+
+  // Chatbase verification hash endpoint
+  app.get('/api/chatbase/verify-hash/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const secret = 'mvdtvo2wat99uoda8ce0duge4c6krljv'; // Verification secret key
+      
+      // Generate hash for user verification
+      const hash = createHmac('sha256', secret).update(userId).digest('hex');
+      
+      res.json({ hash, userId });
+    } catch (error) {
+      console.error("Error generating chatbase hash:", error);
+      res.status(500).json({ message: "Failed to generate verification hash" });
     }
   });
 
