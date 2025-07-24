@@ -24,6 +24,11 @@ const TEMPLATE_VARIABLES = {
     { key: "customer_name", label: "Customer Name", placeholder: "John Doe" },
     { key: "customername", label: "Customer Name", placeholder: "John Doe" },
     { key: "CUSTOMER_NAME", label: "Customer Name (Uppercase)", placeholder: "JOHN DOE" },
+    { key: "CUSTOMERNAME", label: "Customer Name (Uppercase)", placeholder: "JOHN DOE" },
+    { key: "customerfirstname", label: "Customer First Name", placeholder: "John" },
+    { key: "customerlastname", label: "Customer Last Name", placeholder: "Doe" },
+    { key: "CUSTOMERFIRSTNAME", label: "Customer First Name (Uppercase)", placeholder: "JOHN" },
+    { key: "CUSTOMERLASTNAME", label: "Customer Last Name (Uppercase)", placeholder: "DOE" },
     { key: "customer_email", label: "Customer Email", placeholder: "john@example.com" },
     { key: "CUSTOMER_EMAIL", label: "Customer Email (Uppercase)", placeholder: "JOHN@EXAMPLE.COM" },
     { key: "customer_phone", label: "Customer Phone", placeholder: "+971501234567" },
@@ -49,6 +54,11 @@ const TEMPLATE_VARIABLES = {
     { key: "agent_name", label: "Agent Name", placeholder: "Support Agent" },
     { key: "agentname", label: "Agent Name", placeholder: "Support Agent" },
     { key: "AGENTNAME", label: "Agent Name (Uppercase)", placeholder: "SUPPORT AGENT" },
+    { key: "agentfirstname", label: "Agent First Name", placeholder: "John" },
+    { key: "agentlastname", label: "Agent Last Name", placeholder: "Doe" },
+    { key: "AGENTFIRSTNAME", label: "Agent First Name (Uppercase)", placeholder: "JOHN" },
+    { key: "AGENTLASTNAME", label: "Agent Last Name (Uppercase)", placeholder: "DOE" },
+    { key: "agent_email", label: "Agent Email", placeholder: "agent@company.com" },
     { key: "concerned_team", label: "Concerned Team", placeholder: "Finance Team" },
     { key: "company_name", label: "Company Name", placeholder: "Brands For Less" },
     { key: "support_email", label: "Support Email", placeholder: "support@brandsforless.com" },
@@ -110,15 +120,21 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       const newValues = {
         ...prev,
         // Customer data - updates automatically when customerData changes
-        customer_name: customerData.customer_name || '',
-        customername: customerData.customer_name || '', // Support [customername] format
-        CUSTOMER_NAME: customerData.customer_name || '', // Uppercase version
+        customer_name: customerData.customer_name || customerData.customername || '',
+        customername: customerData.customer_name || customerData.customername || '',
+        CUSTOMER_NAME: (customerData.customer_name || customerData.customername || '').toUpperCase(),
+        CUSTOMERNAME: (customerData.customer_name || customerData.customername || '').toUpperCase(),
+        customerfirstname: customerData.customerfirstname || (customerData.customer_name || '').split(' ')[0] || '',
+        customerlastname: customerData.customerlastname || (customerData.customer_name || '').split(' ').slice(1).join(' ') || '',
+        CUSTOMERFIRSTNAME: (customerData.customerfirstname || (customerData.customer_name || '').split(' ')[0] || '').toUpperCase(),
+        CUSTOMERLASTNAME: (customerData.customerlastname || (customerData.customer_name || '').split(' ').slice(1).join(' ') || '').toUpperCase(),
         customer_email: customerData.customer_email || '',
-        CUSTOMER_EMAIL: customerData.customer_email || '', // Uppercase version
+        CUSTOMER_EMAIL: (customerData.customer_email || '').toUpperCase(),
         customer_phone: customerData.customer_phone || '',
-        CUSTOMER_PHONE: customerData.customer_phone || '', // Uppercase version
+        CUSTOMER_PHONE: customerData.customer_phone || '',
+        customer_address: customerData.customer_address || '',
         gender: customerData.gender || '',
-        GENDER: customerData.gender || '', // Uppercase version
+        GENDER: (customerData.gender || '').toUpperCase(),
         
         // Order data - updates automatically when customerData changes
         order_id: customerData.order_id || '',
@@ -132,10 +148,15 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
         waiting_time: customerData.waiting_time || '2-3 business days',
         WAITING_TIME: customerData.waiting_time || '2-3 business days', // Uppercase version
         
-        // System data
-        agent_name: selectedAgentName,
-        agentname: selectedAgentName, // Support both formats
-        AGENTNAME: selectedAgentName, // Support uppercase
+        // System data - Agent information
+        agent_name: customerData.agent_name || selectedAgentName,
+        agentname: customerData.agentname || selectedAgentName,
+        AGENTNAME: (customerData.agentname || selectedAgentName).toUpperCase(),
+        agentfirstname: customerData.agentfirstname || user?.firstName || selectedAgentName.split(' ')[0] || '',
+        agentlastname: customerData.agentlastname || user?.lastName || selectedAgentName.split(' ').slice(1).join(' ') || '',
+        AGENTFIRSTNAME: (customerData.agentfirstname || user?.firstName || selectedAgentName.split(' ')[0] || '').toUpperCase(),
+        AGENTLASTNAME: (customerData.agentlastname || user?.lastName || selectedAgentName.split(' ').slice(1).join(' ') || '').toUpperCase(),
+        agent_email: customerData.agent_email || user?.email || '',
         company_name: 'Brands For Less',
         support_email: 'support@brandsforless.com',
         business_hours: '9 AM - 6 PM, Sunday - Thursday',

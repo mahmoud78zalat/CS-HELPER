@@ -31,9 +31,10 @@
         script.domain="www.chatbase.co";
         document.body.appendChild(script);
         
-        // Initialize user data when chatbase loads (without verification for now)
+        // Initialize user data when chatbase loads - only for signed-in users
         script.onload = function() {
-          setTimeout(() => {
+          // Check if user is authenticated before initializing chatbase
+          const checkUserAndInit = () => {
             const currentUser = window.getCurrentUser && window.getCurrentUser();
             if (currentUser && currentUser.id) {
               window.chatbase('setUserData', {
@@ -41,8 +42,21 @@
                 email: currentUser.email,
                 name: `${currentUser.firstName} ${currentUser.lastName}`
               });
+              console.log('Chatbase initialized for user:', currentUser.email);
+            } else {
+              // Hide chatbase widget if no user
+              const chatbaseWidget = document.querySelector('#chatbase-widget, [id*="chatbase"]');
+              if (chatbaseWidget) {
+                chatbaseWidget.style.display = 'none';
+              }
             }
-          }, 1000);
+          };
+          
+          // Initial check
+          setTimeout(checkUserAndInit, 1000);
+          
+          // Re-check every 5 seconds to catch authentication changes
+          setInterval(checkUserAndInit, 5000);
         };
       };
       

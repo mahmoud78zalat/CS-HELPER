@@ -2,6 +2,9 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 
 interface CustomerData {
   customer_name?: string;
+  customername?: string; // Alternative format
+  customerfirstname?: string;
+  customerlastname?: string;
   customer_phone?: string;
   customer_email?: string;
   customer_country?: string;
@@ -16,6 +19,12 @@ interface CustomerData {
   delivery_date?: string;
   waiting_time?: string;
   language?: 'en' | 'ar'; // Add language preference for live chat templates
+  // Agent data
+  agent_name?: string;
+  agentname?: string;
+  agentfirstname?: string;
+  agentlastname?: string;
+  agent_email?: string;
 }
 
 interface CustomerDataContextType {

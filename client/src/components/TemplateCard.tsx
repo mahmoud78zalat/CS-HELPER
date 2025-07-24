@@ -30,11 +30,18 @@ export default function TemplateCard({ template }: TemplateCardProps) {
     
     const variables = {
       ...customerData,
-      // Customer data with uppercase variants
-      customer_name: customerData.customer_name || '',
-      CUSTOMER_NAME: customerData.customer_name || '',
+      // Customer data with all variants
+      customer_name: customerData.customer_name || customerData.customername || '',
+      customername: customerData.customer_name || customerData.customername || '',
+      CUSTOMER_NAME: (customerData.customer_name || customerData.customername || '').toUpperCase(),
+      CUSTOMERNAME: (customerData.customer_name || customerData.customername || '').toUpperCase(),
+      customerfirstname: customerData.customerfirstname || (customerData.customer_name || '').split(' ')[0] || '',
+      customerlastname: customerData.customerlastname || (customerData.customer_name || '').split(' ').slice(1).join(' ') || '',
+      CUSTOMERFIRSTNAME: (customerData.customerfirstname || (customerData.customer_name || '').split(' ')[0] || '').toUpperCase(),
+      CUSTOMERLASTNAME: (customerData.customerlastname || (customerData.customer_name || '').split(' ').slice(1).join(' ') || '').toUpperCase(),
+      
       customer_email: customerData.customer_email || '',
-      CUSTOMER_EMAIL: customerData.customer_email || '',
+      CUSTOMER_EMAIL: (customerData.customer_email || '').toUpperCase(),
       customer_phone: customerData.customer_phone || '',
       CUSTOMER_PHONE: customerData.customer_phone || '',
       
@@ -45,10 +52,15 @@ export default function TemplateCard({ template }: TemplateCardProps) {
       AWB_NUMBER: customerData.awb_number || '',
       
       // Agent data with all variants
-      agent_name: selectedAgentName,
-      AGENT_NAME: selectedAgentName,
-      agentname: selectedAgentName,
-      AGENTNAME: selectedAgentName,
+      agent_name: customerData.agent_name || selectedAgentName,
+      agentname: customerData.agentname || selectedAgentName,
+      AGENT_NAME: (customerData.agent_name || selectedAgentName).toUpperCase(),
+      AGENTNAME: (customerData.agentname || selectedAgentName).toUpperCase(),
+      agentfirstname: customerData.agentfirstname || (user?.firstName || selectedAgentName.split(' ')[0] || ''),
+      agentlastname: customerData.agentlastname || (user?.lastName || selectedAgentName.split(' ').slice(1).join(' ') || ''),
+      AGENTFIRSTNAME: (customerData.agentfirstname || user?.firstName || selectedAgentName.split(' ')[0] || '').toUpperCase(),
+      AGENTLASTNAME: (customerData.agentlastname || user?.lastName || selectedAgentName.split(' ').slice(1).join(' ') || '').toUpperCase(),
+      agent_email: customerData.agent_email || user?.email || '',
       
       // System data (only for email templates)
       concerned_team: '',

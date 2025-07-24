@@ -167,6 +167,50 @@ export default function CustomerInfoPanel() {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Agent Information Section */}
+        <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <Label className="text-xs font-semibold text-blue-700 mb-3 block">Agent Information</Label>
+          
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs font-medium text-slate-600 mb-1">Agent First Name</Label>
+              <Input
+                type="text"
+                className="w-full text-sm"
+                placeholder="Agent first name"
+                value={customerData.agentfirstname || ''}
+                onChange={(e) => updateCustomerData('agentfirstname', e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <Label className="text-xs font-medium text-slate-600 mb-1">Agent Last Name</Label>
+              <Input
+                type="text"
+                className="w-full text-sm"
+                placeholder="Agent last name"
+                value={customerData.agentlastname || ''}
+                onChange={(e) => updateCustomerData('agentlastname', e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <Label className="text-xs font-medium text-slate-600 mb-1">Agent Email</Label>
+              <Input
+                type="email"
+                className="w-full text-sm"
+                placeholder="agent@company.com"
+                value={customerData.agent_email || ''}
+                onChange={(e) => updateCustomerData('agent_email', e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <p className="text-xs text-blue-600 mt-2">
+            These fields populate {'{agentfirstname}'}, {'{agentlastname}'}, and {'{agent_email}'} variables in templates
+          </p>
+        </div>
         
         <Button 
           onClick={clearCustomerData}
