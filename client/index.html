@@ -25,7 +25,7 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Chatbase Integration - Normal Bubble Method with No Auto-Open -->
+    <!-- Chatbase Integration - Normal Implementation -->
     <script>
       let chatbaseLoaded = false;
       
@@ -33,15 +33,7 @@
         const currentUser = window.getCurrentUser && window.getCurrentUser();
         
         if (currentUser && currentUser.id && !chatbaseLoaded) {
-          // Configure chatbase to disable auto-opening
-          window.chatbaseConfig = {
-            chatbotId: 'rG3h170PKdOsKKTC078sk',
-            styles: {
-              autoOpenChatWindowAfter: -1, // Negative value disables auto-opening
-            }
-          };
-          
-          // User is authenticated - load normal chatbase bubble
+          // Load normal chatbase - no special configuration
           const script = document.createElement('script');
           script.src = 'https://www.chatbase.co/embed.min.js';
           script.setAttribute('chatbotId', 'rG3h170PKdOsKKTC078sk');
@@ -52,7 +44,7 @@
           document.body.classList.add('user-authenticated');
           chatbaseLoaded = true;
           
-          console.log('Chatbase bubble loaded (no auto-open) for authenticated user:', currentUser.email);
+          console.log('Chatbase loaded normally for authenticated user:', currentUser.email);
         } else if (!currentUser || !currentUser.id) {
           document.body.classList.remove('user-authenticated');
         }
