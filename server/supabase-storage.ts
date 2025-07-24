@@ -492,22 +492,26 @@ export class SupabaseStorage implements IStorage {
   }
 
   async upsertSiteContent(content: InsertSiteContent): Promise<SiteContent> {
+    console.log('[SupabaseStorage] Upserting site content:', content.key);
+    
+    // Use UPDATE with WHERE clause since we know the record exists
     const { data, error } = await this.client
       .from('site_content')
-      .upsert({
-        key: content.key,
+      .update({
         content: content.content,
         updated_by: content.updatedBy,
         updated_at: new Date().toISOString()
       })
+      .eq('key', content.key)
       .select()
       .single();
 
     if (error) {
-      console.error('[SupabaseStorage] Error upserting site content:', error);
+      console.error('[SupabaseStorage] Error updating site content:', error);
       throw error;
     }
 
+    console.log('[SupabaseStorage] Successfully updated site content:', data);
     return this.mapSupabaseSiteContent(data);
   }
 
