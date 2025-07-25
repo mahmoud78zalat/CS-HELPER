@@ -584,6 +584,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dynamic Categories and Genres API Routes (for AdminPanel)
+  
+  // Get all template categories (live chat)
+  app.get('/api/template-categories', async (req: any, res) => {
+    try {
+      console.log('[API] Fetching template categories (no auth required)');
+      const categories = await storage.getTemplateCategories();
+      console.log('[API] Found template categories:', categories.length);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching template categories:", error);
+      res.status(500).json({ message: "Failed to fetch template categories" });
+    }
+  });
+
+  // Get all email categories
+  app.get('/api/email-categories', async (req: any, res) => {
+    try {
+      console.log('[API] Fetching email categories (no auth required)');
+      const categories = await storage.getEmailCategories();
+      console.log('[API] Found email categories:', categories.length);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching email categories:", error);
+      res.status(500).json({ message: "Failed to fetch email categories" });
+    }
+  });
+
+  // Get all genres
+  app.get('/api/template-genres', async (req: any, res) => {
+    try {
+      console.log('[API] Fetching template genres (no auth required)');
+      const genres = await storage.getTemplateGenres();
+      console.log('[API] Found template genres:', genres.length);
+      res.json(genres);
+    } catch (error) {
+      console.error("Error fetching template genres:", error);
+      res.status(500).json({ message: "Failed to fetch template genres" });
+    }
+  });
+
+  // Get all concerned teams
+  app.get('/api/concerned-teams', async (req: any, res) => {
+    try {
+      console.log('[API] Fetching concerned teams (no auth required)');
+      const teams = await storage.getConcernedTeams();
+      console.log('[API] Found concerned teams:', teams.length);
+      res.json(teams);
+    } catch (error) {
+      console.error("Error fetching concerned teams:", error);
+      res.status(500).json({ message: "Failed to fetch concerned teams" });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
 

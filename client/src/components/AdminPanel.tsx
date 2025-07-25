@@ -52,19 +52,16 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const { data: dynamicGenres = [], isLoading: genresLoading, refetch: refetchGenres } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
     queryKey: ['/api/template-genres'],
     staleTime: 0,
-    cacheTime: 0,
   });
   
   const { data: dynamicEmailCategories = [], isLoading: emailCategoriesLoading, refetch: refetchEmailCategories } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
     queryKey: ['/api/email-categories'],
     staleTime: 0,
-    cacheTime: 0,
   });
   
   const { data: dynamicTemplateCategories = [], isLoading: templateCategoriesLoading, refetch: refetchTemplateCategories } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
     queryKey: ['/api/template-categories'],
     staleTime: 0,
-    cacheTime: 0,
   });
 
   // Force refetch on component mount
@@ -72,14 +69,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     refetchGenres();
     refetchEmailCategories();
     refetchTemplateCategories();
-  }, []);
+  }, [refetchGenres, refetchEmailCategories, refetchTemplateCategories]);
 
   // Debug logging
   useEffect(() => {
     console.log('[AdminPanel] Dynamic data status:', {
-      genres: { count: dynamicGenres.length, loading: genresLoading, data: dynamicGenres },
-      emailCategories: { count: dynamicEmailCategories.length, loading: emailCategoriesLoading, data: dynamicEmailCategories },
-      templateCategories: { count: dynamicTemplateCategories.length, loading: templateCategoriesLoading, data: dynamicTemplateCategories }
+      genres: { count: (dynamicGenres as any[]).length, loading: genresLoading, data: dynamicGenres },
+      emailCategories: { count: (dynamicEmailCategories as any[]).length, loading: emailCategoriesLoading, data: dynamicEmailCategories },
+      templateCategories: { count: (dynamicTemplateCategories as any[]).length, loading: templateCategoriesLoading, data: dynamicTemplateCategories }
     });
   }, [dynamicGenres, dynamicEmailCategories, dynamicTemplateCategories, genresLoading, emailCategoriesLoading, templateCategoriesLoading]);
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
@@ -105,7 +102,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   useEffect(() => {
     // Initialize genre colors from dynamic data
     const initialGenreColors: Record<string, any> = {};
-    dynamicGenres.forEach(genre => {
+    (dynamicGenres as any[]).forEach(genre => {
       if (!genreColors[genre.name.toLowerCase()]) {
         // Generate or get existing color
         initialGenreColors[genre.name.toLowerCase()] = GENRE_COLORS[genre.name.toLowerCase()] || {
@@ -118,7 +115,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     
     // Initialize category colors from both email and template categories
     const initialCategoryColors: Record<string, any> = {};
-    [...dynamicEmailCategories, ...dynamicTemplateCategories].forEach(category => {
+    [...(dynamicEmailCategories as any[]), ...(dynamicTemplateCategories as any[])].forEach(category => {
       if (!categoryColors[category.name.toLowerCase()]) {
         initialCategoryColors[category.name.toLowerCase()] = CATEGORY_COLORS[category.name.toLowerCase()] || {
           background: 'bg-green-100 dark:bg-green-900',
@@ -135,7 +132,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     if (Object.keys(initialCategoryColors).length > 0) {
       setCategoryColors(prev => ({ ...prev, ...initialCategoryColors }));
     }
-  }, [dynamicGenres, dynamicEmailCategories, dynamicTemplateCategories]);
+  }, [dynamicGenres, dynamicEmailCategories, dynamicTemplateCategories, genreColors, categoryColors]);
 
   // Helper function to convert hex color to closest Tailwind color with accurate color matching
   const hexToTailwindColor = (hex: string): { background: string; text: string; border: string } => {
@@ -1493,12 +1490,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         <p className="text-sm text-slate-500 text-center py-4">
                           Loading genres...
                         </p>
-                      ) : dynamicGenres.length === 0 ? (
+                      ) : (dynamicGenres as any[]).length === 0 ? (
                         <p className="text-sm text-slate-500 text-center py-4">
                           No genres found. Database contains data but API may have issues.
                         </p>
                       ) : (
-                        dynamicGenres.map((genre) => {
+                        (dynamicGenres as any[]).map((genre: any) => {
                           const genreKey = genre.name.toLowerCase();
                           const colors = genreColors[genreKey] || {
                             background: 'bg-blue-100 dark:bg-blue-900',
@@ -1552,7 +1549,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         <p className="text-sm text-slate-500 text-center py-4">
                           Loading categories...
                         </p>
-                      ) : [...dynamicTemplateCategories, ...dynamicEmailCategories].length === 0 ? (
+                      ) : [...(dynamicTemplateCategories as any[]), ...(dynamicEmailCategories as any[])].length === 0 ? (
                         <p className="text-sm text-slate-500 text-center py-4">
                           No categories found. Database contains data but API may have issues.
                         </p>
@@ -1560,10 +1557,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         // Combine and deduplicate categories from both sources
                         Array.from(
                           new Map(
-                            [...dynamicTemplateCategories, ...dynamicEmailCategories]
-                              .map(cat => [cat.name.toLowerCase(), cat])
+                            [...(dynamicTemplateCategories as any[]), ...(dynamicEmailCategories as any[])]
+                              .map((cat: any) => [cat.name.toLowerCase(), cat])
                           ).values()
-                        ).map((category) => {
+                        ).map((category: any) => {
                           const categoryKey = category.name.toLowerCase();
                           const colors = categoryColors[categoryKey] || {
                             background: 'bg-green-100 dark:bg-green-900',
