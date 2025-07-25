@@ -13,70 +13,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, X, Search, Send, Edit3, Sparkles } from "lucide-react";
 import { EmailTemplate } from "@shared/schema";
+import { useDynamicVariables } from "@/hooks/useDynamicVariables";
 
 interface EmailComposerModalProps {
   onClose: () => void;
 }
 
-// Available template variables organized by category
-const TEMPLATE_VARIABLES = {
-  customer: [
-    { key: "customer_name", label: "Customer Name", placeholder: "John Doe" },
-    { key: "customername", label: "Customer Name", placeholder: "John Doe" },
-    { key: "CUSTOMER_NAME", label: "Customer Name (Uppercase)", placeholder: "JOHN DOE" },
-    { key: "CUSTOMERNAME", label: "Customer Name (Uppercase)", placeholder: "JOHN DOE" },
-    { key: "customerfirstname", label: "Customer First Name", placeholder: "John" },
-    { key: "customerlastname", label: "Customer Last Name", placeholder: "Doe" },
-    { key: "CUSTOMERFIRSTNAME", label: "Customer First Name (Uppercase)", placeholder: "JOHN" },
-    { key: "CUSTOMERLASTNAME", label: "Customer Last Name (Uppercase)", placeholder: "DOE" },
-    { key: "customer_email", label: "Customer Email", placeholder: "john@example.com" },
-    { key: "CUSTOMER_EMAIL", label: "Customer Email (Uppercase)", placeholder: "JOHN@EXAMPLE.COM" },
-    { key: "customer_phone", label: "Customer Phone", placeholder: "+971501234567" },
-    { key: "CUSTOMER_PHONE", label: "Customer Phone (Uppercase)", placeholder: "+971501234567" },
-    { key: "customer_address", label: "Customer Address", placeholder: "Dubai, UAE" },
-    { key: "gender", label: "Gender", placeholder: "Male/Female" },
-    { key: "GENDER", label: "Gender (Uppercase)", placeholder: "MALE/FEMALE" },
-  ],
-  order: [
-    { key: "order_id", label: "Order ID", placeholder: "ORD123456" },
-    { key: "ORDER_ID", label: "Order ID (Uppercase)", placeholder: "ORD123456" },
-    { key: "awb_number", label: "AWB Number", placeholder: "AWB789012" },
-    { key: "AWB_NUMBER", label: "AWB Number (Uppercase)", placeholder: "AWB789012" },
-    { key: "order_status", label: "Order Status", placeholder: "Processing" },
-    { key: "ORDER_STATUS", label: "Order Status (Uppercase)", placeholder: "PROCESSING" },
-    { key: "tracking_number", label: "Tracking Number", placeholder: "TRK345678" },
-    { key: "delivery_date", label: "Delivery Date", placeholder: "2025-01-25" },
-    { key: "waiting_time", label: "Waiting Time", placeholder: "2-3 business days" },
-    { key: "WAITING_TIME", label: "Waiting Time (Uppercase)", placeholder: "2-3 BUSINESS DAYS" },
-    { key: "item_name", label: "Item Name", placeholder: "Product Name" },
-  ],
-  system: [
-    { key: "agent_name", label: "Agent Name", placeholder: "Support Agent" },
-    { key: "agentname", label: "Agent Name", placeholder: "Support Agent" },
-    { key: "AGENTNAME", label: "Agent Name (Uppercase)", placeholder: "SUPPORT AGENT" },
-    { key: "agentarabicname", label: "Agent Arabic Name", placeholder: "محمد أحمد" },
-    { key: "agentarabicfirstname", label: "Agent Arabic First Name", placeholder: "محمد" },
-    { key: "agentarabiclastname", label: "Agent Arabic Last Name", placeholder: "أحمد" },
-    { key: "AGENTARABICNAME", label: "Agent Arabic Name (Uppercase)", placeholder: "محمد أحمد" },
-    { key: "AGENTARABICFIRSTNAME", label: "Agent Arabic First Name (Uppercase)", placeholder: "محمد" },
-    { key: "AGENTARABICLASTNAME", label: "Agent Arabic Last Name (Uppercase)", placeholder: "أحمد" },
-    { key: "concerned_team", label: "Concerned Team", placeholder: "Finance Team" },
-    { key: "company_name", label: "Company Name", placeholder: "Brands For Less" },
-    { key: "support_email", label: "Support Email", placeholder: "support@brandsforless.com" },
-    { key: "business_hours", label: "Business Hours", placeholder: "9 AM - 6 PM, Sun-Thu" },
-  ],
-  time: [
-    { key: "current_date", label: "Current Date", placeholder: "January 23, 2025" },
-    { key: "current_time", label: "Current Time", placeholder: "2:30 PM" },
-    { key: "time_frame", label: "Time Frame", placeholder: "24-48 hours" },
-  ],
-  custom: [
-    { key: "reason", label: "Reason", placeholder: "Enter reason here..." },
-    { key: "REASON", label: "Reason (Uppercase)", placeholder: "ENTER REASON HERE..." },
-  ]
-};
+// Dynamic variables are now fetched from Supabase via useDynamicVariables hook
 
 export default function EmailComposerModal({ onClose }: EmailComposerModalProps) {
+  // Use dynamic variables from Supabase instead of hardcoded ones
+  const { getTemplateVariablesFormat, isLoading: variablesLoading } = useDynamicVariables();
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [emailSubject, setEmailSubject] = useState('');
@@ -524,8 +471,8 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               <div className="flex-1 overflow-y-auto p-4">
                 {uniqueVariables.length > 0 ? (
                   <div className="space-y-4">
-                    {/* Known Variables */}
-                    {Object.entries(TEMPLATE_VARIABLES).map(([category, variables]) => {
+                    {/* Known Variables - Using Dynamic Variables from Supabase */}
+                    {getTemplateVariablesFormat().map(([category, variables]) => {
                       const categoryVariables = variables.filter(v => 
                         uniqueVariables.includes(v.key)
                       );
@@ -566,7 +513,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                     
                     {/* Unrecognized Variables */}
                     {(() => {
-                      const allKnownVariables = Object.values(TEMPLATE_VARIABLES).flat().map(v => v.key);
+                      const allKnownVariables = getTemplateVariablesFormat().flatMap(([, variables]) => variables.map(v => v.key));
                       const unrecognizedVariables = uniqueVariables.filter(v => !allKnownVariables.includes(v));
                       
                       if (unrecognizedVariables.length === 0) return null;

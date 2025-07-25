@@ -14,8 +14,8 @@ export default function AdditionalInfoPanel() {
             type="text"
             className="w-full text-sm"
             placeholder="Product name"
-            value={customerData.item_name || ''}
-            onChange={(e) => updateCustomerData('item_name', e.target.value)}
+            value={customerData.itemname || ''}
+            onChange={(e) => updateCustomerData('itemname', e.target.value)}
           />
         </div>
         
@@ -24,8 +24,8 @@ export default function AdditionalInfoPanel() {
           <Input
             type="date"
             className="w-full text-sm"
-            value={customerData.delivery_date || ''}
-            onChange={(e) => updateCustomerData('delivery_date', e.target.value)}
+            value={customerData.deliverydate || ''}
+            onChange={(e) => updateCustomerData('deliverydate', e.target.value)}
           />
         </div>
         
@@ -35,8 +35,8 @@ export default function AdditionalInfoPanel() {
             type="text"
             className="w-full text-sm"
             placeholder="2 business days"
-            value={customerData.waiting_time || ''}
-            onChange={(e) => updateCustomerData('waiting_time', e.target.value)}
+            value={customerData.waitingtime || ''}
+            onChange={(e) => updateCustomerData('waitingtime', e.target.value)}
           />
         </div>
       </div>

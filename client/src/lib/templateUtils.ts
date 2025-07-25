@@ -1,41 +1,5 @@
 // Template utility functions for dynamic variable management
-
-export interface DynamicVariable {
-  name: string;
-  description: string;
-  category: 'customer' | 'order' | 'system' | 'time';
-  example: string;
-}
-
-export const AVAILABLE_VARIABLES: DynamicVariable[] = [
-  // Customer Variables
-  { name: 'CUSTOMERNAME', description: 'Customer full name', category: 'customer', example: 'John Smith' },
-  { name: 'CUSTOMERFIRSTNAME', description: 'Customer first name', category: 'customer', example: 'John' },
-  { name: 'CUSTOMEREMAIL', description: 'Customer email address', category: 'customer', example: 'john@example.com' },
-  { name: 'CUSTOMERPHONE', description: 'Customer phone number', category: 'customer', example: '+1-555-0123' },
-  { name: 'CUSTOMERADDRESS', description: 'Customer shipping address', category: 'customer', example: '123 Main St, City, State' },
-  
-  // Order Variables
-  { name: 'ORDERNUMBER', description: 'Order reference number', category: 'order', example: 'ORD-2025-001234' },
-  { name: 'TRACKINGNUMBER', description: 'Package tracking number', category: 'order', example: 'TRK123456789' },
-  { name: 'ORDERDATE', description: 'Date order was placed', category: 'order', example: 'January 15, 2025' },
-  { name: 'DELIVERYDATE', description: 'Expected delivery date', category: 'order', example: 'January 20, 2025' },
-  { name: 'ORDERVALUE', description: 'Total order amount', category: 'order', example: '$125.99' },
-  { name: 'PAYMENTMETHOD', description: 'Payment method used', category: 'order', example: 'Credit Card ending in 1234' },
-  
-  // System Variables  
-  { name: 'TICKETNUMBER', description: 'Support ticket reference', category: 'system', example: 'TKT-2025-5678' },
-  { name: 'AGENTNAME', description: 'Customer service agent name', category: 'system', example: 'Sarah Johnson' },
-  { name: 'COMPANYNAME', description: 'Company name (BFL)', category: 'system', example: 'Brands For Less' },
-  { name: 'SUPPORTEMAIL', description: 'Customer support email', category: 'system', example: 'support@brandsforless.com' },
-  { name: 'SUPPORTPHONE', description: 'Customer support phone', category: 'system', example: '+971-4-123-4567' },
-  
-  // Time Variables
-  { name: 'CURRENTDATE', description: 'Current date', category: 'time', example: 'January 22, 2025' },
-  { name: 'WAITINGTIME', description: 'How long customer has been waiting', category: 'time', example: '3 business days' },
-  { name: 'PROCESSINGTIME', description: 'Expected processing time', category: 'time', example: '2-3 business days' },
-  { name: 'BUSINESSHOURS', description: 'Customer service hours', category: 'time', example: '9 AM - 6 PM, Sunday - Thursday' },
-];
+// Variables are now fetched dynamically from Supabase via useDynamicVariables hook
 
 export function extractVariablesFromTemplate(content: string): string[] {
   // Match variables in format [VARIABLENAME] or {variablename} - accept both cases

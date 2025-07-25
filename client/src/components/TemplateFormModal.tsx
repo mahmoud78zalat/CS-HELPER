@@ -11,12 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { 
-  AVAILABLE_VARIABLES, 
   extractVariablesFromTemplate, 
   validateTemplate, 
-  getTemplateWarning, 
-  type DynamicVariable 
+  getTemplateWarning 
 } from "@/lib/templateUtils";
+import { useDynamicVariables } from "@/hooks/useDynamicVariables";
 import { 
   Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, AlertTriangle,
   User, Package, Settings, Clock, Check, Plus
@@ -40,6 +39,9 @@ export default function TemplateFormModal({
   isLoading,
   isEmailTemplate = false
 }: TemplateFormModalProps) {
+  // Use dynamic variables from Supabase
+  const { variables, isLoading: variablesLoading } = useDynamicVariables();
+  
   const [formData, setFormData] = useState({
     name: '',
     subject: '',
@@ -184,16 +186,13 @@ export default function TemplateFormModal({
     onSave(templateData);
   };
 
+  // Use dynamic variables from Supabase instead of hardcoded ones
   const filteredVariables = selectedCategory === 'all' 
-    ? AVAILABLE_VARIABLES 
-    : AVAILABLE_VARIABLES.filter(v => v.category === selectedCategory);
+    ? variables 
+    : variables.filter(v => v.category === selectedCategory);
 
   const variableCategories = [
-    { key: 'all', label: 'All Variables', icon: Code },
-    { key: 'customer', label: 'Customer', icon: User },
-    { key: 'order', label: 'Order', icon: Package },
-    { key: 'system', label: 'System', icon: Settings },
-    { key: 'time', label: 'Time', icon: Clock }
+    { key: 'all', label: 'All Variables', icon: Code }
   ];
 
   return (
