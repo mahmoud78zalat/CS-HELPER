@@ -79,7 +79,7 @@ export const emailTemplates = pgTable("email_templates", {
   stageOrder: integer("stage_order").default(1).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   usageCount: integer("usage_count").default(0).notNull(),
-  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdBy: varchar("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
@@ -230,6 +230,7 @@ export const insertLiveReplyTemplateSchema = createInsertSchema(liveReplyTemplat
   createdAt: true,
   updatedAt: true,
   usageCount: true,
+  createdBy: true,
   supabaseId: true,
   lastSyncedAt: true,
 });
@@ -239,6 +240,7 @@ export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit
   createdAt: true,
   updatedAt: true,
   usageCount: true,
+  createdBy: true,
   supabaseId: true,
   lastSyncedAt: true,
 });

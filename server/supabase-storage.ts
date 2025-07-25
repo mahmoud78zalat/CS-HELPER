@@ -291,9 +291,15 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createLiveReplyTemplate(template: InsertLiveReplyTemplate): Promise<LiveReplyTemplate> {
+    // Ensure created_by always has a value
+    const templateWithDefaults: any = {
+      ...template,
+      createdBy: template.createdBy || 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Always provide a valid user ID as default
+    };
+    
     const { data, error } = await this.client
       .from('live_reply_templates')
-      .insert(this.mapToSupabaseLiveReplyTemplate(template))
+      .insert(this.mapToSupabaseLiveReplyTemplate(templateWithDefaults))
       .select()
       .single();
 
@@ -451,9 +457,17 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
+    // Ensure created_by always has a value
+    const templateWithDefaults: any = {
+      ...template,
+      createdBy: template.createdBy || 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Always provide a valid user ID as default
+    };
+    
+    const mappedTemplate = this.mapToSupabaseEmailTemplate(templateWithDefaults);
+    
     const { data, error } = await this.client
       .from('email_templates')
-      .insert(this.mapToSupabaseEmailTemplate(template))
+      .insert(mappedTemplate)
       .select()
       .single();
 
@@ -1369,7 +1383,7 @@ export class SupabaseStorage implements IStorage {
       stage_order: template.stageOrder,
       is_active: template.isActive,
       usage_count: template.usageCount || 0,
-      created_by: template.createdBy,
+      created_by: template.createdBy || template.created_by || 'f765c1de-f9b5-4615-8c09-8cdde8152a07', // Handle both camelCase and snake_case
     };
   }
 
@@ -1408,7 +1422,7 @@ export class SupabaseStorage implements IStorage {
       stage_order: template.stageOrder,
       is_active: template.isActive,
       usage_count: template.usageCount || 0,
-      created_by: template.createdBy,
+      created_by: template.createdBy || template.created_by || 'system', // Handle both camelCase and snake_case
     };
   }
 

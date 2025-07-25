@@ -57,11 +57,11 @@ export default function TemplateFormModal({
   const [previewMode, setPreviewMode] = useState(false);
 
   // Fetch dynamic data for dropdowns
-  const { data: templateCategories = [] } = useQuery({
+  const { data: templateCategories = [] } = useQuery<{id: string, name: string}[]>({
     queryKey: ['/api/template-categories'],
   });
 
-  const { data: emailCategories = [] } = useQuery({
+  const { data: emailCategories = [] } = useQuery<{id: string, name: string}[]>({
     queryKey: ['/api/email-categories'],
     enabled: isEmailTemplate,
   });
@@ -71,11 +71,11 @@ export default function TemplateFormModal({
     (emailCategories.length > 1 ? emailCategories : templateCategories) : 
     templateCategories;
 
-  const { data: templateGenres = [] } = useQuery({
+  const { data: templateGenres = [] } = useQuery<{id: string, name: string}[]>({
     queryKey: ['/api/template-genres'],
   });
 
-  const { data: concernedTeams = [] } = useQuery({
+  const { data: concernedTeams = [] } = useQuery<{id: string, name: string}[]>({
     queryKey: ['/api/concerned-teams'],
     enabled: isEmailTemplate,
   });

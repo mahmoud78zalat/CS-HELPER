@@ -36,7 +36,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/live-reply-templates', async (req, res) => {
     try {
       const validatedData = insertLiveReplyTemplateSchema.parse(req.body);
-      const template = await storage.createLiveReplyTemplate(validatedData);
+      
+      // Ensure we always have a createdBy value - use existing admin user as default
+      const templateData = {
+        ...validatedData,
+        createdBy: validatedData.createdBy || 'f765c1de-f9b5-4615-8c09-8cdde8152a07'
+      };
+      
+      const template = await storage.createLiveReplyTemplate(templateData);
       res.status(201).json(template);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -113,7 +120,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/email-templates', async (req, res) => {
     try {
       const validatedData = insertEmailTemplateSchema.parse(req.body);
-      const template = await storage.createEmailTemplate(validatedData);
+      
+      // Ensure we always have a createdBy value - use existing admin user as default
+      const templateData = {
+        ...validatedData,
+        createdBy: validatedData.createdBy || 'f765c1de-f9b5-4615-8c09-8cdde8152a07'
+      };
+      
+      const template = await storage.createEmailTemplate(templateData);
       res.status(201).json(template);
     } catch (error) {
       if (error instanceof z.ZodError) {

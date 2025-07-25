@@ -415,6 +415,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const { data: emailTemplates = [], isLoading: emailTemplatesLoading } = useQuery<EmailTemplate[]>({
     queryKey: ['/api/email-templates'],
     retry: false,
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache results
   });
 
   // Site content query
@@ -710,10 +712,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Email template deletion mutation
   const deleteEmailTemplateMutation = useMutation({
     mutationFn: async (templateId: string) => {
-      await apiRequest('DELETE', `/api/email-templates/${templateId}`);
+      const response = await apiRequest('DELETE', `/api/email-templates/${templateId}`);
+      return response;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+      // Force refetch email templates immediately
+      await queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/email-templates'] });
       toast({
         title: "Email template deleted",
         description: "Successfully removed from system",
@@ -721,6 +726,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
     },
     onError: (error) => {
+      console.error('Email template deletion error:', error);
       toast({
         title: "Delete failed",
         description: "Unable to remove email template. Please try again.",
@@ -871,10 +877,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Email Template create mutation  
   const createEmailTemplateMutation = useMutation({
     mutationFn: async (templateData: any) => {
-      await apiRequest('POST', '/api/email-templates', templateData);
+      const response = await apiRequest('POST', '/api/email-templates', templateData);
+      return response;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+      // Force refetch email templates immediately
+      await queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/email-templates'] });
       setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
@@ -883,6 +892,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
     },
     onError: (error) => {
+      console.error('Email template creation error:', error);
       toast({
         title: "Error",
         description: "Failed to create email template",
@@ -894,10 +904,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Email Template update mutation
   const updateEmailTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      await apiRequest('PUT', `/api/email-templates/${id}`, data);
+      const response = await apiRequest('PUT', `/api/email-templates/${id}`, data);
+      return response;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+      // Force refetch email templates immediately
+      await queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/email-templates'] });
       setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
@@ -906,6 +919,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
     },
     onError: (error) => {
+      console.error('Email template update error:', error);
       toast({
         title: "Error",
         description: "Failed to update email template",
@@ -2304,9 +2318,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             }
           } else {
             if (isEmailTemplate) {
-              createEmailTemplateMutation.mutate({ ...templateData, createdBy: currentUser?.id });
+              createEmailTemplateMutation.mutate(templateData);
             } else {
-              createTemplateMutation.mutate({ ...templateData, createdBy: currentUser?.id });
+              createTemplateMutation.mutate(templateData);
             }
           }
         }}
