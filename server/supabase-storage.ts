@@ -799,6 +799,248 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
+  // Dynamic Category and Genre operations
+  async getTemplateCategories(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    try {
+      // First try to create the tables if they don't exist
+      await this.ensureDynamicTablesExist();
+      
+      const { data, error } = await this.client
+        .from('template_categories')
+        .select('id, name, description, is_active')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching template categories:', error);
+        // If table doesn't exist, populate it from existing templates
+        if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
+          await this.populateTemplateCategories();
+          return this.getTemplateCategories(); // Retry
+        }
+        return [];
+      }
+
+      return data.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        isActive: item.is_active
+      }));
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getTemplateCategories:', error);
+      return [];
+    }
+  }
+
+  async getEmailCategories(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const { data, error } = await this.client
+        .from('email_categories')
+        .select('id, name, description, is_active')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching email categories:', error);
+        if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
+          await this.populateEmailCategories();
+          return this.getEmailCategories(); // Retry
+        }
+        return [];
+      }
+
+      return data.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        isActive: item.is_active
+      }));
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getEmailCategories:', error);
+      return [];
+    }
+  }
+
+  async getTemplateGenres(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const { data, error } = await this.client
+        .from('template_genres')
+        .select('id, name, description, is_active')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching template genres:', error);
+        if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
+          await this.populateTemplateGenres();
+          return this.getTemplateGenres(); // Retry
+        }
+        return [];
+      }
+
+      return data.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        isActive: item.is_active
+      }));
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getTemplateGenres:', error);
+      return [];
+    }
+  }
+
+  async getConcernedTeams(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const { data, error } = await this.client
+        .from('concerned_teams')
+        .select('id, name, description, is_active')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching concerned teams:', error);
+        if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
+          await this.populateConcernedTeams();
+          return this.getConcernedTeams(); // Retry
+        }
+        return [];
+      }
+
+      return data.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        isActive: item.is_active
+      }));
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getConcernedTeams:', error);
+      return [];
+    }
+  }
+
+  // Helper methods for dynamic table management
+  private async ensureDynamicTablesExist(): Promise<void> {
+    // This is a placeholder - tables should be created via Supabase dashboard or SQL
+    // since we can't create tables via the client in a production environment
+    return;
+  }
+
+  private async populateTemplateCategories(): Promise<void> {
+    try {
+      // Get unique categories from existing live reply templates
+      const { data: templates } = await this.client
+        .from('live_reply_templates')
+        .select('category')
+        .eq('is_active', true);
+
+      if (templates) {
+        const uniqueCategories = [...new Set(templates.map(t => t.category).filter(Boolean))];
+        for (const category of uniqueCategories) {
+          await this.client
+            .from('template_categories')
+            .upsert({ 
+              name: category, 
+              description: `Live chat template category: ${category}`,
+              is_active: true 
+            }, { onConflict: 'name' });
+        }
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error populating template categories:', error);
+    }
+  }
+
+  private async populateEmailCategories(): Promise<void> {
+    try {
+      // Get unique categories from existing email templates
+      const { data: templates } = await this.client
+        .from('email_templates')
+        .select('category')
+        .eq('is_active', true);
+
+      if (templates) {
+        const uniqueCategories = [...new Set(templates.map(t => t.category).filter(Boolean))];
+        for (const category of uniqueCategories) {
+          await this.client
+            .from('email_categories')
+            .upsert({ 
+              name: category, 
+              description: `Email template category: ${category}`,
+              is_active: true 
+            }, { onConflict: 'name' });
+        }
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error populating email categories:', error);
+    }
+  }
+
+  private async populateTemplateGenres(): Promise<void> {
+    try {
+      // Get unique genres from both template types
+      const { data: liveTemplates } = await this.client
+        .from('live_reply_templates')
+        .select('genre')
+        .eq('is_active', true);
+
+      const { data: emailTemplates } = await this.client
+        .from('email_templates')
+        .select('genre')
+        .eq('is_active', true);
+
+      const allGenres = [
+        ...(liveTemplates || []).map(t => t.genre),
+        ...(emailTemplates || []).map(t => t.genre)
+      ].filter(Boolean);
+
+      const uniqueGenres = [...new Set(allGenres)];
+      for (const genre of uniqueGenres) {
+        await this.client
+          .from('template_genres')
+          .upsert({ 
+            name: genre, 
+            description: `Template genre: ${genre}`,
+            is_active: true 
+          }, { onConflict: 'name' });
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error populating template genres:', error);
+    }
+  }
+
+  private async populateConcernedTeams(): Promise<void> {
+    try {
+      // Get unique teams from email templates
+      const { data: templates } = await this.client
+        .from('email_templates')
+        .select('concerned_team')
+        .eq('is_active', true);
+
+      if (templates) {
+        const uniqueTeams = [...new Set(templates.map(t => t.concerned_team).filter(Boolean))];
+        for (const team of uniqueTeams) {
+          await this.client
+            .from('concerned_teams')
+            .upsert({ 
+              name: team, 
+              description: `Concerned team: ${team}`,
+              is_active: true 
+            }, { onConflict: 'name' });
+        }
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error populating concerned teams:', error);
+    }
+  }
+
   // Mapping functions
   private mapSupabaseUser(data: any): User {
     return {

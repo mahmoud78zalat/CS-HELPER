@@ -434,6 +434,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dynamic Categories and Genres API Routes
+  
+  // Get all template categories (live chat)
+  app.get('/api/template-categories', isAuthenticated, async (req: any, res) => {
+    try {
+      const categories = await storage.getTemplateCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching template categories:", error);
+      res.status(500).json({ message: "Failed to fetch template categories" });
+    }
+  });
+
+  // Get all email categories
+  app.get('/api/email-categories', isAuthenticated, async (req: any, res) => {
+    try {
+      const categories = await storage.getEmailCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching email categories:", error);
+      res.status(500).json({ message: "Failed to fetch email categories" });
+    }
+  });
+
+  // Get all genres
+  app.get('/api/template-genres', isAuthenticated, async (req: any, res) => {
+    try {
+      const genres = await storage.getTemplateGenres();
+      res.json(genres);
+    } catch (error) {
+      console.error("Error fetching template genres:", error);
+      res.status(500).json({ message: "Failed to fetch template genres" });
+    }
+  });
+
+  // Get all concerned teams
+  app.get('/api/concerned-teams', isAuthenticated, async (req: any, res) => {
+    try {
+      const teams = await storage.getConcernedTeams();
+      res.json(teams);
+    } catch (error) {
+      console.error("Error fetching concerned teams:", error);
+      res.status(500).json({ message: "Failed to fetch concerned teams" });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
 

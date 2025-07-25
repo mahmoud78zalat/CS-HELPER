@@ -87,6 +87,12 @@ export interface IStorage {
   incrementTemplateUsage(templateId: string, userId: string): Promise<void>;
   getTemplateUsageStats(templateId: string): Promise<number>;
 
+  // Dynamic Category and Genre operations
+  getTemplateCategories(): Promise<{id: string, name: string, description: string, isActive: boolean}[]>;
+  getEmailCategories(): Promise<{id: string, name: string, description: string, isActive: boolean}[]>;
+  getTemplateGenres(): Promise<{id: string, name: string, description: string, isActive: boolean}[]>;
+  getConcernedTeams(): Promise<{id: string, name: string, description: string, isActive: boolean}[]>;
+
   // Site content operations
   getSiteContent(key?: string): Promise<SiteContent[]>;
   upsertSiteContent(content: InsertSiteContent): Promise<SiteContent>;

@@ -45,8 +45,21 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [showConfigManager, setShowConfigManager] = useState(false);
   const [showVariableManager, setShowVariableManager] = useState(false);
   const [siteContentValues, setSiteContentValues] = useState<{[key: string]: string}>({});
-  const [genreColors, setGenreColors] = useState(GENRE_COLORS);
-  const [categoryColors, setCategoryColors] = useState(CATEGORY_COLORS);
+  const [genreColors, setGenreColors] = useState<Record<string, any>>({});
+  const [categoryColors, setCategoryColors] = useState<Record<string, any>>({});
+  
+  // Fetch dynamic categories and genres
+  const { data: dynamicGenres = [] } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
+    queryKey: ['/api/template-genres'],
+  });
+  
+  const { data: dynamicEmailCategories = [] } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
+    queryKey: ['/api/email-categories'],
+  });
+  
+  const { data: dynamicTemplateCategories = [] } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
+    queryKey: ['/api/template-categories'],
+  });
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
   const [tempColor, setTempColor] = useState<string>('#3b82f6');
   const [editingColorType, setEditingColorType] = useState<'genre' | 'category'>('genre');
@@ -65,6 +78,42 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Initialize colors from dynamic data
+  useEffect(() => {
+    // Initialize genre colors from dynamic data
+    const initialGenreColors: Record<string, any> = {};
+    dynamicGenres.forEach(genre => {
+      if (!genreColors[genre.name.toLowerCase()]) {
+        // Generate or get existing color
+        initialGenreColors[genre.name.toLowerCase()] = GENRE_COLORS[genre.name.toLowerCase()] || {
+          background: 'bg-blue-100 dark:bg-blue-900',
+          text: 'text-blue-800 dark:text-blue-200',
+          border: 'border-blue-200 dark:border-blue-700'
+        };
+      }
+    });
+    
+    // Initialize category colors from both email and template categories
+    const initialCategoryColors: Record<string, any> = {};
+    [...dynamicEmailCategories, ...dynamicTemplateCategories].forEach(category => {
+      if (!categoryColors[category.name.toLowerCase()]) {
+        initialCategoryColors[category.name.toLowerCase()] = CATEGORY_COLORS[category.name.toLowerCase()] || {
+          background: 'bg-green-100 dark:bg-green-900',
+          text: 'text-green-800 dark:text-green-200',
+          border: 'border-green-200 dark:border-green-700'
+        };
+      }
+    });
+    
+    if (Object.keys(initialGenreColors).length > 0) {
+      setGenreColors(prev => ({ ...prev, ...initialGenreColors }));
+    }
+    
+    if (Object.keys(initialCategoryColors).length > 0) {
+      setCategoryColors(prev => ({ ...prev, ...initialCategoryColors }));
+    }
+  }, [dynamicGenres, dynamicEmailCategories, dynamicTemplateCategories]);
 
   // Helper function to convert hex color to closest Tailwind color with accurate color matching
   const hexToTailwindColor = (hex: string): { background: string; text: string; border: string } => {
@@ -1418,28 +1467,46 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {Object.entries(genreColors).map(([genre, colors]) => (
-                        <div key={genre} className="flex items-center justify-between p-3 border dark:border-slate-600 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <Badge className={`${colors.background} ${colors.text} ${colors.border} border`}>
-                              {genre}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className={`w-6 h-6 rounded-full ${colors.background.replace('100', '500')} border-2 border-white dark:border-slate-300 shadow-sm`}
-                              title={`Background: ${colors.background}, Text: ${colors.text}`}
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openColorPicker(genre, 'genre')}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                      {dynamicGenres.length === 0 ? (
+                        <p className="text-sm text-slate-500 text-center py-4">
+                          No genres found. Create templates to see genres here.
+                        </p>
+                      ) : (
+                        dynamicGenres.map((genre) => {
+                          const genreKey = genre.name.toLowerCase();
+                          const colors = genreColors[genreKey] || {
+                            background: 'bg-blue-100 dark:bg-blue-900',
+                            text: 'text-blue-800 dark:text-blue-200',
+                            border: 'border-blue-200 dark:border-blue-700'
+                          };
+                          
+                          return (
+                            <div key={genre.id} className="flex items-center justify-between p-3 border dark:border-slate-600 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <Badge className={`${colors.background} ${colors.text} ${colors.border} border`}>
+                                  {genre.name}
+                                </Badge>
+                                <span className="text-xs text-slate-500">
+                                  {genre.description}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className={`w-6 h-6 rounded-full ${colors.background.replace('100', '500')} border-2 border-white dark:border-slate-300 shadow-sm`}
+                                  title={`Background: ${colors.background}, Text: ${colors.text}`}
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openColorPicker(genreKey, 'genre')}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -1455,28 +1522,52 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {Object.entries(categoryColors).map(([category, colors]) => (
-                        <div key={category} className="flex items-center justify-between p-3 border dark:border-slate-600 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <Badge className={`${colors.background} ${colors.text} ${colors.border} border`}>
-                              {category}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className={`w-6 h-6 rounded-full ${colors.background.replace('100', '500')} border-2 border-white dark:border-slate-300 shadow-sm`}
-                              title={`Background: ${colors.background}, Text: ${colors.text}`}
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openColorPicker(category, 'category')}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                      {[...dynamicTemplateCategories, ...dynamicEmailCategories].length === 0 ? (
+                        <p className="text-sm text-slate-500 text-center py-4">
+                          No categories found. Create templates to see categories here.
+                        </p>
+                      ) : (
+                        // Combine and deduplicate categories from both sources
+                        Array.from(
+                          new Map(
+                            [...dynamicTemplateCategories, ...dynamicEmailCategories]
+                              .map(cat => [cat.name.toLowerCase(), cat])
+                          ).values()
+                        ).map((category) => {
+                          const categoryKey = category.name.toLowerCase();
+                          const colors = categoryColors[categoryKey] || {
+                            background: 'bg-green-100 dark:bg-green-900',
+                            text: 'text-green-800 dark:text-green-200',
+                            border: 'border-green-200 dark:border-green-700'
+                          };
+                          
+                          return (
+                            <div key={category.id} className="flex items-center justify-between p-3 border dark:border-slate-600 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <Badge className={`${colors.background} ${colors.text} ${colors.border} border`}>
+                                  {category.name}
+                                </Badge>
+                                <span className="text-xs text-slate-500">
+                                  {category.description}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className={`w-6 h-6 rounded-full ${colors.background.replace('100', '500')} border-2 border-white dark:border-slate-300 shadow-sm`}
+                                  title={`Background: ${colors.background}, Text: ${colors.text}`}
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openColorPicker(categoryKey, 'category')}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </CardContent>
                 </Card>

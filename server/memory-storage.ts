@@ -506,4 +506,21 @@ export class MemoryStorage implements IStorage {
     
     this.announcements.set(announcementId, updated);
   }
+
+  // Dynamic Category and Genre operations - return empty arrays for memory storage
+  async getTemplateCategories(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    return [];
+  }
+
+  async getEmailCategories(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    return [];
+  }
+
+  async getTemplateGenres(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    return [];
+  }
+
+  async getConcernedTeams(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    return [];
+  }
 }
