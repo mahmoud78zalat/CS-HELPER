@@ -9,7 +9,7 @@ interface AboutModalProps {
 
 export default function AboutModal({ onClose }: AboutModalProps) {
   // Fetch site content from database
-  const { data: siteContent = [] } = useQuery({
+  const { data: siteContent = [] } = useQuery<any[]>({
     queryKey: ['/api/site-content'],
     retry: false,
   });
@@ -47,7 +47,7 @@ export default function AboutModal({ onClose }: AboutModalProps) {
               <Headphones className="text-white text-2xl" />
             </div>
             <h2 className="text-2xl font-bold text-slate-800 mb-2">
-              {aboutTitle}
+              {siteName}
             </h2>
             <p className="text-slate-600 max-w-2xl mx-auto">
               {aboutDescription}

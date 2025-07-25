@@ -160,6 +160,23 @@ The system is designed to be deployed on Replit with automatic environment provi
 
 ## Recent Changes (July 25, 2025)
 
+**UI/UX IMPROVEMENTS AND CLEANUP (July 25, 2025 - 11:20 PM)**:
+✓ **HIDDEN USAGE COUNTERS**: Removed "Used [count] times" display from all template cards for cleaner UI - usage stats now only visible in analytics dashboard
+✓ **REMOVED RESET BUTTON**: Eliminated "Reset to Defaults" button from admin panel Colors section as requested
+✓ **DYNAMIC ABOUT MODAL**: Fixed About section to show dynamic site name from database instead of static "Customer Service Helper"
+✓ **IMPROVED DATA FETCHING**: About modal now properly fetches site content from database with fallback to localStorage
+✓ **REMOVED DUPLICATE UI ELEMENTS**: Cleaned up duplicate X button in About modal and improved layout
+✓ **TYPESCRIPT FIXES**: Resolved LSP diagnostics and improved type safety in AboutModal component
+
+**Technical Details**:
+- Template cards now show only badges and content without usage statistics clutter
+- About modal displays "About [Dynamic Site Name]" from Supabase database
+- All localStorage calls in About modal replaced with database queries
+- Create Return feature successfully implemented with automatic order ID vs AWB detection
+- Email template categories fixed to show all 4 categories instead of limiting to 1
+
+## Recent Changes (July 25, 2025)
+
 **ADMIN PANEL CLEANUP AND VARIABLE SYSTEM FIX (July 25, 2025 - 10:35 PM)**:
 ✓ **REMOVED DUPLICATE VARIABLE MANAGER**: Removed redundant Variable Manager section from AdminPanel since it already exists in Template Configuration Manager
 ✓ **FIXED VARIABLE CATEGORIES**: Updated VariableManager to use existing project categories (template-categories, email-categories) instead of empty template-variable-categories
