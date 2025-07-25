@@ -60,6 +60,37 @@ export default function CheckOrderModal({ onClose }: CheckOrderModalProps) {
     });
   };
 
+  const handleCreateReturn = () => {
+    if (!orderNumber.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an order number or AWB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const input = orderNumber.trim();
+    let url = '';
+
+    // Use the same logic as order converter to detect if it's order ID or AWB
+    if (input.startsWith('A')) {
+      // Order ID
+      url = `https://dashboard.clickpost.ai/returns/return-management?search_type=order_id&search_value=${input}&state=create`;
+    } else {
+      // AWB
+      url = `https://dashboard.clickpost.ai/returns/return-management?search_type=awb&search_value=${input}&state=create`;
+    }
+
+    // Open in new tab
+    window.open(url, '_blank');
+    
+    toast({
+      title: "Success",
+      description: "Opened return creation in ClickPost",
+    });
+  };
+
 
 
 
@@ -110,11 +141,21 @@ export default function CheckOrderModal({ onClose }: CheckOrderModalProps) {
           <div className="flex gap-2">
             <Button 
               onClick={handleTrackOrder}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200"
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200"
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              Open in {platform === 'clickpost' ? 'ClickPost' : 'BFL Panel'}
+              Track Order
             </Button>
+            
+            {platform === 'clickpost' && (
+              <Button 
+                onClick={handleCreateReturn}
+                className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-white py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Create Return
+              </Button>
+            )}
           </div>
 
           <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">

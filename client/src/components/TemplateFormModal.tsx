@@ -59,13 +59,17 @@ export default function TemplateFormModal({
   // Fetch dynamic data for dropdowns
   const { data: templateCategories = [] } = useQuery({
     queryKey: ['/api/template-categories'],
-    enabled: !isEmailTemplate,
   });
 
   const { data: emailCategories = [] } = useQuery({
     queryKey: ['/api/email-categories'],
     enabled: isEmailTemplate,
   });
+
+  // Use template categories as fallback for email templates if email categories are limited
+  const availableCategories = isEmailTemplate ? 
+    (emailCategories.length > 1 ? emailCategories : templateCategories) : 
+    templateCategories;
 
   const { data: templateGenres = [] } = useQuery({
     queryKey: ['/api/template-genres'],
@@ -251,7 +255,7 @@ export default function TemplateFormModal({
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {(isEmailTemplate ? emailCategories : templateCategories).map((category: any) => (
+                      {availableCategories.map((category: any) => (
                         <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
                       ))}
                     </SelectContent>
