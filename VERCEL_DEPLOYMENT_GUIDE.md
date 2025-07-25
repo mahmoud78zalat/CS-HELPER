@@ -65,14 +65,74 @@ ISSUER_URL=your_issuer_url
 ```
 
 ### 2.3 Configure Build Settings
-- **Framework Preset**: Vite
+- **Framework Preset**: Other (or leave empty)
 - **Build Command**: `npm run build`
-- **Output Directory**: `client/dist`
+- **Output Directory**: `dist/public`
 - **Install Command**: `npm install`
+- **Node.js Version**: 18.x or 20.x
 
-## Step 3: Additional Configuration Needed
+## Step 3: Fix Blank Page Issues
 
-### 3.1 Complete API Migration
+### 3.1 Critical Files to Check Before Deploying
+
+**1. Update package.json build script locally:**
+```json
+{
+  "scripts": {
+    "build": "vite build",
+    "vercel-build": "vite build",
+    "start": "node dist/index.js"
+  }
+}
+```
+
+**2. Ensure your GitHub repository has these exact files:**
+- `vercel.json` (already updated)
+- `.env.example` (template for environment variables)
+- All `api/` folder contents
+- `client/` folder with React app
+- `shared/` folder with schema
+
+### 3.2 Common Blank Page Fixes
+
+**Problem 1: Wrong Output Directory**
+- Vercel setting: `dist/public` (matches your vite.config.ts)
+- NOT `client/dist` or just `dist`
+
+**Problem 2: Missing Environment Variables**
+- All Supabase credentials must be set in Vercel dashboard
+- `NODE_ENV=production` is required
+- Missing DATABASE_URL will cause API failures
+
+**Problem 3: Build Configuration**
+- Framework preset: "Other" or leave empty
+- Build command: `npm run build`
+- Node.js version: 18.x or 20.x
+
+### 3.3 Troubleshooting Steps
+
+**If you still get a blank page:**
+
+1. **Check Vercel Function Logs:**
+   - Go to your Vercel dashboard
+   - Click on your project → Functions tab
+   - Look for errors in `/api` functions
+
+2. **Check Build Logs:**
+   - In deployment details, review the build output
+   - Ensure Vite build completes successfully
+   - Confirm files are generated in `dist/public`
+
+3. **Test API Endpoints:**
+   - Visit `https://yourapp.vercel.app/api/site-content`
+   - Should return JSON data, not 404
+
+4. **Browser Console:**
+   - Open browser dev tools on your deployed site
+   - Check for JavaScript errors
+   - Look for failed API calls
+
+### 3.4 Complete API Migration
 The current setup includes basic API endpoints. You may need to create additional serverless functions for:
 - Personal notes management
 - User role updates
