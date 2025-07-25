@@ -24,7 +24,7 @@ import {
 import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
-import VariableManager from "@/components/VariableManager";
+
 import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates } from "@/lib/templateColors";
 import { HexColorPicker } from 'react-colorful';
 // Removed QUICK_TEMPLATE_STARTERS import as it's no longer needed
@@ -43,7 +43,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [templateSearchTerm, setTemplateSearchTerm] = useState('');
   const [emailTemplateSearchTerm, setEmailTemplateSearchTerm] = useState('');
   const [showConfigManager, setShowConfigManager] = useState(false);
-  const [showVariableManager, setShowVariableManager] = useState(false);
+
   const [siteContentValues, setSiteContentValues] = useState<{[key: string]: string}>({});
   const [genreColors, setGenreColors] = useState<Record<string, any>>({});
   const [categoryColors, setCategoryColors] = useState<Record<string, any>>({});
@@ -70,11 +70,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     staleTime: 0,
   });
 
-  // Add template variables query for variable manager count
-  const { data: templateVariables = [] } = useQuery({
-    queryKey: ['/api/template-variables'],
-    staleTime: 0,
-  });
+
 
   // Force refetch on component mount
   useEffect(() => {
@@ -2246,34 +2242,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </CardContent>
                 </Card>
 
-                {/* Universal Variables Card */}
-                <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowVariableManager(true)}>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Code className="h-5 w-5" />
-                      Variable Manager
-                    </CardTitle>
-                    <p className="text-sm text-slate-600">Manage all template variables system-wide</p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Total Variables:</span>
-                        <span className="font-medium">{templateVariables.length}</span>
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        Add custom variables that can be used in templates with {`{VARIABLE_NAME}`} syntax
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" className="w-full mt-4" onClick={(e) => {
-                      e.stopPropagation();
-                      setShowVariableManager(true);
-                    }}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Manage Variables
-                    </Button>
-                  </CardContent>
-                </Card>
+
 
                 {/* Quick Stats Card */}
                 <Card>
@@ -2351,8 +2320,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       {/* Template Config Manager */}
       <TemplateConfigManager isOpen={showConfigManager} onClose={() => setShowConfigManager(false)} />
 
-      {/* Universal Variable Manager */}
-      <VariableManager isOpen={showVariableManager} onClose={() => setShowVariableManager(false)} />
+
       </DialogContent>
     </Dialog>
   );

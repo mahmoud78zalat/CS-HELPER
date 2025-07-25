@@ -908,6 +908,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Template Variables API Routes
+  app.get('/api/template-variables', async (req, res) => {
+    try {
+      const filters = {
+        category: req.query.category as string,
+        search: req.query.search as string,
+        isSystem: req.query.isSystem === 'true' ? true : req.query.isSystem === 'false' ? false : undefined
+      };
+      const variables = await storage.getTemplateVariables(filters);
+      res.json(variables);
+    } catch (error) {
+      console.error('[API] Error fetching template variables:', error);
+      res.status(500).json({ message: 'Failed to fetch template variables' });
+    }
+  });
+
+  app.post('/api/template-variables', async (req, res) => {
+    try {
+      const variableData = { ...req.body, createdBy: 'system' };
+      const variable = await storage.createTemplateVariable(variableData);
+      res.json(variable);
+    } catch (error) {
+      console.error('[API] Error creating template variable:', error);
+      res.status(500).json({ message: 'Failed to create template variable' });
+    }
+  });
+
+  app.put('/api/template-variables/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const variable = await storage.updateTemplateVariable(id, req.body);
+      res.json(variable);
+    } catch (error) {
+      console.error('[API] Error updating template variable:', error);
+      res.status(500).json({ message: 'Failed to update template variable' });
+    }
+  });
+
+  app.delete('/api/template-variables/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteTemplateVariable(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting template variable:', error);
+      res.status(500).json({ message: 'Failed to delete template variable' });
+    }
+  });
+
+  // Template Variable Categories API Routes
+  app.get('/api/template-variable-categories', async (req, res) => {
+    try {
+      const categories = await storage.getTemplateVariableCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error('[API] Error fetching template variable categories:', error);
+      res.status(500).json({ message: 'Failed to fetch template variable categories' });
+    }
+  });
+
+  app.post('/api/template-variable-categories', async (req, res) => {
+    try {
+      const categoryData = { ...req.body, createdBy: 'system' };
+      const category = await storage.createTemplateVariableCategory(categoryData);
+      res.json(category);
+    } catch (error) {
+      console.error('[API] Error creating template variable category:', error);
+      res.status(500).json({ message: 'Failed to create template variable category' });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
 

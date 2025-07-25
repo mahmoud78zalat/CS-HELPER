@@ -98,9 +98,15 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
     enabled: isOpen,
   });
 
-  // Fetch template variable categories
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
-    queryKey: ['/api/template-variable-categories'],
+  // Fetch existing template categories from the project instead of template variable categories
+  const { data: templateCategories = [], isLoading: templateCategoriesLoading } = useQuery({
+    queryKey: ['/api/template-categories'],
+    enabled: isOpen,
+  });
+
+  // Fetch email categories as well
+  const { data: emailCategories = [], isLoading: emailCategoriesLoading } = useQuery({
+    queryKey: ['/api/email-categories'],
     enabled: isOpen,
   });
 
@@ -165,11 +171,55 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
     }
   });
 
+  // Combine all available categories from template and email categories
   useEffect(() => {
-    if (categories && Array.isArray(categories) && categories.length > 0) {
-      setAvailableCategories(categories as TemplateVariableCategory[]);
+    const combinedCategories: TemplateVariableCategory[] = [];
+    
+    // Add template categories
+    if (templateCategories && Array.isArray(templateCategories)) {
+      templateCategories.forEach((cat: any) => {
+        combinedCategories.push({
+          id: cat.id,
+          name: cat.name,
+          displayName: cat.name,
+          color: cat.color || '#3b82f6',
+          isActive: cat.isActive || true,
+          createdBy: cat.createdBy || '',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      });
     }
-  }, [categories]);
+    
+    // Add email categories
+    if (emailCategories && Array.isArray(emailCategories)) {
+      emailCategories.forEach((cat: any) => {
+        if (!combinedCategories.find(c => c.name === cat.name)) {
+          combinedCategories.push({
+            id: cat.id,
+            name: cat.name,
+            displayName: cat.name,
+            color: cat.color || '#3b82f6',
+            isActive: cat.isActive || true,
+            createdBy: cat.createdBy || '',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+        }
+      });
+    }
+    
+    // Add some default categories if none exist
+    if (combinedCategories.length === 0) {
+      combinedCategories.push(
+        { id: '1', name: 'General Support', displayName: 'General Support', color: '#3b82f6', isActive: true, createdBy: '', createdAt: new Date(), updatedAt: new Date() },
+        { id: '2', name: 'Order Issues', displayName: 'Order Issues', color: '#ef4444', isActive: true, createdBy: '', createdAt: new Date(), updatedAt: new Date() },
+        { id: '3', name: 'Technical Support', displayName: 'Technical Support', color: '#10b981', isActive: true, createdBy: '', createdAt: new Date(), updatedAt: new Date() }
+      );
+    }
+    
+    setAvailableCategories(combinedCategories);
+  }, [templateCategories, emailCategories]);
 
   const resetForm = () => {
     setFormData({
@@ -283,7 +333,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
         
         <div className="space-y-4">
           {/* Loading States */}
-          {(variablesLoading || categoriesLoading) && (
+          {(variablesLoading || templateCategoriesLoading || emailCategoriesLoading) && (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin mr-2" />
               Loading variables...
