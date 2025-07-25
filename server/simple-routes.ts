@@ -778,6 +778,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Template Variables API Routes
+  app.get('/api/template-variables', async (req, res) => {
+    try {
+      const { category, search, isSystem } = req.query;
+      const variables = await storage.getTemplateVariables({ 
+        category: category as string || undefined,
+        search: search as string || undefined,
+        isSystem: isSystem === 'true' ? true : isSystem === 'false' ? false : undefined
+      });
+      res.json(variables);
+    } catch (error) {
+      console.error('[API] Error fetching template variables:', error);
+      res.status(500).json({ message: 'Failed to fetch template variables' });
+    }
+  });
+
+  app.post('/api/template-variables', async (req, res) => {
+    try {
+      const variableData = { ...req.body, createdBy: 'system' }; // For now use system as default
+      const variable = await storage.createTemplateVariable(variableData);
+      res.status(201).json(variable);
+    } catch (error) {
+      console.error('[API] Error creating template variable:', error);
+      res.status(500).json({ message: 'Failed to create template variable', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.patch('/api/template-variables/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const variable = await storage.updateTemplateVariable(id, req.body);
+      res.json(variable);
+    } catch (error) {
+      console.error('[API] Error updating template variable:', error);
+      res.status(500).json({ message: 'Failed to update template variable' });
+    }
+  });
+
+  app.delete('/api/template-variables/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteTemplateVariable(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting template variable:', error);
+      res.status(500).json({ message: 'Failed to delete template variable' });
+    }
+  });
+
+  // Template Variable Categories API Routes
+  app.get('/api/template-variable-categories', async (req, res) => {
+    try {
+      const categories = await storage.getTemplateVariableCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error('[API] Error fetching template variable categories:', error);
+      res.status(500).json({ message: 'Failed to fetch template variable categories' });
+    }
+  });
+
+  app.post('/api/template-variable-categories', async (req, res) => {
+    try {
+      const categoryData = { ...req.body, createdBy: 'system' }; // For now use system as default
+      const category = await storage.createTemplateVariableCategory(categoryData);
+      res.status(201).json(category);
+    } catch (error) {
+      console.error('[API] Error creating template variable category:', error);
+      res.status(500).json({ message: 'Failed to create template variable category', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.patch('/api/template-variable-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const category = await storage.updateTemplateVariableCategory(id, req.body);
+      res.json(category);
+    } catch (error) {
+      console.error('[API] Error updating template variable category:', error);
+      res.status(500).json({ message: 'Failed to update template variable category' });
+    }
+  });
+
+  app.delete('/api/template-variable-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteTemplateVariableCategory(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting template variable category:', error);
+      res.status(500).json({ message: 'Failed to delete template variable category' });
+    }
+  });
+
+  // Color Settings API Routes
+  app.get('/api/color-settings', async (req, res) => {
+    try {
+      const { entityType, entityName } = req.query;
+      const colorSettings = await storage.getColorSettings({ 
+        entityType: entityType as 'genre' | 'category' || undefined,
+        entityName: entityName as string || undefined
+      });
+      res.json(colorSettings);
+    } catch (error) {
+      console.error('[API] Error fetching color settings:', error);
+      res.status(500).json({ message: 'Failed to fetch color settings' });
+    }
+  });
+
+  app.post('/api/color-settings', async (req, res) => {
+    try {
+      const colorSettingData = { ...req.body, createdBy: 'system' }; // For now use system as default
+      const colorSetting = await storage.upsertColorSetting(colorSettingData);
+      res.json(colorSetting);
+    } catch (error) {
+      console.error('[API] Error creating/updating color setting:', error);
+      res.status(500).json({ message: 'Failed to create/update color setting', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.delete('/api/color-settings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteColorSetting(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting color setting:', error);
+      res.status(500).json({ message: 'Failed to delete color setting' });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
 

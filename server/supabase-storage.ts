@@ -1455,93 +1455,753 @@ export class SupabaseStorage implements IStorage {
     };
   }
 
-  // Template Variables operations (stub implementations)
+  // Template Variables operations
   async getTemplateVariables(filters?: { category?: string; search?: string; isSystem?: boolean; }): Promise<any[]> {
-    // TODO: Implement with Supabase
-    return [];
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      let query = this.client
+        .from('template_variables')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (filters?.category) {
+        query = query.eq('category', filters.category);
+      }
+      if (filters?.search) {
+        query = query.ilike('name', `%${filters.search}%`);
+      }
+      if (filters?.isSystem !== undefined) {
+        query = query.eq('is_system', filters.isSystem);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching template variables:', error);
+        return [];
+      }
+
+      return data.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        category: item.category,
+        example: item.example,
+        defaultValue: item.default_value,
+        isSystem: item.is_system,
+        createdBy: item.created_by,
+        createdAt: new Date(item.created_at),
+        updatedAt: new Date(item.updated_at)
+      }));
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getTemplateVariables:', error);
+      return [];
+    }
   }
 
   async getTemplateVariable(id: string): Promise<any | undefined> {
-    // TODO: Implement with Supabase
-    return undefined;
+    try {
+      const { data, error } = await this.client
+        .from('template_variables')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching template variable:', error);
+        return undefined;
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        example: data.example,
+        defaultValue: data.default_value,
+        isSystem: data.is_system,
+        createdBy: data.created_by,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getTemplateVariable:', error);
+      return undefined;
+    }
   }
 
   async createTemplateVariable(variable: any): Promise<any> {
-    // TODO: Implement with Supabase
-    throw new Error('Not implemented yet');
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const { data, error } = await this.client
+        .from('template_variables')
+        .insert({
+          name: variable.name,
+          description: variable.description,
+          category: variable.category,
+          example: variable.example,
+          default_value: variable.defaultValue,
+          is_system: variable.isSystem || false,
+          created_by: variable.createdBy,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error creating template variable:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        example: data.example,
+        defaultValue: data.default_value,
+        isSystem: data.is_system,
+        createdBy: data.created_by,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in createTemplateVariable:', error);
+      throw error;
+    }
   }
 
   async updateTemplateVariable(id: string, variable: any): Promise<any> {
-    // TODO: Implement with Supabase
-    throw new Error('Not implemented yet');
+    try {
+      const { data, error } = await this.client
+        .from('template_variables')
+        .update({
+          name: variable.name,
+          description: variable.description,
+          category: variable.category,
+          example: variable.example,
+          default_value: variable.defaultValue,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error updating template variable:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        example: data.example,
+        defaultValue: data.default_value,
+        isSystem: data.is_system,
+        createdBy: data.created_by,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in updateTemplateVariable:', error);
+      throw error;
+    }
   }
 
   async deleteTemplateVariable(id: string): Promise<void> {
-    // TODO: Implement with Supabase
-    throw new Error('Not implemented yet');
+    try {
+      const { error } = await this.client
+        .from('template_variables')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('[SupabaseStorage] Error deleting template variable:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in deleteTemplateVariable:', error);
+      throw error;
+    }
   }
 
-  // Template Variable Categories operations (stub implementations)
+  // Template Variable Categories operations
   async getTemplateVariableCategories(): Promise<any[]> {
-    // TODO: Implement with Supabase
-    return [];
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const { data, error } = await this.client
+        .from('template_variable_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_name', { ascending: true });
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching template variable categories:', error);
+        return [];
+      }
+
+      return data.map(item => ({
+        id: item.id,
+        name: item.name,
+        displayName: item.display_name,
+        color: item.color,
+        isActive: item.is_active,
+        createdBy: item.created_by,
+        createdAt: new Date(item.created_at),
+        updatedAt: new Date(item.updated_at)
+      }));
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getTemplateVariableCategories:', error);
+      return [];
+    }
   }
 
   async getTemplateVariableCategory(id: string): Promise<any | undefined> {
-    // TODO: Implement with Supabase
-    return undefined;
+    try {
+      const { data, error } = await this.client
+        .from('template_variable_categories')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching template variable category:', error);
+        return undefined;
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        displayName: data.display_name,
+        color: data.color,
+        isActive: data.is_active,
+        createdBy: data.created_by,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getTemplateVariableCategory:', error);
+      return undefined;
+    }
   }
 
   async createTemplateVariableCategory(category: any): Promise<any> {
-    // TODO: Implement with Supabase
-    throw new Error('Not implemented yet');
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const { data, error } = await this.client
+        .from('template_variable_categories')
+        .insert({
+          name: category.name,
+          display_name: category.displayName || category.name,
+          color: category.color || 'bg-gray-100 text-gray-800',
+          is_active: category.isActive !== false,
+          created_by: category.createdBy,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error creating template variable category:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        displayName: data.display_name,
+        color: data.color,
+        isActive: data.is_active,
+        createdBy: data.created_by,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in createTemplateVariableCategory:', error);
+      throw error;
+    }
   }
 
   async updateTemplateVariableCategory(id: string, category: any): Promise<any> {
-    // TODO: Implement with Supabase
-    throw new Error('Not implemented yet');
+    try {
+      const { data, error } = await this.client
+        .from('template_variable_categories')
+        .update({
+          name: category.name,
+          display_name: category.displayName,
+          color: category.color,
+          is_active: category.isActive,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error updating template variable category:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        displayName: data.display_name,
+        color: data.color,
+        isActive: data.is_active,
+        createdBy: data.created_by,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in updateTemplateVariableCategory:', error);
+      throw error;
+    }
   }
 
   async deleteTemplateVariableCategory(id: string): Promise<void> {
-    // TODO: Implement with Supabase
-    throw new Error('Not implemented yet');
+    try {
+      const { error } = await this.client
+        .from('template_variable_categories')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('[SupabaseStorage] Error deleting template variable category:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in deleteTemplateVariableCategory:', error);
+      throw error;
+    }
   }
 
-  // Color Settings operations (stub implementations)
+  // Color Settings operations
   async getColorSettings(filters?: { entityType?: 'genre' | 'category'; entityName?: string; }): Promise<any[]> {
-    // TODO: Implement with Supabase
-    return [];
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      let query = this.client
+        .from('color_settings')
+        .select('*')
+        .order('entity_name', { ascending: true });
+
+      if (filters?.entityType) {
+        query = query.eq('entity_type', filters.entityType);
+      }
+      if (filters?.entityName) {
+        query = query.eq('entity_name', filters.entityName);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching color settings:', error);
+        return [];
+      }
+
+      return data.map(item => ({
+        id: item.id,
+        entityType: item.entity_type,
+        entityName: item.entity_name,
+        backgroundColor: item.background_color,
+        textColor: item.text_color,
+        borderColor: item.border_color,
+        createdBy: item.created_by,
+        createdAt: new Date(item.created_at),
+        updatedAt: new Date(item.updated_at)
+      }));
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getColorSettings:', error);
+      return [];
+    }
   }
 
   async getColorSetting(id: string): Promise<any | undefined> {
-    // TODO: Implement with Supabase
-    return undefined;
+    try {
+      const { data, error } = await this.client
+        .from('color_settings')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching color setting:', error);
+        return undefined;
+      }
+
+      return {
+        id: data.id,
+        entityType: data.entity_type,
+        entityName: data.entity_name,
+        backgroundColor: data.background_color,
+        textColor: data.text_color,
+        borderColor: data.border_color,
+        createdBy: data.created_by,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getColorSetting:', error);
+      return undefined;
+    }
   }
 
   async upsertColorSetting(colorSetting: any): Promise<any> {
-    // TODO: Implement with Supabase
-    throw new Error('Not implemented yet');
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      // Check if exists
+      const { data: existing, error: fetchError } = await this.client
+        .from('color_settings')
+        .select('*')
+        .eq('entity_type', colorSetting.entityType)
+        .eq('entity_name', colorSetting.entityName)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('[SupabaseStorage] Error checking existing color setting:', fetchError);
+        throw fetchError;
+      }
+
+      let data, error;
+
+      if (existing) {
+        // Update existing
+        const result = await this.client
+          .from('color_settings')
+          .update({
+            background_color: colorSetting.backgroundColor,
+            text_color: colorSetting.textColor,
+            border_color: colorSetting.borderColor,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+        
+        data = result.data;
+        error = result.error;
+      } else {
+        // Create new
+        const result = await this.client
+          .from('color_settings')
+          .insert({
+            entity_type: colorSetting.entityType,
+            entity_name: colorSetting.entityName,
+            background_color: colorSetting.backgroundColor,
+            text_color: colorSetting.textColor,
+            border_color: colorSetting.borderColor,
+            created_by: colorSetting.createdBy,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+        
+        data = result.data;
+        error = result.error;
+      }
+
+      if (error) {
+        console.error('[SupabaseStorage] Error upserting color setting:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        entityType: data.entity_type,
+        entityName: data.entity_name,
+        backgroundColor: data.background_color,
+        textColor: data.text_color,
+        borderColor: data.border_color,
+        createdBy: data.created_by,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in upsertColorSetting:', error);
+      throw error;
+    }
   }
 
   async deleteColorSetting(id: string): Promise<void> {
-    // TODO: Implement with Supabase
-    throw new Error('Not implemented yet');
+    try {
+      const { error } = await this.client
+        .from('color_settings')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('[SupabaseStorage] Error deleting color setting:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in deleteColorSetting:', error);
+      throw error;
+    }
   }
 
-  // Missing CRUD operations for categories and teams (stub implementations)
+  // CRUD operations for categories and teams
   async createTemplateCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
-    // TODO: Implement with Supabase
-    throw new Error('Not implemented yet');
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const { data: result, error } = await this.client
+        .from('template_categories')
+        .insert({
+          name: data.name,
+          description: data.description,
+          is_active: data.isActive,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error creating template category:', error);
+        throw error;
+      }
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description,
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in createTemplateCategory:', error);
+      throw error;
+    }
   }
 
   async updateTemplateCategory(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
-    // TODO: Implement with Supabase
-    throw new Error('Not implemented yet');
+    try {
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+
+      const { data: result, error } = await this.client
+        .from('template_categories')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error updating template category:', error);
+        throw error;
+      }
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description,
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in updateTemplateCategory:', error);
+      throw error;
+    }
   }
 
   async deleteTemplateCategory(id: string): Promise<void> {
-    // TODO: Implement with Supabase
-    throw new Error('Not implemented yet');
+    try {
+      const { error } = await this.client
+        .from('template_categories')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('[SupabaseStorage] Error deleting template category:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in deleteTemplateCategory:', error);
+      throw error;
+    }
+  }
+
+  // CRUD operations for template genres
+  async createTemplateGenre(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const { data: result, error } = await this.client
+        .from('template_genres')
+        .insert({
+          name: data.name,
+          description: data.description,
+          is_active: data.isActive,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error creating template genre:', error);
+        throw error;
+      }
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description,
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in createTemplateGenre:', error);
+      throw error;
+    }
+  }
+
+  async updateTemplateGenre(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+
+      const { data: result, error } = await this.client
+        .from('template_genres')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error updating template genre:', error);
+        throw error;
+      }
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description,
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in updateTemplateGenre:', error);
+      throw error;
+    }
+  }
+
+  async deleteTemplateGenre(id: string): Promise<void> {
+    try {
+      const { error } = await this.client
+        .from('template_genres')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('[SupabaseStorage] Error deleting template genre:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in deleteTemplateGenre:', error);
+      throw error;
+    }
+  }
+
+  // CRUD operations for concerned teams
+  async createConcernedTeam(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const { data: result, error } = await this.client
+        .from('concerned_teams')
+        .insert({
+          name: data.name,
+          description: data.description,
+          is_active: data.isActive,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error creating concerned team:', error);
+        throw error;
+      }
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description,
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in createConcernedTeam:', error);
+      throw error;
+    }
+  }
+
+  async updateConcernedTeam(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+
+      const { data: result, error } = await this.client
+        .from('concerned_teams')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error updating concerned team:', error);
+        throw error;
+      }
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description,
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in updateConcernedTeam:', error);
+      throw error;
+    }
+  }
+
+  async deleteConcernedTeam(id: string): Promise<void> {
+    try {
+      const { error } = await this.client
+        .from('concerned_teams')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('[SupabaseStorage] Error deleting concerned team:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in deleteConcernedTeam:', error);
+      throw error;
+    }
   }
 
   async createEmailCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
