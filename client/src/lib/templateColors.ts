@@ -302,7 +302,53 @@ export async function syncColorsToSupabase() {
   }
 }
 
-// Auto-sync colors on module load (runs once)
+// Function to load saved colors from database and update the static color objects
+export async function loadColorsFromDatabase() {
+  try {
+    console.log('[TemplateColors] Loading saved colors from database...');
+    
+    const response = await fetch('/api/color-settings', {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      console.warn('[TemplateColors] Failed to load colors from database, using defaults');
+      return false;
+    }
+
+    const colorSettings = await response.json();
+    console.log('[TemplateColors] Retrieved color settings:', colorSettings.length);
+
+    // Update the static color objects with database values
+    colorSettings.forEach((setting: any) => {
+      const colorConfig = {
+        background: setting.backgroundColor,
+        text: setting.textColor,
+        border: setting.borderColor
+      };
+
+      if (setting.entityType === 'genre') {
+        GENRE_COLORS[setting.entityName] = colorConfig;
+        console.log(`[TemplateColors] Updated genre color: ${setting.entityName}`);
+      } else if (setting.entityType === 'category') {
+        CATEGORY_COLORS[setting.entityName] = colorConfig;
+        console.log(`[TemplateColors] Updated category color: ${setting.entityName}`);
+      }
+    });
+
+    console.log('[TemplateColors] Successfully loaded and applied saved colors');
+    return true;
+  } catch (error) {
+    console.error('[TemplateColors] Error loading colors from database:', error);
+    return false;
+  }
+}
+
+// Auto-load colors on module initialization
 if (typeof window !== 'undefined') {
-  syncColorsToSupabase();
+  // Load saved colors first, then sync any missing ones
+  loadColorsFromDatabase().then(() => {
+    syncColorsToSupabase();
+  });
 }

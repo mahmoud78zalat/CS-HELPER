@@ -2,10 +2,9 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCustomerData } from "@/hooks/useCustomerData";
-import { Copy, Calculator, Coins, RefreshCw } from "lucide-react";
+import { Copy, Coins, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const CONVERSION_RATES = {
@@ -29,8 +28,6 @@ export default function OrderConverterPanel() {
   const [pointsInput, setPointsInput] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('UAE');
   const [convertedCurrency, setConvertedCurrency] = useState('');
-  const [freeTextInput, setFreeTextInput] = useState('');
-  const [freeTextResult, setFreeTextResult] = useState('');
 
   const handleOrderConversion = (value: string) => {
     setOrderInput(value);
@@ -95,11 +92,7 @@ export default function OrderConverterPanel() {
     }
   };
 
-  const handleFreeTextConversion = (text: string) => {
-    setFreeTextInput(text);
-    // Agent can type anything, result will be the same text but clickable/copyable
-    setFreeTextResult(text);
-  };
+
 
   const handleCopyText = (text: string, description: string) => {
     if (text && text !== 'Unable to convert' && text !== 'Must start with A or U and be at least 13 characters') {
@@ -204,40 +197,7 @@ export default function OrderConverterPanel() {
         )}
       </div>
 
-      {/* Free Text Converter */}
-      <div className="space-y-3 border-t pt-4">
-        <div className="flex items-center gap-2">
-          <Calculator className="h-4 w-4 text-purple-500" />
-          <Label className="text-sm font-medium text-slate-700">Free Text Converter</Label>
-        </div>
-        
-        <Textarea
-          placeholder="Type anything here - result will be copyable"
-          value={freeTextInput}
-          onChange={(e) => handleFreeTextConversion(e.target.value)}
-          className="text-sm min-h-[60px]"
-        />
-        
-        {freeTextResult && (
-          <div className="text-xs text-slate-600 bg-white p-3 rounded border">
-            <div className="mb-2">
-              <strong>Result:</strong>
-            </div>
-            <div className="bg-slate-50 p-2 rounded text-sm mb-2 break-words">
-              {freeTextResult}
-            </div>
-            <Button 
-              onClick={() => handleCopyText(freeTextResult, 'Free text')}
-              size="sm"
-              variant="outline"
-              className="w-full"
-            >
-              <Copy className="w-3 h-3 mr-1" />
-              Copy Text
-            </Button>
-          </div>
-        )}
-      </div>
+
     </div>
   );
 }

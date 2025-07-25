@@ -25,7 +25,7 @@ import { User, Template } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
 
-import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates } from "@/lib/templateColors";
+import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates, loadColorsFromDatabase } from "@/lib/templateColors";
 import { HexColorPicker } from 'react-colorful';
 // Removed QUICK_TEMPLATE_STARTERS import as it's no longer needed
 
@@ -72,11 +72,16 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
 
 
-  // Force refetch on component mount
+  // Force refetch on component mount and load saved colors
   useEffect(() => {
     refetchGenres();
     refetchEmailCategories();
     refetchTemplateCategories();
+    
+    // Load saved colors from database on component mount
+    loadColorsFromDatabase().then(() => {
+      console.log('[AdminPanel] Colors loaded from database on mount');
+    });
   }, [refetchGenres, refetchEmailCategories, refetchTemplateCategories]);
 
   // Debug logging
@@ -249,15 +254,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
 
       if (response.ok) {
-        // Update local state only after successful API call
+        // Update local state and reload colors from database to ensure consistency
         setGenreColors(prev => ({
           ...prev,
           [genre]: tailwindColors
         }));
+        
+        // Reload colors from database to update the static color objects
+        await loadColorsFromDatabase();
+        
         setColorPickerOpen(null);
         toast({
           title: "Color Updated",
-          description: `${genre} color has been saved to database successfully.`,
+          description: `${genre} color has been saved and synchronized successfully.`,
         });
       } else {
         throw new Error('Failed to save color settings');
@@ -300,15 +309,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
 
       if (response.ok) {
-        // Update local state only after successful API call
+        // Update local state and reload colors from database to ensure consistency
         setCategoryColors(prev => ({
           ...prev,
           [category]: tailwindColors
         }));
+        
+        // Reload colors from database to update the static color objects
+        await loadColorsFromDatabase();
+        
         setColorPickerOpen(null);
         toast({
           title: "Color Updated", 
-          description: `${category} color has been saved to database successfully.`,
+          description: `${category} color has been saved and synchronized successfully.`,
         });
       } else {
         throw new Error('Failed to save color settings');

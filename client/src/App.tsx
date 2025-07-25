@@ -11,6 +11,7 @@ import Login from "@/pages/login";
 import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
+import { loadColorsFromDatabase } from "@/lib/templateColors";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -56,6 +57,13 @@ function Router() {
 }
 
 function App() {
+  // Load colors from database when app starts
+  React.useEffect(() => {
+    loadColorsFromDatabase().then(() => {
+      console.log('[App] Colors loaded from database on app start');
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
