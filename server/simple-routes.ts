@@ -796,7 +796,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/template-variables', async (req, res) => {
     try {
-      const variableData = { ...req.body, createdBy: 'system' }; // For now use system as default
+      const userId = req.headers['x-user-id'] as string;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID required' });
+      }
+      
+      const variableData = { ...req.body, createdBy: userId };
       const variable = await storage.createTemplateVariable(variableData);
       res.status(201).json(variable);
     } catch (error) {
@@ -840,7 +845,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/template-variable-categories', async (req, res) => {
     try {
-      const categoryData = { ...req.body, createdBy: 'system' }; // For now use system as default
+      const userId = req.headers['x-user-id'] as string;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID required' });
+      }
+      
+      const categoryData = { ...req.body, createdBy: userId };
       const category = await storage.createTemplateVariableCategory(categoryData);
       res.status(201).json(category);
     } catch (error) {
@@ -888,7 +898,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/color-settings', async (req, res) => {
     try {
-      const colorSettingData = { ...req.body, createdBy: 'system' }; // For now use system as default
+      const userId = req.headers['x-user-id'] as string;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID required' });
+      }
+      
+      const colorSettingData = { ...req.body, createdBy: userId };
       const colorSetting = await storage.upsertColorSetting(colorSettingData);
       res.json(colorSetting);
     } catch (error) {
@@ -924,16 +939,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/template-variables', async (req, res) => {
-    try {
-      const variableData = { ...req.body, createdBy: 'system' };
-      const variable = await storage.createTemplateVariable(variableData);
-      res.json(variable);
-    } catch (error) {
-      console.error('[API] Error creating template variable:', error);
-      res.status(500).json({ message: 'Failed to create template variable' });
-    }
-  });
+
 
   app.put('/api/template-variables/:id', async (req, res) => {
     try {
