@@ -48,18 +48,40 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [genreColors, setGenreColors] = useState<Record<string, any>>({});
   const [categoryColors, setCategoryColors] = useState<Record<string, any>>({});
   
-  // Fetch dynamic categories and genres
-  const { data: dynamicGenres = [] } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
+  // Fetch dynamic categories and genres - Force fresh data
+  const { data: dynamicGenres = [], isLoading: genresLoading, refetch: refetchGenres } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
     queryKey: ['/api/template-genres'],
+    staleTime: 0,
+    cacheTime: 0,
   });
   
-  const { data: dynamicEmailCategories = [] } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
+  const { data: dynamicEmailCategories = [], isLoading: emailCategoriesLoading, refetch: refetchEmailCategories } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
     queryKey: ['/api/email-categories'],
+    staleTime: 0,
+    cacheTime: 0,
   });
   
-  const { data: dynamicTemplateCategories = [] } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
+  const { data: dynamicTemplateCategories = [], isLoading: templateCategoriesLoading, refetch: refetchTemplateCategories } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
     queryKey: ['/api/template-categories'],
+    staleTime: 0,
+    cacheTime: 0,
   });
+
+  // Force refetch on component mount
+  useEffect(() => {
+    refetchGenres();
+    refetchEmailCategories();
+    refetchTemplateCategories();
+  }, []);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('[AdminPanel] Dynamic data status:', {
+      genres: { count: dynamicGenres.length, loading: genresLoading, data: dynamicGenres },
+      emailCategories: { count: dynamicEmailCategories.length, loading: emailCategoriesLoading, data: dynamicEmailCategories },
+      templateCategories: { count: dynamicTemplateCategories.length, loading: templateCategoriesLoading, data: dynamicTemplateCategories }
+    });
+  }, [dynamicGenres, dynamicEmailCategories, dynamicTemplateCategories, genresLoading, emailCategoriesLoading, templateCategoriesLoading]);
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
   const [tempColor, setTempColor] = useState<string>('#3b82f6');
   const [editingColorType, setEditingColorType] = useState<'genre' | 'category'>('genre');
@@ -1467,9 +1489,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {dynamicGenres.length === 0 ? (
+                      {genresLoading ? (
                         <p className="text-sm text-slate-500 text-center py-4">
-                          No genres found. Create templates to see genres here.
+                          Loading genres...
+                        </p>
+                      ) : dynamicGenres.length === 0 ? (
+                        <p className="text-sm text-slate-500 text-center py-4">
+                          No genres found. Database contains data but API may have issues.
                         </p>
                       ) : (
                         dynamicGenres.map((genre) => {
@@ -1522,9 +1548,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {[...dynamicTemplateCategories, ...dynamicEmailCategories].length === 0 ? (
+                      {(templateCategoriesLoading || emailCategoriesLoading) ? (
                         <p className="text-sm text-slate-500 text-center py-4">
-                          No categories found. Create templates to see categories here.
+                          Loading categories...
+                        </p>
+                      ) : [...dynamicTemplateCategories, ...dynamicEmailCategories].length === 0 ? (
+                        <p className="text-sm text-slate-500 text-center py-4">
+                          No categories found. Database contains data but API may have issues.
                         </p>
                       ) : (
                         // Combine and deduplicate categories from both sources
