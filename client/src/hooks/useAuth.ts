@@ -93,6 +93,10 @@ export function useAuth() {
           try {
             const userData = JSON.parse(responseText);
             console.log('[Auth] User found via API:', userData.email, userData.role);
+            
+            // Store user ID in localStorage for apiRequest function
+            localStorage.setItem('current_user_id', userData.id);
+            
             setUser(userData);
             setIsLoading(false);
             if (authTimeout) clearTimeout(authTimeout);
@@ -125,6 +129,10 @@ export function useAuth() {
       };
       
       console.log('[Auth] Setting user manually based on backend data:', userData.email, userData.role);
+      
+      // Store user ID in localStorage for apiRequest function
+      localStorage.setItem('current_user_id', userData.id);
+      
       setUser(userData);
       setIsLoading(false);
       if (authTimeout) clearTimeout(authTimeout);
@@ -239,6 +247,9 @@ export function useAuth() {
     if (error) {
       console.error('[Auth] Sign out error:', error);
     }
+    
+    // Clear user ID from localStorage
+    localStorage.removeItem('current_user_id');
     
     setUser(null);
     setIsLoading(false);

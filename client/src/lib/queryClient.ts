@@ -12,15 +12,34 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  userId?: string,
 ): Promise<Response> {
-  // Get current user ID for authentication
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id;
+  // Try multiple ways to get user ID
+  let currentUserId = userId;
+  
+  if (!currentUserId) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      currentUserId = session?.user?.id;
+    } catch (error) {
+      console.warn('[apiRequest] Failed to get session, using fallback');
+    }
+  }
+  
+  // Fallback to stored user ID in localStorage
+  if (!currentUserId) {
+    const storedUser = localStorage.getItem('current_user_id');
+    if (storedUser) {
+      currentUserId = storedUser;
+    }
+  }
   
   const headers: Record<string, string> = {
     ...(data ? { "Content-Type": "application/json" } : {}),
-    ...(userId ? { "x-user-id": userId } : {}),
+    ...(currentUserId ? { "x-user-id": currentUserId } : {}),
   };
+
+  console.log('[apiRequest] Making request to:', url, 'with user ID:', currentUserId ? 'present' : 'missing');
 
   const res = await fetch(url, {
     method,
