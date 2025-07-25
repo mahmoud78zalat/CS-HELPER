@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, X, Edit2, Save, Trash2, Variable, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface TemplateVariable {
   id: string;
@@ -32,6 +33,14 @@ interface TemplateVariableCategory {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface CustomVariable {
+  name: string;
+  description: string;
+  category: string;
+  example: string;
+  defaultValue: string;
 }
 
 const DEFAULT_SYSTEM_VARIABLES: CustomVariable[] = [
@@ -157,8 +166,8 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
   });
 
   useEffect(() => {
-    if (categories.length > 0) {
-      setAvailableCategories(categories);
+    if (categories && Array.isArray(categories) && categories.length > 0) {
+      setAvailableCategories(categories as TemplateVariableCategory[]);
     }
   }, [categories]);
 
@@ -185,7 +194,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
 
     const variableName = formData.name.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
     
-    if (variables.some((v: any) => v.name === variableName)) {
+    if (variables && Array.isArray(variables) && variables.some((v: any) => v.name === variableName)) {
       toast({
         title: "Error",
         description: "A variable with this name already exists",
@@ -212,7 +221,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
 
     const variableName = formData.name.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
     
-    if (variables.some((v: any) => v.name === variableName && v.id !== editingId)) {
+    if (variables && Array.isArray(variables) && variables.some((v: any) => v.name === variableName && v.id !== editingId)) {
       toast({
         title: "Error",
         description: "A variable with this name already exists",
@@ -386,7 +395,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
             <Card>
               <CardContent className="p-4">
                 <div className="space-y-3">
-                  {variables.map((variable: TemplateVariable) => (
+                  {(variables as TemplateVariable[] || []).map((variable: TemplateVariable) => (
                     <div key={variable.id} className="flex items-start justify-between p-3 border rounded-lg">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -438,7 +447,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
                   ))}
                 </div>
                 
-                {variables.length === 0 && (
+                {(!variables || (variables as TemplateVariable[]).length === 0) && (
                   <p className="text-sm text-slate-500 text-center py-8">
                     No template variables found. Add some above.
                   </p>
@@ -449,7 +458,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
 
           {!variablesLoading && (
             <div className="text-xs text-slate-500">
-              <p><strong>Total:</strong> {variables.length} template variables</p>
+              <p><strong>Total:</strong> {(variables as TemplateVariable[] || []).length} template variables</p>
               <p><strong>Usage:</strong> Use variables in templates like {`{VARIABLE_NAME}`} or {`[VARIABLE_NAME]`}</p>
               <p><strong>Note:</strong> Changes are saved directly to the database and apply immediately</p>
             </div>

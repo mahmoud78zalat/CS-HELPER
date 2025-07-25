@@ -5,14 +5,83 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Edit2, Save, Trash2, Settings } from "lucide-react";
+import { Plus, X, Edit2, Save, Trash2, Settings, Variable } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import VariableManager from "./VariableManager";
 
 interface TemplateConfigManagerProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+// State for controlling the Variable Manager modal
+function TemplateConfigManager({ isOpen, onClose }: TemplateConfigManagerProps) {
+  const [isVariableManagerOpen, setIsVariableManagerOpen] = useState(false);
+  
+  return (
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Template Configuration Manager</DialogTitle>
+          </DialogHeader>
+          
+          <Tabs defaultValue="categories" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="categories">Categories</TabsTrigger>
+              <TabsTrigger value="genres">Genres</TabsTrigger>
+              <TabsTrigger value="teams">Concerned Teams</TabsTrigger>
+              <TabsTrigger value="variables">Variables</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="categories">
+              <ConfigTypeManager type="categories" />
+            </TabsContent>
+            
+            <TabsContent value="genres">
+              <ConfigTypeManager type="genres" />
+            </TabsContent>
+            
+            <TabsContent value="teams">
+              <ConfigTypeManager type="concerned_teams" />
+            </TabsContent>
+            
+            <TabsContent value="variables">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Variable className="h-5 w-5" />
+                    Universal Variable Manager
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-slate-600 mb-4">
+                    Manage template variables and categories used throughout the system. 
+                    Variables can be used in both live chat templates and email templates.
+                  </p>
+                  <Button 
+                    onClick={() => setIsVariableManagerOpen(true)}
+                    className="w-full"
+                  >
+                    <Variable className="h-4 w-4 mr-2" />
+                    Open Universal Variable Manager
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      {/* Variable Manager Modal */}
+      <VariableManager 
+        isOpen={isVariableManagerOpen} 
+        onClose={() => setIsVariableManagerOpen(false)} 
+      />
+    </>
+  );
 }
 
 interface ConfigItem {
@@ -256,35 +325,4 @@ function ConfigTypeManager({ type }: { type: 'categories' | 'genres' | 'concerne
   );
 }
 
-// Main dialog component
-export default function TemplateConfigManager({ isOpen, onClose }: TemplateConfigManagerProps) {
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Template Configuration Manager</DialogTitle>
-        </DialogHeader>
-        
-        <Tabs defaultValue="categories" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="genres">Genres</TabsTrigger>
-            <TabsTrigger value="teams">Concerned Teams</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="categories">
-            <ConfigTypeManager type="categories" />
-          </TabsContent>
-          
-          <TabsContent value="genres">
-            <ConfigTypeManager type="genres" />
-          </TabsContent>
-          
-          <TabsContent value="teams">
-            <ConfigTypeManager type="concerned_teams" />
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-}
+export default TemplateConfigManager;
