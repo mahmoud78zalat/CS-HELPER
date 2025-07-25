@@ -64,6 +64,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     staleTime: 0,
   });
 
+  // Add concerned teams query for configuration manager count
+  const { data: concernedTeamsData = [] } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
+    queryKey: ['/api/concerned-teams'],
+    staleTime: 0,
+  });
+
   // Force refetch on component mount
   useEffect(() => {
     refetchGenres();
@@ -2139,24 +2145,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Categories:</span>
-                        <span className="font-medium">{(() => {
-                          const categories = siteContentValues.template_categories;
-                          return categories ? JSON.parse(categories).length : 8;
-                        })()}</span>
+                        <span className="font-medium">{(dynamicTemplateCategories as any[]).length + (dynamicEmailCategories as any[]).length}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Genres:</span>
-                        <span className="font-medium">{(() => {
-                          const genres = siteContentValues.template_genres;
-                          return genres ? JSON.parse(genres).length : 14;
-                        })()}</span>
+                        <span className="font-medium">{(dynamicGenres as any[]).length}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Concerned Teams:</span>
-                        <span className="font-medium">{(() => {
-                          const teams = siteContentValues.template_concerned_teams;
-                          return teams ? JSON.parse(teams).length : 7;
-                        })()}</span>
+                        <span className="font-medium">{concernedTeamsData?.length || 0}</span>
                       </div>
                     </div>
                     <Button variant="outline" size="sm" className="w-full mt-4" onClick={(e) => {

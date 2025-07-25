@@ -93,6 +93,23 @@ export interface IStorage {
   getTemplateGenres(): Promise<{id: string, name: string, description: string, isActive: boolean}[]>;
   getConcernedTeams(): Promise<{id: string, name: string, description: string, isActive: boolean}[]>;
 
+  // CRUD operations for dynamic data
+  createTemplateCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}>;
+  updateTemplateCategory(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}>;
+  deleteTemplateCategory(id: string): Promise<void>;
+
+  createEmailCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}>;
+  updateEmailCategory(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}>;
+  deleteEmailCategory(id: string): Promise<void>;
+
+  createTemplateGenre(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}>;
+  updateTemplateGenre(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}>;
+  deleteTemplateGenre(id: string): Promise<void>;
+
+  createConcernedTeam(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}>;
+  updateConcernedTeam(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}>;
+  deleteConcernedTeam(id: string): Promise<void>;
+
   // Site content operations
   getSiteContent(key?: string): Promise<SiteContent[]>;
   upsertSiteContent(content: InsertSiteContent): Promise<SiteContent>;

@@ -638,6 +638,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CRUD operations for template categories
+  app.post('/api/template-categories', async (req, res) => {
+    try {
+      const { name, description, isActive = true } = req.body;
+      const category = await storage.createTemplateCategory({ name, description, isActive });
+      res.status(201).json(category);
+    } catch (error) {
+      console.error('[API] Error creating template category:', error);
+      res.status(500).json({ message: 'Failed to create template category' });
+    }
+  });
+
+  app.patch('/api/template-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const category = await storage.updateTemplateCategory(id, updates);
+      res.json(category);
+    } catch (error) {
+      console.error('[API] Error updating template category:', error);
+      res.status(500).json({ message: 'Failed to update template category' });
+    }
+  });
+
+  app.delete('/api/template-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteTemplateCategory(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting template category:', error);
+      res.status(500).json({ message: 'Failed to delete template category' });
+    }
+  });
+
+  // CRUD operations for email categories
+  app.post('/api/email-categories', async (req, res) => {
+    try {
+      const { name, description, isActive = true } = req.body;
+      const category = await storage.createEmailCategory({ name, description, isActive });
+      res.status(201).json(category);
+    } catch (error) {
+      console.error('[API] Error creating email category:', error);
+      res.status(500).json({ message: 'Failed to create email category' });
+    }
+  });
+
+  app.patch('/api/email-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const category = await storage.updateEmailCategory(id, updates);
+      res.json(category);
+    } catch (error) {
+      console.error('[API] Error updating email category:', error);
+      res.status(500).json({ message: 'Failed to update email category' });
+    }
+  });
+
+  app.delete('/api/email-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteEmailCategory(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting email category:', error);
+      res.status(500).json({ message: 'Failed to delete email category' });
+    }
+  });
+
+  // CRUD operations for template genres
+  app.post('/api/template-genres', async (req, res) => {
+    try {
+      const { name, description, isActive = true } = req.body;
+      const genre = await storage.createTemplateGenre({ name, description, isActive });
+      res.status(201).json(genre);
+    } catch (error) {
+      console.error('[API] Error creating template genre:', error);
+      res.status(500).json({ message: 'Failed to create template genre' });
+    }
+  });
+
+  app.patch('/api/template-genres/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const genre = await storage.updateTemplateGenre(id, updates);
+      res.json(genre);
+    } catch (error) {
+      console.error('[API] Error updating template genre:', error);
+      res.status(500).json({ message: 'Failed to update template genre' });
+    }
+  });
+
+  app.delete('/api/template-genres/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteTemplateGenre(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting template genre:', error);
+      res.status(500).json({ message: 'Failed to delete template genre' });
+    }
+  });
+
+  // CRUD operations for concerned teams
+  app.post('/api/concerned-teams', async (req, res) => {
+    try {
+      const { name, description, isActive = true } = req.body;
+      const team = await storage.createConcernedTeam({ name, description, isActive });
+      res.status(201).json(team);
+    } catch (error) {
+      console.error('[API] Error creating concerned team:', error);
+      res.status(500).json({ message: 'Failed to create concerned team' });
+    }
+  });
+
+  app.patch('/api/concerned-teams/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const team = await storage.updateConcernedTeam(id, updates);
+      res.json(team);
+    } catch (error) {
+      console.error('[API] Error updating concerned team:', error);
+      res.status(500).json({ message: 'Failed to update concerned team' });
+    }
+  });
+
+  app.delete('/api/concerned-teams/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteConcernedTeam(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting concerned team:', error);
+      res.status(500).json({ message: 'Failed to delete concerned team' });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
 

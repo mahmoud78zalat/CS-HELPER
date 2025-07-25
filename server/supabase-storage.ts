@@ -1041,6 +1041,286 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
+  // CRUD operations for template categories
+  async createTemplateCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      const { data: result, error } = await this.client
+        .from('template_categories')
+        .insert({
+          name: data.name,
+          description: data.description,
+          is_active: data.isActive
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error creating template category:', error);
+      throw error;
+    }
+  }
+
+  async updateTemplateCategory(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      const updateData: any = {};
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+      updateData.updated_at = new Date().toISOString();
+
+      const { data: result, error } = await this.client
+        .from('template_categories')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error updating template category:', error);
+      throw error;
+    }
+  }
+
+  async deleteTemplateCategory(id: string): Promise<void> {
+    try {
+      const { error } = await this.client
+        .from('template_categories')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('[SupabaseStorage] Error deleting template category:', error);
+      throw error;
+    }
+  }
+
+  // CRUD operations for email categories
+  async createEmailCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      const { data: result, error } = await this.client
+        .from('email_categories')
+        .insert({
+          name: data.name,
+          description: data.description,
+          is_active: data.isActive
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error creating email category:', error);
+      throw error;
+    }
+  }
+
+  async updateEmailCategory(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      const updateData: any = {};
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+      updateData.updated_at = new Date().toISOString();
+
+      const { data: result, error } = await this.client
+        .from('email_categories')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error updating email category:', error);
+      throw error;
+    }
+  }
+
+  async deleteEmailCategory(id: string): Promise<void> {
+    try {
+      const { error } = await this.client
+        .from('email_categories')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('[SupabaseStorage] Error deleting email category:', error);
+      throw error;
+    }
+  }
+
+  // CRUD operations for template genres
+  async createTemplateGenre(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      const { data: result, error } = await this.client
+        .from('template_genres')
+        .insert({
+          name: data.name,
+          description: data.description,
+          is_active: data.isActive
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error creating template genre:', error);
+      throw error;
+    }
+  }
+
+  async updateTemplateGenre(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      const updateData: any = {};
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+      updateData.updated_at = new Date().toISOString();
+
+      const { data: result, error } = await this.client
+        .from('template_genres')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error updating template genre:', error);
+      throw error;
+    }
+  }
+
+  async deleteTemplateGenre(id: string): Promise<void> {
+    try {
+      const { error } = await this.client
+        .from('template_genres')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('[SupabaseStorage] Error deleting template genre:', error);
+      throw error;
+    }
+  }
+
+  // CRUD operations for concerned teams
+  async createConcernedTeam(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      const { data: result, error } = await this.client
+        .from('concerned_teams')
+        .insert({
+          name: data.name,
+          description: data.description,
+          is_active: data.isActive
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error creating concerned team:', error);
+      throw error;
+    }
+  }
+
+  async updateConcernedTeam(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    try {
+      const updateData: any = {};
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+      updateData.updated_at = new Date().toISOString();
+
+      const { data: result, error } = await this.client
+        .from('concerned_teams')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        isActive: result.is_active
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error updating concerned team:', error);
+      throw error;
+    }
+  }
+
+  async deleteConcernedTeam(id: string): Promise<void> {
+    try {
+      const { error } = await this.client
+        .from('concerned_teams')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('[SupabaseStorage] Error deleting concerned team:', error);
+      throw error;
+    }
+  }
+
   // Mapping functions
   private mapSupabaseUser(data: any): User {
     return {
