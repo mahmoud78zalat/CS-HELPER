@@ -53,7 +53,7 @@ INSERT INTO public.template_variable_categories (name, display_name, color, crea
 SELECT 
     LOWER(REPLACE(name, ' ', '_')), 
     name, 
-    color,
+    '#3b82f6', -- Default blue color
     (SELECT id FROM users WHERE role = 'admin' LIMIT 1)
 FROM public.template_categories
 ON CONFLICT (name) DO NOTHING;
