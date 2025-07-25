@@ -2,9 +2,23 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCustomerData } from "@/hooks/useCustomerData";
-import { Copy } from "lucide-react";
+import { Copy, Calculator, Coins, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+const CONVERSION_RATES = {
+  'UAE': { symbol: 'AED', rate: 0.01 }, // 1000 points = 10 AED
+  'KSA': { symbol: 'SAR', rate: 0.01 }, // 1000 points = 10 SAR  
+  'QATAR': { symbol: 'QTR', rate: 0.01 }, // 1000 points = 10 QTR
+  'MALAYSIA': { symbol: 'MYR', rate: 0.01 }, // 1000 points = 10 MYR
+  'BAHRAIN': { symbol: 'BAH', rate: 0.001 }, // 1000 points = 1 BAH
+  'KUWAIT': { symbol: 'KWT', rate: 0.001 }, // 1000 points = 1 KWT
+  'OMAN': { symbol: 'OMR', rate: 0.001 }, // 1000 points = 1 OMR
+  'SINGAPORE': { symbol: 'SGD', rate: 0.003 }, // 1000 points = 3 SGD
+  'OTHER': { symbol: 'USD', rate: 0.003 }, // 1000 points = 3 USD (Rest of countries)
+};
 
 export default function OrderConverterPanel() {
   const { customerData, updateCustomerData } = useCustomerData();
@@ -12,22 +26,54 @@ export default function OrderConverterPanel() {
   const [orderInput, setOrderInput] = useState('');
   const [convertedOrder, setConvertedOrder] = useState('');
   const [orderType, setOrderType] = useState('');
+  const [pointsInput, setPointsInput] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('UAE');
+  const [convertedCurrency, setConvertedCurrency] = useState('');
+  const [freeTextInput, setFreeTextInput] = useState('');
+  const [freeTextResult, setFreeTextResult] = useState('');
 
   const handleOrderConversion = (value: string) => {
     setOrderInput(value);
     updateCustomerData('order_number', value);
 
     if (value.trim()) {
-      // Auto-detect order type and convert
-      if (value.startsWith('A') && value.length === 8) {
+      // New logic: Input must start with 'A' and total length must be >= 13
+      if (value.startsWith('A') && value.length >= 13) {
         setOrderType('Order ID Format');
-        setConvertedOrder(`U${Math.random().toString().slice(2, 11)}`);
-      } else if (value.startsWith('U')) {
+        
+        // Remove first 'A' letter
+        let processed = value.substring(1);
+        
+        // If length > 13, remove extra characters from the beginning (after removing A)
+        if (value.length > 13) {
+          const extraChars = value.length - 13;
+          processed = processed.substring(extraChars);
+        }
+        
+        // Remove last 5 digits and first digit from what remains
+        if (processed.length >= 6) {
+          processed = processed.substring(1, processed.length - 5);
+        }
+        
+        setConvertedOrder(`U${processed}`);
+      } else if (value.startsWith('U') && value.length >= 13) {
         setOrderType('User ID Format');
-        setConvertedOrder(`A${Math.random().toString().slice(2, 9)}`);
+        
+        // Remove first 'U' letter
+        let processed = value.substring(1);
+        
+        // If length > 13, remove extra characters from the beginning (after removing U)  
+        if (value.length > 13) {
+          const extraChars = value.length - 13;
+          processed = processed.substring(extraChars);
+        }
+        
+        // For reverse conversion, add back the removed parts
+        // This is an approximation since we can't perfectly reverse
+        setConvertedOrder(`A1${processed}12345`);
       } else {
-        setOrderType('Unknown Format');
-        setConvertedOrder('Unable to convert');
+        setOrderType('Invalid Format');
+        setConvertedOrder('Must start with A or U and be at least 13 characters');
       }
     } else {
       setOrderType('');
@@ -35,45 +81,162 @@ export default function OrderConverterPanel() {
     }
   };
 
-  const handleCopyConverted = () => {
-    if (convertedOrder && convertedOrder !== 'Unable to convert') {
-      navigator.clipboard.writeText(convertedOrder);
+  const handlePointsConversion = (points: string, country: string) => {
+    setPointsInput(points);
+    setSelectedCountry(country);
+    
+    const pointsNum = parseFloat(points);
+    if (!isNaN(pointsNum) && pointsNum > 0) {
+      const rate = CONVERSION_RATES[country as keyof typeof CONVERSION_RATES];
+      const converted = (pointsNum * rate.rate).toFixed(2);
+      setConvertedCurrency(`${converted} ${rate.symbol}`);
+    } else {
+      setConvertedCurrency('');
+    }
+  };
+
+  const handleFreeTextConversion = (text: string) => {
+    setFreeTextInput(text);
+    // Agent can type anything, result will be the same text but clickable/copyable
+    setFreeTextResult(text);
+  };
+
+  const handleCopyText = (text: string, description: string) => {
+    if (text && text !== 'Unable to convert' && text !== 'Must start with A or U and be at least 13 characters') {
+      navigator.clipboard.writeText(text);
       toast({
         title: "Success",
-        description: "Converted order number copied to clipboard!",
+        description: `${description} copied to clipboard!`,
       });
     }
   };
 
   return (
-    <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+    <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-4">
+      {/* Order/User ID Conversion */}
       <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4 text-blue-500" />
+          <Label className="text-sm font-medium text-slate-700">Order/User ID Converter</Label>
+        </div>
+        
         <div>
-          <Label className="text-xs font-medium text-slate-600 mb-1">Order/User ID</Label>
           <Input
             type="text"
             className="w-full text-sm"
-            placeholder="A1234567 or U123456789"
+            placeholder="A123456789101 (min 13 chars, starts with A/U)"
             value={orderInput}
             onChange={(e) => handleOrderConversion(e.target.value)}
           />
         </div>
         
         {orderType && (
-          <div className="text-xs text-slate-500 bg-white p-2 rounded border">
-            <div><strong>Auto-detected:</strong> {orderType}</div>
-            <div><strong>Converted:</strong> {convertedOrder}</div>
+          <div className="text-xs text-slate-600 bg-white p-3 rounded border">
+            <div className="flex justify-between items-center mb-2">
+              <span><strong>Detected:</strong> {orderType}</span>
+            </div>
+            <div className="space-y-2">
+              <div><strong>Result:</strong> {convertedOrder}</div>
+              {convertedOrder && convertedOrder !== 'Unable to convert' && convertedOrder !== 'Must start with A or U and be at least 13 characters' && (
+                <Button 
+                  onClick={() => handleCopyText(convertedOrder, 'Converted ID')}
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Copy className="w-3 h-3 mr-1" />
+                  Copy Result
+                </Button>
+              )}
+            </div>
           </div>
         )}
+      </div>
+
+      {/* Points to Currency Conversion */}
+      <div className="space-y-3 border-t pt-4">
+        <div className="flex items-center gap-2">
+          <Coins className="h-4 w-4 text-green-500" />
+          <Label className="text-sm font-medium text-slate-700">Points to Currency</Label>
+        </div>
         
-        <Button 
-          onClick={handleCopyConverted}
-          disabled={!convertedOrder || convertedOrder === 'Unable to convert'}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-3 rounded-md text-sm hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Copy className="w-4 h-4 mr-2" />
-          Copy Converted Number
-        </Button>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            type="number"
+            placeholder="Enter points"
+            value={pointsInput}
+            onChange={(e) => handlePointsConversion(e.target.value, selectedCountry)}
+            className="text-sm"
+          />
+          <Select value={selectedCountry} onValueChange={(value) => handlePointsConversion(pointsInput, value)}>
+            <SelectTrigger className="text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="UAE">UAE (AED)</SelectItem>
+              <SelectItem value="KSA">KSA (SAR)</SelectItem>
+              <SelectItem value="QATAR">Qatar (QTR)</SelectItem>
+              <SelectItem value="MALAYSIA">Malaysia (MYR)</SelectItem>
+              <SelectItem value="BAHRAIN">Bahrain (BAH)</SelectItem>
+              <SelectItem value="KUWAIT">Kuwait (KWT)</SelectItem>
+              <SelectItem value="OMAN">Oman (OMR)</SelectItem>
+              <SelectItem value="SINGAPORE">Singapore (SGD)</SelectItem>
+              <SelectItem value="OTHER">Other Countries (USD)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {convertedCurrency && (
+          <div className="text-xs text-slate-600 bg-white p-3 rounded border">
+            <div className="flex justify-between items-center mb-2">
+              <span><strong>Converted Amount:</strong> {convertedCurrency}</span>
+            </div>
+            <Button 
+              onClick={() => handleCopyText(convertedCurrency, 'Currency amount')}
+              size="sm"
+              variant="outline"
+              className="w-full"
+            >
+              <Copy className="w-3 h-3 mr-1" />
+              Copy Amount
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Free Text Converter */}
+      <div className="space-y-3 border-t pt-4">
+        <div className="flex items-center gap-2">
+          <Calculator className="h-4 w-4 text-purple-500" />
+          <Label className="text-sm font-medium text-slate-700">Free Text Converter</Label>
+        </div>
+        
+        <Textarea
+          placeholder="Type anything here - result will be copyable"
+          value={freeTextInput}
+          onChange={(e) => handleFreeTextConversion(e.target.value)}
+          className="text-sm min-h-[60px]"
+        />
+        
+        {freeTextResult && (
+          <div className="text-xs text-slate-600 bg-white p-3 rounded border">
+            <div className="mb-2">
+              <strong>Result:</strong>
+            </div>
+            <div className="bg-slate-50 p-2 rounded text-sm mb-2 break-words">
+              {freeTextResult}
+            </div>
+            <Button 
+              onClick={() => handleCopyText(freeTextResult, 'Free text')}
+              size="sm"
+              variant="outline"
+              className="w-full"
+            >
+              <Copy className="w-3 h-3 mr-1" />
+              Copy Text
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

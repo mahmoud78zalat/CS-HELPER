@@ -70,6 +70,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     staleTime: 0,
   });
 
+  // Add template variables query for variable manager count
+  const { data: templateVariables = [] } = useQuery({
+    queryKey: ['/api/template-variables'],
+    staleTime: 0,
+  });
+
   // Force refetch on component mount
   useEffect(() => {
     refetchGenres();
@@ -226,32 +232,106 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     };
   };
 
-  // Function to update genre color
-  const updateGenreColor = (genre: string, color: string) => {
-    const tailwindColors = hexToTailwindColor(color);
-    setGenreColors(prev => ({
-      ...prev,
-      [genre]: tailwindColors
-    }));
-    setColorPickerOpen(null);
-    toast({
-      title: "Color Updated",
-      description: `${genre} color has been updated successfully.`,
-    });
+  // Function to update genre color - now saves to database
+  const updateGenreColor = async (genre: string, color: string) => {
+    try {
+      const tailwindColors = hexToTailwindColor(color);
+      
+      // Save to database via API
+      const response = await fetch('/api/color-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          entityType: 'genre',
+          entityName: genre.toLowerCase(),
+          backgroundColor: tailwindColors.background,
+          textColor: tailwindColors.text,
+          borderColor: tailwindColors.border,
+        }),
+      });
+
+      if (response.ok) {
+        // Update local state only after successful API call
+        setGenreColors(prev => ({
+          ...prev,
+          [genre]: tailwindColors
+        }));
+        setColorPickerOpen(null);
+        toast({
+          title: "Color Updated",
+          description: `${genre} color has been saved to database successfully.`,
+        });
+      } else {
+        throw new Error('Failed to save color settings');
+      }
+    } catch (error) {
+      console.error('Error updating genre color:', error);
+      toast({
+        title: "Error",
+        description: `Failed to save ${genre} color. Changes not persisted.`,
+        variant: "destructive",
+      });
+      // Still update local state for immediate visual feedback
+      const tailwindColors = hexToTailwindColor(color);
+      setGenreColors(prev => ({
+        ...prev,
+        [genre]: tailwindColors
+      }));
+      setColorPickerOpen(null);
+    }
   };
 
-  // Function to update category color
-  const updateCategoryColor = (category: string, color: string) => {
-    const tailwindColors = hexToTailwindColor(color);
-    setCategoryColors(prev => ({
-      ...prev,
-      [category]: tailwindColors
-    }));
-    setColorPickerOpen(null);
-    toast({
-      title: "Color Updated", 
-      description: `${category} color has been updated successfully.`,
-    });
+  // Function to update category color - now saves to database
+  const updateCategoryColor = async (category: string, color: string) => {
+    try {
+      const tailwindColors = hexToTailwindColor(color);
+      
+      // Save to database via API
+      const response = await fetch('/api/color-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          entityType: 'category',
+          entityName: category.toLowerCase(),
+          backgroundColor: tailwindColors.background,
+          textColor: tailwindColors.text,
+          borderColor: tailwindColors.border,
+        }),
+      });
+
+      if (response.ok) {
+        // Update local state only after successful API call
+        setCategoryColors(prev => ({
+          ...prev,
+          [category]: tailwindColors
+        }));
+        setColorPickerOpen(null);
+        toast({
+          title: "Color Updated", 
+          description: `${category} color has been saved to database successfully.`,
+        });
+      } else {
+        throw new Error('Failed to save color settings');
+      }
+    } catch (error) {
+      console.error('Error updating category color:', error);
+      toast({
+        title: "Error",
+        description: `Failed to save ${category} color. Changes not persisted.`,
+        variant: "destructive",
+      });
+      // Still update local state for immediate visual feedback
+      const tailwindColors = hexToTailwindColor(color);
+      setCategoryColors(prev => ({
+        ...prev,
+        [category]: tailwindColors
+      }));
+      setColorPickerOpen(null);
+    }
   };
 
   // Function to open color picker
@@ -2179,10 +2259,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Total Variables:</span>
-                        <span className="font-medium">{(() => {
-                          const variables = localStorage.getItem('system_template_variables');
-                          return variables ? JSON.parse(variables).length : 18;
-                        })()}</span>
+                        <span className="font-medium">{templateVariables.length}</span>
                       </div>
                       <div className="text-xs text-slate-500">
                         Add custom variables that can be used in templates with {`{VARIABLE_NAME}`} syntax

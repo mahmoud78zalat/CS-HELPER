@@ -328,6 +328,111 @@ export const insertPersonalNoteSchema = createInsertSchema(personalNotes).omit({
 export type PersonalNote = typeof personalNotes.$inferSelect;
 export type InsertPersonalNote = z.infer<typeof insertPersonalNoteSchema>;
 
+// Template Variables Schema
+export const templateVariables = pgTable("template_variables", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").unique().notNull(),
+  description: text("description").notNull(),
+  category: varchar("category").notNull(),
+  example: text("example").notNull(),
+  defaultValue: text("default_value"),
+  isSystem: boolean("is_system").default(false).notNull(),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(),
+  lastSyncedAt: timestamp("last_synced_at"),
+});
+
+// Template Variable Categories Schema
+export const templateVariableCategories = pgTable("template_variable_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").unique().notNull(),
+  displayName: varchar("display_name").notNull(),
+  color: varchar("color").default("#3b82f6").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(),
+  lastSyncedAt: timestamp("last_synced_at"),
+});
+
+// Color Management Schema
+export const colorSettings = pgTable("color_settings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  entityType: varchar("entity_type").notNull(), // 'genre' or 'category'
+  entityName: varchar("entity_name").notNull(),
+  backgroundColor: varchar("background_color").notNull(),
+  textColor: varchar("text_color").notNull(),
+  borderColor: varchar("border_color").notNull(),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(),
+  lastSyncedAt: timestamp("last_synced_at"),
+});
+
+// Relations
+export const templateVariablesRelations = relations(templateVariables, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [templateVariables.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const templateVariableCategoriesRelations = relations(templateVariableCategories, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [templateVariableCategories.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const colorSettingsRelations = relations(colorSettings, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [colorSettings.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas
+export const insertTemplateVariableSchema = createInsertSchema(templateVariables).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
+export const insertTemplateVariableCategorySchema = createInsertSchema(templateVariableCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
+export const insertColorSettingSchema = createInsertSchema(colorSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
+// Types
+export type TemplateVariable = typeof templateVariables.$inferSelect;
+export type InsertTemplateVariable = z.infer<typeof insertTemplateVariableSchema>;
+
+export type TemplateVariableCategory = typeof templateVariableCategories.$inferSelect;
+export type InsertTemplateVariableCategory = z.infer<typeof insertTemplateVariableCategorySchema>;
+
+export type ColorSetting = typeof colorSettings.$inferSelect;
+export type InsertColorSetting = z.infer<typeof insertColorSettingSchema>;
+
 // Legacy template type for backward compatibility (will remove after migration)
 export type Template = LiveReplyTemplate;
 export type InsertTemplate = InsertLiveReplyTemplate;

@@ -6,15 +6,32 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X, Edit2, Save, Trash2, Variable } from "lucide-react";
+import { Plus, X, Edit2, Save, Trash2, Variable, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface CustomVariable {
+interface TemplateVariable {
+  id: string;
   name: string;
   description: string;
-  category: string; // Use dynamic categories from TemplateConfigManager
+  category: string;
   example: string;
   defaultValue?: string;
+  isSystem: boolean;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface TemplateVariableCategory {
+  id: string;
+  name: string;
+  displayName: string;
+  color: string;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const DEFAULT_SYSTEM_VARIABLES: CustomVariable[] = [
@@ -52,58 +69,107 @@ interface VariableManagerProps {
 }
 
 export default function VariableManager({ isOpen, onClose }: VariableManagerProps) {
-  const [variables, setVariables] = useState<CustomVariable[]>([]);
-  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<TemplateVariableCategory[]>([]);
   const [isAdding, setIsAdding] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [formData, setFormData] = useState<CustomVariable>({
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
     name: '',
     description: '',
     category: '',
     example: '',
-    defaultValue: ''
+    defaultValue: '',
+    isSystem: false
   });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch template variables
+  const { data: variables = [], isLoading: variablesLoading } = useQuery({
+    queryKey: ['/api/template-variables'],
+    enabled: isOpen,
+  });
+
+  // Fetch template variable categories
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ['/api/template-variable-categories'],
+    enabled: isOpen,
+  });
+
+  // Create variable mutation
+  const createVariableMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch('/api/template-variables', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create variable');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
+      toast({ title: "Success", description: "Variable created successfully" });
+      resetForm();
+      setIsAdding(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  // Update variable mutation
+  const updateVariableMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await fetch(`/api/template-variables/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to update variable');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
+      toast({ title: "Success", description: "Variable updated successfully" });
+      resetForm();
+      setEditingId(null);
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  // Delete variable mutation
+  const deleteVariableMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/template-variables/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete variable');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
+      toast({ title: "Success", description: "Variable deleted successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
 
   useEffect(() => {
-    // Load categories from TemplateConfigManager
-    const categoriesData = localStorage.getItem('template_categories');
-    if (categoriesData) {
-      try {
-        const categories = JSON.parse(categoriesData);
-        setAvailableCategories(categories);
-      } catch {
-        setAvailableCategories(['Order Issues', 'Delivery Problems', 'Payment Issues', 'Returns & Refunds', 'Product Inquiry', 'General Support', 'Technical Support', 'Escalation']);
-      }
-    } else {
-      setAvailableCategories(['Order Issues', 'Delivery Problems', 'Payment Issues', 'Returns & Refunds', 'Product Inquiry', 'General Support', 'Technical Support', 'Escalation']);
+    if (categories.length > 0) {
+      setAvailableCategories(categories);
     }
-    
-    // Load variables from localStorage or use defaults
-    const saved = localStorage.getItem('system_template_variables');
-    if (saved) {
-      try {
-        setVariables(JSON.parse(saved));
-      } catch {
-        setVariables(DEFAULT_SYSTEM_VARIABLES);
-      }
-    } else {
-      setVariables(DEFAULT_SYSTEM_VARIABLES);
-    }
-  }, []);
-
-  const saveToStorage = (newVariables: CustomVariable[]) => {
-    localStorage.setItem('system_template_variables', JSON.stringify(newVariables));
-    setVariables(newVariables);
-  };
+  }, [categories]);
 
   const resetForm = () => {
     setFormData({
       name: '',
       description: '',
-      category: availableCategories[0] || 'General Support',
+      category: availableCategories[0]?.name || '',
       example: '',
-      defaultValue: ''
+      defaultValue: '',
+      isSystem: false
     });
   };
 
@@ -119,7 +185,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
 
     const variableName = formData.name.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
     
-    if (variables.some(v => v.name === variableName)) {
+    if (variables.some((v: any) => v.name === variableName)) {
       toast({
         title: "Error",
         description: "A variable with this name already exists",
@@ -128,24 +194,14 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       return;
     }
 
-    const newVariable = {
+    createVariableMutation.mutate({
       ...formData,
       name: variableName
-    };
-
-    const newVariables = [...variables, newVariable];
-    saveToStorage(newVariables);
-    resetForm();
-    setIsAdding(false);
-    
-    toast({
-      title: "Success",
-      description: `Added variable ${variableName}`,
     });
   };
 
   const updateVariable = () => {
-    if (!formData.name.trim() || !formData.description.trim() || editingIndex === null) {
+    if (!formData.name.trim() || !formData.description.trim() || !editingId) {
       toast({
         title: "Error",
         description: "Name and description are required",
@@ -156,7 +212,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
 
     const variableName = formData.name.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
     
-    if (variables.some((v, i) => v.name === variableName && i !== editingIndex)) {
+    if (variables.some((v: any) => v.name === variableName && v.id !== editingId)) {
       toast({
         title: "Error",
         description: "A variable with this name already exists",
@@ -165,60 +221,45 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       return;
     }
 
-    const newVariables = [...variables];
-    newVariables[editingIndex] = {
-      ...formData,
-      name: variableName
-    };
-    
-    saveToStorage(newVariables);
-    resetForm();
-    setEditingIndex(null);
-    
-    toast({
-      title: "Success",
-      description: `Updated variable ${variableName}`,
+    updateVariableMutation.mutate({
+      id: editingId,
+      data: {
+        ...formData,
+        name: variableName
+      }
     });
   };
 
-  const deleteVariable = (index: number) => {
+  const deleteVariable = (id: string) => {
     if (confirm('Are you sure you want to delete this variable?')) {
-      const newVariables = variables.filter((_, i) => i !== index);
-      saveToStorage(newVariables);
-      
-      toast({
-        title: "Success",
-        description: "Variable deleted successfully",
-      });
+      deleteVariableMutation.mutate(id);
     }
   };
 
-  const startEditing = (index: number) => {
-    setFormData(variables[index]);
-    setEditingIndex(index);
+  const startEditing = (variable: TemplateVariable) => {
+    setFormData({
+      name: variable.name,
+      description: variable.description,
+      category: variable.category,
+      example: variable.example,
+      defaultValue: variable.defaultValue || '',
+      isSystem: variable.isSystem
+    });
+    setEditingId(variable.id);
     setIsAdding(false);
   };
 
   const cancelEdit = () => {
     resetForm();
-    setEditingIndex(null);
+    setEditingId(null);
     setIsAdding(false);
   };
 
 
 
-  const getCategoryColor = (category: string) => {
-    const categoryColors = {
-      'Order Issues': 'bg-red-100 text-red-800',
-      'Delivery Problems': 'bg-orange-100 text-orange-800', 
-      'Payment Issues': 'bg-yellow-100 text-yellow-800',
-      'Returns & Refunds': 'bg-blue-100 text-blue-800',
-      'Product Inquiry': 'bg-green-100 text-green-800',
-      'General Support': 'bg-purple-100 text-purple-800',
-      'Technical Support': 'bg-indigo-100 text-indigo-800',
-      'Escalation': 'bg-red-100 text-red-800'
-    };
-    return categoryColors[category as keyof typeof categoryColors] || 'bg-gray-100 text-gray-800';
+  const getCategoryColor = (categoryName: string) => {
+    const category = availableCategories.find(c => c.name === categoryName);
+    return category?.color || 'bg-gray-100 text-gray-800';
   };
 
   return (
@@ -232,12 +273,20 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
         </DialogHeader>
         
         <div className="space-y-4">
+          {/* Loading States */}
+          {(variablesLoading || categoriesLoading) && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              Loading variables...
+            </div>
+          )}
+
           {/* Add/Edit Form */}
-          {(isAdding || editingIndex !== null) && (
+          {(isAdding || editingId !== null) && !variablesLoading && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm">
-                  {editingIndex !== null ? 'Edit Variable' : 'Add New Variable'}
+                  {editingId !== null ? 'Edit Variable' : 'Add New Variable'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -262,8 +311,8 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
                       </SelectTrigger>
                       <SelectContent>
                         {availableCategories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
+                          <SelectItem key={category.id} value={category.name}>
+                            {category.displayName}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -303,11 +352,16 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
 
                 <div className="flex gap-2">
                   <Button 
-                    onClick={editingIndex !== null ? updateVariable : addVariable}
+                    onClick={editingId !== null ? updateVariable : addVariable}
                     size="sm"
+                    disabled={createVariableMutation.isPending || updateVariableMutation.isPending}
                   >
-                    <Save className="h-4 w-4 mr-1" />
-                    {editingIndex !== null ? 'Update' : 'Add'} Variable
+                    {(createVariableMutation.isPending || updateVariableMutation.isPending) ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-1" />
+                    )}
+                    {editingId !== null ? 'Update' : 'Add'} Variable
                   </Button>
                   <Button onClick={cancelEdit} variant="outline" size="sm">
                     Cancel
@@ -318,7 +372,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
           )}
 
           {/* Action Buttons */}
-          {!isAdding && editingIndex === null && (
+          {!isAdding && editingId === null && !variablesLoading && (
             <div className="flex gap-2">
               <Button onClick={() => setIsAdding(true)} size="sm">
                 <Plus className="h-4 w-4 mr-1" />
@@ -328,63 +382,78 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
           )}
 
           {/* Variables List */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="space-y-3">
-                {variables.map((variable, index) => (
-                  <div key={index} className="flex items-start justify-between p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <code className="bg-slate-100 px-2 py-1 rounded text-sm font-mono">
-                          {`{${variable.name}}`}
-                        </code>
-                        <Badge variant="outline" className={`text-xs ${getCategoryColor(variable.category)}`}>
-                          {variable.category}
-                        </Badge>
+          {!variablesLoading && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {variables.map((variable: TemplateVariable) => (
+                    <div key={variable.id} className="flex items-start justify-between p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <code className="bg-slate-100 px-2 py-1 rounded text-sm font-mono">
+                            {`{${variable.name}}`}
+                          </code>
+                          <Badge variant="outline" className={`text-xs ${getCategoryColor(variable.category)}`}>
+                            {variable.category}
+                          </Badge>
+                          {variable.isSystem && (
+                            <Badge variant="secondary" className="text-xs">
+                              System
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-700 mb-1">{variable.description}</p>
+                        <div className="text-xs text-slate-500">
+                          <span><strong>Example:</strong> {variable.example}</span>
+                          {variable.defaultValue && (
+                            <span className="ml-4"><strong>Default:</strong> {variable.defaultValue}</span>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-sm text-slate-700 mb-1">{variable.description}</p>
-                      <div className="text-xs text-slate-500">
-                        <span><strong>Example:</strong> {variable.example}</span>
-                        {variable.defaultValue && (
-                          <span className="ml-4"><strong>Default:</strong> {variable.defaultValue}</span>
-                        )}
+                      
+                      <div className="flex gap-1 ml-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => startEditing(variable)}
+                          disabled={variable.isSystem}
+                        >
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => deleteVariable(variable.id)}
+                          className="text-red-600 hover:bg-red-50"
+                          disabled={variable.isSystem || deleteVariableMutation.isPending}
+                        >
+                          {deleteVariableMutation.isPending ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                        </Button>
                       </div>
                     </div>
-                    
-                    <div className="flex gap-1 ml-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => startEditing(index)}
-                      >
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => deleteVariable(index)}
-                        className="text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {variables.length === 0 && (
-                <p className="text-sm text-slate-500 text-center py-8">
-                  No custom variables configured. Add some above.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+                
+                {variables.length === 0 && (
+                  <p className="text-sm text-slate-500 text-center py-8">
+                    No template variables found. Add some above.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-          <div className="text-xs text-slate-500">
-            <p><strong>Total:</strong> {variables.length} custom variables</p>
-            <p><strong>Usage:</strong> Use variables in templates like {`{VARIABLE_NAME}`} or {`[VARIABLE_NAME]`}</p>
-            <p><strong>Note:</strong> Changes apply immediately to template editors and email composer</p>
-          </div>
+          {!variablesLoading && (
+            <div className="text-xs text-slate-500">
+              <p><strong>Total:</strong> {variables.length} template variables</p>
+              <p><strong>Usage:</strong> Use variables in templates like {`{VARIABLE_NAME}`} or {`[VARIABLE_NAME]`}</p>
+              <p><strong>Note:</strong> Changes are saved directly to the database and apply immediately</p>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

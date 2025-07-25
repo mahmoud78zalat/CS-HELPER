@@ -523,4 +523,112 @@ export class MemoryStorage implements IStorage {
   async getConcernedTeams(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
     return [];
   }
+
+  // CRUD operations for categories and teams (stub implementations)
+  async createTemplateCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateTemplateCategory(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteTemplateCategory(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async createEmailCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateEmailCategory(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteEmailCategory(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async createTemplateGenre(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateTemplateGenre(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteTemplateGenre(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async createConcernedTeam(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateConcernedTeam(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteConcernedTeam(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  // Template Variables operations (stub implementations)
+  async getTemplateVariables(filters?: { category?: string; search?: string; isSystem?: boolean; }): Promise<any[]> {
+    return [];
+  }
+
+  async getTemplateVariable(id: string): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async createTemplateVariable(variable: any): Promise<any> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateTemplateVariable(id: string, variable: any): Promise<any> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteTemplateVariable(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  // Template Variable Categories operations (stub implementations)
+  async getTemplateVariableCategories(): Promise<any[]> {
+    return [];
+  }
+
+  async getTemplateVariableCategory(id: string): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async createTemplateVariableCategory(category: any): Promise<any> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateTemplateVariableCategory(id: string, category: any): Promise<any> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteTemplateVariableCategory(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  // Color Settings operations (stub implementations)
+  async getColorSettings(filters?: { entityType?: 'genre' | 'category'; entityName?: string; }): Promise<any[]> {
+    return [];
+  }
+
+  async getColorSetting(id: string): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async upsertColorSetting(colorSetting: any): Promise<any> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteColorSetting(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
 }

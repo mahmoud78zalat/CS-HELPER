@@ -111,7 +111,7 @@ export default function Sidebar({
             >
               <div className="flex items-center space-x-3">
                 <ArrowLeftRight className="h-4 w-4 text-blue-500" />
-                <span className="hidden lg:block font-medium text-slate-700 dark:text-slate-200">Order Converter</span>
+                <span className="hidden lg:block font-medium text-slate-700 dark:text-slate-200">Smart Converter</span>
               </div>
               <ChevronRight 
                 className={`hidden lg:block h-4 w-4 transition-transform duration-200 ${

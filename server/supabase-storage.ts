@@ -1454,4 +1454,123 @@ export class SupabaseStorage implements IStorage {
       lastSyncedAt: data.last_synced_at ? new Date(data.last_synced_at) : null,
     };
   }
+
+  // Template Variables operations (stub implementations)
+  async getTemplateVariables(filters?: { category?: string; search?: string; isSystem?: boolean; }): Promise<any[]> {
+    // TODO: Implement with Supabase
+    return [];
+  }
+
+  async getTemplateVariable(id: string): Promise<any | undefined> {
+    // TODO: Implement with Supabase
+    return undefined;
+  }
+
+  async createTemplateVariable(variable: any): Promise<any> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async updateTemplateVariable(id: string, variable: any): Promise<any> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async deleteTemplateVariable(id: string): Promise<void> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  // Template Variable Categories operations (stub implementations)
+  async getTemplateVariableCategories(): Promise<any[]> {
+    // TODO: Implement with Supabase
+    return [];
+  }
+
+  async getTemplateVariableCategory(id: string): Promise<any | undefined> {
+    // TODO: Implement with Supabase
+    return undefined;
+  }
+
+  async createTemplateVariableCategory(category: any): Promise<any> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async updateTemplateVariableCategory(id: string, category: any): Promise<any> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async deleteTemplateVariableCategory(id: string): Promise<void> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  // Color Settings operations (stub implementations)
+  async getColorSettings(filters?: { entityType?: 'genre' | 'category'; entityName?: string; }): Promise<any[]> {
+    // TODO: Implement with Supabase
+    return [];
+  }
+
+  async getColorSetting(id: string): Promise<any | undefined> {
+    // TODO: Implement with Supabase
+    return undefined;
+  }
+
+  async upsertColorSetting(colorSetting: any): Promise<any> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async deleteColorSetting(id: string): Promise<void> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  // Missing CRUD operations for categories and teams (stub implementations)
+  async createTemplateCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async updateTemplateCategory(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async deleteTemplateCategory(id: string): Promise<void> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async createEmailCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async updateEmailCategory(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async deleteEmailCategory(id: string): Promise<void> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async createTemplateGenre(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async updateTemplateGenre(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
+
+  async deleteTemplateGenre(id: string): Promise<void> {
+    // TODO: Implement with Supabase
+    throw new Error('Not implemented yet');
+  }
 }

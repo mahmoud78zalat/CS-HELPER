@@ -7,6 +7,9 @@ import {
   siteContent,
   announcements,
   userAnnouncementAcks,
+  templateVariables,
+  templateVariableCategories,
+  colorSettings,
   type User,
   type UpsertUser,
   type LiveReplyTemplate,
@@ -23,6 +26,12 @@ import {
   type InsertAnnouncement,
   type UserAnnouncementAck,
   type InsertUserAnnouncementAck,
+  type TemplateVariable,
+  type InsertTemplateVariable,
+  type TemplateVariableCategory,
+  type InsertTemplateVariableCategory,
+  type ColorSetting,
+  type InsertColorSetting,
   // Legacy types for backward compatibility
   type Template,
   type InsertTemplate,
@@ -126,6 +135,33 @@ export interface IStorage {
   getUserAnnouncementAck(userId: string, announcementId: string): Promise<UserAnnouncementAck | undefined>;
   getUnacknowledgedAnnouncements(userId: string): Promise<Announcement[]>;
   reAnnounce(announcementId: string): Promise<void>;
+
+  // Template Variables operations
+  getTemplateVariables(filters?: {
+    category?: string;
+    search?: string;
+    isSystem?: boolean;
+  }): Promise<TemplateVariable[]>;
+  getTemplateVariable(id: string): Promise<TemplateVariable | undefined>;
+  createTemplateVariable(variable: InsertTemplateVariable): Promise<TemplateVariable>;
+  updateTemplateVariable(id: string, variable: Partial<InsertTemplateVariable>): Promise<TemplateVariable>;
+  deleteTemplateVariable(id: string): Promise<void>;
+
+  // Template Variable Categories operations
+  getTemplateVariableCategories(): Promise<TemplateVariableCategory[]>;
+  getTemplateVariableCategory(id: string): Promise<TemplateVariableCategory | undefined>;
+  createTemplateVariableCategory(category: InsertTemplateVariableCategory): Promise<TemplateVariableCategory>;
+  updateTemplateVariableCategory(id: string, category: Partial<InsertTemplateVariableCategory>): Promise<TemplateVariableCategory>;
+  deleteTemplateVariableCategory(id: string): Promise<void>;
+
+  // Color Settings operations
+  getColorSettings(filters?: {
+    entityType?: 'genre' | 'category';
+    entityName?: string;
+  }): Promise<ColorSetting[]>;
+  getColorSetting(id: string): Promise<ColorSetting | undefined>;
+  upsertColorSetting(colorSetting: InsertColorSetting): Promise<ColorSetting>;
+  deleteColorSetting(id: string): Promise<void>;
 }
 
 // DatabaseStorage class commented out for beta testing
