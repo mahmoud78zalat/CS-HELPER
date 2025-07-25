@@ -942,7 +942,7 @@ export class SupabaseStorage implements IStorage {
         .eq('is_active', true);
 
       if (templates) {
-        const uniqueCategories = [...new Set(templates.map(t => t.category).filter(Boolean))];
+        const uniqueCategories = Array.from(new Set(templates.map(t => t.category).filter(Boolean)));
         for (const category of uniqueCategories) {
           await this.client
             .from('template_categories')
@@ -967,7 +967,7 @@ export class SupabaseStorage implements IStorage {
         .eq('is_active', true);
 
       if (templates) {
-        const uniqueCategories = [...new Set(templates.map(t => t.category).filter(Boolean))];
+        const uniqueCategories = Array.from(new Set(templates.map(t => t.category).filter(Boolean)));
         for (const category of uniqueCategories) {
           await this.client
             .from('email_categories')
@@ -1001,7 +1001,7 @@ export class SupabaseStorage implements IStorage {
         ...(emailTemplates || []).map(t => t.genre)
       ].filter(Boolean);
 
-      const uniqueGenres = [...new Set(allGenres)];
+      const uniqueGenres = Array.from(new Set(allGenres));
       for (const genre of uniqueGenres) {
         await this.client
           .from('template_genres')
@@ -1025,7 +1025,7 @@ export class SupabaseStorage implements IStorage {
         .eq('is_active', true);
 
       if (templates) {
-        const uniqueTeams = [...new Set(templates.map(t => t.concerned_team).filter(Boolean))];
+        const uniqueTeams = Array.from(new Set(templates.map(t => t.concerned_team).filter(Boolean)));
         for (const team of uniqueTeams) {
           await this.client
             .from('concerned_teams')

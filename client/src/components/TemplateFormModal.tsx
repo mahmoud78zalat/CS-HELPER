@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
 import { 
   AVAILABLE_VARIABLES, 
   extractVariablesFromTemplate, 
@@ -54,6 +55,26 @@ export default function TemplateFormModal({
   const [selectedCategory, setSelectedCategory] = useState<'customer' | 'order' | 'system' | 'time' | 'all'>('all');
   const [templateValidation, setTemplateValidation] = useState<{ isValid: boolean; issues: string[]; variables: string[] } | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+
+  // Fetch dynamic data for dropdowns
+  const { data: templateCategories = [] } = useQuery({
+    queryKey: ['/api/template-categories'],
+    enabled: !isEmailTemplate,
+  });
+
+  const { data: emailCategories = [] } = useQuery({
+    queryKey: ['/api/email-categories'],
+    enabled: isEmailTemplate,
+  });
+
+  const { data: templateGenres = [] } = useQuery({
+    queryKey: ['/api/template-genres'],
+  });
+
+  const { data: concernedTeams = [] } = useQuery({
+    queryKey: ['/api/concerned-teams'],
+    enabled: isEmailTemplate,
+  });
 
   // Initialize form data when template changes
   useEffect(() => {
@@ -213,13 +234,9 @@ export default function TemplateFormModal({
                         <SelectValue placeholder="Select team" />
                       </SelectTrigger>
                       <SelectContent>
-                        {(() => {
-                          const teams = localStorage.getItem('template_concerned_teams');
-                          const teamsList = teams ? JSON.parse(teams) : ['Customer Service', 'Order Management', 'Delivery Team', 'Returns Team', 'Technical Support', 'Finance', 'IT Support', 'Fulfillment', 'Quality Assurance', 'Management'];
-                          return teamsList.map((team: string) => (
-                            <SelectItem key={team} value={team}>{team}</SelectItem>
-                          ));
-                        })()}
+                        {concernedTeams.map((team: any) => (
+                          <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -234,13 +251,9 @@ export default function TemplateFormModal({
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {(() => {
-                        const categories = localStorage.getItem('template_categories');
-                        const categoriesList = categories ? JSON.parse(categories) : ['Order Issues', 'Delivery Problems', 'Payment Issues', 'Returns & Refunds', 'Product Inquiry', 'General Support', 'Technical Support', 'Escalation'];
-                        return categoriesList.map((category: string) => (
-                          <SelectItem key={category} value={category}>{category}</SelectItem>
-                        ));
-                      })()}
+                      {(isEmailTemplate ? emailCategories : templateCategories).map((category: any) => (
+                        <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -252,13 +265,9 @@ export default function TemplateFormModal({
                       <SelectValue placeholder="Select genre" />
                     </SelectTrigger>
                     <SelectContent>
-                      {(() => {
-                        const genres = localStorage.getItem('template_genres');
-                        const genresList = genres ? JSON.parse(genres) : ['Urgent', 'Standard', 'Follow-up', 'Escalation', 'Resolution', 'Greeting', 'CSAT', 'Warning Abusive Language', 'Apology', 'Thank You', 'Farewell', 'Confirmation', 'Technical Support', 'Holiday/Special Occasion'];
-                        return genresList.map((genre: string) => (
-                          <SelectItem key={genre} value={genre}>{genre}</SelectItem>
-                        ));
-                      })()}
+                      {templateGenres.map((genre: any) => (
+                        <SelectItem key={genre.id} value={genre.name}>{genre.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
