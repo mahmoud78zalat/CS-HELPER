@@ -1695,23 +1695,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 </Card>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    // Reset to default colors
-                    setGenreColors(GENRE_COLORS);
-                    setCategoryColors(CATEGORY_COLORS);
-                    toast({
-                      title: "Colors Reset",
-                      description: "Template colors have been reset to defaults.",
-                    });
-                  }}
-                >
-                  Reset to Defaults
-                </Button>
-              </div>
+    
 
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                 <h4 className="font-medium mb-2 dark:text-blue-100">Color System Information</h4>
