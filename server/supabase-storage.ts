@@ -476,6 +476,10 @@ export class SupabaseStorage implements IStorage {
       throw error;
     }
 
+    // Clear email template cache to ensure fresh data
+    this.templateCache.clear();
+    console.log('[SupabaseStorage] Cleared email template cache after creation');
+
     return this.mapSupabaseEmailTemplate(data);
   }
 
@@ -495,6 +499,10 @@ export class SupabaseStorage implements IStorage {
       throw error;
     }
 
+    // Clear email template cache to ensure fresh data
+    this.templateCache.clear();
+    console.log('[SupabaseStorage] Cleared email template cache after update');
+
     return this.mapSupabaseEmailTemplate(data);
   }
 
@@ -511,6 +519,10 @@ export class SupabaseStorage implements IStorage {
       console.error('[SupabaseStorage] ❌ Error deleting email template:', error);
       throw new Error(`Failed to delete email template: ${error.message}`);
     }
+
+    // Clear email template cache to ensure fresh data
+    this.templateCache.clear();
+    console.log('[SupabaseStorage] Cleared email template cache after deletion');
 
     console.log('[SupabaseStorage] ✅ Successfully deleted email template:', data);
   }
