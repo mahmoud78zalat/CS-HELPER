@@ -76,5 +76,14 @@ CREATE INDEX IF NOT EXISTS idx_template_variables_created_by ON public.template_
 CREATE INDEX IF NOT EXISTS idx_color_settings_entity ON public.color_settings(entity_type, entity_name);
 CREATE INDEX IF NOT EXISTS idx_template_variable_categories_active ON public.template_variable_categories(is_active);
 
--- Add unique constraint to prevent duplicate entity color settings
-ALTER TABLE public.color_settings ADD CONSTRAINT unique_entity_color IF NOT EXISTS UNIQUE (entity_type, entity_name);
+-- Add unique constraint to prevent duplicate entity color settings (ignore if already exists)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'unique_entity_color' 
+        AND table_name = 'color_settings'
+    ) THEN
+        ALTER TABLE public.color_settings ADD CONSTRAINT unique_entity_color UNIQUE (entity_type, entity_name);
+    END IF;
+END $$;
