@@ -21,7 +21,7 @@ import {
   X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
   Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save
 } from "lucide-react";
-import { User, Template } from "@shared/schema";
+import { User, Template, EmailTemplate } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
 
@@ -412,7 +412,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   });
 
   // Email Templates query with proper typing
-  const { data: emailTemplates = [], isLoading: emailTemplatesLoading } = useQuery<Template[]>({
+  const { data: emailTemplates = [], isLoading: emailTemplatesLoading } = useQuery<EmailTemplate[]>({
     queryKey: ['/api/email-templates'],
     retry: false,
   });
