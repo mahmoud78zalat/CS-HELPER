@@ -48,11 +48,10 @@ const TEMPLATE_VARIABLES = {
   ]
 };
 
-// Allowed variables for email subject field (strictly limited)
+// Allowed variables for email subject field (strictly limited to orderid and awb only)
 const SUBJECT_VARIABLES = [
-  { key: "ordernumber", label: "Order Number", placeholder: "ORD123456" },
-  { key: "AWB", label: "AWB Number", placeholder: "AWB789012" },
-  { key: "customernumber", label: "Customer Number", placeholder: "CUST001" },
+  { key: "orderid", label: "Order ID", placeholder: "ORD123456" },
+  { key: "awb", label: "AWB Number", placeholder: "AWB789012" },
 ];
 
 export default function EmailComposerModal({ onClose }: EmailComposerModalProps) {
@@ -64,6 +63,10 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const [showVariables, setShowVariables] = useState(false);
   const [showSubjectVariables, setShowSubjectVariables] = useState(false);
   
+  // Track subject and content changes for variable synchronization
+  const [prevSubject, setPrevSubject] = useState('');
+  const [prevBody, setPrevBody] = useState('');
+  
   // Fetch email templates
   const { data: templates = [] } = useQuery<EmailTemplate[]>({
     queryKey: ['/api/email-templates'],
@@ -72,6 +75,56 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const { customerData } = useCustomerData();
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Effect to handle variable synchronization between subject and content
+  useEffect(() => {
+    // Check if orderid or awb variables were added/changed in subject
+    const subjectOrderidMatch = emailSubject.match(/\{orderid\}/g);
+    const subjectAwbMatch = emailSubject.match(/\{awb\}/g);
+    const prevSubjectOrderidMatch = prevSubject.match(/\{orderid\}/g);
+    const prevSubjectAwbMatch = prevSubject.match(/\{awb\}/g);
+    
+    // Check if orderid or awb variables were added/changed in body
+    const bodyOrderidMatch = emailBody.match(/\{orderid\}/g);
+    const bodyAwbMatch = emailBody.match(/\{awb\}/g);
+    const prevBodyOrderidMatch = prevBody.match(/\{orderid\}/g);
+    const prevBodyAwbMatch = prevBody.match(/\{awb\}/g);
+    
+    // Sync variables if they changed in either subject or body
+    let updated = false;
+    
+    // If orderid was added to subject but not in body, sync it
+    if (subjectOrderidMatch && !bodyOrderidMatch && 
+        (!prevSubjectOrderidMatch || subjectOrderidMatch.length !== prevSubjectOrderidMatch.length)) {
+      setEmailBody(prev => prev.includes('{orderid}') ? prev : prev + ' {orderid} ');
+      updated = true;
+    }
+    
+    // If awb was added to subject but not in body, sync it
+    if (subjectAwbMatch && !bodyAwbMatch && 
+        (!prevSubjectAwbMatch || subjectAwbMatch.length !== prevSubjectAwbMatch.length)) {
+      setEmailBody(prev => prev.includes('{awb}') ? prev : prev + ' {awb} ');
+      updated = true;
+    }
+    
+    // If orderid was added to body but not in subject, sync it
+    if (bodyOrderidMatch && !subjectOrderidMatch && 
+        (!prevBodyOrderidMatch || bodyOrderidMatch.length !== prevBodyOrderidMatch.length)) {
+      setEmailSubject(prev => prev.includes('{orderid}') ? prev : prev + ' {orderid} ');
+      updated = true;
+    }
+    
+    // If awb was added to body but not in subject, sync it
+    if (bodyAwbMatch && !subjectAwbMatch && 
+        (!prevBodyAwbMatch || bodyAwbMatch.length !== prevBodyAwbMatch.length)) {
+      setEmailSubject(prev => prev.includes('{awb}') ? prev : prev + ' {awb} ');
+      updated = true;
+    }
+    
+    // Update tracking variables
+    setPrevSubject(emailSubject);
+    setPrevBody(emailBody);
+  }, [emailSubject, emailBody, prevSubject, prevBody]);
 
   // Initialize variable values with customer data and system defaults
   useEffect(() => {
@@ -141,13 +194,18 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     });
   };
 
-  // Insert variable into subject at cursor position
+  // Insert variable into subject at cursor position with proper spacing
   const insertSubjectVariable = (variable: string) => {
     const subjectInput = document.getElementById('emailSubject') as HTMLInputElement;
     const cursorPosition = subjectInput?.selectionStart || emailSubject.length;
     const beforeCursor = emailSubject.substring(0, cursorPosition);
     const afterCursor = emailSubject.substring(cursorPosition);
-    const newSubject = beforeCursor + `{${variable}}` + afterCursor;
+    
+    // Add spaces before and after the variable for better readability
+    const spaceBefore = beforeCursor && !beforeCursor.endsWith(' ') ? ' ' : '';
+    const spaceAfter = afterCursor && !afterCursor.startsWith(' ') ? ' ' : '';
+    
+    const newSubject = beforeCursor + spaceBefore + `{${variable}}` + spaceAfter + afterCursor;
     setEmailSubject(newSubject);
     setShowSubjectVariables(false);
   };
@@ -165,12 +223,37 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     }));
   };
 
-  // Handle variable value change
+  // Handle variable value change with synchronization between subject and content
   const handleVariableChange = (key: string, value: string) => {
-    setVariableValues(prev => ({
-      ...prev,
-      [key]: value
-    }));
+    setVariableValues(prev => {
+      const newValues = {
+        ...prev,
+        [key]: value
+      };
+      
+      // If this is an orderid or awb variable, update both subject and content synchronously
+      if (key === 'orderid' || key === 'awb') {
+        // Update the subject with new variable value
+        if (emailSubject.includes(`{${key}}`)) {
+          const updatedSubject = emailSubject.replace(
+            new RegExp(`\\{${key}\\}`, 'g'),
+            ` {${key}} `
+          );
+          setEmailSubject(updatedSubject);
+        }
+        
+        // Update the content with new variable value
+        if (emailBody.includes(`{${key}}`)) {
+          const updatedBody = emailBody.replace(
+            new RegExp(`\\{${key}\\}`, 'g'),
+            ` {${key}} `
+          );
+          setEmailBody(updatedBody);
+        }
+      }
+      
+      return newValues;
+    });
   };
 
   // Get final email content with variables replaced

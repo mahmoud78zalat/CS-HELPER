@@ -72,24 +72,38 @@ export function useAuth() {
     try {
       console.log('[Auth] Checking user in database:', supabaseUser.id);
       
-      // Use backend API with proper error handling
-      const response = await fetch(`/api/user/${supabaseUser.id}`);
-      const responseText = await response.text();
+      // Performance optimization: Use Promise race for faster timeout
+      const fetchWithTimeout = (url: string, timeout: number = 3000) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
+        return fetch(url, { signal: controller.signal })
+          .finally(() => clearTimeout(timeoutId));
+      };
       
-      console.log('[Auth] Response status:', response.status);
-      console.log('[Auth] Response type:', response.headers.get('content-type'));
-      console.log('[Auth] Response text preview:', responseText.substring(0, 100) + '...');
-      
-      if (response.ok && !responseText.includes('<!DOCTYPE html>')) {
-        try {
-          const userData = JSON.parse(responseText);
-          console.log('[Auth] User found via API:', userData.email, userData.role);
-          setUser(userData);
-          return;
-        } catch (parseError) {
-          console.error('[Auth] JSON parse error:', parseError);
-          console.log('[Auth] Full response text:', responseText);
+      try {
+        const response = await fetchWithTimeout(`/api/user/${supabaseUser.id}`, 3000);
+        const responseText = await response.text();
+        
+        console.log('[Auth] Response status:', response.status);
+        console.log('[Auth] Response type:', response.headers.get('content-type'));
+        console.log('[Auth] Response text preview:', responseText.substring(0, 100) + '...');
+        
+        if (response.ok && !responseText.includes('<!DOCTYPE html>')) {
+          try {
+            const userData = JSON.parse(responseText);
+            console.log('[Auth] User found via API:', userData.email, userData.role);
+            setUser(userData);
+            setIsLoading(false);
+            if (authTimeout) clearTimeout(authTimeout);
+            return;
+          } catch (parseError) {
+            console.error('[Auth] JSON parse error:', parseError);
+            console.log('[Auth] Full response text:', responseText);
+          }
         }
+      } catch (fetchError) {
+        console.log('[Auth] API fetch failed or timed out:', fetchError instanceof Error ? fetchError.message : 'Unknown error');
       }
       
       // API route is being intercepted by Vite, fall back to the user we know exists
@@ -142,23 +156,29 @@ export function useAuth() {
         
         console.log(`[Auth] Heartbeat - User active: ${isUserActive}, Time since activity: ${Math.round(timeSinceActivity / 1000)}s`);
         
-        // Update online status in database
-        await fetch('/api/user/heartbeat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            userId: user.id,
-            isOnline: isUserActive,
-            lastActivity: new Date(lastActivityTime.current).toISOString()
-          }),
-        });
+        // Only send heartbeat if status changed (performance optimization)
+        const currentStatus = user.isOnline;
+        if (currentStatus !== isUserActive) {
+          await fetch('/api/user/heartbeat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              userId: user.id,
+              isOnline: isUserActive,
+              lastActivity: new Date(lastActivityTime.current).toISOString()
+            }),
+          });
+          
+          // Update local user state to prevent unnecessary calls
+          setUser(prev => prev ? { ...prev, isOnline: isUserActive } : null);
+        }
       } catch (error) {
         console.error('[Auth] Heartbeat error:', error);
       }
-    }, 15000); // Update every 15 seconds for more accuracy
+    }, 30000); // Update every 30 seconds to reduce performance impact
     
     // Track user activity
     const updateActivity = () => {

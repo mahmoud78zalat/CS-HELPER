@@ -22,6 +22,11 @@ import { IStorage } from './storage';
 export class SupabaseStorage implements IStorage {
   private client: SupabaseClient;
   private serviceClient: SupabaseClient;
+  
+  // Performance optimization: Add caching
+  private userCache = new Map<string, { user: User; timestamp: number }>();
+  private templateCache = new Map<string, { templates: any[]; timestamp: number }>();
+  private readonly CACHE_TTL = 30000; // 30 seconds cache
 
   constructor() {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -38,19 +43,32 @@ export class SupabaseStorage implements IStorage {
       throw new Error(`Missing or empty Supabase credentials - URL: ${!!supabaseUrl && supabaseUrl.trim() !== ''}, Key: ${!!supabaseKey && supabaseKey.trim() !== ''}`);
     }
     
+    // Performance optimization: Add connection pooling options
+    const clientOptions = {
+      auth: {
+        persistSession: false, // Disable session persistence for server-side
+        detectSessionInUrl: false
+      },
+      global: {
+        headers: {
+          'Connection': 'keep-alive'
+        }
+      }
+    };
+    
     // Regular client for read operations
-    this.client = createClient(supabaseUrl.trim(), supabaseKey.trim());
+    this.client = createClient(supabaseUrl.trim(), supabaseKey.trim(), clientOptions);
     
     // Service role client for admin operations (bypasses RLS)
     if (serviceRoleKey && serviceRoleKey.trim() !== '') {
-      this.serviceClient = createClient(supabaseUrl.trim(), serviceRoleKey.trim());
+      this.serviceClient = createClient(supabaseUrl.trim(), serviceRoleKey.trim(), clientOptions);
       console.log('[SupabaseStorage] ✅ Service role client initialized for admin operations');
     } else {
       console.warn('[SupabaseStorage] ⚠️ No service role key - using anon client for all operations');
       this.serviceClient = this.client;
     }
     
-    console.log('[SupabaseStorage] ✅ Successfully connected to Supabase');
+    console.log('[SupabaseStorage] ✅ Successfully connected to Supabase with performance optimizations');
     
     // Test connection asynchronously
     this.testConnection();
@@ -72,9 +90,21 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
-  // User operations
+  // Performance optimization: Check cache validity
+  private isCacheValid(timestamp: number): boolean {
+    return Date.now() - timestamp < this.CACHE_TTL;
+  }
+
+  // User operations with caching
   async getUser(id: string): Promise<User | undefined> {
     console.log('[SupabaseStorage] Querying user with ID:', id);
+    
+    // Check cache first
+    const cached = this.userCache.get(id);
+    if (cached && this.isCacheValid(cached.timestamp)) {
+      console.log('[SupabaseStorage] Returning cached user:', cached.user.email);
+      return cached.user;
+    }
     
     const { data, error } = await this.client
       .from('users')
@@ -90,6 +120,13 @@ export class SupabaseStorage implements IStorage {
     }
 
     const mappedUser = data ? this.mapSupabaseUser(data) : undefined;
+    
+    // Cache the result
+    if (mappedUser) {
+      this.userCache.set(id, { user: mappedUser, timestamp: Date.now() });
+      console.log('[SupabaseStorage] Cached user:', mappedUser.email);
+    }
+    
     console.log('[SupabaseStorage] Mapped user:', mappedUser);
     return mappedUser;
   }
@@ -341,7 +378,7 @@ export class SupabaseStorage implements IStorage {
     return data?.length || 0;
   }
 
-  // Email template operations
+  // Email template operations with caching
   async getEmailTemplates(filters?: {
     category?: string;
     genre?: string;
@@ -349,6 +386,15 @@ export class SupabaseStorage implements IStorage {
     search?: string;
     isActive?: boolean;
   }): Promise<EmailTemplate[]> {
+    // Create cache key based on filters
+    const cacheKey = JSON.stringify(filters || {});
+    const cached = this.templateCache.get(cacheKey);
+    
+    if (cached && this.isCacheValid(cached.timestamp)) {
+      console.log('[SupabaseStorage] Returning cached email templates');
+      return cached.templates;
+    }
+    
     let query = this.client
       .from('email_templates')
       .select('*');
@@ -380,7 +426,13 @@ export class SupabaseStorage implements IStorage {
       return [];
     }
 
-    return data.map(this.mapSupabaseEmailTemplate);
+    const templates = data.map(this.mapSupabaseEmailTemplate);
+    
+    // Cache the result
+    this.templateCache.set(cacheKey, { templates, timestamp: Date.now() });
+    console.log('[SupabaseStorage] Cached email templates');
+    
+    return templates;
   }
 
   async getEmailTemplate(id: string): Promise<EmailTemplate | undefined> {
