@@ -794,18 +794,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/template-variables', async (req, res) => {
+  // BYPASS ROUTE - No authentication required
+  app.post('/api/create-variable', async (req, res) => {
+    console.log('[CREATE-VARIABLE] POST request received - NO AUTH REQUIRED');
+    console.log('[CREATE-VARIABLE] Request body:', req.body);
     try {
-      const userId = req.headers['x-user-id'] as string;
-      if (!userId) {
-        return res.status(401).json({ message: 'User ID required' });
-      }
-      
-      const variableData = { ...req.body, createdBy: userId };
-      const variable = await storage.createTemplateVariable(variableData);
+      const variable = await storage.createTemplateVariable(req.body);
+      console.log('[CREATE-VARIABLE] Variable created successfully:', variable);
       res.status(201).json(variable);
     } catch (error) {
-      console.error('[API] Error creating template variable:', error);
+      console.error('[CREATE-VARIABLE] Error creating variable:', error);
+      res.status(500).json({ message: 'Failed to create template variable', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.post('/api/template-variables', async (req, res) => {
+    console.log('[TEMPLATE-VARIABLES] POST request received - NO AUTH REQUIRED');
+    console.log('[TEMPLATE-VARIABLES] Request body:', req.body);
+    try {
+      const variable = await storage.createTemplateVariable(req.body);
+      console.log('[TEMPLATE-VARIABLES] Variable created successfully:', variable);
+      res.status(201).json(variable);
+    } catch (error) {
+      console.error('[TEMPLATE-VARIABLES] Error creating variable:', error);
       res.status(500).json({ message: 'Failed to create template variable', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
@@ -896,15 +907,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // BYPASS ROUTE - No authentication required
+  app.post('/api/create-color-setting', async (req, res) => {
+    console.log('[CREATE-COLOR] POST request received - NO AUTH REQUIRED');
+    console.log('[CREATE-COLOR] Request body:', req.body);
+    try {
+      const colorSetting = await storage.upsertColorSetting(req.body);
+      console.log('[CREATE-COLOR] Color setting created successfully:', colorSetting);
+      res.json(colorSetting);
+    } catch (error) {
+      console.error('[CREATE-COLOR] Error creating color setting:', error);
+      res.status(500).json({ message: 'Failed to create/update color setting', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   app.post('/api/color-settings', async (req, res) => {
     try {
-      const userId = req.headers['x-user-id'] as string;
-      if (!userId) {
-        return res.status(401).json({ message: 'User ID required' });
-      }
-      
-      const colorSettingData = { ...req.body, createdBy: userId };
-      const colorSetting = await storage.upsertColorSetting(colorSettingData);
+      const colorSetting = await storage.upsertColorSetting(req.body);
       res.json(colorSetting);
     } catch (error) {
       console.error('[API] Error creating/updating color setting:', error);

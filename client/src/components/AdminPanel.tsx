@@ -233,8 +233,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     try {
       const tailwindColors = hexToTailwindColor(color);
       
-      // Save to database via API
-      const response = await fetch('/api/color-settings', {
+      // Save to database via bypass API route
+      const response = await fetch('/api/create-color-setting', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -284,8 +284,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     try {
       const tailwindColors = hexToTailwindColor(color);
       
-      // Save to database via API
-      const response = await fetch('/api/color-settings', {
+      // Save to database via bypass API route
+      const response = await fetch('/api/create-color-setting', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

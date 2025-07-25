@@ -337,7 +337,6 @@ export const templateVariables = pgTable("template_variables", {
   example: text("example").notNull(),
   defaultValue: text("default_value"),
   isSystem: boolean("is_system").default(false).notNull(),
-  createdBy: varchar("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
@@ -368,7 +367,6 @@ export const colorSettings = pgTable("color_settings", {
   backgroundColor: varchar("background_color").notNull(),
   textColor: varchar("text_color").notNull(),
   borderColor: varchar("border_color").notNull(),
-  createdBy: varchar("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
@@ -377,12 +375,7 @@ export const colorSettings = pgTable("color_settings", {
 });
 
 // Relations
-export const templateVariablesRelations = relations(templateVariables, ({ one }) => ({
-  createdBy: one(users, {
-    fields: [templateVariables.createdBy],
-    references: [users.id],
-  }),
-}));
+// Relations removed - templateVariables no longer has createdBy field
 
 export const templateVariableCategoriesRelations = relations(templateVariableCategories, ({ one }) => ({
   createdBy: one(users, {
@@ -391,12 +384,7 @@ export const templateVariableCategoriesRelations = relations(templateVariableCat
   }),
 }));
 
-export const colorSettingsRelations = relations(colorSettings, ({ one }) => ({
-  createdBy: one(users, {
-    fields: [colorSettings.createdBy],
-    references: [users.id],
-  }),
-}));
+// Relations removed - colorSettings no longer has createdBy field
 
 // Insert schemas
 export const insertTemplateVariableSchema = createInsertSchema(templateVariables).omit({
