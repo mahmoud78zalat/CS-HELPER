@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node vercel-build.cjs",
+  "buildCommand": "chmod +x build.sh && ./build.sh",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
   "rewrites": [
