@@ -1,50 +1,97 @@
-# Vercel Environment Variables Setup
+# Vercel Environment Variables Setup Guide
 
-## Required Environment Variables
+## Quick Setup
 
-After deploying to Vercel, you need to set these environment variables in your Vercel project dashboard:
+1. **Copy the `.env.vercel` file** - Contains all required environment variables
+2. **Add to Vercel Dashboard**:
+   - Go to your Vercel project
+   - Settings → Environment Variables
+   - Add each variable from `.env.vercel`
+   - Set for: Production, Preview, Development
 
-### 1. Supabase Configuration
+## Required Variables (Minimum)
+
 ```bash
-DATABASE_URL=postgresql://postgres:[PASSWORD]@[PROJECT_REF].supabase.co:5432/postgres
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
-```
-
-### 2. Authentication
-```bash
-SESSION_SECRET=your-very-secure-session-secret-at-least-32-characters-long
-```
-
-### 3. System Configuration
-```bash
+SUPABASE_URL=https://lafldimdrginjqloihbh.supabase.co
+VITE_SUPABASE_URL=https://lafldimdrginjqloihbh.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZmxkaW1kcmdpbmpxbG9paGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4NDQwNTksImV4cCI6MjA1MjQyMDA1OX0.T4bUhpO_8AiQeGVcX4ZHlzNrKNP8xjNXkLxsS37qHd0
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZmxkaW1kcmdpbmpxbG9paGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4NDQwNTksImV4cCI6MjA1MjQyMDA1OX0.T4bUhpO_8AiQeGVcX4ZHlzNrKNP8xjNXkLxsS37qHd0
 NODE_ENV=production
 ```
 
-## How to Set Environment Variables in Vercel
+## Additional Variables (Recommended)
 
-1. Go to your Vercel project dashboard
-2. Click on "Settings" tab
-3. Click on "Environment Variables" in the sidebar
-4. Add each variable above with its corresponding value
-5. Make sure to select "Production", "Preview", and "Development" for each variable
-6. Click "Save" after adding each variable
-7. Redeploy your project for changes to take effect
+For full functionality, also add:
 
-## Getting Supabase Credentials
+```bash
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_from_supabase_dashboard
+SESSION_SECRET=generate_random_32_character_string
+```
 
-1. **DATABASE_URL**: Go to Supabase Dashboard > Project Settings > Database > Connection string (URI)
-2. **VITE_SUPABASE_URL**: Go to Supabase Dashboard > Project Settings > API > Project URL
-3. **VITE_SUPABASE_ANON_KEY**: Go to Supabase Dashboard > Project Settings > API > Project API keys > anon/public
-4. **SUPABASE_SERVICE_ROLE_KEY**: Go to Supabase Dashboard > Project Settings > API > Project API keys > service_role (keep this secret!)
+## Step-by-Step Vercel Setup
 
-## Database Setup
+### 1. Access Environment Variables
+- Login to Vercel Dashboard
+- Select your project
+- Go to **Settings** tab
+- Click **Environment Variables**
 
-Make sure to run the SQL commands from `SUPABASE_BOOTSTRAP.sql` in your Supabase SQL editor to create all necessary tables and functions.
+### 2. Add Variables
+For each variable in `.env.vercel`:
+- Click **"Add New"**
+- Enter **Name** (e.g., `SUPABASE_URL`)
+- Enter **Value** (e.g., `https://lafldimdrginjqloihbh.supabase.co`)
+- Select **Environments**: Production, Preview, Development
+- Click **Save**
+
+### 3. Deploy
+- Go to **Deployments** tab
+- Click **"Redeploy"** on latest deployment
+- Wait for completion
+
+## How to Get Missing Values
+
+### Service Role Key
+1. Go to [Supabase Dashboard](https://app.supabase.com)
+2. Select your project
+3. Settings → API
+4. Copy "service_role" key
+5. Add as `SUPABASE_SERVICE_ROLE_KEY`
+
+### Session Secret
+Generate a random string:
+```bash
+# Use any random 32+ character string
+SESSION_SECRET=abc123def456ghi789jkl012mno345pqr678stu901vwx234yz
+```
+
+## Verification
+
+After setting environment variables:
+1. Redeploy your Vercel project
+2. Visit your deployed app
+3. Check if templates load (should show your Supabase data)
+4. Test login functionality
+5. Verify admin panel access
 
 ## Troubleshooting
 
-- If you get 404 errors: Check that all environment variables are set correctly
-- If API calls fail: Verify Supabase credentials and database tables exist
-- If authentication doesn't work: Ensure SESSION_SECRET is set and is at least 32 characters
+**Templates not loading?**
+- Ensure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set
+- Check browser console for connection errors
+
+**Authentication not working?**
+- Verify `SUPABASE_SERVICE_ROLE_KEY` is set correctly
+- Check Supabase Auth settings
+
+**Environment variables not working?**
+- Ensure variables are set for all environments (Production, Preview, Development)
+- Redeploy after adding variables
+- Check variable names match exactly (case-sensitive)
+
+## Security Best Practices
+
+- **Never commit** `.env.vercel` to public repositories
+- **ANON_KEY** is safe to expose (designed for frontend use)
+- **SERVICE_ROLE_KEY** must remain private (has admin access)
+- Use unique **SESSION_SECRET** for each deployment environment
