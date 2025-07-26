@@ -1,22 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Get environment variables with multiple fallback patterns for different deployment environments
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 
-                   import.meta.env.SUPABASE_URL || 
-                   'https://lafldimdrginjqloihbh.supabase.co';
+// Supabase configuration - using direct values for Vercel static deployment
+const supabaseUrl = 'https://lafldimdrginjqloihbh.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZmxkaW1kcmdpbmpxbG9paGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4NDQwNTksImV4cCI6MjA1MjQyMDA1OX0.T4bUhpO_8AiQeGVcX4ZHlzNrKNP8xjNXkLxsS37qHd0';
 
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 
-                       import.meta.env.SUPABASE_ANON_KEY || 
-                       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZmxkaW1kcmdpbmpxbG9paGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4NDQwNTksImV4cCI6MjA1MjQyMDA1OX0.T4bUhpO_8AiQeGVcX4ZHlzNrKNP8xjNXkLxsS37qHd0';
-
-console.log('[Frontend Supabase] URL:', supabaseUrl);
-console.log('[Frontend Supabase] Key present:', !!supabaseAnonKey);
-console.log('[Frontend Supabase] Environment:', import.meta.env.MODE);
-console.log('[Frontend Supabase] Available env vars:', Object.keys(import.meta.env).filter(key => key.includes('SUPABASE')));
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('[Frontend Supabase] Missing credentials, using fallback values');
-}
+console.log('[Frontend Supabase] Connecting to:', supabaseUrl);
+console.log('[Frontend Supabase] Key configured:', !!supabaseAnonKey);
+console.log('[Frontend Supabase] Environment mode:', import.meta.env?.MODE || 'production');
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
