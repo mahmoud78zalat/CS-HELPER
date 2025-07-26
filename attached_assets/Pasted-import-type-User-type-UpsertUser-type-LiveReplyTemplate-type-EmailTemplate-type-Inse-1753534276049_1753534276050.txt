@@ -1,0 +1,648 @@
+import {
+  type User,
+  type UpsertUser,
+  type LiveReplyTemplate,
+  type EmailTemplate,
+  type InsertLiveReplyTemplate,
+  type InsertEmailTemplate,
+  type InsertLiveReplyUsage,
+  type InsertEmailTemplateUsage,
+  type LiveReplyUsage,
+  type EmailTemplateUsage,
+  type InsertSiteContent,
+  type SiteContent,
+  type Announcement,
+  type InsertAnnouncement,
+  type UserAnnouncementAck,
+  type InsertUserAnnouncementAck,
+  // Legacy types for backward compatibility
+  type Template,
+  type InsertTemplate,
+} from "@shared/schema";
+import { nanoid } from "nanoid";
+import type { IStorage } from "./storage";
+
+export class MemoryStorage implements IStorage {
+  private users = new Map<string, User>();
+  private liveReplyTemplates = new Map<string, LiveReplyTemplate>();
+  private emailTemplates = new Map<string, EmailTemplate>();
+  private liveReplyUsage = new Map<string, LiveReplyUsage>();
+  private emailTemplateUsage = new Map<string, EmailTemplateUsage>();
+  private siteContent = new Map<string, SiteContent>();
+  private announcements = new Map<string, Announcement>();
+  private userAnnouncementAcks = new Map<string, UserAnnouncementAck>();
+
+  constructor() {
+    console.log('[MemoryStorage] ⚠️  Using memory storage - data will not persist!');
+    // Note: No hardcoded data - everything should come from Supabase
+  }
+
+
+
+  // User operations
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const now = new Date();
+    const existingUser = this.users.get(userData.id);
+    
+    const user: User = {
+      id: userData.id,
+      email: userData.email || null,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      profileImageUrl: userData.profileImageUrl || null,
+      role: userData.role || "agent",
+      status: userData.status || "active",
+      isOnline: userData.isOnline || false,
+      lastSeen: userData.lastSeen || now,
+      createdAt: existingUser?.createdAt || now,
+      updatedAt: now,
+    };
+    
+    this.users.set(userData.id, user);
+    return user;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values()).sort((a, b) => 
+      (a.firstName || "").localeCompare(b.firstName || "") || (a.lastName || "").localeCompare(b.lastName || "")
+    );
+  }
+
+  async updateUserStatus(id: string, status: "active" | "blocked" | "banned"): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      user.status = status;
+      user.updatedAt = new Date();
+      this.users.set(id, user);
+    }
+  }
+
+  async updateUserOnlineStatus(id: string, isOnline: boolean): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      user.isOnline = isOnline;
+      user.lastSeen = new Date();
+      user.updatedAt = new Date();
+      this.users.set(id, user);
+    }
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    console.log('[MemoryStorage] Deleting user with ID:', id);
+    this.users.delete(id);
+    console.log('[MemoryStorage] Successfully deleted user:', id);
+  }
+
+  async updateUserRole(id: string, role: "admin" | "agent"): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      user.role = role;
+      user.updatedAt = new Date();
+      this.users.set(id, user);
+    }
+  }
+
+  // Live Reply Template operations
+  async getLiveReplyTemplates(filters?: {
+    category?: string;
+    genre?: string;
+    search?: string;
+    isActive?: boolean;
+  }): Promise<LiveReplyTemplate[]> {
+    let templates = Array.from(this.liveReplyTemplates.values());
+
+    if (filters?.category) {
+      templates = templates.filter(t => t.category === filters.category);
+    }
+
+    if (filters?.genre) {
+      templates = templates.filter(t => t.genre === filters.genre);
+    }
+
+    if (filters?.search) {
+      const searchLower = filters.search.toLowerCase();
+      templates = templates.filter(t => 
+        t.name.toLowerCase().includes(searchLower) ||
+        t.contentEn.toLowerCase().includes(searchLower) ||
+        t.contentAr.toLowerCase().includes(searchLower) ||
+        t.category.toLowerCase().includes(searchLower) ||
+        t.genre.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (filters?.isActive !== undefined) {
+      templates = templates.filter(t => t.isActive === filters.isActive);
+    }
+
+    return templates.sort((a, b) => a.stageOrder - b.stageOrder || (b.createdAt || new Date(0)).getTime() - (a.createdAt || new Date(0)).getTime());
+  }
+
+  async getLiveReplyTemplate(id: string): Promise<LiveReplyTemplate | undefined> {
+    return this.liveReplyTemplates.get(id);
+  }
+
+  async createLiveReplyTemplate(template: InsertLiveReplyTemplate): Promise<LiveReplyTemplate> {
+    const id = nanoid();
+    const now = new Date();
+    
+    const newTemplate: LiveReplyTemplate = {
+      id,
+      name: template.name,
+      contentEn: template.contentEn,
+      contentAr: template.contentAr,
+      category: template.category,
+      genre: template.genre,
+      variables: template.variables || null,
+      stageOrder: template.stageOrder || 1,
+      isActive: template.isActive !== undefined ? template.isActive : true,
+      usageCount: 0,
+      createdBy: "system", // Default value for memory storage
+      createdAt: now,
+      updatedAt: now,
+      supabaseId: null,
+      lastSyncedAt: null,
+    };
+    
+    this.liveReplyTemplates.set(id, newTemplate);
+    return newTemplate;
+  }
+
+  async upsertLiveReplyTemplate(template: InsertLiveReplyTemplate): Promise<LiveReplyTemplate> {
+    // For memory storage, upsert is same as create since we don't have IDs from external source
+    return this.createLiveReplyTemplate(template);
+  }
+
+  async updateLiveReplyTemplate(id: string, template: Partial<InsertLiveReplyTemplate>): Promise<LiveReplyTemplate> {
+    const existingTemplate = this.liveReplyTemplates.get(id);
+    if (!existingTemplate) {
+      throw new Error("Template not found");
+    }
+
+    const updatedTemplate: LiveReplyTemplate = {
+      ...existingTemplate,
+      ...template,
+      updatedAt: new Date(),
+    };
+
+    this.liveReplyTemplates.set(id, updatedTemplate);
+    return updatedTemplate;
+  }
+
+  async deleteLiveReplyTemplate(id: string): Promise<void> {
+    this.liveReplyTemplates.delete(id);
+  }
+
+  async incrementLiveReplyUsage(templateId: string, userId: string): Promise<void> {
+    const usageId = nanoid();
+    const usage: LiveReplyUsage = {
+      id: usageId,
+      templateId,
+      userId,
+      usedAt: new Date(),
+    };
+    
+    this.liveReplyUsage.set(usageId, usage);
+
+    const template = this.liveReplyTemplates.get(templateId);
+    if (template) {
+      template.usageCount++;
+      template.updatedAt = new Date();
+      this.liveReplyTemplates.set(templateId, template);
+    }
+  }
+
+  async getLiveReplyUsageStats(templateId: string): Promise<number> {
+    return Array.from(this.liveReplyUsage.values())
+      .filter(usage => usage.templateId === templateId).length;
+  }
+
+  // Email Template operations
+  async getEmailTemplates(filters?: {
+    category?: string;
+    genre?: string;
+    concernedTeam?: string;
+    search?: string;
+    isActive?: boolean;
+  }): Promise<EmailTemplate[]> {
+    let templates = Array.from(this.emailTemplates.values());
+
+    if (filters?.category) {
+      templates = templates.filter(t => t.category === filters.category);
+    }
+
+    if (filters?.genre) {
+      templates = templates.filter(t => t.genre === filters.genre);
+    }
+
+    if (filters?.concernedTeam) {
+      templates = templates.filter(t => t.concernedTeam === filters.concernedTeam);
+    }
+
+    if (filters?.search) {
+      const searchLower = filters.search.toLowerCase();
+      templates = templates.filter(t => 
+        t.name.toLowerCase().includes(searchLower) ||
+        t.content.toLowerCase().includes(searchLower) ||
+        t.subject.toLowerCase().includes(searchLower) ||
+        t.category.toLowerCase().includes(searchLower) ||
+        t.genre.toLowerCase().includes(searchLower) ||
+        (t.concernedTeam && t.concernedTeam.toLowerCase().includes(searchLower))
+      );
+    }
+
+    if (filters?.isActive !== undefined) {
+      templates = templates.filter(t => t.isActive === filters.isActive);
+    }
+
+    return templates.sort((a, b) => a.stageOrder - b.stageOrder || (b.createdAt || new Date(0)).getTime() - (a.createdAt || new Date(0)).getTime());
+  }
+
+  async getEmailTemplate(id: string): Promise<EmailTemplate | undefined> {
+    return this.emailTemplates.get(id);
+  }
+
+  async createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
+    const id = nanoid();
+    const now = new Date();
+    
+    const newTemplate: EmailTemplate = {
+      id,
+      name: template.name,
+      subject: template.subject,
+      content: template.content,
+      category: template.category,
+      genre: template.genre,
+      concernedTeam: template.concernedTeam,
+      warningNote: template.warningNote || null,
+      variables: template.variables || null,
+      stageOrder: template.stageOrder || 1,
+      isActive: template.isActive !== undefined ? template.isActive : true,
+      usageCount: 0,
+      createdBy: "system", // Default value for memory storage
+      createdAt: now,
+      updatedAt: now,
+      supabaseId: null,
+      lastSyncedAt: null,
+    };
+    
+    this.emailTemplates.set(id, newTemplate);
+    return newTemplate;
+  }
+
+  async upsertEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
+    // For memory storage, upsert is same as create since we don't have IDs from external source
+    return this.createEmailTemplate(template);
+  }
+
+  async updateEmailTemplate(id: string, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate> {
+    const existingTemplate = this.emailTemplates.get(id);
+    if (!existingTemplate) {
+      throw new Error("Template not found");
+    }
+
+    const updatedTemplate: EmailTemplate = {
+      ...existingTemplate,
+      ...template,
+      updatedAt: new Date(),
+    };
+
+    this.emailTemplates.set(id, updatedTemplate);
+    return updatedTemplate;
+  }
+
+  async deleteEmailTemplate(id: string): Promise<void> {
+    this.emailTemplates.delete(id);
+  }
+
+  async incrementEmailTemplateUsage(templateId: string, userId: string): Promise<void> {
+    const usageId = nanoid();
+    const usage: EmailTemplateUsage = {
+      id: usageId,
+      templateId,
+      userId,
+      usedAt: new Date(),
+    };
+    
+    this.emailTemplateUsage.set(usageId, usage);
+
+    const template = this.emailTemplates.get(templateId);
+    if (template) {
+      template.usageCount++;
+      template.updatedAt = new Date();
+      this.emailTemplates.set(templateId, template);
+    }
+  }
+
+  async getEmailTemplateUsageStats(templateId: string): Promise<number> {
+    return Array.from(this.emailTemplateUsage.values())
+      .filter(usage => usage.templateId === templateId).length;
+  }
+
+  // Legacy template operations (backward compatibility)
+  async getTemplates(filters?: {
+    category?: string;
+    genre?: string;
+    search?: string;
+    isActive?: boolean;
+  }): Promise<Template[]> {
+    return this.getLiveReplyTemplates(filters);
+  }
+
+  async getTemplate(id: string): Promise<Template | undefined> {
+    return this.getLiveReplyTemplate(id);
+  }
+
+  async createTemplate(template: InsertTemplate): Promise<Template> {
+    return this.createLiveReplyTemplate(template);
+  }
+
+  async updateTemplate(id: string, template: Partial<InsertTemplate>): Promise<Template> {
+    return this.updateLiveReplyTemplate(id, template);
+  }
+
+  async deleteTemplate(id: string): Promise<void> {
+    return this.deleteLiveReplyTemplate(id);
+  }
+
+  async incrementTemplateUsage(templateId: string, userId: string): Promise<void> {
+    return this.incrementLiveReplyUsage(templateId, userId);
+  }
+
+  async getTemplateUsageStats(templateId: string): Promise<number> {
+    return this.getLiveReplyUsageStats(templateId);
+  }
+
+  // Site content operations
+  async getSiteContent(key?: string): Promise<SiteContent[]> {
+    let content = Array.from(this.siteContent.values());
+
+    if (key) {
+      content = content.filter(c => c.key === key);
+    }
+
+    return content.sort((a, b) => (b.updatedAt || new Date(0)).getTime() - (a.updatedAt || new Date(0)).getTime());
+  }
+
+  async upsertSiteContent(content: InsertSiteContent): Promise<SiteContent> {
+    const existingContent = Array.from(this.siteContent.values())
+      .find(c => c.key === content.key);
+    
+    const now = new Date();
+    const newContent: SiteContent = {
+      id: existingContent?.id || nanoid(),
+      ...content,
+      updatedAt: now,
+      supabaseId: null,
+      lastSyncedAt: null,
+    };
+    
+    this.siteContent.set(newContent.id, newContent);
+    return newContent;
+  }
+
+  // Announcement operations (stub implementation for memory storage)
+  async getAnnouncements(): Promise<Announcement[]> {
+    return Array.from(this.announcements.values()).sort((a, b) => 
+      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    );
+  }
+
+  async getActiveAnnouncement(): Promise<Announcement | undefined> {
+    return Array.from(this.announcements.values())
+      .filter(a => a.isActive)
+      .sort((a, b) => {
+        const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+        return priorityOrder[b.priority] - priorityOrder[a.priority] || 
+               new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime();
+      })[0];
+  }
+
+  async createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement> {
+  const now = new Date();
+  
+  // @ts-ignore - Temporary fix for Vercel deployment
+  const newAnnouncement: Announcement = {
+    id: nanoid(),
+    title: announcement.title,
+    content: announcement.content,
+    isActive: announcement.isActive || false,
+    backgroundColor: announcement.backgroundColor || "#3b82f6",
+    textColor: announcement.textColor || "#ffffff",
+    borderColor: announcement.borderColor || "#1d4ed8",
+    priority: announcement.priority || "medium",
+    createdBy: announcement.createdBy,
+    createdAt: now,
+    updatedAt: now,
+    version: 1,
+    lastAnnouncedAt: null,
+    supabaseId: null,
+    lastSyncedAt: null,
+  };
+  
+  this.announcements.set(newAnnouncement.id, newAnnouncement);
+  return newAnnouncement;
+}
+
+  async updateAnnouncement(id: string, announcement: Partial<InsertAnnouncement>): Promise<Announcement> {
+    const existing = this.announcements.get(id);
+    if (!existing) {
+      throw new Error("Announcement not found");
+    }
+
+    const updated: Announcement = {
+      ...existing,
+      ...announcement,
+      updatedAt: new Date(),
+    };
+    
+    this.announcements.set(id, updated);
+    return updated;
+  }
+
+  async deleteAnnouncement(id: string): Promise<void> {
+    this.announcements.delete(id);
+    // Also delete related acknowledgments
+    for (const [ackId, ack] of Array.from(this.userAnnouncementAcks.entries())) {
+      if (ack.announcementId === id) {
+        this.userAnnouncementAcks.delete(ackId);
+      }
+    }
+  }
+
+  async acknowledgeAnnouncement(userId: string, announcementId: string): Promise<void> {
+    const ackId = nanoid();
+    const ack: UserAnnouncementAck = {
+      id: ackId,
+      userId,
+      announcementId,
+      acknowledgedAt: new Date(),
+      supabaseId: null,
+      lastSyncedAt: null,
+    };
+    
+    this.userAnnouncementAcks.set(ackId, ack);
+  }
+
+  async getUserAnnouncementAck(userId: string, announcementId: string): Promise<UserAnnouncementAck | undefined> {
+    return Array.from(this.userAnnouncementAcks.values())
+      .find(ack => ack.userId === userId && ack.announcementId === announcementId);
+  }
+
+  async getUnacknowledgedAnnouncements(userId: string): Promise<Announcement[]> {
+    const activeAnnouncements = Array.from(this.announcements.values()).filter(a => a.isActive);
+    const userAcks = Array.from(this.userAnnouncementAcks.values()).filter(ack => ack.userId === userId);
+    
+    return activeAnnouncements.filter(announcement => 
+      !userAcks.some(ack => ack.announcementId === announcement.id)
+    ).sort((a, b) => {
+      const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+      return priorityOrder[b.priority] - priorityOrder[a.priority] || 
+             new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime();
+    });
+  }
+
+  async reAnnounce(announcementId: string): Promise<void> {
+    const existing = this.announcements.get(announcementId);
+    if (!existing) {
+      throw new Error("Announcement not found");
+    }
+
+    const updated: Announcement = {
+      ...existing,
+      version: (existing.version || 1) + 1,
+      lastAnnouncedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.announcements.set(announcementId, updated);
+  }
+
+  // Dynamic Category and Genre operations - return empty arrays for memory storage
+  async getTemplateCategories(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    return [];
+  }
+
+  async getEmailCategories(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    return [];
+  }
+
+  async getTemplateGenres(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    return [];
+  }
+
+  async getConcernedTeams(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
+    return [];
+  }
+
+  // CRUD operations for categories and teams (stub implementations)
+  async createTemplateCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateTemplateCategory(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteTemplateCategory(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async createEmailCategory(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateEmailCategory(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteEmailCategory(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async createTemplateGenre(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateTemplateGenre(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteTemplateGenre(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async createConcernedTeam(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateConcernedTeam(id: string, updates: Partial<{name: string, description: string, isActive: boolean}>): Promise<{id: string, name: string, description: string, isActive: boolean}> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteConcernedTeam(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  // Template Variables operations (stub implementations)
+  async getTemplateVariables(filters?: { category?: string; search?: string; isSystem?: boolean; }): Promise<any[]> {
+    return [];
+  }
+
+  async getTemplateVariable(id: string): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async createTemplateVariable(variable: any): Promise<any> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateTemplateVariable(id: string, variable: any): Promise<any> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteTemplateVariable(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  // Template Variable Categories operations (stub implementations)
+  async getTemplateVariableCategories(): Promise<any[]> {
+    return [];
+  }
+
+  async getTemplateVariableCategory(id: string): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async createTemplateVariableCategory(category: any): Promise<any> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async updateTemplateVariableCategory(id: string, category: any): Promise<any> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteTemplateVariableCategory(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  // Color Settings operations (stub implementations)
+  async getColorSettings(filters?: { entityType?: 'genre' | 'category'; entityName?: string; }): Promise<any[]> {
+    return [];
+  }
+
+  async getColorSetting(id: string): Promise<any | undefined> {
+    return undefined;
+  }
+
+  async upsertColorSetting(colorSetting: any): Promise<any> {
+    throw new Error('Not implemented in memory storage');
+  }
+
+  async deleteColorSetting(id: string): Promise<void> {
+    throw new Error('Not implemented in memory storage');
+  }
+}
