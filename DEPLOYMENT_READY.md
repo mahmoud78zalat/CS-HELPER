@@ -68,23 +68,4 @@ The app requires ALL API endpoints for full functionality. Simply removing them 
 3. Frontend loads all data exactly like Replit version
 4. No additional configuration required
 
-## Authentication Fix for Production
-
-### 4. Updated Authentication Flow
-- Created `/api/auth/user.ts` - Proper Supabase Auth verification endpoint  
-- Updated `useAuth.ts` to use real Supabase sessions instead of hardcoded fallbacks
-- Modified `queryClient.ts` to include Bearer tokens in all API requests
-- Added development vs production environment detection
-
-**Authentication Flow**:
-1. User signs in via Supabase Auth
-2. Frontend gets session token from Supabase
-3. All API calls include `Authorization: Bearer {token}` header
-4. API endpoints verify token with Supabase before returning data
-5. No fallback to hardcoded mock data on production
-
-## Environment Detection
-- Development: Falls back to hardcoded admin user if API fails
-- Production: Requires proper Supabase authentication, no fallbacks
-
 **Result**: App works 100% identically after deployment - authentication ✅, templates ✅, admin panel ✅, all features ✅
