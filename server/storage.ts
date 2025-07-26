@@ -62,6 +62,7 @@ export interface IStorage {
   }): Promise<LiveReplyTemplate[]>;
   getLiveReplyTemplate(id: string): Promise<LiveReplyTemplate | undefined>;
   createLiveReplyTemplate(template: InsertLiveReplyTemplate): Promise<LiveReplyTemplate>;
+  upsertLiveReplyTemplate(template: InsertLiveReplyTemplate): Promise<LiveReplyTemplate>;
   updateLiveReplyTemplate(id: string, template: Partial<InsertLiveReplyTemplate>): Promise<LiveReplyTemplate>;
   deleteLiveReplyTemplate(id: string): Promise<void>;
   incrementLiveReplyUsage(templateId: string, userId: string): Promise<void>;
@@ -77,6 +78,7 @@ export interface IStorage {
   }): Promise<EmailTemplate[]>;
   getEmailTemplate(id: string): Promise<EmailTemplate | undefined>;
   createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
+  upsertEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
   updateEmailTemplate(id: string, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate>;
   deleteEmailTemplate(id: string): Promise<void>;
   incrementEmailTemplateUsage(templateId: string, userId: string): Promise<void>;

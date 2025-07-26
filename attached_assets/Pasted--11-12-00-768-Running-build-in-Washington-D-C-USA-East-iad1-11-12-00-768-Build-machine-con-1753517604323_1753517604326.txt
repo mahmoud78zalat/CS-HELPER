@@ -1,0 +1,102 @@
+[11:12:00.768] Running build in Washington, D.C., USA (East) – iad1
+[11:12:00.768] Build machine configuration: 2 cores, 8 GB
+[11:12:00.784] Cloning github.com/mahmoud78zalat/CSHELPER (Branch: main, Commit: db3543d)
+[11:12:00.791] Skipping build cache, deployment was triggered without cache.
+[11:12:01.061] Cloning completed: 277.000ms
+[11:12:02.063] Running "vercel build"
+[11:12:03.348] Vercel CLI 44.5.0
+[11:12:04.150] Running "install" command: `npm install`...
+[11:12:08.722] npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+[11:12:09.599] npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+[11:12:09.600] npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+[11:12:16.360] 
+[11:12:16.361] added 621 packages, and audited 622 packages in 12s
+[11:12:16.362] 
+[11:12:16.362] 76 packages are looking for funding
+[11:12:16.362]   run `npm fund` for details
+[11:12:16.396] 
+[11:12:16.397] 13 vulnerabilities (3 low, 8 moderate, 2 high)
+[11:12:16.397] 
+[11:12:16.397] To address issues that do not require attention, run:
+[11:12:16.398]   npm audit fix
+[11:12:16.398] 
+[11:12:16.398] To address all issues (including breaking changes), run:
+[11:12:16.398]   npm audit fix --force
+[11:12:16.398] 
+[11:12:16.398] Run `npm audit` for details.
+[11:12:16.665] 🚀 Starting Vercel build process...
+[11:12:16.668] 📦 Installing build dependencies...
+[11:12:16.796] npm warn using --force Recommended protections disabled.
+[11:12:20.210] 
+[11:12:20.210] up to date, audited 622 packages in 3s
+[11:12:20.211] 
+[11:12:20.211] 76 packages are looking for funding
+[11:12:20.211]   run `npm fund` for details
+[11:12:20.248] 
+[11:12:20.249] 13 vulnerabilities (3 low, 8 moderate, 2 high)
+[11:12:20.249] 
+[11:12:20.251] To address issues that do not require attention, run:
+[11:12:20.252]   npm audit fix
+[11:12:20.252] 
+[11:12:20.252] To address all issues (including breaking changes), run:
+[11:12:20.252]   npm audit fix --force
+[11:12:20.252] 
+[11:12:20.253] Run `npm audit` for details.
+[11:12:20.266] 🔍 Verifying installations...
+[11:12:20.830] vite/5.4.19 linux-x64 node-v22.17.1
+[11:12:21.125] 0.25.0
+[11:12:21.136] 🧹 Clearing build cache...
+[11:12:21.138] ⚡ Building frontend...
+[11:12:21.668] [36mvite v5.4.19 [32mbuilding for production...[36m[39m
+[11:12:21.726] transforming...
+[11:12:27.634] [32m✓[39m 1830 modules transformed.
+[11:12:28.063] rendering chunks...
+[11:12:28.080] computing gzip size...
+[11:12:28.101] [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m  3.67 kB[22m[1m[22m[2m │ gzip:   1.25 kB[22m
+[11:12:28.101] [2m../dist/public/[22m[2massets/[22m[35mindex-BUWAogM4.css  [39m[1m[2m107.79 kB[22m[1m[22m[2m │ gzip:  16.82 kB[22m
+[11:12:28.102] [2m../dist/public/[22m[2massets/[22m[36mindex-BPaZaU7p.js   [39m[1m[33m642.25 kB[39m[22m[2m │ gzip: 184.62 kB[22m
+[11:12:28.102] [33m
+[11:12:28.102] (!) Some chunks are larger than 500 kB after minification. Consider:
+[11:12:28.102] - Using dynamic import() to code-split the application
+[11:12:28.102] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[11:12:28.102] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[11:12:28.103] [32m✓ built in 6.41s[39m
+[11:12:28.139] 🔧 Building server...
+[11:12:28.439] 
+[11:12:28.440]   dist/index.js  126.0kb
+[11:12:28.441] 
+[11:12:28.442] ⚡ Done in 12ms
+[11:12:28.451] ✅ Verifying build outputs...
+[11:12:28.451] ✅ Build completed successfully!
+[11:12:28.607] 📁 Frontend: total 4
+[11:12:28.607] drwxr-xr-x 3 root root   38 Jul 26 08:12 .
+[11:12:28.607] drwxr-xr-x 3 root root   36 Jul 26 08:12 ..
+[11:12:28.607] drwxr-xr-x 2 root root   57 Jul 26 08:12 assets
+[11:12:28.608] -rw-r--r-- 1 root root 3667 Jul 26 08:12 index.html
+[11:12:28.609] 🖥️  Server: -rw-r--r-- 1 root root 129050 Jul 26 08:12 dist/index.js
+[11:12:28.639] Installing dependencies...
+[11:12:29.612] 
+[11:12:29.613] up to date in 914ms
+[11:12:29.613] 
+[11:12:29.613] 76 packages are looking for funding
+[11:12:29.613]   run `npm fund` for details
+[11:12:31.313] Using TypeScript 5.6.3 (local user-provided)
+[11:12:37.087] server/memory-storage.ts(163,27): error TS2339: Property 'createdBy' does not exist on type '{ name: string; contentEn: string; contentAr: string; category: string; genre: string; variables?: string[] | null | undefined; stageOrder?: number | undefined; isActive?: boolean | undefined; }'.
+[11:12:37.091] server/memory-storage.ts(280,27): error TS2339: Property 'createdBy' does not exist on type '{ name: string; category: string; genre: string; subject: string; content: string; concernedTeam: string; variables?: string[] | null | undefined; stageOrder?: number | undefined; isActive?: boolean | undefined; warningNote?: string | ... 1 more ... | undefined; }'.
+[11:12:37.092] server/memory-storage.ts(416,11): error TS2739: Type '{ id: string; title: string; content: string; isActive: boolean; backgroundColor: string; textColor: string; borderColor: string; priority: "low" | "medium" | "high" | "urgent"; createdBy: string; createdAt: Date; updatedAt: Date; supabaseId: null; lastSyncedAt: null; }' is missing the following properties from type '{ id: string; createdAt: Date | null; updatedAt: Date | null; isActive: boolean; createdBy: string; supabaseId: string | null; lastSyncedAt: Date | null; content: string; ... 6 more ...; lastAnnouncedAt: Date | null; }': version, lastAnnouncedAt
+[11:12:37.094] 
+[11:12:37.932] server/supabase-storage.ts(297,27): error TS2339: Property 'createdBy' does not exist on type '{ name: string; contentEn: string; contentAr: string; category: string; genre: string; variables?: string[] | null | undefined; stageOrder?: number | undefined; isActive?: boolean | undefined; }'.
+[11:12:37.933] server/supabase-storage.ts(463,27): error TS2339: Property 'createdBy' does not exist on type '{ name: string; category: string; genre: string; subject: string; content: string; concernedTeam: string; variables?: string[] | null | undefined; stageOrder?: number | undefined; isActive?: boolean | undefined; warningNote?: string | ... 1 more ... | undefined; }'.
+[11:12:37.933] 
+[11:12:38.609] Using TypeScript 5.6.3 (local user-provided)
+[11:12:39.482] Using TypeScript 5.6.3 (local user-provided)
+[11:12:40.377] api/email-templates.ts(26,38): error TS2551: Property 'upsertEmailTemplate' does not exist on type 'IStorage'. Did you mean 'getEmailTemplate'?
+[11:12:40.378] 
+[11:12:42.616] Using TypeScript 5.6.3 (local user-provided)
+[11:12:43.285] Using TypeScript 5.6.3 (local user-provided)
+[11:12:44.005] api/templates.ts(26,38): error TS2551: Property 'upsertLiveReplyTemplate' does not exist on type 'IStorage'. Did you mean 'getLiveReplyTemplate'?
+[11:12:44.006] 
+[11:12:44.810] Build Completed in /vercel/output [41s]
+[11:12:44.987] Deploying outputs...
+[11:12:49.530] 
+[11:12:49.688] Deployment completed

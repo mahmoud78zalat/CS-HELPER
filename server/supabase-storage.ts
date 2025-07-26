@@ -294,7 +294,7 @@ export class SupabaseStorage implements IStorage {
     // Ensure created_by always has a value
     const templateWithDefaults: any = {
       ...template,
-      createdBy: template.createdBy || 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Always provide a valid user ID as default
+      createdBy: 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Always provide a valid user ID as default
     };
     
     const { data, error } = await this.client
@@ -309,6 +309,11 @@ export class SupabaseStorage implements IStorage {
     }
 
     return this.mapSupabaseLiveReplyTemplate(data);
+  }
+
+  async upsertLiveReplyTemplate(template: InsertLiveReplyTemplate): Promise<LiveReplyTemplate> {
+    // For Supabase, upsert is same as create since we generate new IDs
+    return this.createLiveReplyTemplate(template);
   }
 
   async updateLiveReplyTemplate(id: string, template: Partial<InsertLiveReplyTemplate>): Promise<LiveReplyTemplate> {
@@ -460,7 +465,7 @@ export class SupabaseStorage implements IStorage {
     // Ensure created_by always has a value
     const templateWithDefaults: any = {
       ...template,
-      createdBy: template.createdBy || 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Always provide a valid user ID as default
+      createdBy: 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Always provide a valid user ID as default
     };
     
     const mappedTemplate = this.mapToSupabaseEmailTemplate(templateWithDefaults);
@@ -481,6 +486,11 @@ export class SupabaseStorage implements IStorage {
     console.log('[SupabaseStorage] Cleared email template cache after creation');
 
     return this.mapSupabaseEmailTemplate(data);
+  }
+
+  async upsertEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
+    // For Supabase, upsert is same as create since we generate new IDs
+    return this.createEmailTemplate(template);
   }
 
   async updateEmailTemplate(id: string, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate> {

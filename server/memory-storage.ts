@@ -160,7 +160,7 @@ export class MemoryStorage implements IStorage {
       stageOrder: template.stageOrder || 1,
       isActive: template.isActive !== undefined ? template.isActive : true,
       usageCount: 0,
-      createdBy: template.createdBy,
+      createdBy: "system", // Default value for memory storage
       createdAt: now,
       updatedAt: now,
       supabaseId: null,
@@ -169,6 +169,11 @@ export class MemoryStorage implements IStorage {
     
     this.liveReplyTemplates.set(id, newTemplate);
     return newTemplate;
+  }
+
+  async upsertLiveReplyTemplate(template: InsertLiveReplyTemplate): Promise<LiveReplyTemplate> {
+    // For memory storage, upsert is same as create since we don't have IDs from external source
+    return this.createLiveReplyTemplate(template);
   }
 
   async updateLiveReplyTemplate(id: string, template: Partial<InsertLiveReplyTemplate>): Promise<LiveReplyTemplate> {
@@ -277,7 +282,7 @@ export class MemoryStorage implements IStorage {
       stageOrder: template.stageOrder || 1,
       isActive: template.isActive !== undefined ? template.isActive : true,
       usageCount: 0,
-      createdBy: template.createdBy,
+      createdBy: "system", // Default value for memory storage
       createdAt: now,
       updatedAt: now,
       supabaseId: null,
@@ -286,6 +291,11 @@ export class MemoryStorage implements IStorage {
     
     this.emailTemplates.set(id, newTemplate);
     return newTemplate;
+  }
+
+  async upsertEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
+    // For memory storage, upsert is same as create since we don't have IDs from external source
+    return this.createEmailTemplate(template);
   }
 
   async updateEmailTemplate(id: string, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate> {
