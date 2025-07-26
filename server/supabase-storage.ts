@@ -29,9 +29,15 @@ export class SupabaseStorage implements IStorage {
   private readonly CACHE_TTL = 30000; // 30 seconds cache
 
   constructor() {
+    // Enhanced environment variable detection for Vercel deployment
     const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    // Debug logging for Vercel deployment
+    console.log('[SupabaseStorage] Environment check:');
+    console.log('[SupabaseStorage] NODE_ENV:', process.env.NODE_ENV);
+    console.log('[SupabaseStorage] All env vars:', Object.keys(process.env).filter(key => key.includes('SUPABASE')));
     
     console.log('[SupabaseStorage] Initializing with URL:', supabaseUrl ? 'URL_PRESENT' : 'URL_MISSING');
     console.log('[SupabaseStorage] Key status:', supabaseKey ? 'KEY_PRESENT' : 'KEY_MISSING');
