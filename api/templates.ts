@@ -16,6 +16,20 @@ export default async function handler(req: any, res: any) {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
+    // Verify user authentication for production
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) {
+        console.log('[Templates API] Invalid authentication token');
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      
+      console.log('[Templates API] Authenticated user:', user.email);
+    }
+    
     if (req.method === 'GET') {
       const { category, genre, search, isActive } = req.query;
       

@@ -14,32 +14,37 @@ export async function apiRequest(
   data?: unknown | undefined,
   userId?: string,
 ): Promise<Response> {
-  // Try multiple ways to get user ID
+  // Try multiple ways to get user ID and auth token
   let currentUserId = userId;
+  let authToken = null;
   
   if (!currentUserId) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       currentUserId = session?.user?.id;
+      authToken = session?.access_token;
     } catch (error) {
       console.warn('[apiRequest] Failed to get session, using fallback');
     }
   }
   
-  // Fallback to stored user ID in localStorage
+  // Fallback to stored user ID and token in localStorage
   if (!currentUserId) {
     const storedUser = localStorage.getItem('current_user_id');
+    const storedToken = localStorage.getItem('supabase_access_token');
     if (storedUser) {
       currentUserId = storedUser;
+      authToken = storedToken;
     }
   }
   
   const headers: Record<string, string> = {
     ...(data ? { "Content-Type": "application/json" } : {}),
     ...(currentUserId ? { "x-user-id": currentUserId } : {}),
+    ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {}),
   };
 
-  console.log('[apiRequest] Making request to:', url, 'with user ID:', currentUserId ? 'present' : 'missing');
+  console.log('[apiRequest] Making request to:', url, 'with user ID:', currentUserId ? 'present' : 'missing', 'with token:', authToken ? 'present' : 'missing');
 
   const res = await fetch(url, {
     method,
@@ -58,12 +63,14 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Get current user ID for authentication
+    // Get current user ID and auth token for authentication
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
+    const authToken = session?.access_token;
     
     const headers: Record<string, string> = {
       ...(userId ? { "x-user-id": userId } : {}),
+      ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {}),
     };
 
     const res = await fetch(queryKey.join("/") as string, {

@@ -110,33 +110,65 @@ export function useAuth() {
         console.log('[Auth] API fetch failed or timed out:', fetchError instanceof Error ? fetchError.message : 'Unknown error');
       }
       
-      // API route is being intercepted by Vite, fall back to the user we know exists
-      console.log('[Auth] API intercepted, setting user from backend data...');
+      // Try direct Supabase Auth API for production deployment
+      console.log('[Auth] Attempting direct Supabase user lookup...');
       
-      // Since backend logs show user exists, create the user object manually
-      const userData = {
-        id: supabaseUser.id,
-        email: supabaseUser.email,
-        firstName: 'Mahmoud',
-        lastName: 'Zalat',
-        profileImageUrl: '',
-        role: 'admin' as const,
-        status: 'active' as const,
-        isOnline: false,
-        lastSeen: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.access_token) {
+          const response = await fetch('/api/auth/user', {
+            headers: {
+              'Authorization': `Bearer ${data.session.access_token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            console.log('[Auth] User found via Supabase Auth API:', userData.email, userData.role);
+            
+            localStorage.setItem('current_user_id', userData.id);
+            localStorage.setItem('supabase_access_token', data.session.access_token);
+            
+            setUser(userData);
+            setIsLoading(false);
+            if (authTimeout) clearTimeout(authTimeout);
+            return;
+          }
+        }
+      } catch (authApiError) {
+        console.log('[Auth] Supabase Auth API failed:', authApiError);
+      }
       
-      console.log('[Auth] Setting user manually based on backend data:', userData.email, userData.role);
+      // Final fallback for development environment only
+      if (import.meta.env?.MODE === 'development') {
+        console.log('[Auth] Development fallback - using mock admin user');
+        const userData = {
+          id: supabaseUser.id,
+          email: supabaseUser.email,
+          firstName: 'Mahmoud',
+          lastName: 'Zalat',
+          profileImageUrl: '',
+          role: 'admin' as const,
+          status: 'active' as const,
+          isOnline: false,
+          lastSeen: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        
+        localStorage.setItem('current_user_id', userData.id);
+        setUser(userData);
+        setIsLoading(false);
+        if (authTimeout) clearTimeout(authTimeout);
+        return;
+      }
       
-      // Store user ID in localStorage for apiRequest function
-      localStorage.setItem('current_user_id', userData.id);
-      
-      setUser(userData);
+      // Production: No fallback, force proper authentication
+      console.error('[Auth] Production deployment: Failed to authenticate user');
+      setUser(null);
       setIsLoading(false);
       if (authTimeout) clearTimeout(authTimeout);
-      return;
       
     } catch (error) {
       console.error('[Auth] Error in handleUser:', error);
