@@ -1,8 +1,14 @@
 {
-  "buildCommand": "chmod +x build.sh && ./build.sh",
-  "outputDirectory": "dist/public",
-  "installCommand": "npm install",
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
