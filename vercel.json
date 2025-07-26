@@ -1,8 +1,8 @@
 {
-  "buildCommand": "chmod +x build.sh && ./build.sh",
+  "framework": "vite",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
-  "framework": null,
   "rewrites": [
     {
       "source": "/api/(.*)",
