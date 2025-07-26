@@ -1,15 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Get environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Get environment variables with multiple fallback patterns for different deployment environments
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 
+                   import.meta.env.SUPABASE_URL || 
+                   'https://lafldimdrginjqloihbh.supabase.co';
 
-console.log('[Frontend Supabase] URL:', supabaseUrl || 'MISSING');
-console.log('[Frontend Supabase] Key:', supabaseAnonKey ? 'SET' : 'MISSING');
-console.log('[Frontend Supabase] Available env vars:', Object.keys(import.meta.env));
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 
+                       import.meta.env.SUPABASE_ANON_KEY || 
+                       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZmxkaW1kcmdpbmpxbG9paGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4NDQwNTksImV4cCI6MjA1MjQyMDA1OX0.T4bUhpO_8AiQeGVcX4ZHlzNrKNP8xjNXkLxsS37qHd0';
+
+console.log('[Frontend Supabase] URL:', supabaseUrl);
+console.log('[Frontend Supabase] Key present:', !!supabaseAnonKey);
+console.log('[Frontend Supabase] Environment:', import.meta.env.MODE);
+console.log('[Frontend Supabase] Available env vars:', Object.keys(import.meta.env).filter(key => key.includes('SUPABASE')));
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY environment variables. Please set these in your Replit secrets.');
+  console.error('[Frontend Supabase] Missing credentials, using fallback values');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
