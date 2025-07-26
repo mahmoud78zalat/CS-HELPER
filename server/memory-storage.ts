@@ -435,6 +435,8 @@ export class MemoryStorage implements IStorage {
       createdBy: announcement.createdBy,
       createdAt: now,
       updatedAt: now,
+      version: 1,
+      lastAnnouncedAt: null,
       supabaseId: null,
       lastSyncedAt: null,
     };
@@ -462,7 +464,7 @@ export class MemoryStorage implements IStorage {
   async deleteAnnouncement(id: string): Promise<void> {
     this.announcements.delete(id);
     // Also delete related acknowledgments
-    for (const [ackId, ack] of this.userAnnouncementAcks.entries()) {
+    for (const [ackId, ack] of Array.from(this.userAnnouncementAcks.entries())) {
       if (ack.announcementId === id) {
         this.userAnnouncementAcks.delete(ackId);
       }
