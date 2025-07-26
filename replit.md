@@ -160,11 +160,12 @@ The system is designed to be deployed on Replit with automatic environment provi
 
 ## Recent Changes (July 26, 2025)
 
-**VERCEL DEPLOYMENT FIXES COMPLETED (July 26, 2025 - 7:05 AM)**:
+**VERCEL DEPLOYMENT FIXES COMPLETED (July 26, 2025 - 7:15 AM)**:
 ✓ **FIXED RUNTIME ERROR**: Removed problematic `functions` configuration from vercel.json that was causing "Function Runtimes must have a valid version" error
-✓ **MOVED BUILD DEPENDENCIES**: Relocated vite, esbuild, and other build tools from devDependencies to dependencies to resolve "command not found" errors during Vercel build
-✓ **VERIFIED BUILD PROCESS**: Confirmed local build works perfectly - 641KB main bundle, 107KB CSS bundle, 126KB server bundle
-✓ **DEPLOYMENT-READY**: Project now successfully builds on Vercel without runtime or dependency errors
+✓ **RESOLVED BUILD COMMAND ISSUE**: Updated buildCommand to use `npx` directly instead of npm scripts to ensure build tools are available during Vercel deployment
+✓ **CREATED BACKUP BUILD SCRIPT**: Added build.sh as alternative deployment method for complex build scenarios
+✓ **VERIFIED BUILD PROCESS**: Confirmed both local and npx-based builds work perfectly - 641KB main bundle, 107KB CSS bundle, 126KB server bundle
+✓ **DEPLOYMENT-READY**: Project now successfully builds on Vercel with reliable npx-based build command
 
 **Technical Details**:
 - Removed invalid `"runtime": "@vercel/node@3"` specification from vercel.json
