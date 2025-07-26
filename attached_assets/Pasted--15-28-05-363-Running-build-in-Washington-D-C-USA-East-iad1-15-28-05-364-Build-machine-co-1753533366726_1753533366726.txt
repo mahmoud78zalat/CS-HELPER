@@ -1,0 +1,96 @@
+[15:28:05.363] Running build in Washington, D.C., USA (East) – iad1
+[15:28:05.364] Build machine configuration: 2 cores, 8 GB
+[15:28:05.383] Cloning github.com/mahmoud78zalat/CSHELPER (Branch: main, Commit: ad6f81e)
+[15:28:05.398] Skipping build cache, deployment was triggered without cache.
+[15:28:05.675] Cloning completed: 292.000ms
+[15:28:07.441] Running "vercel build"
+[15:28:07.938] Vercel CLI 44.5.0
+[15:28:08.695] Running "install" command: `npm install`...
+[15:28:13.006] npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+[15:28:13.838] npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+[15:28:13.930] npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+[15:28:20.433] 
+[15:28:20.434] added 621 packages, and audited 622 packages in 12s
+[15:28:20.434] 
+[15:28:20.434] 76 packages are looking for funding
+[15:28:20.435]   run `npm fund` for details
+[15:28:20.471] 
+[15:28:20.472] 13 vulnerabilities (3 low, 8 moderate, 2 high)
+[15:28:20.472] 
+[15:28:20.472] To address issues that do not require attention, run:
+[15:28:20.472]   npm audit fix
+[15:28:20.472] 
+[15:28:20.472] To address all issues (including breaking changes), run:
+[15:28:20.472]   npm audit fix --force
+[15:28:20.472] 
+[15:28:20.472] Run `npm audit` for details.
+[15:28:20.631] 🚀 Starting Vercel build process...
+[15:28:20.632] 📦 Installing build dependencies...
+[15:28:20.722] npm warn using --force Recommended protections disabled.
+[15:28:24.341] 
+[15:28:24.342] up to date, audited 622 packages in 4s
+[15:28:24.342] 
+[15:28:24.343] 76 packages are looking for funding
+[15:28:24.343]   run `npm fund` for details
+[15:28:24.382] 
+[15:28:24.382] 13 vulnerabilities (3 low, 8 moderate, 2 high)
+[15:28:24.383] 
+[15:28:24.383] To address issues that do not require attention, run:
+[15:28:24.383]   npm audit fix
+[15:28:24.383] 
+[15:28:24.383] To address all issues (including breaking changes), run:
+[15:28:24.383]   npm audit fix --force
+[15:28:24.383] 
+[15:28:24.383] Run `npm audit` for details.
+[15:28:24.396] 🔍 Verifying installations...
+[15:28:24.939] vite/5.4.19 linux-x64 node-v22.17.1
+[15:28:25.246] 0.25.0
+[15:28:25.255] 🧹 Clearing build cache...
+[15:28:25.258] ⚡ Building frontend...
+[15:28:25.855] [36mvite v5.4.19 [32mbuilding for production...[36m[39m
+[15:28:25.913] transforming...
+[15:28:31.141] [32m✓[39m 1830 modules transformed.
+[15:28:31.661] rendering chunks...
+[15:28:31.688] computing gzip size...
+[15:28:31.722] [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m  3.67 kB[22m[1m[22m[2m │ gzip:   1.25 kB[22m
+[15:28:31.723] [2m../dist/public/[22m[2massets/[22m[35mindex-BUWAogM4.css  [39m[1m[2m107.79 kB[22m[1m[22m[2m │ gzip:  16.82 kB[22m
+[15:28:31.724] [2m../dist/public/[22m[2massets/[22m[36mindex-BLfmHf8J.js   [39m[1m[33m642.26 kB[39m[22m[2m │ gzip: 184.62 kB[22m
+[15:28:31.725] [33m
+[15:28:31.725] (!) Some chunks are larger than 500 kB after minification. Consider:
+[15:28:31.725] - Using dynamic import() to code-split the application
+[15:28:31.725] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[15:28:31.725] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[15:28:31.726] [32m✓ built in 5.85s[39m
+[15:28:31.779] 🔧 Building server...
+[15:28:32.127] 
+[15:28:32.127]   dist/index.js  126.4kb
+[15:28:32.127] 
+[15:28:32.128] ⚡ Done in 24ms
+[15:28:32.136] ✅ Verifying build outputs...
+[15:28:32.136] ✅ Build completed successfully!
+[15:28:32.231] 📁 Frontend: total 4
+[15:28:32.232] drwxr-xr-x 3 root root   38 Jul 26 12:28 .
+[15:28:32.232] drwxr-xr-x 3 root root   36 Jul 26 12:28 ..
+[15:28:32.232] drwxr-xr-x 2 root root   57 Jul 26 12:28 assets
+[15:28:32.233] -rw-r--r-- 1 root root 3667 Jul 26 12:28 index.html
+[15:28:32.237] 🖥️  Server: -rw-r--r-- 1 root root 129450 Jul 26 12:28 dist/index.js
+[15:28:32.271] Installing dependencies...
+[15:28:33.481] 
+[15:28:33.482] up to date in 1s
+[15:28:33.482] 
+[15:28:33.482] 76 packages are looking for funding
+[15:28:33.482]   run `npm fund` for details
+[15:28:33.860] Using TypeScript 5.6.3 (local user-provided)
+[15:28:39.921] server/memory-storage.ts(426,11): error TS2739: Type '{ id: string; title: string; content: string; isActive: boolean; backgroundColor: string; textColor: string; borderColor: string; priority: "low" | "medium" | "high" | "urgent"; createdBy: string; createdAt: Date; updatedAt: Date; supabaseId: null; lastSyncedAt: null; }' is missing the following properties from type '{ id: string; createdAt: Date | null; updatedAt: Date | null; isActive: boolean; createdBy: string; supabaseId: string | null; lastSyncedAt: Date | null; content: string; ... 6 more ...; lastAnnouncedAt: Date | null; }': version, lastAnnouncedAt
+[15:28:39.923] 
+[15:28:41.435] Using TypeScript 5.6.3 (local user-provided)
+[15:28:42.248] Using TypeScript 5.6.3 (local user-provided)
+[15:28:45.329] Using TypeScript 5.6.3 (local user-provided)
+[15:28:45.977] Using TypeScript 5.6.3 (local user-provided)
+[15:28:47.267] Build Completed in /vercel/output [39s]
+[15:28:47.454] Deploying outputs...
+[15:28:51.674] 
+[15:28:51.806] Deployment completed
+[15:29:33.045] Uploading build cache [107.75 MB]...
+[15:29:34.710] Build cache uploaded: 1.664s
+[15:29:36.941] Exiting build container
