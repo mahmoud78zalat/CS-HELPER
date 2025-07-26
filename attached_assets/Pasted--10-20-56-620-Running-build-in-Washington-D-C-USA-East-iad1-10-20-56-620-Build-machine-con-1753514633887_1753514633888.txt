@@ -1,0 +1,40 @@
+[10:20:56.620] Running build in Washington, D.C., USA (East) – iad1
+[10:20:56.620] Build machine configuration: 2 cores, 8 GB
+[10:20:56.650] Cloning github.com/mahmoud78zalat/CSHELPER (Branch: main, Commit: af00f64)
+[10:20:56.765] Previous build caches not available
+[10:20:56.947] Cloning completed: 297.000ms
+[10:20:57.298] Running "vercel build"
+[10:20:58.700] Vercel CLI 44.5.0
+[10:20:59.803] Running "install" command: `npm install`...
+[10:21:04.195] npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+[10:21:09.780] 
+[10:21:09.780] added 518 packages, and audited 519 packages in 10s
+[10:21:09.780] 
+[10:21:09.781] 64 packages are looking for funding
+[10:21:09.781]   run `npm fund` for details
+[10:21:09.792] 
+[10:21:09.792] 7 vulnerabilities (3 low, 2 moderate, 2 high)
+[10:21:09.793] 
+[10:21:09.793] To address issues that do not require attention, run:
+[10:21:09.793]   npm audit fix
+[10:21:09.793] 
+[10:21:09.793] To address all issues (including breaking changes), run:
+[10:21:09.793]   npm audit fix --force
+[10:21:09.793] 
+[10:21:09.793] Run `npm audit` for details.
+[10:21:10.623] npm warn exec The following package was not found and will be installed: vite@7.0.6
+[10:21:16.174] [31mfailed to load config from /vercel/path0/vite.config.ts[39m
+[10:21:16.175] [31merror during build:
+[10:21:16.176] Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from /vercel/path0/node_modules/.vite-temp/vite.config.ts.timestamp-1753514476171-3d2ec3f72cb7e.mjs
+[10:21:16.176]     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+[10:21:16.176]     at packageResolve (node:internal/modules/esm/resolve:768:81)
+[10:21:16.176]     at moduleResolve (node:internal/modules/esm/resolve:854:18)
+[10:21:16.177]     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+[10:21:16.177]     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+[10:21:16.177]     at #cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+[10:21:16.177]     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+[10:21:16.177]     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+[10:21:16.178]     at ModuleJob._link (node:internal/modules/esm/module_job:175:49)[39m
+[10:21:16.199] Error: Command "npx vite build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist" exited with 1
+[10:21:16.427] 
+[10:21:19.523] Exiting build container

@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx vite build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+  "buildCommand": "chmod +x build.sh && ./build.sh",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
   "framework": null,
