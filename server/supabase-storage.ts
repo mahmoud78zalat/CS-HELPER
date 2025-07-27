@@ -29,7 +29,7 @@ export class SupabaseStorage implements IStorage {
   private readonly CACHE_TTL = 30000; // 30 seconds cache
 
   constructor() {
-    // Enhanced environment variable detection for all deployment environments
+    // Enhanced environment variable detection for all deployment environments (Render, Vercel, Replit)
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

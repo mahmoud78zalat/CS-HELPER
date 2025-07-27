@@ -42,6 +42,7 @@ import {
 // import { eq, desc, asc, and, or, like, sql } from "drizzle-orm";
 import { MemoryStorage } from "./memory-storage";
 import { SupabaseStorage } from "./supabase-storage";
+import { FallbackStorage } from "./fallback-storage";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -575,15 +576,23 @@ export class DatabaseStorage implements IStorage {
 }
 */
 
-// Create storage instance - using Supabase for production
+// Create storage instance - optimized for deployment environments
 let storage: IStorage;
 
 try {
   storage = new SupabaseStorage();
-  console.log('[Storage] Using Supabase storage');
+  console.log('[Storage] ✅ Using Supabase storage');
 } catch (error) {
-  console.error('[Storage] Failed to initialize Supabase storage, falling back to memory storage:', error);
-  storage = new MemoryStorage();
+  console.error('[Storage] Failed to initialize Supabase storage, falling back to fallback storage:', error);
+  
+  // Use fallback storage for deployment environments without database
+  if (process.env.NODE_ENV === 'production') {
+    storage = new FallbackStorage();
+    console.log('[Storage] 🔄 Using fallback storage for deployment testing');
+  } else {
+    storage = new MemoryStorage();
+    console.log('[Storage] 💾 Using memory storage for development');
+  }
 }
 
 export { storage };

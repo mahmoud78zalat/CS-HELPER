@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import { registerRoutes } from "./simple-routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { validateRenderEnvironment, optimizeForRender } from "./render-config";
 
 const app = express();
 app.use(express.json());
@@ -38,6 +39,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Configure for Render.com deployment
+  const config = validateRenderEnvironment();
+  optimizeForRender();
+  
   // Register routes (now synchronous for serverless compatibility)
   registerRoutes(app);
   

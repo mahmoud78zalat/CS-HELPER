@@ -4,31 +4,68 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-console.log('[Frontend Supabase] URL:', supabaseUrl);
-console.log('[Frontend Supabase] Key present:', !!supabaseAnonKey);
-console.log('[Frontend Supabase] Environment:', import.meta.env.MODE);
-console.log('[Frontend Supabase] Available env vars:', Object.keys(import.meta.env).filter(key => key.includes('SUPABASE')));
-console.log('[Frontend Supabase] Raw env access test:', {
-  url: import.meta.env.VITE_SUPABASE_URL,
-  keyLength: import.meta.env.VITE_SUPABASE_ANON_KEY?.length || 0
-});
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('[Frontend Supabase] MISSING REQUIRED CREDENTIALS!');
-  console.error('[Frontend Supabase] URL:', supabaseUrl ? 'Present' : 'MISSING');
-  console.error('[Frontend Supabase] Key:', supabaseAnonKey ? 'Present' : 'MISSING');
-  console.error('[Frontend Supabase] This is likely a Vite environment variable configuration issue');
-  
-  // For development, provide helpful debug info
-  if (import.meta.env.MODE === 'development') {
-    console.error('[Frontend Supabase] In development mode, ensure environment variables are properly set in Replit Secrets');
-    console.error('[Frontend Supabase] Required variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY');
-  }
-  
-  throw new Error('Missing required Supabase environment variables. Please check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your deployment environment.');
+// Debug logging (only in development)
+if (import.meta.env.MODE === 'development') {
+  console.log('[Frontend Supabase] URL:', supabaseUrl ? 'Present' : 'Missing');
+  console.log('[Frontend Supabase] Key present:', !!supabaseAnonKey);
+  console.log('[Frontend Supabase] Environment:', import.meta.env.MODE);
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Check if Supabase credentials are available
+const hasSupabaseCredentials = !!(supabaseUrl && supabaseAnonKey && 
+  supabaseUrl.trim() !== '' && supabaseAnonKey.trim() !== '');
+
+if (!hasSupabaseCredentials) {
+  // Only log detailed errors in development
+  if (import.meta.env.MODE === 'development') {
+    console.warn('[Frontend Supabase] Missing credentials - using fallback mode');
+    console.warn('[Frontend Supabase] URL:', supabaseUrl ? 'Present' : 'MISSING');
+    console.warn('[Frontend Supabase] Key:', supabaseAnonKey ? 'Present' : 'MISSING');
+    console.warn('[Frontend Supabase] Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for full functionality');
+  }
+  
+  // Import fallback client instead of throwing error
+  console.log('[Frontend Supabase] Using fallback mode - authentication will be limited');
+}
+
+// Create either real or fallback Supabase client
+let supabaseClient: any;
+
+if (hasSupabaseCredentials) {
+  supabaseClient = createClient(supabaseUrl!, supabaseAnonKey!);
+  console.log('[Frontend Supabase] ✅ Connected to Supabase');
+} else {
+  // Use a simple mock client for deployment environments without credentials
+  supabaseClient = {
+    auth: {
+      signInWithPassword: async () => ({
+        data: { user: null, session: null },
+        error: { message: 'Supabase not configured - add credentials for full functionality' }
+      }),
+      signOut: async () => ({ error: null }),
+      getUser: async () => ({
+        data: { user: null },
+        error: { message: 'Supabase not configured' }
+      }),
+      onAuthStateChange: (callback: any) => ({
+        data: { subscription: { unsubscribe: () => {} } }
+      })
+    },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({
+            data: null,
+            error: { message: 'Database not configured' }
+          })
+        })
+      })
+    })
+  };
+  console.log('[Frontend Supabase] 🔄 Using fallback mode - add credentials for full functionality');
+}
+
+export const supabase = supabaseClient;
 
 // Auth helper functions
 export const signInWithEmail = async (email: string, password: string) => {
