@@ -40,9 +40,7 @@ import {
 // import { supabaseSync } from "./supabase";
 // import { db } from "./db";
 // import { eq, desc, asc, and, or, like, sql } from "drizzle-orm";
-import { MemoryStorage } from "./memory-storage";
 import { SupabaseStorage } from "./supabase-storage";
-import { FallbackStorage } from "./fallback-storage";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -576,23 +574,21 @@ export class DatabaseStorage implements IStorage {
 }
 */
 
-// Create storage instance - optimized for deployment environments
+// Create storage instance - requires Supabase for full functionality
 let storage: IStorage;
 
 try {
   storage = new SupabaseStorage();
   console.log('[Storage] ✅ Using Supabase storage');
 } catch (error) {
-  console.error('[Storage] Failed to initialize Supabase storage, falling back to fallback storage:', error);
+  console.error('[Storage] Failed to initialize Supabase storage:', error);
+  console.error('[Storage] Please ensure Supabase environment variables are configured:');
+  console.error('[Storage] - VITE_SUPABASE_URL or SUPABASE_URL');
+  console.error('[Storage] - VITE_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY');
+  console.error('[Storage] - SUPABASE_SERVICE_ROLE_KEY (for admin operations)');
   
-  // Use fallback storage for deployment environments without database
-  if (process.env.NODE_ENV === 'production') {
-    storage = new FallbackStorage();
-    console.log('[Storage] 🔄 Using fallback storage for deployment testing');
-  } else {
-    storage = new MemoryStorage();
-    console.log('[Storage] 💾 Using memory storage for development');
-  }
+  // Throw error to prevent startup without proper database
+  throw new Error('Supabase configuration required for full functionality. Please set environment variables.');
 }
 
 export { storage };

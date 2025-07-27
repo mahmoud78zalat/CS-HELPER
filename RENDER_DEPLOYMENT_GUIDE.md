@@ -10,14 +10,18 @@ This guide will help you deploy your Customer Service Platform to Render.com wit
 
 ## Deployment Steps
 
-### Option 1: Using Supabase Database (Recommended)
+### Deployment Steps (Supabase Required)
 
 1. **Set up Supabase Project**
    - Go to [supabase.com](https://supabase.com) and create a new project
    - Navigate to Settings > API to get your credentials
    - Copy the Project URL and anon public key
 
-2. **Deploy to Render**
+2. **Initialize Database**
+   - Run the SQL from `SUPABASE_BOOTSTRAP.sql` in your Supabase SQL editor
+   - This creates all necessary tables and security policies
+
+3. **Deploy to Render**
    - Connect your GitHub repository to Render
    - Render will automatically detect the `render.yaml` configuration
    - Set the following environment variables in Render dashboard:
@@ -30,42 +34,19 @@ This guide will help you deploy your Customer Service Platform to Render.com wit
      SESSION_SECRET=your_random_session_secret
      ```
 
-3. **Initialize Database**
-   - Run the SQL from `SUPABASE_BOOTSTRAP.sql` in your Supabase SQL editor
-   - This creates all necessary tables and security policies
-
-### Option 2: Using Render PostgreSQL
-
-1. **Deploy with Database**
-   - The `render.yaml` includes a PostgreSQL database
-   - Render will automatically create and connect the database
-   - Set these environment variables:
-     ```
-     SESSION_SECRET=your_random_session_secret
-     ```
-
-2. **Initialize Database Schema**
-   - After deployment, run database migrations:
-     ```bash
-     npm run db:push
-     ```
-
 ## Environment Variables Explained
 
-### Required for Supabase Integration:
+### Required Environment Variables:
 - `VITE_SUPABASE_URL` - Your Supabase project URL (for frontend)
 - `VITE_SUPABASE_ANON_KEY` - Your Supabase anon key (for frontend)
 - `SUPABASE_URL` - Your Supabase project URL (for backend)
 - `SUPABASE_ANON_KEY` - Your Supabase anon key (for backend)
 - `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key (for admin operations)
-
-### Required for Sessions:
 - `SESSION_SECRET` - Random string for session encryption (generate a secure 32+ character string)
 
 ### Auto-managed by Render:
 - `PORT` - Automatically set by Render
 - `NODE_ENV` - Set to "production"
-- `DATABASE_URL` - Automatically set if using Render PostgreSQL
 
 ## Post-Deployment Setup
 

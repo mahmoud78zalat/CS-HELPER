@@ -11,61 +11,22 @@ if (import.meta.env.MODE === 'development') {
   console.log('[Frontend Supabase] Environment:', import.meta.env.MODE);
 }
 
-// Check if Supabase credentials are available
-const hasSupabaseCredentials = !!(supabaseUrl && supabaseAnonKey && 
-  supabaseUrl.trim() !== '' && supabaseAnonKey.trim() !== '');
-
-if (!hasSupabaseCredentials) {
+if (!supabaseUrl || !supabaseAnonKey) {
+  const errorMessage = 'Missing required Supabase environment variables. Please check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your deployment environment.';
+  
   // Only log detailed errors in development
   if (import.meta.env.MODE === 'development') {
-    console.warn('[Frontend Supabase] Missing credentials - using fallback mode');
-    console.warn('[Frontend Supabase] URL:', supabaseUrl ? 'Present' : 'MISSING');
-    console.warn('[Frontend Supabase] Key:', supabaseAnonKey ? 'Present' : 'MISSING');
-    console.warn('[Frontend Supabase] Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for full functionality');
+    console.error('[Frontend Supabase] MISSING REQUIRED CREDENTIALS!');
+    console.error('[Frontend Supabase] URL:', supabaseUrl ? 'Present' : 'MISSING');
+    console.error('[Frontend Supabase] Key:', supabaseAnonKey ? 'Present' : 'MISSING');
+    console.error('[Frontend Supabase] Available env vars:', Object.keys(import.meta.env).filter(key => key.includes('SUPABASE')));
+    console.error('[Frontend Supabase] Required variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY');
   }
   
-  // Import fallback client instead of throwing error
-  console.log('[Frontend Supabase] Using fallback mode - authentication will be limited');
+  throw new Error(errorMessage);
 }
 
-// Create either real or fallback Supabase client
-let supabaseClient: any;
-
-if (hasSupabaseCredentials) {
-  supabaseClient = createClient(supabaseUrl!, supabaseAnonKey!);
-  console.log('[Frontend Supabase] ✅ Connected to Supabase');
-} else {
-  // Use a simple mock client for deployment environments without credentials
-  supabaseClient = {
-    auth: {
-      signInWithPassword: async () => ({
-        data: { user: null, session: null },
-        error: { message: 'Supabase not configured - add credentials for full functionality' }
-      }),
-      signOut: async () => ({ error: null }),
-      getUser: async () => ({
-        data: { user: null },
-        error: { message: 'Supabase not configured' }
-      }),
-      onAuthStateChange: (callback: any) => ({
-        data: { subscription: { unsubscribe: () => {} } }
-      })
-    },
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          single: async () => ({
-            data: null,
-            error: { message: 'Database not configured' }
-          })
-        })
-      })
-    })
-  };
-  console.log('[Frontend Supabase] 🔄 Using fallback mode - add credentials for full functionality');
-}
-
-export const supabase = supabaseClient;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Auth helper functions
 export const signInWithEmail = async (email: string, password: string) => {

@@ -26,33 +26,24 @@ Your Customer Service Platform is now fully optimized for Render.com deployment 
 
 ## 🎯 Ready for Deployment
 
-### Option 1: Quick Deploy (5 minutes)
-1. Push your code to GitHub
-2. Connect repository to Render.com
-3. Render auto-detects `render.yaml` configuration
-4. Set environment variable: `SESSION_SECRET=your-secure-random-string`
-5. Deploy automatically uses Render PostgreSQL
-
-### Option 2: Full-Featured Deploy (10 minutes)
+### Deploy to Render.com (10 minutes)
 1. Create Supabase project and get credentials
-2. Deploy to Render with Supabase environment variables
-3. Run `SUPABASE_BOOTSTRAP.sql` in Supabase SQL editor
-4. Full authentication and data persistence enabled
+2. Run `SUPABASE_BOOTSTRAP.sql` in Supabase SQL editor
+3. Push your code to GitHub
+4. Connect repository to Render.com (auto-detects render.yaml)
+5. Set all required Supabase environment variables
+6. Deploy with full authentication and data persistence
 
-## 🛠️ What Works Out of the Box
+## 🛠️ What Works Out of the Box (Supabase Required)
 
-### Without Database (Fallback Mode)
-✅ Application starts and serves frontend  
-✅ Health checks pass  
-✅ Basic functionality with demo data  
-✅ Perfect for initial deployment testing  
-
-### With Database (Full Mode)
-✅ Complete user authentication  
-✅ Persistent data storage  
-✅ Template management  
-✅ Admin panel functionality  
-✅ Production-ready features  
+### Full Production Mode
+✅ Complete user authentication with Supabase Auth  
+✅ Persistent data storage with real-time updates  
+✅ Template management and analytics  
+✅ Admin panel with full functionality  
+✅ Real-time user presence tracking  
+✅ Comprehensive security with RLS policies  
+✅ Production-ready scalable architecture  
 
 ## 🔧 Build Process Verified
 
@@ -64,25 +55,20 @@ Your Customer Service Platform is now fully optimized for Render.com deployment 
 
 ## 📦 Environment Variables
 
-### Required (Minimal Setup)
-```
-SESSION_SECRET=your-32-character-random-string
-```
-
-### Optional (Full Supabase Integration)
+### Required (Supabase Integration)
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_URL=https://your-project.supabase.co  
 SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SESSION_SECRET=your-32-character-random-string
 ```
 
 ### Auto-Managed by Render
 ```
 NODE_ENV=production (automatic)
 PORT=10000 (automatic)
-DATABASE_URL=postgresql://... (if using Render PostgreSQL)
 ```
 
 ## 🏃‍♂️ Next Steps
