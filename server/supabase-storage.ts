@@ -29,21 +29,26 @@ export class SupabaseStorage implements IStorage {
   private readonly CACHE_TTL = 30000; // 30 seconds cache
 
   constructor() {
-    // Enhanced environment variable detection for Vercel deployment
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // Enhanced environment variable detection for all deployment environments
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
-    // Debug logging for Vercel deployment
+    // Debug logging for deployment troubleshooting
     console.log('[SupabaseStorage] Environment check:');
     console.log('[SupabaseStorage] NODE_ENV:', process.env.NODE_ENV);
     console.log('[SupabaseStorage] All env vars:', Object.keys(process.env).filter(key => key.includes('SUPABASE')));
     
-    console.log('[SupabaseStorage] Initializing with URL:', supabaseUrl ? 'URL_PRESENT' : 'URL_MISSING');
-    console.log('[SupabaseStorage] Key status:', supabaseKey ? 'KEY_PRESENT' : 'KEY_MISSING');
-    console.log('[SupabaseStorage] Service Key status:', serviceRoleKey ? 'SERVICE_KEY_PRESENT' : 'SERVICE_KEY_MISSING');
-    console.log('[SupabaseStorage] URL length:', supabaseUrl?.length || 0);
-    console.log('[SupabaseStorage] Key length:', supabaseKey?.length || 0);
+    // Detailed credential debugging
+    console.log('[SupabaseStorage] VITE_SUPABASE_URL:', process.env.VITE_SUPABASE_URL ? 'PRESENT' : 'MISSING');
+    console.log('[SupabaseStorage] SUPABASE_URL:', process.env.SUPABASE_URL ? 'PRESENT' : 'MISSING');
+    console.log('[SupabaseStorage] VITE_SUPABASE_ANON_KEY:', process.env.VITE_SUPABASE_ANON_KEY ? 'PRESENT' : 'MISSING');
+    console.log('[SupabaseStorage] SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'PRESENT' : 'MISSING');
+    console.log('[SupabaseStorage] SUPABASE_SERVICE_ROLE_KEY:', serviceRoleKey ? 'PRESENT' : 'MISSING');
+    
+    console.log('[SupabaseStorage] Final URL:', supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'MISSING');
+    console.log('[SupabaseStorage] Final Key length:', supabaseKey?.length || 0);
+    console.log('[SupabaseStorage] Service Key length:', serviceRoleKey?.length || 0);
     
     if (!supabaseUrl || !supabaseKey || supabaseUrl.trim() === '' || supabaseKey.trim() === '') {
       throw new Error(`Missing or empty Supabase credentials - URL: ${!!supabaseUrl && supabaseUrl.trim() !== ''}, Key: ${!!supabaseKey && supabaseKey.trim() !== ''}`);
