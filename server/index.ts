@@ -1,12 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { createServer } from "http";
 import { registerRoutes } from "./simple-routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { validateRailwayEnvironment, optimizeForRailway, logRailwayStatus } from "./railway-config";
+import { validateRailwayEnvironment, optimizeForRailway } from "./railway-config";
+import { createRailwayServer, startRailwayServer } from "./railway-startup";
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Create Railway-optimized Express app
+const app = createRailwayServer();
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -39,38 +38,39 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Configure for Railway deployment
-  const config = validateRailwayEnvironment();
-  optimizeForRailway();
-  
-  // Register routes (now synchronous for serverless compatibility)
-  registerRoutes(app);
-  
-  // Create HTTP server for development
-  const server = createServer(app);
+  try {
+    console.log('[Railway] 🚂 Starting Railway deployment...');
+    
+    // Configure for Railway deployment
+    const config = validateRailwayEnvironment();
+    optimizeForRailway();
+    
+    // Register API routes BEFORE Vite setup
+    registerRoutes(app);
+    
+    // Error handling middleware
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      console.error('[Railway] Express error:', err);
+      res.status(status).json({ message });
+    });
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    // Setup development/production serving
+    if (process.env.NODE_ENV === "development") {
+      console.log('[Railway] Setting up development mode with Vite...');
+      const server = await import("http").then(http => http.createServer(app));
+      await setupVite(app, server);
+    } else {
+      console.log('[Railway] Setting up production static file serving...');
+      serveStatic(app);
+    }
 
-    res.status(status).json({ message });
-    throw err;
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+    // Start the Railway server
+    await startRailwayServer(app);
+    
+  } catch (error) {
+    console.error('[Railway] 💥 Critical startup error:', error);
+    process.exit(1);
   }
-
-  // Railway deployment: serve on PORT environment variable
-  // Railway requires binding to 0.0.0.0 for external access
-  const port = parseInt(process.env.PORT || '8080', 10);
-  server.listen(port, "0.0.0.0", () => {
-    log(`🚂 Railway server running on port ${port}`);
-    logRailwayStatus();
-  });
 })();

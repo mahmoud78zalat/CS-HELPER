@@ -1,0 +1,274 @@
+robust-contentment
+
+
+production
+Architecture
+Observability
+Logs
+Settings
+
+30 days or $5.00 left
+
+
+Share
+
+
+
+
+
+Activity
+
+web
+
+Deployment restarted
+
+10 minutes ago
+
+web
+
+Deployment restarted
+
+10 minutes ago
+
+web
+
+Deployment restarted
+
+11 minutes ago
+
+web
+
+Deployment restarted
+
+11 minutes ago
+
+web
+
+Deployment restarted
+
+11 minutes ago
+
+web
+
+Deployment restarted
+
+11 minutes ago
+
+web
+
+Deployment restarted
+
+11 minutes ago
+
+web
+
+Deployment restarted
+
+11 minutes ago
+
+web
+
+Deployment restarted
+
+11 minutes ago
+
+web
+
+Deployment failed
+
+12 minutes ago
+
+
+5 changes in web
+
+mahmoud78zalat
+
+·
+12 minutes ago
+web
+
+Deployment created
+
+12 minutes ago
+
+
+New environment
+
+mahmoud78zalat
+
+·
+12 minutes ago
+
+web
+Deployments
+Variables
+Metrics
+Settings
+web-production-91d8.up.railway.app
+europe-west4-drams3a
+1 Replica
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+History
+
+
+
+web
+/
+2e44365
+Jul 27, 2025, 5:10 PM
+Failed
+
+web-production-91d8.up.railway.app
+Get Help
+
+Details
+Build Logs
+Deploy Logs
+HTTP Logs
+
+Filter
+Filter logs using "", (), AND, OR, -
+
+
+
+You reached the start of the range → Jul 27, 2025, 5:10 PM
+
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+
+vite v5.4.19 building for production...
+
+transforming...
+
+✓ 1830 modules transformed.
+
+rendering chunks...
+
+computing gzip size...
+
+../dist/public/index.html                   3.71 kB │ gzip:   1.27 kB
+../dist/public/assets/index-BUWAogM4.css  107.79 kB │ gzip:  16.82 kB
+
+../dist/public/assets/index-CWgb4isA.js   640.78 kB │ gzip: 183.88 kB
+
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+✓ built in 6.22s
+
+
+  dist/index.js  113.3kb
+
+⚡ Done in 12ms
+
+[6/7] RUN npm run build  ✔ 6 sec
+
+[7/7] RUN npm prune --production
+
+npm warn config production Use `--omit=dev` instead.
+
+
+up to date, audited 445 packages in 2s
+
+
+
+58 packages are looking for funding
+
+  run `npm fund` for details
+
+
+3 low severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+[7/7] RUN npm prune --production  ✔ 1 sec
+
+exporting to docker image format
+
+exporting to image
+
+[auth] sharing credentials for production-europe-west4-drams3a.railway-registry.com
+
+[auth] sharing credentials for production-europe-west4-drams3a.railway-registry.com  ✔ 0 ms
+
+importing to docker
+
+importing to docker  ✔ 9 sec
+
+Build time: 57.57 seconds
+
+ 
+
+====================
+
+Starting Healthcheck
+
+====================
+
+
+Path: /api/health
+
+Retry window: 5m0s
+
+ 
+
+Attempt #1 failed with service unavailable. Continuing to retry for 4m54s
+
+Attempt #2 failed with service unavailable. Continuing to retry for 4m53s
+
+Attempt #3 failed with service unavailable. Continuing to retry for 4m50s
+
+Attempt #4 failed with service unavailable. Continuing to retry for 4m46s
+
+Attempt #5 failed with service unavailable. Continuing to retry for 4m37s
+
+Attempt #6 failed with service unavailable. Continuing to retry for 4m21s
+
+Attempt #7 failed with service unavailable. Continuing to retry for 3m50s
+
+Attempt #8 failed with service unavailable. Continuing to retry for 3m20s
+
+Attempt #9 failed with service unavailable. Continuing to retry for 2m50s
+
+Attempt #10 failed with service unavailable. Continuing to retry for 2m19s
+
+Attempt #11 failed with service unavailable. Continuing to retry for 1m49s
+
+Attempt #12 failed with service unavailable. Continuing to retry for 1m18s
+
+Attempt #13 failed with service unavailable. Continuing to retry for 48s
+
+Attempt #14 failed with service unavailable. Continuing to retry for 17s
+
+ 
+
+1/1 replicas never became healthy!
+
+Healthcheck failed!
+Log stream has been paused
+
+Resume Log Stream
+
+
+web | Railway
