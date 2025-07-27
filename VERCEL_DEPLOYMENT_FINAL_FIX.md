@@ -36,24 +36,37 @@ export default async function handler(req, res) {
 }
 ```
 
-#### 2. Updated `vercel.json` - Correct Routing
+#### 2. Updated `vercel.json` - Correct Routing (Fixed Conflict)
 ```json
 {
   "version": 2,
   "builds": [
     {
       "src": "api/index.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 30
+      }
+    },
+    {
+      "src": "dist/public/**/*",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/api/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/public/$1"
     }
   ]
 }
 ```
+
+**Fixed Issue**: Removed conflicting `functions` property that can't be used with `builds`. The `maxDuration` is now properly configured in the build config.
 
 #### 3. Added Test Endpoint `/api/test.ts`
 - Test environment variables
