@@ -11,72 +11,85 @@ Your Supabase database access issue on Vercel has been successfully diagnosed an
 
 ## Solutions Implemented
 
-### 1. Fixed Environment Variable Access
-Updated both frontend and backend to properly handle Supabase credentials:
+### 1. Created Serverless-Optimized Architecture
+Completely rebuilt the API for Vercel serverless functions:
 
 ```typescript
-// Frontend (client/src/lib/supabase.ts) - Already working
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// api/supabase-client.ts - Lightweight Supabase client for serverless
+const getSupabaseCredentials = () => {
+  const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!url || !anonKey) {
+    throw new Error(`Missing Supabase credentials: URL=${!!url}, Key=${!!anonKey}`);
+  }
+  return { url, anonKey, serviceRoleKey };
+};
 
-// Backend (server/supabase-storage.ts) - Enhanced for Vercel
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+export const createServerlessAdminClient = () => {
+  const { url, serviceRoleKey } = getSupabaseCredentials();
+  return createClient(url, serviceRoleKey);
+};
 ```
 
-### 2. Vercel Configuration Update
-Updated `vercel.json` for proper serverless function handling:
+### 2. Self-Contained API Endpoints
+Rebuilt `api/index.ts` with direct Supabase calls instead of complex imports:
+
+```typescript
+// Direct database operations without server dependencies
+app.get('/api/templates', async (req, res) => {
+  try {
+    const supabase = createServerlessAdminClient();
+    const { data: templates, error } = await supabase
+      .from('live_reply_templates')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    res.json(templates || []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+```
+
+### 3. Updated Vercel Configuration
+Enhanced `vercel.json` with proper serverless function routing:
 
 ```json
 {
+  "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
   "functions": {
     "api/index.ts": {
+      "runtime": "nodejs18.x",
       "maxDuration": 30,
       "memory": 1024
     }
   },
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
 ```
 
-### 3. Serverless Health Check
-Added proper health check endpoint in `api/index.ts` to verify Supabase connection:
-
-```typescript
-app.get('/api/health', async (req, res) => {
-  try {
-    const { testServerlessConnection } = await import('./supabase-config');
-    const connectionTest = await testServerlessConnection();
-    
-    res.json({ 
-      status: 'OK', 
-      platform: 'Vercel Serverless',
-      supabase: {
-        configured: !!process.env.VITE_SUPABASE_URL,
-        connected: connectionTest.success
-      },
-      userCount: connectionTest.userCount || 0
-    });
-  } catch (error) {
-    // Error handling
-  }
-});
-```
+### 4. Core API Endpoints Implemented
+Added all essential endpoints directly in the serverless function:
+- ✅ `/api/health` - Database connection test
+- ✅ `/api/templates` - Live reply templates
+- ✅ `/api/site-content` - Site configuration
+- ✅ `/api/color-settings` - Theme colors
+- ✅ `/api/user/:id` - User data
+- ✅ `/api/templates/:id/use` - Template usage tracking
 
 ## Deployment Instructions for Vercel
 
