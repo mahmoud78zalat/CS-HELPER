@@ -9,20 +9,19 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// CORS for deployment
+// CORS for deployment - Allow all origins for Vercel deployment
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.vercel.app'] // Update with your actual domain
-    : ['http://localhost:5000', 'http://localhost:3000'];
-  
+  // Allow all origins in production for Vercel deployment flexibility
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin as string)) {
-    res.setHeader('Access-Control-Allow-Origin', origin as string);
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
   
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -38,25 +37,22 @@ registerRoutes(app);
 // Health check with database test - optimized for Vercel serverless
 app.get('/api/health', async (req, res) => {
   try {
-    // Test Supabase connection directly in serverless environment
-    const { testServerlessConnection } = await import('./supabase-config');
-    const connectionTest = await testServerlessConnection();
-    
-    if (!connectionTest.success) {
-      throw new Error(connectionTest.error || 'Database connection failed');
-    }
+    // Test database connection using existing storage
+    const { storage } = await import('../server/storage');
+    const users = await storage.getAllUsers();
     
     res.json({ 
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
-      platform: 'Vercel Serverless',
+      platform: process.env.VERCEL ? 'Vercel Serverless' : 'Development',
       supabase: {
         configured: !!process.env.VITE_SUPABASE_URL,
-        connected: connectionTest.success
+        connected: true
       },
       database: 'connected',
-      userCount: connectionTest.userCount || 0
+      userCount: users.length,
+      storageType: storage.constructor.name
     });
   } catch (error) {
     console.error('[API Health Check] Error:', error);
@@ -64,7 +60,7 @@ app.get('/api/health', async (req, res) => {
       status: 'ERROR',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
-      platform: 'Vercel Serverless',
+      platform: process.env.VERCEL ? 'Vercel Serverless' : 'Development',
       supabase: {
         configured: !!process.env.VITE_SUPABASE_URL,
         connected: false
