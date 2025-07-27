@@ -1,0 +1,49 @@
+[10:05:41.873] Running build in Washington, D.C., USA (East) – iad1
+[10:05:41.873] Build machine configuration: 2 cores, 8 GB
+[10:05:41.891] Cloning github.com/mahmoud78zalat/CSHELPER (Branch: main, Commit: 3873916)
+[10:05:42.068] Previous build caches not available
+[10:05:42.240] Cloning completed: 349.000ms
+[10:05:44.226] Running "vercel build"
+[10:05:44.702] Vercel CLI 44.5.0
+[10:05:45.434] Installing dependencies...
+[10:05:50.117] npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+[10:05:50.918] npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+[10:05:50.992] npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+[10:05:58.036] 
+[10:05:58.039] added 621 packages in 12s
+[10:05:58.040] 
+[10:05:58.040] 76 packages are looking for funding
+[10:05:58.040]   run `npm fund` for details
+[10:05:58.308] 
+[10:05:58.308] > rest-express@1.0.0 build
+[10:05:58.308] > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+[10:05:58.308] 
+[10:05:58.944] [36mvite v5.4.19 [32mbuilding for production...[36m[39m
+[10:05:59.130] transforming...
+[10:06:04.228] [32m✓[39m 1830 modules transformed.
+[10:06:04.688] rendering chunks...
+[10:06:04.705] computing gzip size...
+[10:06:04.723] [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m  3.71 kB[22m[1m[22m[2m │ gzip:   1.27 kB[22m
+[10:06:04.724] [2m../dist/public/[22m[2massets/[22m[35mindex-BUWAogM4.css  [39m[1m[2m107.79 kB[22m[1m[22m[2m │ gzip:  16.82 kB[22m
+[10:06:04.724] [2m../dist/public/[22m[2massets/[22m[36mindex-B5o8rJwG.js   [39m[1m[33m642.45 kB[39m[22m[2m │ gzip: 184.67 kB[22m
+[10:06:04.724] [33m
+[10:06:04.724] (!) Some chunks are larger than 500 kB after minification. Consider:
+[10:06:04.725] - Using dynamic import() to code-split the application
+[10:06:04.725] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[10:06:04.725] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[10:06:04.725] [32m✓ built in 5.76s[39m
+[10:06:04.770] 
+[10:06:04.770]   dist/index.js  127.1kb
+[10:06:04.770] 
+[10:06:04.771] ⚡ Done in 13ms
+[10:06:05.169] Using TypeScript 5.6.3 (local user-provided)
+[10:06:11.368] server/simple-routes.ts(43,34): error TS2339: Property 'createdBy' does not exist on type '{ name: string; category: string; genre: string; contentEn: string; contentAr: string; isActive?: boolean | undefined; variables?: string[] | null | undefined; stageOrder?: number | undefined; }'.
+[10:06:11.369] server/simple-routes.ts(127,34): error TS2339: Property 'createdBy' does not exist on type '{ name: string; category: string; genre: string; concernedTeam: string; subject: string; content: string; isActive?: boolean | undefined; variables?: string[] | null | undefined; stageOrder?: number | undefined; warningNote?: string | ... 1 more ... | undefined; }'.
+[10:06:11.369] 
+[10:06:13.902] Build Completed in /vercel/output [28s]
+[10:06:14.004] Deploying outputs...
+[10:06:17.565] 
+[10:06:17.726] Deployment completed
+[10:06:39.137] Uploading build cache [107.75 MB]...
+[10:06:41.128] Build cache uploaded: 1.996s
+[10:06:43.373] Exiting build container

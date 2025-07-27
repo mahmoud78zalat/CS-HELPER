@@ -13,7 +13,7 @@ import {
 import { SupabasePersonalNotesStorage } from './supabase-personal-notes';
 import { z } from "zod";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export function registerRoutes(app: Express): void {
   // Live Reply Template routes (for live chat)
   app.get('/api/live-reply-templates', async (req, res) => {
     try {
@@ -37,10 +37,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertLiveReplyTemplateSchema.parse(req.body);
       
-      // Ensure we always have a createdBy value - use existing admin user as default
+      // Add createdBy as a required field for template creation
       const templateData = {
         ...validatedData,
-        createdBy: validatedData.createdBy || 'f765c1de-f9b5-4615-8c09-8cdde8152a07'
+        createdBy: 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Default admin user
       };
       
       const template = await storage.createLiveReplyTemplate(templateData);
@@ -121,10 +121,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertEmailTemplateSchema.parse(req.body);
       
-      // Ensure we always have a createdBy value - use existing admin user as default
+      // Add createdBy as a required field for template creation
       const templateData = {
         ...validatedData,
-        createdBy: validatedData.createdBy || 'f765c1de-f9b5-4615-8c09-8cdde8152a07'
+        createdBy: 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Default admin user
       };
       
       const template = await storage.createEmailTemplate(templateData);
@@ -1018,78 +1018,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create HTTP server
-  const httpServer = createServer(app);
-
-  // Setup WebSocket server for real-time features
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
-  const connectedClients = new Map<string, WebSocket>();
-
-  wss.on('connection', (ws, req) => {
-    console.log('WebSocket client connected');
-
-    ws.on('message', (data) => {
-      try {
-        const message = JSON.parse(data.toString());
-        
-        switch (message.type) {
-          case 'user_online':
-            if (message.userId) {
-              connectedClients.set(message.userId, ws);
-              // Broadcast user online status
-              broadcast({
-                type: 'user_status_change',
-                userId: message.userId,
-                isOnline: true,
-              });
-            }
-            break;
-            
-          case 'user_offline':
-            if (message.userId) {
-              connectedClients.delete(message.userId);
-              // Broadcast user offline status
-              broadcast({
-                type: 'user_status_change',
-                userId: message.userId,
-                isOnline: false,
-              });
-            }
-            break;
-        }
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-      }
-    });
-
-    ws.on('close', () => {
-      console.log('WebSocket client disconnected');
-      // Find and remove the disconnected client
-      for (const [userId, client] of Array.from(connectedClients.entries())) {
-        if (client === ws) {
-          connectedClients.delete(userId);
-          // Broadcast user offline status
-          broadcast({
-            type: 'user_status_change',
-            userId,
-            isOnline: false,
-          });
-          break;
-        }
-      }
-    });
-  });
-
-  function broadcast(message: any) {
-    const messageStr = JSON.stringify(message);
-    for (const [userId, client] of Array.from(connectedClients.entries())) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(messageStr);
-      } else {
-        connectedClients.delete(userId);
-      }
-    }
-  }
-
-  return httpServer;
+  // Note: WebSocket functionality disabled for Vercel serverless deployment
+  // Real-time features can be implemented using Supabase real-time subscriptions in the client
 }

@@ -32,19 +32,34 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Initialize routes
-(async () => {
-  await registerRoutes(app);
-})();
+// Initialize routes synchronously for serverless
+registerRoutes(app);
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    supabase: !!process.env.VITE_SUPABASE_URL
-  });
+// Health check with database test
+app.get('/api/health', async (req, res) => {
+  try {
+    // Test database connection
+    const { storage } = await import('../server/storage');
+    const users = await storage.getUsers();
+    
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      supabase: !!process.env.VITE_SUPABASE_URL,
+      database: 'connected',
+      userCount: users.length
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'ERROR',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      supabase: !!process.env.VITE_SUPABASE_URL,
+      database: 'failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // Error handling
