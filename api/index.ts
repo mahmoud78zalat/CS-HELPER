@@ -35,27 +35,40 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Initialize routes synchronously for serverless
 registerRoutes(app);
 
-// Health check with database test
+// Health check with database test - optimized for Vercel serverless
 app.get('/api/health', async (req, res) => {
   try {
-    // Test database connection
-    const { storage } = await import('../server/storage');
-    const users = await storage.getUsers();
+    // Test Supabase connection directly in serverless environment
+    const { testServerlessConnection } = await import('./supabase-config');
+    const connectionTest = await testServerlessConnection();
+    
+    if (!connectionTest.success) {
+      throw new Error(connectionTest.error || 'Database connection failed');
+    }
     
     res.json({ 
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
-      supabase: !!process.env.VITE_SUPABASE_URL,
+      platform: 'Vercel Serverless',
+      supabase: {
+        configured: !!process.env.VITE_SUPABASE_URL,
+        connected: connectionTest.success
+      },
       database: 'connected',
-      userCount: users.length
+      userCount: connectionTest.userCount || 0
     });
   } catch (error) {
+    console.error('[API Health Check] Error:', error);
     res.status(500).json({
       status: 'ERROR',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
-      supabase: !!process.env.VITE_SUPABASE_URL,
+      platform: 'Vercel Serverless',
+      supabase: {
+        configured: !!process.env.VITE_SUPABASE_URL,
+        connected: false
+      },
       database: 'failed',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
