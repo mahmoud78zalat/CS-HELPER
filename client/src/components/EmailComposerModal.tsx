@@ -472,8 +472,8 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 {uniqueVariables.length > 0 ? (
                   <div className="space-y-4">
                     {/* Known Variables - Using Dynamic Variables from Supabase */}
-                    {getTemplateVariablesFormat().map(([category, variables]) => {
-                      const categoryVariables = variables.filter(v => 
+                    {Object.entries(getTemplateVariablesFormat() || {}).map(([category, variables]) => {
+                      const categoryVariables = (variables || []).filter((v: any) => 
                         uniqueVariables.includes(v.key)
                       );
                       
@@ -485,7 +485,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                             {category} Variables
                           </h4>
                           <div className="space-y-3">
-                            {categoryVariables.map((variable) => {
+                            {categoryVariables.map((variable: any) => {
                               const hasValue = !!variableValues[variable.key];
                               const isFromCustomerData = ['customer_name', 'customername', 'CUSTOMER_NAME', 'customer_email', 'CUSTOMER_EMAIL', 'customer_phone', 'CUSTOMER_PHONE', 'customer_country', 'gender', 'GENDER', 'order_id', 'ORDER_ID', 'awb_number', 'AWB_NUMBER', 'order_status', 'ORDER_STATUS', 'tracking_number', 'item_name', 'delivery_date', 'waiting_time', 'WAITING_TIME'].includes(variable.key);
                               
@@ -513,8 +513,8 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                     
                     {/* Unrecognized Variables */}
                     {(() => {
-                      const allKnownVariables = getTemplateVariablesFormat().flatMap(([, variables]) => variables.map(v => v.key));
-                      const unrecognizedVariables = uniqueVariables.filter(v => !allKnownVariables.includes(v));
+                      const allKnownVariables = Object.values(getTemplateVariablesFormat() || {}).flatMap((variables: any) => (variables || []).map((v: any) => v.key));
+                      const unrecognizedVariables = uniqueVariables.filter((v: string) => !allKnownVariables.includes(v));
                       
                       if (unrecognizedVariables.length === 0) return null;
                       
