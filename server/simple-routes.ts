@@ -11,12 +11,11 @@ import {
   insertLiveReplyTemplateSchema as insertTemplateSchema
 } from "@shared/schema";
 import { SupabasePersonalNotesStorage } from './supabase-personal-notes';
-import { healthCheck } from './health';
+// Health check inline - no separate file needed
 import { z } from "zod";
 
 export function registerRoutes(app: Express): void {
-  // Health check endpoint for Render.com
-  app.get('/api/health', healthCheck);
+  // Health check endpoint (handled by railway-startup.ts)
   // Live Reply Template routes (for live chat)
   app.get('/api/live-reply-templates', async (req, res) => {
     try {

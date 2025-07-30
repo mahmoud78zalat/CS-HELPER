@@ -44,14 +44,7 @@ export function createRailwayServer() {
     res.status(200).json(healthData);
   });
 
-  // Fallback root endpoint
-  app.get('/', (req, res) => {
-    res.status(200).json({
-      message: 'Customer Service Helper - Railway Deployment',
-      health: '/api/health',
-      status: 'running'
-    });
-  });
+  // No root endpoint - let Vite handle frontend routing
 
   return app;
 }
