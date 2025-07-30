@@ -257,7 +257,7 @@ The system is designed to be deployed on Replit with automatic environment provi
 ✓ **DEPLOYMENT GUIDE CREATED**: Created comprehensive RAILWAY_DEPLOYMENT_GUIDE.md with environment variable setup
 ✓ **ENVIRONMENT VARIABLES DOCUMENTED**: Clear instructions for setting required Supabase credentials in Railway dashboard
 
-**Railway Dockerfile Syntax Error Fix (July 30, 2025 - FINAL)**:
+**Railway Dockerfile Syntax Error Fix (July 30, 2025 - FINAL v2)**:
 ✓ **DOCKERFILE SYNTAX ERROR RESOLVED**: Fixed unterminated quoted string error in Caddy configuration using heredoc
 ✓ **ENHANCED LOGGING SYSTEM**: Created comprehensive railway-logging.ts with request/response tracking and environment validation
 ✓ **DEBUG ENDPOINTS ADDED**: Added /api/debug/logs endpoint for deployment troubleshooting
@@ -266,12 +266,15 @@ The system is designed to be deployed on Replit with automatic environment provi
 ✓ **COMPREHENSIVE DOCUMENTATION**: Created RAILWAY_DEPLOYMENT_COMPLETE_FIX.md with complete troubleshooting guide
 
 **Critical Fixes Applied**:
-- Fixed Docker build command escaping issues
+- Fixed Docker build command escaping issues (multiple iterations - printf, heredoc, finally echo chains)  
 - Implemented detailed logging with timestamps and request IDs
 - Added environment variable validation and reporting
 - Created debug endpoints for real-time troubleshooting
 - Enhanced error handling with full stack traces
-- Improved health checks to pass Railway requirements even in degraded modeNFIG ADDED**: Created nixpacks.toml as alternative build configuration for Railway
+- Improved health checks to pass Railway requirements even in degraded mode
+- Replaced heredoc syntax with echo chains for Docker compatibility
+
+**Latest Update**: Fixed Dockerfile heredoc syntax error by converting to echo command chains for proper Docker compatibility
 ✓ **DEPLOYMENT GUIDE UPDATED**: Added troubleshooting section for start command conflicts
 
 **Railway Build Failure Fix (July 30, 2025)**:

@@ -48,30 +48,28 @@ RUN echo '{"status":"healthy","service":"bfl-customer-service"}' > /srv/health
 # Railway sets PORT environment variable
 ENV PORT=3000
 
-# Create Caddy config that uses Railway's PORT variable - Fixed JSON escaping
-RUN cat > /etc/caddy/Caddyfile << 'EOF'
-# Railway Auto-Generated Caddy Config
-:{$PORT:3000} {
-  root * /srv
-  try_files {path} /index.html
-  file_server
-  
-  handle /health {
-    header Content-Type application/json
-    respond `{"status":"healthy","service":"railway-frontend","timestamp":"{time.now.unix}"}`
-  }
-  
-  handle /api/health {
-    header Content-Type application/json
-    respond `{"status":"healthy","service":"railway-frontend","timestamp":"{time.now.unix}"}`
-  }
-  
-  log {
-    output stdout
-    format console
-  }
-}
-EOF
+# Create Caddy config that uses Railway's PORT variable - Fixed for Docker
+RUN echo '# Railway Auto-Generated Caddy Config' > /etc/caddy/Caddyfile && \
+    echo ':{$PORT:3000} {' >> /etc/caddy/Caddyfile && \
+    echo '  root * /srv' >> /etc/caddy/Caddyfile && \
+    echo '  try_files {path} /index.html' >> /etc/caddy/Caddyfile && \
+    echo '  file_server' >> /etc/caddy/Caddyfile && \
+    echo '  ' >> /etc/caddy/Caddyfile && \
+    echo '  handle /health {' >> /etc/caddy/Caddyfile && \
+    echo '    header Content-Type application/json' >> /etc/caddy/Caddyfile && \
+    echo '    respond `{\"status\":\"healthy\",\"service\":\"railway-frontend\"}`' >> /etc/caddy/Caddyfile && \
+    echo '  }' >> /etc/caddy/Caddyfile && \
+    echo '  ' >> /etc/caddy/Caddyfile && \
+    echo '  handle /api/health {' >> /etc/caddy/Caddyfile && \
+    echo '    header Content-Type application/json' >> /etc/caddy/Caddyfile && \
+    echo '    respond `{\"status\":\"healthy\",\"service\":\"railway-frontend\"}`' >> /etc/caddy/Caddyfile && \
+    echo '  }' >> /etc/caddy/Caddyfile && \
+    echo '  ' >> /etc/caddy/Caddyfile && \
+    echo '  log {' >> /etc/caddy/Caddyfile && \
+    echo '    output stdout' >> /etc/caddy/Caddyfile && \
+    echo '    format console' >> /etc/caddy/Caddyfile && \
+    echo '  }' >> /etc/caddy/Caddyfile && \
+    echo '}' >> /etc/caddy/Caddyfile
 
 # Expose the port
 EXPOSE $PORT
