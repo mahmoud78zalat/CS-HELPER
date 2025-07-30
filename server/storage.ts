@@ -574,21 +574,31 @@ export class DatabaseStorage implements IStorage {
 }
 */
 
-// Create storage instance - requires Supabase for full functionality
-let storage: IStorage;
+// Lazy storage initialization - allows server to start even without Supabase
+let _storage: IStorage | null = null;
 
-try {
-  storage = new SupabaseStorage();
-  console.log('[Storage] ✅ Using Supabase storage');
-} catch (error) {
-  console.error('[Storage] Failed to initialize Supabase storage:', error);
-  console.error('[Storage] Please ensure Supabase environment variables are configured:');
-  console.error('[Storage] - VITE_SUPABASE_URL or SUPABASE_URL');
-  console.error('[Storage] - VITE_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY');
-  console.error('[Storage] - SUPABASE_SERVICE_ROLE_KEY (for admin operations)');
-  
-  // Throw error to prevent startup without proper database
-  throw new Error('Supabase configuration required for full functionality. Please set environment variables.');
+function getStorage(): IStorage {
+  if (!_storage) {
+    try {
+      _storage = new SupabaseStorage();
+      console.log('[Storage] ✅ Using Supabase storage');
+    } catch (error) {
+      console.error('[Storage] Failed to initialize Supabase storage:', error);
+      console.error('[Storage] Please ensure Supabase environment variables are configured:');
+      console.error('[Storage] - VITE_SUPABASE_URL or SUPABASE_URL');
+      console.error('[Storage] - VITE_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY');
+      console.error('[Storage] - SUPABASE_SERVICE_ROLE_KEY (for admin operations)');
+      
+      // For Railway deployment, throw error to prevent API calls without database
+      throw new Error('Supabase configuration required for full functionality. Please set environment variables.');
+    }
+  }
+  return _storage;
 }
 
-export { storage };
+// Export storage getter instead of direct instance
+export const storage = new Proxy({} as IStorage, {
+  get(target, prop) {
+    return getStorage()[prop as keyof IStorage];
+  }
+});

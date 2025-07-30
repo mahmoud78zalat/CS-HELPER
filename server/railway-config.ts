@@ -13,28 +13,34 @@ export function validateRailwayEnvironment() {
 
   const missingVars = requiredVars.filter(envVar => !process.env[envVar]);
   
-  if (missingVars.length > 0) {
-    console.error(`❌ CRITICAL: Missing required environment variables: ${missingVars.join(', ')}`);
-    console.error('🚨 Application cannot start without Supabase credentials');
-    process.exit(1);
-  }
-
   // Set Railway defaults
   process.env.NODE_ENV = process.env.NODE_ENV || 'production';
   process.env.PORT = process.env.PORT || '8080';
 
-  console.log('🚂 Railway Environment Configuration:');
-  console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
-  console.log(`   PORT: ${process.env.PORT}`);
-  console.log(`   Database: Supabase`);
-  console.log(`   Supabase URL: ${process.env.VITE_SUPABASE_URL ? 'configured' : 'missing'}`);
-  console.log(`   Service Role Key: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? 'configured' : 'missing'}`);
+  if (missingVars.length > 0) {
+    console.warn(`⚠️ WARNING: Missing environment variables: ${missingVars.join(', ')}`);
+    console.warn('🏥 Server will start in degraded mode for health checks');
+    console.warn('📋 Application features will be limited without Supabase credentials');
+    console.log('🚂 Railway Environment Configuration (DEGRADED):');
+    console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`   PORT: ${process.env.PORT}`);
+    console.log(`   Database: NOT CONFIGURED`);
+    console.log(`   Status: Health endpoint only`);
+  } else {
+    console.log('🚂 Railway Environment Configuration:');
+    console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`   PORT: ${process.env.PORT}`);
+    console.log(`   Database: Supabase`);
+    console.log(`   Supabase URL: ${process.env.VITE_SUPABASE_URL ? 'configured' : 'missing'}`);
+    console.log(`   Service Role Key: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? 'configured' : 'missing'}`);
+  }
 
   return {
     isProduction: process.env.NODE_ENV === 'production',
     port: parseInt(process.env.PORT || '8080', 10),
     hasSupabase: !!(process.env.VITE_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY),
-    hasSessionSecret: !!process.env.SESSION_SECRET
+    hasSessionSecret: !!process.env.SESSION_SECRET,
+    isHealthyDeploy: missingVars.length === 0
   };
 }
 

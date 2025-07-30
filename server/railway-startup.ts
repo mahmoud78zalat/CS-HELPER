@@ -16,12 +16,32 @@ export function createRailwayServer() {
   // CRITICAL: Basic health endpoint that MUST respond immediately
   app.get('/api/health', (req, res) => {
     console.log('[Railway Health] Health check requested');
-    res.status(200).json({
-      status: 'healthy',
+    
+    // Check if Supabase environment variables are configured
+    const hasSupabaseUrl = !!(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL);
+    const hasSupabaseKey = !!(process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY);
+    const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    const missingVars: string[] = [];
+    if (!hasSupabaseUrl) missingVars.push('SUPABASE_URL');
+    if (!hasSupabaseKey) missingVars.push('SUPABASE_ANON_KEY');
+    if (!hasServiceKey) missingVars.push('SUPABASE_SERVICE_ROLE_KEY');
+    
+    const healthData = {
+      status: hasSupabaseUrl && hasSupabaseKey && hasServiceKey ? 'healthy' : 'degraded',
       timestamp: new Date().toISOString(),
       platform: 'railway',
-      port: process.env.PORT || '8080'
-    });
+      port: process.env.PORT || '8080',
+      environment: {
+        NODE_ENV: process.env.NODE_ENV,
+        supabase_configured: hasSupabaseUrl && hasSupabaseKey && hasServiceKey,
+        missing_vars: missingVars
+      }
+    };
+    
+    // Always return 200 for Railway health check - even if degraded
+    console.log(`[Railway Health] Status: ${healthData.status}, Missing vars: ${healthData.environment.missing_vars.join(', ')}`);
+    res.status(200).json(healthData);
   });
 
   // Fallback root endpoint
