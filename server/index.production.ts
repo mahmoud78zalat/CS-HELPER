@@ -72,18 +72,46 @@ app.use((req, res, next) => {
     console.log('[Railway] Setting up production static file serving...');
     const distPath = path.resolve(process.cwd(), "dist", "public");
     
+    console.log('[Railway] Checking static files directory:', distPath);
+    console.log('[Railway] Directory exists:', fs.existsSync(distPath));
     if (fs.existsSync(distPath)) {
-      app.use(express.static(distPath));
+      const files = fs.readdirSync(distPath);
+      console.log('[Railway] Static files found:', files);
+    }
+    
+    if (fs.existsSync(distPath)) {
+      // Serve static files with proper headers
+      app.use(express.static(distPath, {
+        maxAge: '1d',
+        etag: false,
+        lastModified: false
+      }));
       console.log('[Railway] ✅ Static files served from:', distPath);
       
       // Serve index.html for all non-API routes (SPA routing)
-      app.get('*', (req, res) => {
-        if (!req.path.startsWith('/api')) {
-          res.sendFile(path.join(distPath, 'index.html'));
+      app.get('*', (req, res, next) => {
+        if (req.path.startsWith('/api')) {
+          return next();
+        }
+        
+        console.log('[Railway] Serving index.html for route:', req.path);
+        const indexPath = path.join(distPath, 'index.html');
+        
+        if (fs.existsSync(indexPath)) {
+          res.sendFile(indexPath);
+        } else {
+          console.error('[Railway] index.html not found at:', indexPath);
+          res.status(404).json({ error: 'Frontend not found' });
         }
       });
     } else {
-      console.log('[Railway] ⚠️ Static build directory not found:', distPath);
+      console.error('[Railway] ⚠️ Static build directory not found:', distPath);
+      app.get('*', (req, res, next) => {
+        if (req.path.startsWith('/api')) {
+          return next();
+        }
+        res.status(404).json({ error: 'Static files not built', path: distPath });
+      });
     }
 
     // Start the Railway server
