@@ -21,8 +21,8 @@ RUN NODE_ENV=production npx vite build --config vite.config.railway.ts && \
 # Remove dev dependencies after build
 RUN npm prune --production
 
-# Expose port
-EXPOSE 8080
+# Expose port (Railway provides PORT env var)
+EXPOSE $PORT
 
-# Start the application using Railway-specific startup script
-CMD ["node", "railway-start.js"]
+# Start the application directly using the built dist/index.js
+CMD ["node", "dist/index.js"]
