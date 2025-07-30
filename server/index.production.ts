@@ -57,8 +57,15 @@ app.use((req, res, next) => {
     const config = validateRailwayEnvironment();
     optimizeForRailway();
     
-    // Register API routes
+    // Register API routes including debug endpoints
     registerRoutes(app);
+    
+    // Add Railway debug endpoints for production troubleshooting
+    const { railwaySupabaseDebug, railwayHealthCheck } = await import('./railway-supabase-debug');
+    app.get('/api/railway/supabase-debug', railwaySupabaseDebug);
+    app.get('/api/railway/health', railwayHealthCheck);
+    
+    console.log('[Railway] ✅ Debug endpoints added: /api/railway/supabase-debug, /api/railway/health');
     
     // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

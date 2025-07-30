@@ -21,8 +21,8 @@ import type {
 import { IStorage } from './storage';
 
 export class SupabaseStorage implements IStorage {
-  private client: SupabaseClient;
-  private serviceClient: SupabaseClient;
+  private client!: SupabaseClient;
+  private serviceClient!: SupabaseClient;
   
   // Performance optimization: Add caching
   private userCache = new Map<string, { user: User; timestamp: number }>();
@@ -34,36 +34,90 @@ export class SupabaseStorage implements IStorage {
     const isRailwayProduction = !!(process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_PROJECT_ID);
     
     console.log('[SupabaseStorage] Initializing storage with Railway support:', isRailwayProduction);
+    console.log('[SupabaseStorage] Environment variables check:', {
+      'VITE_SUPABASE_URL': !!process.env.VITE_SUPABASE_URL,
+      'SUPABASE_URL': !!process.env.SUPABASE_URL,
+      'VITE_SUPABASE_ANON_KEY': !!process.env.VITE_SUPABASE_ANON_KEY,
+      'SUPABASE_ANON_KEY': !!process.env.SUPABASE_ANON_KEY,
+      'SUPABASE_SERVICE_ROLE_KEY': !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      'NODE_ENV': process.env.NODE_ENV,
+      'RAILWAY_ENVIRONMENT_NAME': process.env.RAILWAY_ENVIRONMENT_NAME || 'not-set'
+    });
     
+    // Initialize clients immediately instead of async
     if (isRailwayProduction) {
       // Use Railway-optimized client for production
-      this.initializeRailwayClients();
+      this.initializeRailwayClientsSync();
     } else {
       // Use regular client for development
       this.initializeRegularClients();
     }
   }
 
-  private async initializeRailwayClients() {
-    console.log('[SupabaseStorage] Using Railway-optimized Supabase clients');
+  private initializeRailwayClientsSync() {
+    console.log('[SupabaseStorage] Using Railway-optimized Supabase clients (sync init)');
     
     try {
-      const initResult = await railwaySupabase.initializeClients();
-      
-      if (initResult.success) {
-        this.client = await railwaySupabase.getClient() as any;
-        this.serviceClient = await railwaySupabase.getServiceClient() as any;
-        console.log('[SupabaseStorage] ✅ Railway clients initialized successfully');
-      } else {
-        console.error('[SupabaseStorage] ❌ Railway client initialization failed:', initResult.error);
-        // Fallback to regular client initialization
-        this.initializeRegularClients();
+      // Create Railway-optimized clients directly without async initialization
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+      const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseUrl || !supabaseKey || supabaseUrl.trim() === '' || supabaseKey.trim() === '') {
+        console.error('[SupabaseStorage] ❌ Missing Railway Supabase credentials');
+        console.error('[SupabaseStorage] URL present:', !!supabaseUrl && supabaseUrl.trim() !== '');
+        console.error('[SupabaseStorage] Key present:', !!supabaseKey && supabaseKey.trim() !== '');
+        throw new Error(`Missing or empty Supabase credentials for Railway deployment`);
       }
+
+      // Create Railway-specific client configuration
+      const railwayOptions = {
+        auth: {
+          persistSession: false,
+          detectSessionInUrl: false,
+          flowType: 'pkce' as const
+        },
+        global: {
+          headers: {
+            'User-Agent': 'BFL-CustomerService-Railway/1.0',
+            'Connection': 'keep-alive',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Railway-Client': 'true',
+            'X-IPv4-Preferred': 'true',
+            'Cache-Control': 'no-cache'
+          }
+        },
+        db: {
+          schema: 'public'
+        }
+      };
+
+      this.client = createClient(supabaseUrl.trim(), supabaseKey.trim(), railwayOptions) as any;
+      
+      if (serviceRoleKey && serviceRoleKey.trim() !== '') {
+        this.serviceClient = createClient(supabaseUrl.trim(), serviceRoleKey.trim(), railwayOptions) as any;
+        console.log('[SupabaseStorage] ✅ Railway service role client initialized');
+      } else {
+        console.warn('[SupabaseStorage] ⚠️ No service role key for Railway - using anon client');
+        this.serviceClient = this.client;
+      }
+      
+      console.log('[SupabaseStorage] ✅ Railway clients initialized successfully');
+      
+      // Test connection asynchronously
+      this.testConnectionAsync();
+      
     } catch (error: any) {
       console.error('[SupabaseStorage] ❌ Railway client setup error:', error.message);
       // Fallback to regular client initialization
       this.initializeRegularClients();
     }
+  }
+
+  private async initializeRailwayClients() {
+    // Legacy async method - kept for compatibility
+    this.initializeRailwayClientsSync();
   }
 
   private initializeRegularClients() {
@@ -103,10 +157,10 @@ export class SupabaseStorage implements IStorage {
     console.log('[SupabaseStorage] ✅ Regular clients initialized successfully');
     
     // Test connection asynchronously
-    this.testConnection();
+    this.testConnectionAsync();
   }
 
-  private async testConnection() {
+  private async testConnectionAsync() {
     try {
       console.log('[SupabaseStorage] Testing connection...');
       
