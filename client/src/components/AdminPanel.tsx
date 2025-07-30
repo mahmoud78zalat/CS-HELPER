@@ -19,7 +19,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { realTimeService } from "@/lib/realTimeService";
 import { 
   X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
-  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save
+  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save, Loader2
 } from "lucide-react";
 import { User, Template, EmailTemplate } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
@@ -970,7 +970,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
 
 
-  // Check admin access AFTER all hooks are called
+  // Enhanced admin access check with automatic closure
   console.log('AdminPanel - Current user:', currentUser);
   console.log('AdminPanel - User email:', currentUser?.email);
   console.log('AdminPanel - User role:', currentUser?.role);
@@ -979,7 +979,31 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const isAdmin = currentUser?.role === 'admin' || 
                   currentUser?.email === 'mahmoud78zalat@gmail.com';
   
+  // Auto-close panel when user changes and is not admin
+  useEffect(() => {
+    if (currentUser && !isAdmin) {
+      console.log('[AdminPanel] Non-admin user detected, auto-closing panel');
+      onClose();
+    }
+  }, [currentUser?.id, isAdmin, onClose]);
+  
+  if (!currentUser) {
+    // Still loading user data
+    return (
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <div className="p-6 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+  
   if (!isAdmin) {
+    // Non-admin user - show brief access denied then auto-close
+    setTimeout(() => onClose(), 2000);
     return (
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="max-w-md" aria-describedby="access-denied-description">
@@ -993,7 +1017,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                You don't have admin permissions to access this panel.
+                You don't have admin permissions to access this panel. Closing automatically...
               </AlertDescription>
             </Alert>
           </div>

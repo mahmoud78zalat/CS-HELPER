@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import TemplatesArea from "@/components/TemplatesArea";
 import CheckOrderModal from "@/components/CheckOrderModal";
@@ -6,8 +6,10 @@ import EmailComposerModal from "@/components/EmailComposerModal";
 import AdminPanel from "@/components/AdminPanel";
 import AboutModal from "@/components/AboutModal";
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
+  const { user } = useAuth();
   const [showCheckOrder, setShowCheckOrder] = useState(false);
   const [showEmailComposer, setShowEmailComposer] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
@@ -15,6 +17,12 @@ export default function Home() {
 
   // Enable real-time updates for all users
   useRealTimeUpdates();
+
+  // Reset admin panel state when user changes to prevent admin panel from persisting across user sessions
+  useEffect(() => {
+    console.log('[Home] User changed, resetting admin panel state');
+    setShowAdminPanel(false);
+  }, [user?.id]);
 
 
 
