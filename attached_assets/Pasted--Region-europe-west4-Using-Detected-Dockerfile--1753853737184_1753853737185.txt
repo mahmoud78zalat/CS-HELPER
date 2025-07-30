@@ -1,0 +1,104 @@
+ 
+
+[Region: europe-west4]
+
+=========================
+
+Using Detected Dockerfile
+
+=========================
+
+
+context: bmbm-tDRy
+
+[internal] load build definition from Dockerfile
+
+[internal] load build definition from Dockerfile  ✔ 0 ms
+
+[internal] load build definition from Dockerfile
+
+[internal] load build definition from Dockerfile  ✔ 10 ms
+
+[internal] load metadata for docker.io/library/node:20-alpine
+
+[auth] library/node:pull token for registry-1.docker.io
+
+[auth] library/node:pull token for registry-1.docker.io  ✔ 0 ms
+
+[internal] load metadata for docker.io/library/node:20-alpine  ✔ 680 ms
+
+[internal] load .dockerignore
+
+[internal] load .dockerignore  ✔ 0 ms
+
+[internal] load .dockerignore
+
+[internal] load .dockerignore  ✔ 12 ms
+
+[7/7] RUN npm prune --production
+
+[6/7] RUN npm run build
+
+[5/7] COPY . .
+
+[4/7] RUN npm ci --include=dev
+
+[3/7] COPY package.json package-lock.json* ./
+
+[internal] load build context
+
+[2/7] WORKDIR /app
+
+[1/7] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799
+
+[1/7] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799
+
+[internal] load build context
+
+[internal] load build context  ✔ 0 ms
+
+[1/7] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799  ✔ 7 ms
+
+[internal] load build context
+
+[internal] load build context  ✔ 43 ms
+
+[2/7] WORKDIR /app  ✔ 0 ms – CACHED
+
+[3/7] COPY package.json package-lock.json* ./  ✔ 0 ms – CACHED
+
+[4/7] RUN npm ci --include=dev  ✔ 0 ms – CACHED
+
+[5/7] COPY . .  ✔ 0 ms – CACHED
+
+[6/7] RUN npm run build  ✔ 0 ms – CACHED
+
+[7/7] RUN npm prune --production  ✔ 0 ms – CACHED
+
+exporting to docker image format
+
+exporting to image
+
+[auth] sharing credentials for production-europe-west4-drams3a.railway-registry.com
+
+[auth] sharing credentials for production-europe-west4-drams3a.railway-registry.com  ✔ 0 ms
+
+importing to docker
+
+importing to docker  ✔ 8 sec
+
+Build time: 11.06 seconds
+
+ 
+
+=========================
+
+Container failed to start
+
+=========================
+
+ 
+
+The executable `node_env=production` could not be found.
+
+ 

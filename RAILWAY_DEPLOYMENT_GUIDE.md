@@ -131,21 +131,23 @@ The Railway build process now successfully handles the Replit development enviro
 ## FINAL DEPLOYMENT FIX (July 30, 2025)
 
 **"executable node_env=production could not be found" ERROR RESOLVED:**
-- **Root cause**: Environment variables in nixpacks.toml were being interpreted as executable commands
-- **Solution**: Removed environment variable declarations from nixpacks.toml and Dockerfile
-- **Fixed CMD**: Changed to direct `node dist/index.js` command without environment variable conflicts
-- **Environment setup**: All environment variables now set through Railway dashboard interface only
+- **Root cause**: The `npm start` command in package.json contains `NODE_ENV=production node dist/index.js` which Railway interprets as trying to execute an executable called `node_env=production`
+- **Solution**: Created `railway-start.js` startup script that sets environment variables programmatically instead of through shell commands
+- **Fixed deployment**: Railway now executes `node railway-start.js` which properly sets NODE_ENV and imports the application
 
 **Updated files**:
-- `nixpacks.toml`: Removed [variables] section, simplified start command  
-- `Dockerfile`: Removed ENV declarations to prevent command conflicts
+- `railway-start.js`: New Railway-specific startup script (created)
+- `nixpacks.toml`: Updated start command to use railway-start.js
+- `Dockerfile`: Updated CMD to use railway-start.js
+- Removed environment variable declarations from build configs
 
 Environment variables must be set in Railway dashboard:
 ```
-NODE_ENV=production
 PORT=8080
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_key
 SESSION_SECRET=your_session_secret
 ```
+
+**Note**: `NODE_ENV=production` is now set automatically by the `railway-start.js` script, so you don't need to set it in the Railway dashboard.
