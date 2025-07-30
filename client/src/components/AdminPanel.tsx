@@ -354,14 +354,18 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Users query - use admin endpoint that bypasses Vite interception
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
-    retry: 3, // Allow retries for Railway deployment
-    retryDelay: 1000, // 1 second between retries
-    enabled: !!currentUser && currentUser.role === 'admin', // Only fetch if user is admin
-    staleTime: 10000, // Consider data fresh for 10 seconds
+    retry: 5, // Increased retries for Railway deployment
+    retryDelay: 2000, // 2 seconds between retries
+    enabled: !!currentUser, // Always enabled when user exists - we'll check admin status later
+    staleTime: 5000, // Consider data fresh for 5 seconds
     gcTime: 30000, // Keep in cache for 30 seconds
     queryFn: async () => {
       console.log('[AdminPanel] Fetching users via admin endpoint...');
       console.log('[AdminPanel] Current user:', currentUser?.email, currentUser?.role);
+      
+      if (!currentUser) {
+        throw new Error('No current user available');
+      }
       
       // Try multiple endpoints for Railway compatibility
       const urls = [
@@ -377,7 +381,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             headers: { 
               'Content-Type': 'application/json',
               'Accept': 'application/json',
-              'x-user-id': currentUser?.id || '',
+              'x-user-id': currentUser.id,
+              'X-User-Email': currentUser.email || '',
+              'X-User-Role': currentUser.role || '',
             },
             credentials: 'include',
           });
@@ -386,7 +392,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
           console.log('[AdminPanel] Response content-type:', response.headers.get('content-type'));
           
           if (!response.ok) {
-            console.log('[AdminPanel] Request failed with status:', response.status);
+            const errorText = await response.text();
+            console.log('[AdminPanel] Request failed with status:', response.status, 'Error:', errorText);
             continue;
           }
           
@@ -970,7 +977,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
 
 
-  // Enhanced admin access check with automatic closure
+  // Enhanced admin access check with automatic closure - MOVED AFTER ALL HOOKS
   console.log('AdminPanel - Current user:', currentUser);
   console.log('AdminPanel - User email:', currentUser?.email);
   console.log('AdminPanel - User role:', currentUser?.role);
@@ -987,6 +994,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     }
   }, [currentUser?.id, isAdmin, onClose]);
   
+  // HANDLE CONDITIONAL RENDERING AFTER ALL HOOKS ARE CALLED
   if (!currentUser) {
     // Still loading user data
     return (
