@@ -15,8 +15,8 @@ COPY . .
 
 # Build the application with Railway-specific configuration
 RUN NODE_ENV=production npx vite build --config vite.config.railway.ts && \
-    npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist \
-    --external:@replit/* --external:pg-native --external:cpu-features --external:vite
+    npx esbuild server/index.production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist \
+    --external:@replit/* --external:pg-native --external:cpu-features
 
 # Remove dev dependencies after build
 RUN npm prune --production
@@ -24,5 +24,5 @@ RUN npm prune --production
 # Expose port (Railway provides PORT env var)
 EXPOSE $PORT
 
-# Start the application directly using the built dist/index.js
-CMD ["node", "dist/index.js"]
+# Start the application directly using the built dist/index.production.js
+CMD ["node", "dist/index.production.js"]

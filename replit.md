@@ -230,6 +230,7 @@ The system is designed to be deployed on Replit with automatic environment provi
 ✓ **START COMMAND FIX**: Changed Dockerfile CMD from `railway-start.js` to `dist/index.js` to match actual build output
 ✓ **VITE IMPORT FIX**: Made vite imports conditional for development-only to prevent production runtime errors
 ✓ **PRODUCTION STATIC SERVER**: Added express.static fallback for production when vite is not available
+✓ **RAILWAY PRODUCTION ENTRY**: Created separate server/index.production.ts without any vite dependencies for Railway deployment
 ✓ **OPTIMIZED BUILD PROCESS**: Updated Dockerfile with Railway-specific build commands including proper dependency externalization
 ✓ **ENHANCED NIXPACKS CONFIG**: Updated nixpacks.toml with Railway-optimized build steps
 ✓ **DEPENDENCY EXTERNALIZATION**: Added exclusions for @replit/*, pg-native, and cpu-features to prevent build errors
