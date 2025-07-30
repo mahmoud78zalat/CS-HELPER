@@ -1,5 +1,8 @@
+[variables]
+NIXPACKS_NO_CACHE = '1'
+
 [phases.setup]
-nixPkgs = ["nodejs-20_x", "npm-9_x"]
+nixPkgs = ["nodejs-20_x", "npm-9_x", "caddy"]
 
 [phases.install]
 dependsOn = ["setup"]
@@ -8,8 +11,15 @@ cmds = ["npm ci --include=dev"]
 [phases.build]
 dependsOn = ["install"]
 cmds = [
-  "NODE_ENV=production npx vite build --config vite.config.railway.ts"
+  "echo '[Railway Build] Environment check:'",
+  "echo '[Railway Build] VITE_SUPABASE_URL:' $VITE_SUPABASE_URL",
+  "echo '[Railway Build] VITE_SUPABASE_ANON_KEY length:' ${#VITE_SUPABASE_ANON_KEY}",
+  "NODE_ENV=production npx vite build --config vite.config.railway.ts",
+  "echo '[Railway Build] Build completed, checking output:'",
+  "ls -la dist/public/",
+  "echo '[Railway Build] index.html size:'",
+  "wc -c dist/public/index.html"
 ]
 
 [start]
-cmd = "node railway-static-start.js"
+cmd = "caddy run --config Caddyfile --adapter caddyfile"

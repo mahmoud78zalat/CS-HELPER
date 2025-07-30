@@ -4,9 +4,8 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "healthcheckPath": "/",
+    "healthcheckPath": "/health",
     "healthcheckTimeout": 300,
-    "startCommand": "node railway-static-start.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }

@@ -1,44 +1,60 @@
-# global options
+# Railway Caddy configuration for Vite React app
 {
-    admin off # no admin api needed
-    persist_config off # storage isn't persistent anyway
-    auto_https off # railway handles https
-    
-    # runtime logs
+    admin off
+    persist_config off
+    auto_https off
     log {
         format json
+        output stdout
     }
-    
-    # server options
     servers {
         trusted_proxies static private_ranges 100.0.0.0/8
     }
 }
 
-# site block
+# Main site configuration
 :{$PORT:3000} {
-    # access logs
     log {
         format json
+        output stdout
     }
     
-    # health check for railway
-    respond /api/health 200 {
-        body `{"status":"healthy","timestamp":"$(date)","platform":"railway-caddy"}`
+    # Health check endpoint
+    respond /health 200 {
+        body `{"status":"healthy","timestamp":"$(date)","platform":"railway-caddy","port":"$PORT"}`
     }
     
-    # API proxy to backend service (if needed later)
-    # reverse_proxy /api/* backend:8080
-    
-    # serve from the 'dist/public' folder (where Vite builds to)
+    # Serve static files from dist/public
     root * dist/public
     
-    # enable gzipping
+    # Enable compression
     encode gzip
     
-    # serve files from 'dist/public'
-    file_server
+    # Set proper headers for static assets
+    header /assets/* {
+        Cache-Control "public, max-age=31536000, immutable"
+    }
     
-    # handle client-side routing - fallback to index.html for SPA
+    header *.css {
+        Content-Type "text/css"
+    }
+    
+    header *.js {
+        Content-Type "application/javascript"
+    }
+    
+    # File server with proper error handling
+    file_server {
+        hide .git
+    }
+    
+    # SPA routing - fallback to index.html for all routes
     try_files {path} /index.html
+    
+    # Debug logging
+    log {
+        output stdout
+        format json
+        level DEBUG
+    }
 }
