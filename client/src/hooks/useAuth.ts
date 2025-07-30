@@ -49,6 +49,40 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[Auth] Auth state changed:', event, session?.user?.email);
       
+      // Handle different auth events
+      if (event === 'SIGNED_OUT') {
+        console.log('[Auth] User signed out - clearing state');
+        setUser(null);
+        setIsLoading(false);
+        stopHeartbeat();
+        localStorage.removeItem('current_user_id');
+        return;
+      }
+      
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+          console.log('[Auth] User signed in/token refreshed - handling user');
+          await handleUser(session.user);
+          startHeartbeat();
+        }
+        return;
+      }
+      
+      // For initial session check
+      if (event === 'INITIAL_SESSION') {
+        if (session?.user) {
+          console.log('[Auth] Initial session found - handling user');
+          await handleUser(session.user);
+          startHeartbeat();
+        } else {
+          console.log('[Auth] No initial session');
+          setUser(null);
+          setIsLoading(false);
+        }
+        return;
+      }
+      
+      // Fallback for any other events
       if (session?.user) {
         await handleUser(session.user);
         startHeartbeat();
@@ -70,10 +104,13 @@ export function useAuth() {
 
   const handleUser = async (supabaseUser: any) => {
     try {
-      console.log('[Auth] Checking user in database:', supabaseUser.id);
+      console.log('[Auth] Processing user authentication:', supabaseUser.id, supabaseUser.email);
+      
+      // Clear any existing user ID from localStorage to prevent conflicts
+      localStorage.removeItem('current_user_id');
       
       // Performance optimization: Use Promise race for faster timeout
-      const fetchWithTimeout = (url: string, timeout: number = 3000) => {
+      const fetchWithTimeout = (url: string, timeout: number = 5000) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
         
@@ -81,18 +118,19 @@ export function useAuth() {
           .finally(() => clearTimeout(timeoutId));
       };
       
+      // First attempt: Check if user exists in database
       try {
-        const response = await fetchWithTimeout(`/api/user/${supabaseUser.id}`, 3000);
+        console.log('[Auth] Checking if user exists in database...');
+        const response = await fetchWithTimeout(`/api/user/${supabaseUser.id}`, 5000);
         const responseText = await response.text();
         
-        console.log('[Auth] Response status:', response.status);
-        console.log('[Auth] Response type:', response.headers.get('content-type'));
-        console.log('[Auth] Response text preview:', responseText.substring(0, 100) + '...');
+        console.log('[Auth] User lookup response status:', response.status);
+        console.log('[Auth] Response content type:', response.headers.get('content-type'));
         
         if (response.ok && !responseText.includes('<!DOCTYPE html>')) {
           try {
             const userData = JSON.parse(responseText);
-            console.log('[Auth] User found via API:', userData.email, userData.role);
+            console.log('[Auth] ✅ Existing user found:', userData.email, userData.role);
             
             // Store user ID in localStorage for apiRequest function
             localStorage.setItem('current_user_id', userData.id);
@@ -103,50 +141,73 @@ export function useAuth() {
             return;
           } catch (parseError) {
             console.error('[Auth] JSON parse error:', parseError);
-            console.log('[Auth] Full response text:', responseText);
+            console.log('[Auth] Response text:', responseText);
           }
         } else if (response.status === 404) {
-          // User not found, try to create them
-          console.log('[Auth] User not found (404), attempting to create new user...');
+          console.log('[Auth] ⚠️ User not found in database (404) - will create new user');
+        } else {
+          console.log('[Auth] ⚠️ Unexpected response:', response.status, responseText.substring(0, 200));
         }
       } catch (fetchError) {
-        console.log('[Auth] API fetch failed or timed out:', fetchError instanceof Error ? fetchError.message : 'Unknown error');
+        console.log('[Auth] ⚠️ User lookup failed:', fetchError instanceof Error ? fetchError.message : 'Unknown error');
       }
       
-      // User not found in database, try to create new user
-      console.log('[Auth] User not found in database, attempting to create new user...');
+      // Second attempt: Create new user in database
+      console.log('[Auth] 🔧 Creating new user in database...');
+      console.log('[Auth] User metadata available:', {
+        full_name: supabaseUser.user_metadata?.full_name,
+        email: supabaseUser.email,
+        id: supabaseUser.id
+      });
       
       try {
+        const newUserPayload = {
+          id: supabaseUser.id,
+          email: supabaseUser.email,
+          firstName: supabaseUser.user_metadata?.full_name?.split(' ')[0] || 
+                    supabaseUser.email?.split('@')[0] || 'User',
+          lastName: supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+          profileImageUrl: supabaseUser.user_metadata?.avatar_url || '',
+          role: 'agent', // Default role for all new users
+          status: 'active' // Default status
+        };
+        
+        console.log('[Auth] Creating user with payload:', newUserPayload);
+        
         const createResponse = await fetch('/api/create-user', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            id: supabaseUser.id,
-            email: supabaseUser.email,
-            firstName: supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
-            lastName: supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-            role: 'agent', // Default role for new users
-          }),
+          body: JSON.stringify(newUserPayload),
         });
+        
+        const createResponseText = await createResponse.text();
+        
+        console.log('[Auth] Create user response status:', createResponse.status);
+        console.log('[Auth] Create response preview:', createResponseText.substring(0, 200));
 
-        if (createResponse.ok) {
-          const newUserData = await createResponse.json();
-          console.log('[Auth] Successfully created new user:', newUserData.email, newUserData.role);
-          
-          // Store user ID in localStorage for apiRequest function
-          localStorage.setItem('current_user_id', newUserData.id);
-          
-          setUser(newUserData);
-          setIsLoading(false);
-          if (authTimeout) clearTimeout(authTimeout);
-          return;
+        if (createResponse.ok && !createResponseText.includes('<!DOCTYPE html>')) {
+          try {
+            const newUserData = JSON.parse(createResponseText);
+            console.log('[Auth] ✅ Successfully created new user:', newUserData.email, newUserData.role);
+            
+            // Store user ID in localStorage for apiRequest function
+            localStorage.setItem('current_user_id', newUserData.id);
+            
+            setUser(newUserData);
+            setIsLoading(false);
+            if (authTimeout) clearTimeout(authTimeout);
+            return;
+          } catch (parseError) {
+            console.error('[Auth] Error parsing create response:', parseError);
+            console.log('[Auth] Full create response:', createResponseText);
+          }
         } else {
-          console.error('[Auth] Failed to create user:', createResponse.status);
+          console.error('[Auth] ❌ Failed to create user:', createResponse.status, createResponseText);
         }
       } catch (createError) {
-        console.error('[Auth] Error creating user:', createError);
+        console.error('[Auth] ❌ Error during user creation:', createError);
       }
       
       // If all else fails, set a temporary user object (should not happen in production)
@@ -276,23 +337,40 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    console.log('[Auth] Signing out user...');
+    console.log('[Auth] Starting comprehensive sign out...');
+    
+    // Stop heartbeat first
     stopHeartbeat();
     
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      console.error('[Auth] Sign out error:', error);
+    try {
+      // Sign out from Supabase (all sessions)
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      
+      if (error) {
+        console.error('[Auth] Supabase sign out error:', error);
+      } else {
+        console.log('[Auth] Supabase sign out successful');
+      }
+    } catch (error) {
+      console.error('[Auth] Error during sign out:', error);
     }
     
-    // Clear user ID from localStorage
+    // Clear all local storage data
     localStorage.removeItem('current_user_id');
+    localStorage.removeItem('customer_data');
+    localStorage.removeItem('agent_info');
     
+    // Clear session storage if any
+    sessionStorage.clear();
+    
+    // Reset state
     setUser(null);
     setIsLoading(false);
     
-    // Redirect to login page after sign out
-    window.location.href = '/login';
+    console.log('[Auth] Local data cleared, redirecting to login...');
+    
+    // Force page reload to ensure clean state
+    window.location.replace('/login');
   };
 
   return {

@@ -9,6 +9,8 @@ if (import.meta.env.MODE === 'development') {
   console.log('[Frontend Supabase] URL:', supabaseUrl ? 'Present' : 'Missing');
   console.log('[Frontend Supabase] Key present:', !!supabaseAnonKey);
   console.log('[Frontend Supabase] Environment:', import.meta.env.MODE);
+  console.log('[Frontend Supabase] Raw URL value:', supabaseUrl);
+  console.log('[Frontend Supabase] All VITE env vars:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
 }
 
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -36,6 +38,9 @@ const clientOptions = {
   auth: {
     persistSession: true,
     detectSessionInUrl: true,
+    autoRefreshToken: true,
+    storage: window.localStorage,
+    storageKey: 'supabase.auth.token',
     ...(isProduction && railwayEnvironment && {
       flowType: 'pkce' as const // Enhanced auth flow for Railway production
     })
@@ -78,7 +83,17 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const signOut = async () => {
-  const { error } = await supabase.auth.signOut();
+  console.log('[Supabase] Starting sign out process...');
+  
+  // Sign out from all sessions (including other tabs/devices)
+  const { error } = await supabase.auth.signOut({ scope: 'global' });
+  
+  if (error) {
+    console.error('[Supabase] Sign out error:', error);
+  } else {
+    console.log('[Supabase] Sign out successful');
+  }
+  
   return { error };
 };
 
