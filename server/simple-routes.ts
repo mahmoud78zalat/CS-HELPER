@@ -501,6 +501,37 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // Regular users endpoint (fallback for admin panel)
+  app.get('/api/users', async (req, res) => {
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID required' });
+      }
+
+      console.log('[UsersAPI] Fetching users for user:', userId);
+      const currentUser = await storage.getUser(userId);
+      
+      if (currentUser?.role !== 'admin') {
+        console.log('[UsersAPI] Access denied - user is not admin');
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Update current user's online status first
+      await storage.updateUserOnlineStatus(userId, true);
+      
+      // Fetch updated users data
+      const users = await storage.getAllUsers();
+      console.log('[UsersAPI] Retrieved', users.length, 'users');
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.json(users);
+    } catch (error) {
+      console.error('[UsersAPI] Error fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
   // Announcement routes
   app.get('/api/announcements', async (req, res) => {
     try {

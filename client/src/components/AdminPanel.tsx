@@ -359,10 +359,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     queryFn: async () => {
       console.log('[AdminPanel] Fetching users via admin endpoint...');
       
-      // Try direct backend request first, fallback to normal API
+      // Try multiple endpoints for Railway compatibility
       const urls = [
-        `${window.location.protocol}//${window.location.hostname}:5000/api/admin/users`,
-        '/api/admin/users'
+        '/api/admin/users', // Primary endpoint
+        '/api/users', // Fallback endpoint
       ];
       
       for (const url of urls) {
@@ -416,7 +416,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     queryKey: ['/api/email-templates'],
     retry: false,
     staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Don't cache results
+    gcTime: 0, // Don't cache results
   });
 
   // Site content query
@@ -547,7 +547,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   }, [templates, emailTemplates, toast]);
 
   // Filter users based on search term
-  const filteredUsers = users.filter((user: User) => {
+  const filteredUsers = (users as User[]).filter((user: User) => {
     const searchTerm = userSearchTerm.toLowerCase();
     return (
       user.firstName?.toLowerCase().includes(searchTerm) ||
@@ -576,7 +576,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   }, [users, usersLoading, usersError, currentUser]);
 
   // Filter templates based on search term
-  const filteredTemplates = templates.filter((template: any) => {
+  const filteredTemplates = (templates as Template[]).filter((template: any) => {
     const searchTerm = templateSearchTerm.toLowerCase();
     return (
       template.name?.toLowerCase().includes(searchTerm) ||
@@ -587,7 +587,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   });
 
   // Filter email templates based on search term
-  const filteredEmailTemplates = emailTemplates.filter((template: any) => {
+  const filteredEmailTemplates = (emailTemplates as EmailTemplate[]).filter((template: any) => {
     const searchTerm = emailTemplateSearchTerm.toLowerCase();
     return (
       template.name?.toLowerCase().includes(searchTerm) ||
@@ -1418,7 +1418,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           </div>
                           {user.lastSeen && (
                             <div className="text-xs text-slate-500 mt-1">
-                              Last seen: {new Date(user.lastSeen).toLocaleDateString()}
+                              Last seen: {new Date(user.lastSeen).toLocaleDateString()} at {new Date(user.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                             </div>
                           )}
                         </TableCell>
