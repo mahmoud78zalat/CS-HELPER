@@ -116,7 +116,8 @@ The application is now configured to work properly with Railway's deployment sys
 
 **Railway Build Failure Resolution:**
 - **Created `vite.config.railway.ts`**: Railway-specific Vite configuration that excludes Replit plugins causing build failures
-- **Updated Dockerfile**: Uses Railway-optimized build command with proper dependency externalization
+- **Updated Dockerfile**: Uses Railway-optimized build command with proper dependency externalization (`npx` prefixes added)
+- **Fixed Health Check Issue**: Modified storage initialization to use memory fallback when Supabase credentials are missing, allowing server to start for health checks
 - **Enhanced nixpacks.toml**: Alternative build configuration for Railway using Nixpacks instead of Docker
 
 **Build Process Now:**

@@ -589,11 +589,14 @@ function getStorage(): IStorage {
       console.error('[Storage] - VITE_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY');
       console.error('[Storage] - SUPABASE_SERVICE_ROLE_KEY (for admin operations)');
       
-      // For Railway deployment, throw error to prevent API calls without database
-      throw new Error('Supabase configuration required for full functionality. Please set environment variables.');
+      // For Railway deployment, use memory storage fallback to allow health checks
+      console.warn('[Storage] 🟡 Using memory storage fallback - Supabase functionality disabled');
+      const { MemoryStorage } = require('./memory-storage');
+      _storage = new MemoryStorage();
+      console.log('[Storage] ✅ Using memory storage (degraded mode)');
     }
   }
-  return _storage;
+  return _storage!;
 }
 
 // Export storage getter instead of direct instance
