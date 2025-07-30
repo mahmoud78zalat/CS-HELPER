@@ -80,13 +80,22 @@ app.use((req, res, next) => {
     }
     
     if (fs.existsSync(distPath)) {
-      // Serve static files with proper headers
+      // Serve static files with proper headers and longer cache for assets
+      app.use('/assets', express.static(path.join(distPath, 'assets'), {
+        maxAge: '1y', // Cache assets for longer since they have content hashes
+        etag: true,
+        lastModified: true
+      }));
+      
+      // Serve other static files (like favicon, etc.)
       app.use(express.static(distPath, {
         maxAge: '1d',
         etag: false,
         lastModified: false
       }));
+      
       console.log('[Railway] ✅ Static files served from:', distPath);
+      console.log('[Railway] ✅ Assets served from:', path.join(distPath, 'assets'));
       
       // Serve index.html for all non-API routes (SPA routing)
       app.get('*', (req, res, next) => {
@@ -98,6 +107,11 @@ app.use((req, res, next) => {
         const indexPath = path.join(distPath, 'index.html');
         
         if (fs.existsSync(indexPath)) {
+          // Set proper headers for HTML
+          res.set({
+            'Content-Type': 'text/html',
+            'Cache-Control': 'no-cache'
+          });
           res.sendFile(indexPath);
         } else {
           console.error('[Railway] index.html not found at:', indexPath);
