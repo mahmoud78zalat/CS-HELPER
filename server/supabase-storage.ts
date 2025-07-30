@@ -312,10 +312,18 @@ export class SupabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const { data, error } = await this.client
+    const { data, error } = await this.serviceClient
       .from('users')
       .upsert({
-        ...userData,
+        id: userData.id,
+        email: userData.email,
+        first_name: userData.firstName || '',
+        last_name: userData.lastName || '',
+        profile_image_url: userData.profileImageUrl,
+        role: userData.role || 'agent',
+        status: userData.status || 'active',
+        is_online: userData.isOnline || false,
+        last_seen: userData.lastSeen ? userData.lastSeen.toISOString() : new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .select()
@@ -326,7 +334,13 @@ export class SupabaseStorage implements IStorage {
       throw error;
     }
 
-    return this.mapSupabaseUser(data);
+    const newUser = this.mapSupabaseUser(data);
+    
+    // Cache the upserted user
+    this.userCache.set(userData.id, { user: newUser, timestamp: Date.now() });
+    
+    console.log('[SupabaseStorage] Successfully upserted user:', newUser.email, newUser.role);
+    return newUser;
   }
 
   async getAllUsers(): Promise<User[]> {

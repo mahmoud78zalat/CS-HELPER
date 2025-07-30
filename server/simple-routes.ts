@@ -339,17 +339,42 @@ export function registerRoutes(app: Express): void {
     }
   });
 
-  // Create new user
+  // Create new user (for auto-creation on first login)
   app.post('/api/create-user', async (req, res) => {
     try {
       console.log('[Simple Routes] Creating user:', req.body.email);
-      const userData = req.body;
-      const user = await storage.upsertUser(userData);
-      console.log('[Simple Routes] User created:', user.email);
-      res.status(201).json(user);
+      const { id, email, firstName, lastName, role = 'agent' } = req.body;
+      
+      if (!id || !email) {
+        return res.status(400).json({ message: 'User ID and email are required' });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserById(id);
+      if (existingUser) {
+        console.log('[Simple Routes] User already exists:', existingUser.email);
+        return res.json(existingUser);
+      }
+
+      // Create new user with automatic role assignment using the correct createUser method
+      const newUser = await storage.createUser({
+        id,
+        email,
+        firstName: firstName || '',
+        lastName: lastName || '',
+        role: role as 'admin' | 'agent',
+      });
+
+      if (newUser) {
+        console.log('[Simple Routes] Successfully created user:', newUser.email, newUser.role);
+        res.status(201).json(newUser);
+      } else {
+        console.error('[Simple Routes] Failed to create user');
+        res.status(500).json({ message: 'Failed to create user' });
+      }
     } catch (error) {
-      console.error("[Simple Routes] Error creating user:", error);
-      res.status(500).json({ message: "Failed to create user" });
+      console.error('[Simple Routes] Error creating user:', error);
+      res.status(500).json({ message: 'Failed to create user' });
     }
   });
 

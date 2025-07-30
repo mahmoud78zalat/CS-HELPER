@@ -47,19 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create new user (for auto-registration)
-  app.post('/api/create-user', async (req, res) => {
-    try {
-      console.log('[API] Creating user:', req.body.email);
-      const userData = req.body;
-      const user = await storage.upsertUser(userData);
-      console.log('[API] User created successfully:', user.email);
-      res.status(201).json(user);
-    } catch (error) {
-      console.error("Error creating user:", error);
-      res.status(500).json({ message: "Failed to create user" });
-    }
-  });
+  // Note: /api/create-user endpoint is handled in simple-routes.ts to avoid conflicts
 
   // Heartbeat endpoint for advanced online status detection
   app.post('/api/user/heartbeat', isAuthenticated, async (req: any, res) => {
