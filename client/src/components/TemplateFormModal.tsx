@@ -23,7 +23,7 @@ import {
 import { Template } from "@shared/schema";
 
 interface TemplateFormModalProps {
-  template?: Template | null;
+  template?: Template | any | null; // Allow any to handle email templates
   isOpen: boolean;
   onClose: () => void;
   onSave: (templateData: any) => void;
@@ -85,16 +85,41 @@ export default function TemplateFormModal({
   // Initialize form data when template changes
   useEffect(() => {
     if (template) {
-      setFormData({
-        name: template.name || '',
-        subject: (template as any).subject || '',
-        contentEn: isEmailTemplate ? (template as any).content || '' : template.contentEn || '',
-        contentAr: isEmailTemplate ? '' : template.contentAr || '',
-        category: template.category || '',
-        genre: template.genre || '',
-        concernedTeam: (template as any).concernedTeam || '',
-        warningNote: (template as any).warningNote || ''
-      });
+      try {
+        // Safe property access with fallbacks
+        const safeTemplate = template as any;
+        
+        setFormData({
+          name: safeTemplate.name || '',
+          subject: safeTemplate.subject || '',
+          contentEn: isEmailTemplate ? (safeTemplate.content || safeTemplate.contentEn || '') : (safeTemplate.contentEn || ''),
+          contentAr: isEmailTemplate ? '' : (safeTemplate.contentAr || ''),
+          category: safeTemplate.category || '',
+          genre: safeTemplate.genre || '',
+          concernedTeam: safeTemplate.concernedTeam || '',
+          warningNote: safeTemplate.warningNote || ''
+        });
+        
+        console.log('[TemplateFormModal] Initialized form data for editing:', {
+          name: safeTemplate.name,
+          isEmailTemplate,
+          hasSubject: !!safeTemplate.subject,
+          hasContent: !!(safeTemplate.content || safeTemplate.contentEn)
+        });
+      } catch (error) {
+        console.error('[TemplateFormModal] Error initializing form data:', error);
+        // Reset to empty form on error
+        setFormData({
+          name: '',
+          subject: '',
+          contentEn: '',
+          contentAr: '',
+          category: '',
+          genre: '',
+          concernedTeam: '',
+          warningNote: ''
+        });
+      }
     } else {
       // Reset form for new template
       setFormData({
@@ -112,22 +137,31 @@ export default function TemplateFormModal({
 
   // Validate template content when it changes
   useEffect(() => {
-    const contentToValidate = isEmailTemplate ? formData.contentEn : (formData.contentEn + formData.contentAr);
-    if (contentToValidate) {
-      const validation = validateTemplate(contentToValidate);
-      setTemplateValidation(validation);
-    } else {
-      setTemplateValidation(null);
+    try {
+      const contentToValidate = isEmailTemplate ? formData.contentEn : (formData.contentEn + formData.contentAr);
+      if (contentToValidate && contentToValidate.trim()) {
+        const validation = validateTemplate(contentToValidate);
+        setTemplateValidation(validation);
+      } else {
+        setTemplateValidation(null);
+      }
+    } catch (error) {
+      console.error('[TemplateFormModal] Error validating template:', error);
+      setTemplateValidation({ isValid: true, issues: [], variables: [] });
     }
   }, [formData.contentEn, formData.contentAr, isEmailTemplate]);
 
   // Auto-generate warning when category/genre changes
   useEffect(() => {
-    if (formData.category || formData.genre) {
-      const autoWarning = getTemplateWarning(formData.category, formData.genre);
-      if (!formData.warningNote && autoWarning) {
-        setFormData(prev => ({ ...prev, warningNote: autoWarning }));
+    try {
+      if (formData.category || formData.genre) {
+        const autoWarning = getTemplateWarning(formData.category, formData.genre);
+        if (!formData.warningNote && autoWarning) {
+          setFormData(prev => ({ ...prev, warningNote: autoWarning }));
+        }
       }
+    } catch (error) {
+      console.error('[TemplateFormModal] Error generating warning:', error);
     }
   }, [formData.category, formData.genre, formData.warningNote]);
 
@@ -161,29 +195,53 @@ export default function TemplateFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!templateValidation?.isValid && (formData.contentEn || formData.contentAr)) {
-      return;
+    
+    try {
+      // Basic validation
+      if (!formData.name.trim()) {
+        console.error('[TemplateFormModal] Template name is required');
+        return;
+      }
+      
+      const contentToCheck = isEmailTemplate ? formData.contentEn : (formData.contentEn + formData.contentAr);
+      if (!contentToCheck.trim()) {
+        console.error('[TemplateFormModal] Template content is required');
+        return;
+      }
+      
+      if (!templateValidation?.isValid && contentToCheck.trim()) {
+        console.error('[TemplateFormModal] Template validation failed:', templateValidation?.issues);
+        return;
+      }
+      
+      const templateData = isEmailTemplate ? {
+        name: formData.name.trim(),
+        subject: formData.subject.trim(),
+        content: formData.contentEn.trim(),
+        category: formData.category,
+        genre: formData.genre,
+        concernedTeam: formData.concernedTeam,
+        warningNote: formData.warningNote.trim(),
+        variables: extractVariablesFromTemplate(formData.contentEn)
+      } : {
+        name: formData.name.trim(),
+        contentEn: formData.contentEn.trim(),
+        contentAr: formData.contentAr.trim(),
+        category: formData.category,
+        genre: formData.genre,
+        variables: extractVariablesFromTemplate(formData.contentEn + ' ' + formData.contentAr)
+      };
+      
+      console.log('[TemplateFormModal] Submitting template:', {
+        name: templateData.name,
+        isEmailTemplate,
+        hasContent: !!(isEmailTemplate ? templateData.content : (templateData as any).contentEn)
+      });
+      
+      onSave(templateData);
+    } catch (error) {
+      console.error('[TemplateFormModal] Error during submit:', error);
     }
-    
-    const templateData = isEmailTemplate ? {
-      name: formData.name,
-      subject: formData.subject,
-      content: formData.contentEn,
-      category: formData.category,
-      genre: formData.genre,
-      concernedTeam: formData.concernedTeam,
-      warningNote: formData.warningNote,
-      variables: extractVariablesFromTemplate(formData.contentEn)
-    } : {
-      name: formData.name,
-      contentEn: formData.contentEn,
-      contentAr: formData.contentAr,
-      category: formData.category,
-      genre: formData.genre,
-      variables: extractVariablesFromTemplate(formData.contentEn + ' ' + formData.contentAr)
-    };
-    
-    onSave(templateData);
   };
 
   // Use dynamic variables from Supabase instead of hardcoded ones
