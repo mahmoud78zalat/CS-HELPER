@@ -619,6 +619,48 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // User Management Routes
+  console.log('[Simple Routes] 👥 Registering user management routes...');
+
+  // Create new user (for auto-creation on first login)
+  app.post('/api/create-user', async (req, res) => {
+    try {
+      console.log('[Simple Routes] Creating user:', req.body.email);
+      const { id, email, firstName, lastName, role = 'agent' } = req.body;
+      
+      if (!id || !email) {
+        return res.status(400).json({ message: 'User ID and email are required' });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserById(id);
+      if (existingUser) {
+        console.log('[CREATE-USER] User already exists:', existingUser.email);
+        return res.json(existingUser);
+      }
+
+      // Create new user with automatic role assignment
+      const newUser = await storage.createUser({
+        id,
+        email,
+        firstName: firstName || '',
+        lastName: lastName || '',
+        role: role as 'admin' | 'agent',
+      });
+
+      if (newUser) {
+        console.log('[CREATE-USER] Successfully created user:', newUser.email, newUser.role);
+        res.status(201).json(newUser);
+      } else {
+        console.error('[CREATE-USER] Failed to create user');
+        res.status(500).json({ message: 'Failed to create user' });
+      }
+    } catch (error) {
+      console.error('[CREATE-USER] Error creating user:', error);
+      res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // Personal Notes Routes
   console.log('[Simple Routes] 📝 Registering personal notes routes...');
   const personalNotesStorage = new SupabasePersonalNotesStorage();

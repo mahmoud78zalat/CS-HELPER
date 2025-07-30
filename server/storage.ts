@@ -45,6 +45,14 @@ import { SupabaseStorage } from "./supabase-storage";
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
+  createUser(userData: {
+    id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    role?: 'admin' | 'agent';
+  }): Promise<User | null>;
   upsertUser(user: UpsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
   updateUserStatus(id: string, status: "active" | "blocked" | "banned"): Promise<void>;

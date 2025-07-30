@@ -105,22 +105,59 @@ export function useAuth() {
             console.error('[Auth] JSON parse error:', parseError);
             console.log('[Auth] Full response text:', responseText);
           }
+        } else if (response.status === 404) {
+          // User not found, try to create them
+          console.log('[Auth] User not found (404), attempting to create new user...');
         }
       } catch (fetchError) {
         console.log('[Auth] API fetch failed or timed out:', fetchError instanceof Error ? fetchError.message : 'Unknown error');
       }
       
-      // API route is being intercepted by Vite, fall back to the user we know exists
-      console.log('[Auth] API intercepted, setting user from backend data...');
+      // User not found in database, try to create new user
+      console.log('[Auth] User not found in database, attempting to create new user...');
       
-      // Since backend logs show user exists, create the user object manually
-      const userData = {
+      try {
+        const createResponse = await fetch('/api/create-user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: supabaseUser.id,
+            email: supabaseUser.email,
+            firstName: supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
+            lastName: supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+            role: 'agent', // Default role for new users
+          }),
+        });
+
+        if (createResponse.ok) {
+          const newUserData = await createResponse.json();
+          console.log('[Auth] Successfully created new user:', newUserData.email, newUserData.role);
+          
+          // Store user ID in localStorage for apiRequest function
+          localStorage.setItem('current_user_id', newUserData.id);
+          
+          setUser(newUserData);
+          setIsLoading(false);
+          if (authTimeout) clearTimeout(authTimeout);
+          return;
+        } else {
+          console.error('[Auth] Failed to create user:', createResponse.status);
+        }
+      } catch (createError) {
+        console.error('[Auth] Error creating user:', createError);
+      }
+      
+      // If all else fails, set a temporary user object (should not happen in production)
+      console.log('[Auth] Fallback: creating temporary user object');
+      const fallbackUserData = {
         id: supabaseUser.id,
         email: supabaseUser.email,
-        firstName: 'Mahmoud',
-        lastName: 'Zalat',
-        profileImageUrl: '',
-        role: 'admin' as const,
+        firstName: supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
+        lastName: supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+        profileImageUrl: supabaseUser.user_metadata?.avatar_url || '',
+        role: 'agent' as const,
         status: 'active' as const,
         isOnline: false,
         lastSeen: new Date(),
@@ -128,12 +165,12 @@ export function useAuth() {
         updatedAt: new Date()
       };
       
-      console.log('[Auth] Setting user manually based on backend data:', userData.email, userData.role);
+      console.log('[Auth] Setting fallback user:', fallbackUserData.email, fallbackUserData.role);
       
       // Store user ID in localStorage for apiRequest function
-      localStorage.setItem('current_user_id', userData.id);
+      localStorage.setItem('current_user_id', fallbackUserData.id);
       
-      setUser(userData);
+      setUser(fallbackUserData);
       setIsLoading(false);
       if (authTimeout) clearTimeout(authTimeout);
       return;

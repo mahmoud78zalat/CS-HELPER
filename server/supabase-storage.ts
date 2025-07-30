@@ -229,6 +229,10 @@ export class SupabaseStorage implements IStorage {
 
   // User operations with caching
   async getUser(id: string): Promise<User | undefined> {
+    return this.getUserById(id);
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
     console.log('[SupabaseStorage] Querying user with ID:', id);
     
     // Check cache first
@@ -261,6 +265,50 @@ export class SupabaseStorage implements IStorage {
     
     console.log('[SupabaseStorage] Mapped user:', mappedUser);
     return mappedUser;
+  }
+
+  async createUser(userData: {
+    id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    role?: 'admin' | 'agent';
+  }): Promise<User | null> {
+    try {
+      console.log('[SupabaseStorage] Creating new user:', userData.email);
+      
+      const { data, error } = await this.serviceClient
+        .from('users')
+        .insert({
+          id: userData.id,
+          email: userData.email,
+          first_name: userData.firstName || '',
+          last_name: userData.lastName || '',
+          role: userData.role || 'agent',
+          status: 'active',
+          is_online: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error creating user:', error);
+        return null;
+      }
+
+      const newUser = this.mapSupabaseUser(data);
+      
+      // Cache the new user
+      this.userCache.set(userData.id, { user: newUser, timestamp: Date.now() });
+      
+      console.log('[SupabaseStorage] Successfully created user:', newUser.email, newUser.role);
+      return newUser;
+    } catch (error) {
+      console.error('[SupabaseStorage] Error creating user:', error);
+      return null;
+    }
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
