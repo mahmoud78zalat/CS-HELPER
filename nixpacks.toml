@@ -19,12 +19,10 @@ cmds = [
   "ls -la dist/public/",
   "echo '[Railway Build] index.html size:'",
   "wc -c dist/public/index.html",
-  "echo '[Railway Build] Creating production start script:'",
-  "echo '#!/bin/bash' > start.sh",
-  "echo 'echo \"[Railway] Starting Caddy static server...\"' >> start.sh",
-  "echo 'caddy run --config Caddyfile --adapter caddyfile' >> start.sh",
-  "chmod +x start.sh"
+  "echo '[Railway Build] Ensuring start script is executable:'",
+  "chmod +x start.sh",
+  "ls -la start.sh"
 ]
 
 [start]
-cmd = "./start.sh"
+cmd = "caddy run --config Caddyfile --adapter caddyfile"

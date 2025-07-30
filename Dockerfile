@@ -1,29 +1,50 @@
-# Static site deployment with Caddy - Railway recommended approach
-FROM caddy:alpine
+# Multi-stage build for Railway deployment
+FROM node:20-alpine AS build
 
-# Set working directory
 WORKDIR /app
 
-# Install Node.js for building
-RUN apk add --no-cache nodejs npm
-
 # Copy package files
-COPY package.json package-lock.json* ./
-
-# Install dependencies
+COPY package*.json ./
 RUN npm ci --include=dev
 
 # Copy source code
 COPY . .
 
-# Build the frontend application
-RUN NODE_ENV=production npx vite build --config vite.config.railway.ts
+# Build arguments for environment variables
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG SUPABASE_SERVICE_ROLE_KEY
 
-# Copy Caddyfile
-COPY Caddyfile /etc/caddy/Caddyfile
+# Set environment variables for build
+ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+ENV SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
 
-# Expose port
-EXPOSE $PORT
+# Build the application
+RUN echo "[Docker Build] Environment check:" && \
+    echo "[Docker Build] VITE_SUPABASE_URL:" $VITE_SUPABASE_URL && \
+    echo "[Docker Build] VITE_SUPABASE_ANON_KEY length:" ${#VITE_SUPABASE_ANON_KEY} && \
+    NODE_ENV=production npx vite build --config vite.config.railway.ts && \
+    echo "[Docker Build] Build completed, checking output:" && \
+    ls -la dist/public/
 
-# Start Caddy with our configuration
-CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+# Production stage with Caddy
+FROM caddy:2-alpine
+
+WORKDIR /app
+
+# Copy Caddy configuration
+COPY Caddyfile ./
+
+# Copy built application from build stage
+COPY --from=build /app/dist/public ./dist/public
+
+# Expose port (Railway will set PORT env var)
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-3000}/health || exit 1
+
+# Start Caddy
+CMD ["caddy", "run", "--config", "Caddyfile", "--adapter", "caddyfile"]
