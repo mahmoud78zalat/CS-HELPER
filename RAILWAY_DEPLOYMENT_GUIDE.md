@@ -119,6 +119,8 @@ The application is now configured to work properly with Railway's deployment sys
 - **Updated Dockerfile**: Uses Railway-optimized build command with proper dependency externalization (`npx` prefixes added)
 - **Fixed Health Check Issue**: Modified storage initialization to use memory fallback when Supabase credentials are missing, allowing server to start for health checks
 - **Fixed Start Command**: Changed Dockerfile CMD to use `dist/index.js` directly instead of `railway-start.js`
+- **Fixed Vite Import Error**: Made vite imports conditional for development-only to prevent "Cannot find package 'vite'" errors in production
+- **Added Production Static Server**: Implemented express.static fallback for serving frontend files when vite is not available
 - **Enhanced nixpacks.toml**: Alternative build configuration for Railway using Nixpacks instead of Docker
 
 **Build Process Now:**

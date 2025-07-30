@@ -1,8 +1,25 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./simple-routes";
-import { serveStatic, log } from "./vite";
 import { validateRailwayEnvironment, optimizeForRailway } from "./railway-config";
 import { createRailwayServer, startRailwayServer } from "./railway-startup";
+
+// Production-safe vite imports
+let serveStatic: any = null;
+let log: any = console.log;
+
+// Load vite only in development
+async function loadViteIfNeeded() {
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const viteModule = await import("./vite");
+      serveStatic = viteModule.serveStatic;
+      log = viteModule.log;
+      console.log('[Railway] Vite modules loaded for development');
+    } catch (error) {
+      console.log('[Railway] Vite not available - using production fallbacks');
+    }
+  }
+}
 
 // Create Railway-optimized Express app
 const app = createRailwayServer();
@@ -45,6 +62,9 @@ app.use((req, res, next) => {
     const config = validateRailwayEnvironment();
     optimizeForRailway();
     
+    // Load Vite only if needed (development mode)
+    await loadViteIfNeeded();
+    
     // Register API routes BEFORE Vite setup
     registerRoutes(app);
     
@@ -65,11 +85,36 @@ app.use((req, res, next) => {
         await setupVite(app, server);
       } catch (error) {
         console.error('[Railway] Vite setup failed, falling back to static serving:', error);
-        serveStatic(app);
+        if (serveStatic) {
+          serveStatic(app);
+        } else {
+          console.log('[Railway] No static server available');
+        }
       }
     } else {
       console.log('[Railway] Setting up production static file serving...');
-      serveStatic(app);
+      if (serveStatic) {
+        serveStatic(app);
+      } else {
+        // Production fallback static server using express.static
+        const path = await import("path");
+        const fs = await import("fs");
+        const distPath = path.resolve(process.cwd(), "dist", "public");
+        
+        if (fs.existsSync(distPath)) {
+          app.use(express.static(distPath));
+          console.log('[Railway] ✅ Static files served from:', distPath);
+          
+          // Serve index.html for all non-API routes (SPA routing)
+          app.get('*', (req, res) => {
+            if (!req.path.startsWith('/api')) {
+              res.sendFile(path.join(distPath, 'index.html'));
+            }
+          });
+        } else {
+          console.log('[Railway] ⚠️ Static build directory not found:', distPath);
+        }
+      }
     }
 
     // Start the Railway server
