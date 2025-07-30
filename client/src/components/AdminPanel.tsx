@@ -964,23 +964,39 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Admin access check - temporarily allow all authenticated users for beta testing
   const isAdmin = true; // Temporarily disabled admin restriction for beta testing
   
-  // Auto-close panel when user changes and authentication is lost
-  useEffect(() => {
-    if (!currentUser) {
-      console.log('[AdminPanel] User lost, auto-closing panel');
-      onClose();
-    }
-  }, [currentUser?.id, onClose]);
+  // Remove auto-close to prevent premature closing during authentication
   
   // HANDLE CONDITIONAL RENDERING AFTER ALL HOOKS ARE CALLED
-  if (authLoading || !currentUser) {
-    // Still loading user data or no user authenticated
+  if (authLoading) {
+    // Still loading user data
     return (
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="max-w-md">
+          <DialogTitle>Loading</DialogTitle>
           <div className="p-6 text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">{authLoading ? 'Authenticating...' : 'Access Denied'}</p>
+            <p className="text-gray-600">Authenticating...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (!currentUser) {
+    // No user authenticated - show access denied
+    return (
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogTitle>Access Denied</DialogTitle>
+          <div className="p-6 text-center">
+            <Shield className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Authentication Required</h3>
+            <p className="text-gray-600 mb-4">
+              Please log in to access the admin panel.
+            </p>
+            <Button onClick={onClose} className="w-full">
+              Close
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
