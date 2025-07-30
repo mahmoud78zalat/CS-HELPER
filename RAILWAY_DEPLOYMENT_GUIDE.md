@@ -43,6 +43,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 - This is fixed in the updated Dockerfile which now uses npm instead of pnpm
 - Make sure you're using the latest Dockerfile from this project
 
+**If you see "executable node_env=production could not be found":**
+- This is fixed in the updated railway.json which removes conflicting start commands
+- The Dockerfile now handles the start command properly
+
 **If health checks fail:**
 - Ensure all Supabase environment variables are set correctly
 - Check Railway logs for specific error messages
