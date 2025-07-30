@@ -356,6 +356,21 @@ The system is designed to be deployed on Replit with automatic environment provi
 ✓ **DOCUMENTED CLEANUP**: Created PROJECT_CLEAN.md detailing all removed files and fixes applied
 ✓ **VERIFIED FUNCTIONALITY**: Confirmed frontend, backend, authentication, and database operations working correctly after cleanup
 
+**Template Update Foreign Key Constraint Fix (July 30, 2025 - 3:17 PM)**:
+✓ **CRITICAL BUG RESOLVED**: Fixed persistent email template and live reply template update failures caused by foreign key constraint violations
+✓ **ROOT CAUSE IDENTIFIED**: The `mapToSupabaseEmailTemplate` and `mapToSupabaseLiveReplyTemplate` methods were always including `created_by` field during updates
+✓ **TECHNICAL SOLUTION**: Created separate update-specific methods that manually construct update objects without using problematic mapping functions
+✓ **UPDATE METHODS FIXED**: Both `updateEmailTemplate` and `updateLiveReplyTemplate` now build clean update objects excluding `created_by` field
+✓ **VERIFICATION COMPLETED**: Successfully tested both email template and live reply template updates with complete functionality restored
+✓ **CODE CLEANUP**: Removed debugging console logs after successful resolution
+✓ **DESIGN PRINCIPLE**: Template updates should never modify `created_by` field as it's set only during creation and owned by foreign key constraint
+
+**Technical Details**:
+- Fixed constraint violation: `update or delete on table "users" violates foreign key constraint "email_templates_created_by_fkey"`
+- Updated methods now only modify allowed fields during updates: name, subject, content, category, genre, etc.
+- Both email templates and live reply templates now update successfully through API endpoints
+- Maintained data integrity while resolving the persistent update blocking issue
+
 ## Recent Changes (July 27, 2025)
 
 **VERCEL DEPLOYMENT SUPABASE FIX COMPLETED (July 27, 2025 - 10:05 AM)**:

@@ -536,12 +536,26 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateLiveReplyTemplate(id: string, template: Partial<InsertLiveReplyTemplate>): Promise<LiveReplyTemplate> {
+    // Create update data manually to avoid any created_by field issues
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+    
+    // Only include fields that are actually provided in the update
+    if (template.name !== undefined) updateData.name = template.name;
+    if (template.content !== undefined) updateData.content = template.content;
+    if (template.category !== undefined) updateData.category = template.category;
+    if (template.genre !== undefined) updateData.genre = template.genre;
+    if (template.variables !== undefined) updateData.variables = template.variables;
+    if (template.stageOrder !== undefined) updateData.stage_order = template.stageOrder;
+    if (template.isActive !== undefined) updateData.is_active = template.isActive;
+    if (template.usageCount !== undefined) updateData.usage_count = template.usageCount;
+    
+
+    
     const { data, error } = await this.client
       .from('live_reply_templates')
-      .update({
-        ...this.mapToSupabaseLiveReplyTemplate(template),
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -713,12 +727,29 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateEmailTemplate(id: string, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate> {
+    // Create update data manually to avoid any created_by field issues
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+    
+    // Only include fields that are actually provided in the update
+    if (template.name !== undefined) updateData.name = template.name;
+    if (template.subject !== undefined) updateData.subject = template.subject;
+    if (template.content !== undefined) updateData.content = template.content;
+    if (template.category !== undefined) updateData.category = template.category;
+    if (template.genre !== undefined) updateData.genre = template.genre;
+    if (template.concernedTeam !== undefined) updateData.concerned_team = template.concernedTeam;
+    if (template.warningNote !== undefined) updateData.warning_note = template.warningNote;
+    if (template.variables !== undefined) updateData.variables = template.variables;
+    if (template.stageOrder !== undefined) updateData.stage_order = template.stageOrder;
+    if (template.isActive !== undefined) updateData.is_active = template.isActive;
+    if (template.usageCount !== undefined) updateData.usage_count = template.usageCount;
+    
+
+    
     const { data, error } = await this.client
       .from('email_templates')
-      .update({
-        ...this.mapToSupabaseEmailTemplate(template),
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
