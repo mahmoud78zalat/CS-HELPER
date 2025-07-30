@@ -1,9 +1,12 @@
-# Multi-stage build for Railway deployment
-FROM node:20-alpine AS build
+# Single-stage build for Railway deployment
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Install Caddy
+RUN apk add --no-cache caddy
+
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm ci --include=dev
 
@@ -21,30 +24,17 @@ ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
 ENV SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
 
 # Build the application
-RUN echo "[Docker Build] Environment check:" && \
-    echo "[Docker Build] VITE_SUPABASE_URL:" $VITE_SUPABASE_URL && \
-    echo "[Docker Build] VITE_SUPABASE_ANON_KEY length:" ${#VITE_SUPABASE_ANON_KEY} && \
+RUN echo "[Railway Docker] Environment variables:" && \
+    echo "VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:0:30}..." && \
+    echo "VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:0:50}..." && \
     NODE_ENV=production npx vite build --config vite.config.railway.ts && \
-    echo "[Docker Build] Build completed, checking output:" && \
-    ls -la dist/public/
+    echo "[Railway Docker] Build completed:" && \
+    ls -la dist/public/ && \
+    echo "[Railway Docker] Cleaning up dev dependencies..." && \
+    npm prune --production
 
-# Production stage with Caddy
-FROM caddy:2-alpine
-
-WORKDIR /app
-
-# Copy Caddy configuration
-COPY Caddyfile ./
-
-# Copy built application from build stage
-COPY --from=build /app/dist/public ./dist/public
-
-# Expose port (Railway will set PORT env var)
-EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-3000}/health || exit 1
+# Expose port
+EXPOSE $PORT
 
 # Start Caddy
-CMD ["caddy", "run", "--config", "Caddyfile", "--adapter", "caddyfile"]
+CMD ["sh", "-c", "echo '[Railway Docker] Starting Caddy on port $PORT' && caddy run --config Caddyfile --adapter caddyfile"]
