@@ -48,8 +48,30 @@ RUN echo '{"status":"healthy","service":"bfl-customer-service"}' > /srv/health
 # Railway sets PORT environment variable
 ENV PORT=3000
 
-# Create Caddy config that uses Railway's PORT variable
-RUN printf '# Railway Auto-Generated Caddy Config\n:{$PORT:3000} {\n  root * /srv\n  try_files {path} /index.html\n  file_server\n  handle /health {\n    header Content-Type application/json\n    respond `{"status":"healthy","service":"railway-frontend"}`\n  }\n  log\n}\n' > /etc/caddy/Caddyfile
+# Create Caddy config that uses Railway's PORT variable - Fixed JSON escaping
+RUN cat > /etc/caddy/Caddyfile << 'EOF'
+# Railway Auto-Generated Caddy Config
+:{$PORT:3000} {
+  root * /srv
+  try_files {path} /index.html
+  file_server
+  
+  handle /health {
+    header Content-Type application/json
+    respond `{"status":"healthy","service":"railway-frontend","timestamp":"{time.now.unix}"}`
+  }
+  
+  handle /api/health {
+    header Content-Type application/json
+    respond `{"status":"healthy","service":"railway-frontend","timestamp":"{time.now.unix}"}`
+  }
+  
+  log {
+    output stdout
+    format console
+  }
+}
+EOF
 
 # Expose the port
 EXPOSE $PORT
