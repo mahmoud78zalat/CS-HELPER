@@ -216,8 +216,9 @@ The system is designed to be deployed on Replit with automatic environment provi
 ✓ **ENVIRONMENT VARIABLES DOCUMENTED**: Clear instructions for setting required Supabase credentials in Railway dashboard
 
 **Railway Start Command Fix (July 30, 2025)**:
-✓ **START COMMAND CONFLICT RESOLVED**: Removed conflicting startCommand from railway.json to fix "executable node_env=production could not be found" error
-✓ **DOCKERFILE CMD PRIORITY**: Dockerfile now properly handles start command without railway.json override
+✓ **START COMMAND CONFLICT RESOLVED**: Created railway-start.js script to handle production startup correctly  
+✓ **PRODUCTION FILE PATH FIX**: Railway now uses correct dist/index.production.js instead of missing dist/index.js
+✓ **RAILWAY.JSON START COMMAND**: Added startCommand in railway.json to override package.json start script
 ✓ **ENVIRONMENT VARIABLE MANAGEMENT**: Environment variables now properly set through Dockerfile instead of start command
 ✓ **NIXPACKS CONFIG ADDED**: Created nixpacks.toml as alternative build configuration for Railway
 ✓ **DEPLOYMENT GUIDE UPDATED**: Added troubleshooting section for start command conflicts

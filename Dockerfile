@@ -24,5 +24,5 @@ RUN npm prune --production
 # Expose port (Railway provides PORT env var)
 EXPOSE $PORT
 
-# Start the application directly using the built dist/index.production.js
-CMD ["node", "dist/index.production.js"]
+# Start the application using Railway starter script
+CMD ["node", "railway-start.js"]
