@@ -1,16 +1,15 @@
-[phases.build]
-dependsOn = ["install"]
-cmds = [
-  "NODE_ENV=production npx vite build --config vite.config.railway.ts",
-  "npx esbuild server/index.production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --external:@replit/* --external:pg-native --external:cpu-features"
-]
+[phases.setup]
+nixPkgs = ["nodejs-20_x", "npm-9_x", "caddy"]
 
 [phases.install]
 dependsOn = ["setup"]
 cmds = ["npm ci --include=dev"]
 
-[phases.setup]
-nixpkgs = ["nodejs-20_x", "npm-9_x"]
+[phases.build]
+dependsOn = ["install"]
+cmds = [
+  "NODE_ENV=production npx vite build --config vite.config.railway.ts"
+]
 
 [start]
-cmd = "node dist/index.production.js"
+cmd = "caddy run --config Caddyfile --adapter caddyfile"

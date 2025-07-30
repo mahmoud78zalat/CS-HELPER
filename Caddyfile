@@ -1,0 +1,44 @@
+# global options
+{
+    admin off # no admin api needed
+    persist_config off # storage isn't persistent anyway
+    auto_https off # railway handles https
+    
+    # runtime logs
+    log {
+        format json
+    }
+    
+    # server options
+    servers {
+        trusted_proxies static private_ranges 100.0.0.0/8
+    }
+}
+
+# site block
+:{$PORT:3000} {
+    # access logs
+    log {
+        format json
+    }
+    
+    # health check for railway
+    respond /api/health 200 {
+        body `{"status":"healthy","timestamp":"$(date)","platform":"railway-caddy"}`
+    }
+    
+    # API proxy to backend service (if needed later)
+    # reverse_proxy /api/* backend:8080
+    
+    # serve from the 'dist/public' folder (where Vite builds to)
+    root * dist/public
+    
+    # enable gzipping
+    encode gzip
+    
+    # serve files from 'dist/public'
+    file_server
+    
+    # handle client-side routing - fallback to index.html for SPA
+    try_files {path} /index.html
+}

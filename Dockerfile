@@ -1,28 +1,29 @@
-# Use Node.js 20 LTS (matching your project setup)
-FROM node:20-alpine
+# Static site deployment with Caddy - Railway recommended approach
+FROM caddy:alpine
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files (only package.json and package-lock.json for npm)
+# Install Node.js for building
+RUN apk add --no-cache nodejs npm
+
+# Copy package files
 COPY package.json package-lock.json* ./
 
-# Install all dependencies (including dev dependencies for build)
+# Install dependencies
 RUN npm ci --include=dev
 
 # Copy source code
 COPY . .
 
-# Build the application with Railway-specific configuration
-RUN NODE_ENV=production npx vite build --config vite.config.railway.ts && \
-    npx esbuild server/index.production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist \
-    --external:@replit/* --external:pg-native --external:cpu-features
+# Build the frontend application
+RUN NODE_ENV=production npx vite build --config vite.config.railway.ts
 
-# Remove dev dependencies after build
-RUN npm prune --production
+# Copy Caddyfile
+COPY Caddyfile /etc/caddy/Caddyfile
 
-# Expose port (Railway provides PORT env var)
+# Expose port
 EXPOSE $PORT
 
-# Start the application using Railway starter script
-CMD ["node", "railway-start.js"]
+# Start Caddy with our configuration
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
