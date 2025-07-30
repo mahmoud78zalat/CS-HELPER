@@ -173,6 +173,8 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
 
   // Combine all available categories from template and email categories
   useEffect(() => {
+    if (!isOpen) return; // Don't process if modal is closed
+    
     const combinedCategories: TemplateVariableCategory[] = [];
     
     // Add template categories
@@ -218,14 +220,20 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       );
     }
     
-    setAvailableCategories(combinedCategories);
-  }, [templateCategories, emailCategories]);
+    // Only update if categories actually changed
+    setAvailableCategories(prev => {
+      if (JSON.stringify(prev) !== JSON.stringify(combinedCategories)) {
+        return combinedCategories;
+      }
+      return prev;
+    });
+  }, [templateCategories, emailCategories, isOpen]);
 
   const resetForm = () => {
     setFormData({
       name: '',
       description: '',
-      category: availableCategories[0]?.name || '',
+      category: availableCategories.length > 0 ? availableCategories[0]?.name || '' : '',
       example: '',
       defaultValue: '',
       isSystem: false

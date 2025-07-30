@@ -354,10 +354,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Users query - use admin endpoint that bypasses Vite interception
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
-    retry: false,
+    retry: 3, // Allow retries for Railway deployment
+    retryDelay: 1000, // 1 second between retries
     enabled: !!currentUser && currentUser.role === 'admin', // Only fetch if user is admin
+    staleTime: 10000, // Consider data fresh for 10 seconds
+    gcTime: 30000, // Keep in cache for 30 seconds
     queryFn: async () => {
       console.log('[AdminPanel] Fetching users via admin endpoint...');
+      console.log('[AdminPanel] Current user:', currentUser?.email, currentUser?.role);
       
       // Try multiple endpoints for Railway compatibility
       const urls = [
@@ -394,6 +398,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
           
           const data = await response.json();
           console.log('[AdminPanel] Users fetched successfully from:', url, '- Count:', data.length);
+          console.log('[AdminPanel] Setting users loading to false, data:', data);
           return data;
         } catch (error) {
           console.log('[AdminPanel] Error with URL:', url, error);
@@ -1371,7 +1376,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
               </div>
               
               {usersLoading ? (
-                <div>Loading users...</div>
+                <div className="flex flex-col items-center justify-center py-8 space-y-2">
+                  <div className="text-slate-600">Loading users...</div>
+                  <div className="text-xs text-slate-400">
+                    Current User: {currentUser?.email} ({currentUser?.role})
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    Query Enabled: {!!currentUser && currentUser.role === 'admin' ? 'Yes' : 'No'}
+                  </div>
+                </div>
               ) : usersError ? (
                 <div className="text-red-600">Error loading users: {usersError.message}</div>
               ) : users.length === 0 ? (
