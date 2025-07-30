@@ -46,8 +46,14 @@ export async function railwaySupabaseDebug(req: Request, res: Response) {
         global: {
           headers: {
             'User-Agent': 'Railway-Supabase-Debug/1.0',
-            'X-Railway-Debug': 'true'
+            'X-Railway-Debug': 'true',
+            'X-IPv4-Preferred': 'true',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           }
+        },
+        db: {
+          schema: 'public'
         }
       });
 

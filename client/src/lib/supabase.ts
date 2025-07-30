@@ -26,30 +26,41 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(errorMessage);
 }
 
-// Railway deployment fix: Enhanced client options
+// Railway deployment fix: Enhanced client options with IPv4 compatibility
 const isProduction = import.meta.env.PROD;
-const railwayEnvironment = import.meta.env.VITE_RAILWAY_ENVIRONMENT || window.location.hostname.includes('railway.app');
+const railwayEnvironment = import.meta.env.VITE_RAILWAY_ENVIRONMENT || 
+                           window.location.hostname.includes('railway.app') ||
+                           window.location.hostname.includes('.railway.app');
 
 const clientOptions = {
   auth: {
     persistSession: true,
     detectSessionInUrl: true,
     ...(isProduction && railwayEnvironment && {
-      flowType: 'pkce' // Enhanced auth flow for Railway production
+      flowType: 'pkce' as const // Enhanced auth flow for Railway production
     })
   },
   global: {
     headers: {
       'User-Agent': 'BFL-CustomerService-Frontend/1.0',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
       ...(railwayEnvironment && {
-        'X-Railway-Client': 'true'
+        'X-Railway-Client': 'true',
+        'X-IPv4-Preferred': 'true', // Hint for IPv4 preference on Railway
+        'Connection': 'keep-alive'
       })
     }
   },
-  // Railway-specific optimizations
+  // Railway-specific optimizations for IPv4 connectivity
   ...(railwayEnvironment && {
     db: {
       schema: 'public'
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
     }
   })
 };
