@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./simple-routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { serveStatic, log } from "./vite";
 import { validateRailwayEnvironment, optimizeForRailway } from "./railway-config";
 import { createRailwayServer, startRailwayServer } from "./railway-startup";
 
@@ -59,8 +59,14 @@ app.use((req, res, next) => {
     // Setup development/production serving
     if (process.env.NODE_ENV === "development") {
       console.log('[Railway] Setting up development mode with Vite...');
-      const server = await import("http").then(http => http.createServer(app));
-      await setupVite(app, server);
+      try {
+        const server = await import("http").then(http => http.createServer(app));
+        const { setupVite } = await import("./vite");
+        await setupVite(app, server);
+      } catch (error) {
+        console.error('[Railway] Vite setup failed, falling back to static serving:', error);
+        serveStatic(app);
+      }
     } else {
       console.log('[Railway] Setting up production static file serving...');
       serveStatic(app);
