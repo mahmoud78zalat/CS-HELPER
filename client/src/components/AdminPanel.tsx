@@ -34,26 +34,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ onClose }: AdminPanelProps) {
-  // Create a mock user for beta testing when Supabase is unavailable
-  const mockUser = {
-    id: 'beta-user',
-    email: 'beta@test.com',
-    role: 'admin'
-  };
-  
-  let currentUser = mockUser;
-  let authLoading = false;
-  
-  try {
-    const { user: authUser, isLoading } = useAuth();
-    if (authUser) {
-      currentUser = authUser;
-      authLoading = isLoading;
-    }
-  } catch (error) {
-    console.log('[AdminPanel] Auth hook error, using mock user for beta testing:', error);
-    // Keep mock user as fallback
-  }
+  const { user: currentUser, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('announcements');
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [showTemplateForm, setShowTemplateForm] = useState(false);
@@ -985,11 +966,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   
   // Auto-close panel when user changes and authentication is lost
   useEffect(() => {
-    // Don't auto-close for mock user during beta testing
-    if (!currentUser || (currentUser.id === 'beta-user')) {
-      return;
-    }
-    
     if (!currentUser) {
       console.log('[AdminPanel] User lost, auto-closing panel');
       onClose();
