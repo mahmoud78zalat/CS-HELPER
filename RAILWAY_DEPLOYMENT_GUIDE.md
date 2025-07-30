@@ -107,3 +107,23 @@ If you encounter issues:
 4. Check that your Supabase database URL is correct
 
 The application is now configured to work properly with Railway's deployment system using npm instead of pnpm.
+
+## LATEST BUILD FIXES (July 30, 2025)
+
+**Railway Build Failure Resolution:**
+- **Created `vite.config.railway.ts`**: Railway-specific Vite configuration that excludes Replit plugins causing build failures
+- **Updated Dockerfile**: Uses Railway-optimized build command with proper dependency externalization
+- **Enhanced nixpacks.toml**: Alternative build configuration for Railway using Nixpacks instead of Docker
+
+**Build Process Now:**
+```bash
+NODE_ENV=production vite build --config vite.config.railway.ts
+esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --external:@replit/* --external:pg-native --external:cpu-features
+```
+
+**Files Added/Modified:**
+- `vite.config.railway.ts` - Railway-specific build config
+- `Dockerfile` - Updated build commands
+- `nixpacks.toml` - Alternative build configuration
+
+The Railway build process now successfully handles the Replit development environment dependencies and creates clean production builds for deployment.

@@ -13,8 +13,10 @@ RUN npm ci --include=dev
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build the application with Railway-specific configuration
+RUN NODE_ENV=production vite build --config vite.config.railway.ts && \
+    esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist \
+    --external:@replit/* --external:pg-native --external:cpu-features
 
 # Remove dev dependencies after build
 RUN npm prune --production
