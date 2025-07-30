@@ -291,7 +291,22 @@ The system is designed to be deployed on Replit with automatic environment provi
 - Created production testing script with endpoint verification
 - Added Railway-specific client configuration for IPv4/IPv6 compatibility
 
-**Latest Update**: Fixed database connection initialization and Railway environment variable reading issuesoc syntax error by converting to echo command chains for proper Docker compatibility
+**Railway API Routes 405 Fix (July 30, 2025 - FINAL v4)**:
+✓ **ROUTE REGISTRATION ORDER FIXED**: Fixed Express route registration order to prevent static file handlers from overriding API routes
+✓ **EXPRESS MIDDLEWARE CONFIGURED**: Added proper JSON parsing, URL encoding, and CORS headers for API requests
+✓ **STATIC FILE HANDLER UPDATED**: Modified catch-all handlers to explicitly exclude API paths
+✓ **COMPREHENSIVE LOGGING ADDED**: Enhanced route registration logging for debugging and verification
+✓ **API TESTING SCRIPT CREATED**: Built test-railway-api-routes.js for comprehensive endpoint verification
+
+**Critical Fixes Applied**:
+- Fixed 405 Method Not Allowed errors by registering API routes before static file handlers
+- Added express.json() and express.urlencoded() middleware before route registration
+- Configured CORS headers specifically for API requests
+- Updated static file catch-all to exclude API paths completely
+- Added detailed logging for route registration process
+- Created comprehensive testing script for API endpoint verification
+
+**Latest Update**: Fixed Railway 405 Method Not Allowed errors by correcting Express route registration order and middleware configurationoc syntax error by converting to echo command chains for proper Docker compatibility
 ✓ **DEPLOYMENT GUIDE UPDATED**: Added troubleshooting section for start command conflicts
 
 **Railway Supabase IPv6 Connectivity Fix (July 30, 2025 - 12:15 PM)**:

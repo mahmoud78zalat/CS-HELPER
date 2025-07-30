@@ -16,6 +16,8 @@ import { railwaySupabaseDebug, railwayHealthCheck } from './railway-supabase-deb
 import { z } from "zod";
 
 export function registerRoutes(app: Express): void {
+  console.log('[Simple Routes] 📋 Starting route registration...');
+  
   // Health check endpoint (handled by railway-startup.ts)
   // Live Reply Template routes (for live chat)
   app.get('/api/live-reply-templates', async (req, res) => {
@@ -537,9 +539,11 @@ export function registerRoutes(app: Express): void {
   });
 
   // Personal Notes Routes
+  console.log('[Simple Routes] 📝 Registering personal notes routes...');
   const personalNotesStorage = new SupabasePersonalNotesStorage();
 
   app.get('/api/personal-notes', async (req, res) => {
+    console.log('[API] GET /api/personal-notes called');
     try {
       const userId = req.headers['x-user-id'] as string;
       if (!userId) {
@@ -555,6 +559,7 @@ export function registerRoutes(app: Express): void {
   });
 
   app.post('/api/personal-notes', async (req, res) => {
+    console.log('[API] POST /api/personal-notes called with body:', req.body);
     try {
       const userId = req.headers['x-user-id'] as string;
       const { subject, content } = req.body;
@@ -1028,6 +1033,13 @@ export function registerRoutes(app: Express): void {
   console.log('[Simple Routes] ✅ Railway debugging endpoints registered:');
   console.log('[Simple Routes]   - /api/railway/supabase-debug (comprehensive diagnostics)');
   console.log('[Simple Routes]   - /api/railway/health (health check with Supabase status)');
+  console.log('[Simple Routes] ✅ All routes registered successfully!');
+  console.log('[Simple Routes] 📋 Total API routes available:');
+  console.log('[Simple Routes]   - Live Reply Templates: /api/live-reply-templates');
+  console.log('[Simple Routes]   - Email Templates: /api/email-templates');
+  console.log('[Simple Routes]   - Personal Notes: /api/personal-notes');
+  console.log('[Simple Routes]   - Template Variables: /api/template-variables');
+  console.log('[Simple Routes]   - Color Settings: /api/color-settings');
 
   // Note: WebSocket functionality disabled for Vercel serverless deployment
   // Real-time features can be implemented using Supabase real-time subscriptions in the client

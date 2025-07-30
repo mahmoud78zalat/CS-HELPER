@@ -57,7 +57,26 @@ app.use((req, res, next) => {
     const config = validateRailwayEnvironment();
     optimizeForRailway();
     
-    // Register API routes including debug endpoints
+    // CRITICAL: Add JSON and URL encoding middleware FIRST
+    app.use(express.json({ limit: '50mb' }));
+    app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+    
+    // Add CORS headers for API requests
+    app.use((req, res, next) => {
+      if (req.path.startsWith('/api')) {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-User-Id');
+        
+        if (req.method === 'OPTIONS') {
+          return res.sendStatus(200);
+        }
+      }
+      next();
+    });
+    
+    // Register API routes including debug endpoints BEFORE static files
+    console.log('[Railway] 📋 Registering API routes...');
     registerRoutes(app);
     
     // Add Railway debug endpoints for production troubleshooting
@@ -66,16 +85,9 @@ app.use((req, res, next) => {
     app.get('/api/railway/health', railwayHealthCheck);
     
     console.log('[Railway] ✅ Debug endpoints added: /api/railway/supabase-debug, /api/railway/health');
-    
-    // Error handling middleware
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-      console.error('[Railway] Express error:', err);
-      res.status(status).json({ message });
-    });
+    console.log('[Railway] ✅ All API routes registered successfully');
 
-    // Production static file serving (NO VITE DEPENDENCIES)
+    // Production static file serving (NO VITE DEPENDENCIES) - AFTER API ROUTES
     console.log('[Railway] Setting up production static file serving...');
     const distPath = path.resolve(process.cwd(), "dist", "public");
     
@@ -104,10 +116,12 @@ app.use((req, res, next) => {
       console.log('[Railway] ✅ Static files served from:', distPath);
       console.log('[Railway] ✅ Assets served from:', path.join(distPath, 'assets'));
       
-      // Serve index.html for all non-API routes (SPA routing)
+      // Serve index.html for all non-API routes (SPA routing) - LAST
       app.get('*', (req, res, next) => {
+        // CRITICAL: Skip API routes completely 
         if (req.path.startsWith('/api')) {
-          return next();
+          console.log('[Railway] ⚠️ API route hit static handler:', req.method, req.path);
+          return res.status(404).json({ error: 'API endpoint not found', path: req.path });
         }
         
         console.log('[Railway] Serving index.html for route:', req.path);
@@ -128,12 +142,22 @@ app.use((req, res, next) => {
     } else {
       console.error('[Railway] ⚠️ Static build directory not found:', distPath);
       app.get('*', (req, res, next) => {
+        // CRITICAL: Skip API routes completely 
         if (req.path.startsWith('/api')) {
-          return next();
+          console.log('[Railway] ⚠️ API route hit static handler (no build):', req.method, req.path);
+          return res.status(404).json({ error: 'API endpoint not found', path: req.path });
         }
         res.status(404).json({ error: 'Static files not built', path: distPath });
       });
     }
+    
+    // Error handling middleware AFTER all routes
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      console.error('[Railway] Express error:', err);
+      res.status(status).json({ message });
+    });
 
     // Start the Railway server
     await startRailwayServer(app);
