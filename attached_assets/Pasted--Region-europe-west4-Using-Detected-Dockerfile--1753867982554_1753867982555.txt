@@ -1,0 +1,111 @@
+[Region: europe-west4]
+
+=========================
+
+Using Detected Dockerfile
+
+=========================
+
+
+context: mvr4-Zuos
+
+[internal] load build definition from Dockerfile
+
+[internal] load build definition from Dockerfile  ✔ 0 ms
+
+[internal] load build definition from Dockerfile
+
+[internal] load build definition from Dockerfile  ✔ 96 ms
+
+[internal] load metadata for docker.io/library/node:20-alpine
+
+[auth] library/node:pull token for registry-1.docker.io
+
+[auth] library/node:pull token for registry-1.docker.io  ✔ 0 ms
+
+[internal] load metadata for docker.io/library/node:20-alpine  ✔ 1 sec
+
+[internal] load .dockerignore
+
+[internal] load .dockerignore  ✔ 0 ms
+
+[internal] load .dockerignore
+
+[internal] load .dockerignore  ✔ 60 ms
+
+[7/7] RUN npm prune --production
+
+[6/7] RUN NODE_ENV=production npx vite build --config vite.config.railway.ts &&     npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist     --external:@replit/* --external:pg-native --external:cpu-features
+
+[5/7] COPY . .
+
+[4/7] RUN npm ci --include=dev
+
+[3/7] COPY package.json package-lock.json* ./
+
+[internal] load build context
+
+[2/7] WORKDIR /app
+
+[1/7] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799
+
+[1/7] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799
+
+[internal] load build context  ✔ 1 ms
+
+[1/7] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799  ✔ 8 ms
+
+[1/7] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799  ✔ 0 ms
+
+[1/7] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799
+
+[internal] load build context
+
+[1/7] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799  ✔ 27 ms
+
+[1/7] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799
+
+[internal] load build context  ✔ 63 ms
+
+[1/7] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799  ✔ 572 ms
+
+[2/7] WORKDIR /app  ✔ 37 ms
+
+[3/7] COPY package.json package-lock.json* ./
+
+[3/7] COPY package.json package-lock.json* ./  ✔ 36 ms
+
+[4/7] RUN npm ci --include=dev
+
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+
+npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+
+
+added 551 packages, and audited 552 packages in 12s
+
+
+70 packages are looking for funding
+
+  run `npm fund` for details
+
+
+10 vulnerabilities (3 low, 7 moderate)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.5.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.5.1
+npm notice To update run: npm install -g npm@11.5.1
+npm notice
+
+[4/7] RUN npm ci --include=dev  ✔ 12 sec

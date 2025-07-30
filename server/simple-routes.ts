@@ -6,11 +6,11 @@ import {
   insertLiveReplyTemplateSchema, 
   insertEmailTemplateSchema, 
   insertSiteContentSchema,
-
+  insertPersonalNoteSchema,
   // Legacy for backward compatibility
   insertLiveReplyTemplateSchema as insertTemplateSchema
 } from "@shared/schema";
-// Personal notes functionality removed for Railway deployment cleanup
+import { SupabasePersonalNotesStorage } from './supabase-personal-notes';
 // Health check inline - no separate file needed
 import { z } from "zod";
 
