@@ -47,6 +47,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 - This is fixed in the updated railway.json which removes conflicting start commands
 - The Dockerfile now handles the start command properly
 
+**If you see "vite: not found" or "esbuild: not found" during build:**
+- This is fixed in the updated Dockerfile which now uses `npx vite` and `npx esbuild` commands
+- Make sure you're using the latest Dockerfile that includes the npx prefixes
+
 **If health checks fail:**
 - Ensure all Supabase environment variables are set correctly
 - Check Railway logs for specific error messages
@@ -117,8 +121,8 @@ The application is now configured to work properly with Railway's deployment sys
 
 **Build Process Now:**
 ```bash
-NODE_ENV=production vite build --config vite.config.railway.ts
-esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --external:@replit/* --external:pg-native --external:cpu-features
+NODE_ENV=production npx vite build --config vite.config.railway.ts
+npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --external:@replit/* --external:pg-native --external:cpu-features
 ```
 
 **Files Added/Modified:**
