@@ -24,9 +24,5 @@ RUN npm prune --production
 # Expose port
 EXPOSE 8080
 
-# Set environment variables for Railway
-ENV NODE_ENV=production
-ENV PORT=8080
-
-# Start the application
+# Start the application (environment variables set in Railway dashboard)
 CMD ["node", "dist/index.js"]

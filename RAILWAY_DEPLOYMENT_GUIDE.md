@@ -127,3 +127,25 @@ esbuild server/index.ts --platform=node --packages=external --bundle --format=es
 - `nixpacks.toml` - Alternative build configuration
 
 The Railway build process now successfully handles the Replit development environment dependencies and creates clean production builds for deployment.
+
+## FINAL DEPLOYMENT FIX (July 30, 2025)
+
+**"executable node_env=production could not be found" ERROR RESOLVED:**
+- **Root cause**: Environment variables in nixpacks.toml were being interpreted as executable commands
+- **Solution**: Removed environment variable declarations from nixpacks.toml and Dockerfile
+- **Fixed CMD**: Changed to direct `node dist/index.js` command without environment variable conflicts
+- **Environment setup**: All environment variables now set through Railway dashboard interface only
+
+**Updated files**:
+- `nixpacks.toml`: Removed [variables] section, simplified start command  
+- `Dockerfile`: Removed ENV declarations to prevent command conflicts
+
+Environment variables must be set in Railway dashboard:
+```
+NODE_ENV=production
+PORT=8080
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_key
+SESSION_SECRET=your_session_secret
+```
