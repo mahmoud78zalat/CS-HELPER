@@ -1,100 +1,105 @@
-# Railway.app Deployment Guide
+# Railway.app Deployment Guide - BFL Customer Service Helper
 
-## Quick Deployment Steps
+## Quick Fix for Current Issue
 
-### 1. Prerequisites
-- GitHub repository with your code
-- Supabase project with credentials
-- Railway.app account
+Your deployment is failing because the application requires Supabase environment variables to be set in Railway. Here's how to fix it:
 
-### 2. Environment Variables (Required)
-Set these in Railway dashboard under Variables:
+### 1. Set Environment Variables in Railway Dashboard
 
-**Supabase Configuration:**
+Go to your Railway project dashboard and add these environment variables:
+
+**Required Supabase Variables:**
 ```
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key_here
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your_anon_key_here
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+SESSION_SECRET=your_random_session_secret
 ```
 
-**Session Configuration:**
+**How to get Supabase credentials:**
+1. Go to [supabase.com](https://supabase.com) and create/access your project
+2. Go to Settings → API
+3. Copy your Project URL (VITE_SUPABASE_URL)
+4. Copy your anon/public key (VITE_SUPABASE_ANON_KEY) 
+5. Copy your service_role key (SUPABASE_SERVICE_ROLE_KEY)
+
+**Session Secret:**
+Generate a random 32+ character string for SESSION_SECRET:
+```bash
+# You can generate one with:
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
-SESSION_SECRET=your_random_32_character_string
-```
 
-**Railway Configuration (automatically set):**
-```
-NODE_ENV=production
-PORT=8080
-```
+### 2. Deploy Process
 
-### 3. Deploy to Railway
+1. **Push your code to GitHub** (if not already done)
+2. **Connect Railway to your GitHub repo**
+3. **Set the environment variables** in Railway dashboard
+4. **Deploy** - Railway will automatically use the Dockerfile
 
-1. **Connect Repository**
-   - Go to Railway.app dashboard
-   - Click "New Project"
-   - Select "Deploy from GitHub repo"
-   - Choose your repository
+### 3. Troubleshooting
 
-2. **Configure Environment Variables**
-   - Go to Variables tab in Railway dashboard
-   - Add all the required environment variables listed above
-   - Railway will automatically detect the `railway.json` configuration
+**If you see "ERR_PNPM_OUTDATED_LOCKFILE":**
+- This is fixed in the updated Dockerfile which now uses npm instead of pnpm
+- Make sure you're using the latest Dockerfile from this project
 
-3. **Deploy**
-   - Railway will automatically build using the Dockerfile
-   - Health checks will run against `/api/health`
-   - Build takes ~2-3 minutes, health checks may take 2-5 minutes
-
-### 4. Troubleshooting
-
-**Health Check Failures:**
+**If health checks fail:**
 - Ensure all Supabase environment variables are set correctly
-- Check that SESSION_SECRET is a secure random string (32+ characters)
-- Verify your Supabase project is active and accessible
+- Check Railway logs for specific error messages
+- The app will start on port 8080 as configured
 
-**Build Failures:**
-- Check the build logs for specific error messages
-- Ensure all dependencies are in package.json
-- Verify the build command works locally with `npm run build`
+### 4. Railway-Specific Files
 
-**Application Not Starting:**
-- Check the deploy logs for runtime errors
-- Verify environment variables are set in Railway dashboard
-- Test the health endpoint locally: `curl http://localhost:8080/api/health`
+These files are configured for Railway deployment:
+- `Dockerfile` - Uses npm and Node.js 20
+- `railway.json` - Railway configuration with health checks
+- `.dockerignore` - Excludes pnpm files to prevent conflicts
 
-### 5. Configuration Files
+## Complete Deployment Steps
 
-The following files are configured for Railway deployment:
+1. **Prerequisites:**
+   - Supabase project set up with database tables
+   - GitHub repository with your code
+   - Railway account
 
-- **`railway.json`** - Railway-specific configuration
-- **`Dockerfile`** - Container build instructions  
-- **`package.json`** - Build and start scripts
-- **Health Check** - Available at `/api/health`
+2. **Railway Setup:**
+   - Create new project in Railway
+   - Connect to your GitHub repository
+   - Railway will auto-detect the Dockerfile
 
-### 6. Post-Deployment
+3. **Environment Configuration:**
+   Set all required environment variables in Railway dashboard:
+   ```
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJ...your-anon-key
+   SUPABASE_SERVICE_ROLE_KEY=eyJ...your-service-role-key
+   SESSION_SECRET=your-random-32-char-secret
+   NODE_ENV=production
+   PORT=8080
+   ```
 
-1. **Test Health Check**
-   - Visit `https://your-app.railway.app/api/health`
-   - Should return: `{"status":"healthy","timestamp":"...","environment":"production",...}`
+4. **Deploy:**
+   - Railway will automatically build and deploy
+   - Health check endpoint: `/api/health`
+   - App will be available at your Railway domain
 
-2. **Test Application**
-   - Visit your Railway app URL
-   - Log in with your Supabase credentials
-   - Verify all features work correctly
+## Database Setup
 
-3. **Monitor Logs**
-   - Check Railway logs for any runtime errors
-   - Monitor performance and response times
+Your Supabase database should have these tables (they'll be created automatically when the app starts):
+- users
+- live_reply_templates  
+- email_templates
+- live_reply_usage
+- email_template_usage
+- site_content
+- sessions
 
 ## Support
 
 If you encounter issues:
-1. Check Railway logs for specific error messages
-2. Verify all environment variables are correctly set
-3. Test the application locally with the same environment variables
-4. Contact Railway support for platform-specific issues
+1. Check Railway deployment logs
+2. Verify all environment variables are set
+3. Ensure Supabase project is accessible
+4. Check that your Supabase database URL is correct
 
-Your Customer Service Platform is now deployed on Railway! 🚀
+The application is now configured to work properly with Railway's deployment system using npm instead of pnpm.
