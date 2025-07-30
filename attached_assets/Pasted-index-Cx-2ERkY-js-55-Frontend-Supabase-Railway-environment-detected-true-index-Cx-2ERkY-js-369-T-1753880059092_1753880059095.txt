@@ -1,0 +1,159 @@
+index-Cx_2ERkY.js:55 [Frontend Supabase] Railway environment detected: true
+index-Cx_2ERkY.js:369 [TemplateColors] Loading saved colors from database...
+index-Cx_2ERkY.js:325 [Auth] Checking for existing session...
+index-Cx_2ERkY.js:369 [TemplateColors] Loading saved colors from database...
+index-Cx_2ERkY.js:325 [Auth] Auth state changed: SIGNED_IN mahmoud78zalat@gmail.com
+index-Cx_2ERkY.js:325 [Auth] Checking user in database: f765c1de-f9b5-4615-8c09-8cdde8152a07
+index-Cx_2ERkY.js:369 [TemplateColors] Error loading colors from database: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+Hi @ index-Cx_2ERkY.js:369
+await in Hi
+(anonymous) @ index-Cx_2ERkY.js:369
+index-Cx_2ERkY.js:369 [TemplateColors] Error loading colors from database: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+Hi @ index-Cx_2ERkY.js:369
+await in Hi
+(anonymous) @ index-Cx_2ERkY.js:377
+kc @ index-Cx_2ERkY.js:40
+yo @ index-Cx_2ERkY.js:40
+Zm @ index-Cx_2ERkY.js:40
+ns @ index-Cx_2ERkY.js:38
+iN @ index-Cx_2ERkY.js:40
+us @ index-Cx_2ERkY.js:40
+L0 @ index-Cx_2ERkY.js:40
+C @ index-Cx_2ERkY.js:25
+E @ index-Cx_2ERkY.js:25
+index-Cx_2ERkY.js:377 [App] Colors loaded from database on app start
+index-Cx_2ERkY.js:369 
+            
+            
+           POST https://web-production-5653.up.railway.app/api/template-colors net::ERR_ABORTED 405 (Method Not Allowed)
+ru @ index-Cx_2ERkY.js:369
+(anonymous) @ index-Cx_2ERkY.js:369
+Promise.then
+(anonymous) @ index-Cx_2ERkY.js:369
+index-Cx_2ERkY.js:369 [TemplateColors] Failed to sync to Supabase: Error: Failed to sync colors to Supabase
+    at ru (index-Cx_2ERkY.js:369:30715)
+ru @ index-Cx_2ERkY.js:369
+await in ru
+(anonymous) @ index-Cx_2ERkY.js:369
+Promise.then
+(anonymous) @ index-Cx_2ERkY.js:369
+index-Cx_2ERkY.js:325 [Auth] Response status: 200
+index-Cx_2ERkY.js:325 [Auth] Response type: text/html; charset=utf-8
+index-Cx_2ERkY.js:325 [Auth] Response text preview: <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" con...
+index-Cx_2ERkY.js:325 [Auth] API intercepted, setting user from backend data...
+index-Cx_2ERkY.js:325 [Auth] Setting user manually based on backend data: mahmoud78zalat@gmail.com admin
+index-Cx_2ERkY.js:325 [Auth] Starting heartbeat for user presence
+index-Cx_2ERkY.js:325 [Auth] Checking for existing session...
+index-Cx_2ERkY.js:325 [Auth] Checking for existing session...
+index-Cx_2ERkY.js:325 [Auth] Checking for existing session...
+index-Cx_2ERkY.js:325 [Auth] Auth state changed: INITIAL_SESSION mahmoud78zalat@gmail.com
+index-Cx_2ERkY.js:325 [Auth] Checking user in database: f765c1de-f9b5-4615-8c09-8cdde8152a07
+index-Cx_2ERkY.js:325 [Auth] Found existing session for: mahmoud78zalat@gmail.com
+index-Cx_2ERkY.js:325 [Auth] Checking user in database: f765c1de-f9b5-4615-8c09-8cdde8152a07
+index-Cx_2ERkY.js:325 [Auth] Auth state changed: INITIAL_SESSION mahmoud78zalat@gmail.com
+index-Cx_2ERkY.js:325 [Auth] Checking user in database: f765c1de-f9b5-4615-8c09-8cdde8152a07
+index-Cx_2ERkY.js:325 [Auth] Response status: 200
+index-Cx_2ERkY.js:325 [Auth] Response type: text/html; charset=utf-8
+index-Cx_2ERkY.js:325 [Auth] Response text preview: <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" con...
+index-Cx_2ERkY.js:325 [Auth] API intercepted, setting user from backend data...
+index-Cx_2ERkY.js:325 [Auth] Setting user manually based on backend data: mahmoud78zalat@gmail.com admin
+index-Cx_2ERkY.js:325 [Auth] Response status: 200
+index-Cx_2ERkY.js:325 [Auth] Response type: text/html; charset=utf-8
+index-Cx_2ERkY.js:325 [Auth] Response text preview: <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" con...
+index-Cx_2ERkY.js:325 [Auth] API intercepted, setting user from backend data...
+index-Cx_2ERkY.js:325 [Auth] Setting user manually based on backend data: mahmoud78zalat@gmail.com admin
+index-Cx_2ERkY.js:325 [Auth] Found existing session for: mahmoud78zalat@gmail.com
+index-Cx_2ERkY.js:325 [Auth] Checking user in database: f765c1de-f9b5-4615-8c09-8cdde8152a07
+index-Cx_2ERkY.js:325 [Auth] Response status: 200
+index-Cx_2ERkY.js:325 [Auth] Response type: text/html; charset=utf-8
+index-Cx_2ERkY.js:325 [Auth] Response text preview: <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" con...
+index-Cx_2ERkY.js:325 [Auth] API intercepted, setting user from backend data...
+index-Cx_2ERkY.js:325 [Auth] Setting user manually based on backend data: mahmoud78zalat@gmail.com admin
+index-Cx_2ERkY.js:325 [Auth] Starting heartbeat for user presence
+index-Cx_2ERkY.js:325 [Auth] Auth state changed: INITIAL_SESSION mahmoud78zalat@gmail.com
+index-Cx_2ERkY.js:325 [Auth] Checking user in database: f765c1de-f9b5-4615-8c09-8cdde8152a07
+index-Cx_2ERkY.js:325 [Auth] Response status: 200
+index-Cx_2ERkY.js:325 [Auth] Response type: text/html; charset=utf-8
+index-Cx_2ERkY.js:325 [Auth] Response text preview: <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" con...
+index-Cx_2ERkY.js:325 [Auth] API intercepted, setting user from backend data...
+index-Cx_2ERkY.js:325 [Auth] Setting user manually based on backend data: mahmoud78zalat@gmail.com admin
+index-Cx_2ERkY.js:325 [Auth] Found existing session for: mahmoud78zalat@gmail.com
+index-Cx_2ERkY.js:325 [Auth] Checking user in database: f765c1de-f9b5-4615-8c09-8cdde8152a07
+index-Cx_2ERkY.js:325 [Auth] Response status: 200
+index-Cx_2ERkY.js:325 [Auth] Response type: text/html; charset=utf-8
+index-Cx_2ERkY.js:325 [Auth] Response text preview: <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" con...
+index-Cx_2ERkY.js:325 [Auth] API intercepted, setting user from backend data...
+index-Cx_2ERkY.js:325 [Auth] Setting user manually based on backend data: mahmoud78zalat@gmail.com admin
+index-Cx_2ERkY.js:325 [Auth] Starting heartbeat for user presence
+index-Cx_2ERkY.js:325 [Auth] Auth state changed: INITIAL_SESSION mahmoud78zalat@gmail.com
+index-Cx_2ERkY.js:325 [Auth] Checking user in database: f765c1de-f9b5-4615-8c09-8cdde8152a07
+index-Cx_2ERkY.js:325 [Auth] Response status: 200
+index-Cx_2ERkY.js:325 [Auth] Response type: text/html; charset=utf-8
+index-Cx_2ERkY.js:325 [Auth] Response text preview: <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" con...
+index-Cx_2ERkY.js:325 [Auth] API intercepted, setting user from backend data...
+index-Cx_2ERkY.js:325 [Auth] Setting user manually based on backend data: mahmoud78zalat@gmail.com admin
+index-Cx_2ERkY.js:325 [Auth] Found existing session for: mahmoud78zalat@gmail.com
+index-Cx_2ERkY.js:325 [Auth] Checking user in database: f765c1de-f9b5-4615-8c09-8cdde8152a07
+index-Cx_2ERkY.js:325 [Auth] Response status: 200
+index-Cx_2ERkY.js:325 [Auth] Response type: text/html; charset=utf-8
+index-Cx_2ERkY.js:325 [Auth] Response text preview: <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" con...
+index-Cx_2ERkY.js:325 [Auth] API intercepted, setting user from backend data...
+index-Cx_2ERkY.js:325 [Auth] Setting user manually based on backend data: mahmoud78zalat@gmail.com admin
+index-Cx_2ERkY.js:325 [Auth] Starting heartbeat for user presence
+index-Cx_2ERkY.js:325 [Auth] Response status: 200
+index-Cx_2ERkY.js:325 [Auth] Response type: text/html; charset=utf-8
+index-Cx_2ERkY.js:325 [Auth] Response text preview: <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" con...
+index-Cx_2ERkY.js:325 [Auth] API intercepted, setting user from backend data...
+index-Cx_2ERkY.js:325 [Auth] Setting user manually based on backend data: mahmoud78zalat@gmail.com admin
+(index):56 Failed to get chatbase verification hash: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+onLoad @ (index):56
+await in onLoad
+(anonymous) @ (index):67
+loadChatbaseForAuthenticated @ (index):71
+setTimeout
+(anonymous) @ (index):87
+index-Cx_2ERkY.js:369 Error fetching announcements: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ index-Cx_2ERkY.js:369
+await in (anonymous)
+(anonymous) @ index-Cx_2ERkY.js:369
+kc @ index-Cx_2ERkY.js:40
+yo @ index-Cx_2ERkY.js:40
+(anonymous) @ index-Cx_2ERkY.js:40
+C @ index-Cx_2ERkY.js:25
+E @ index-Cx_2ERkY.js:25
