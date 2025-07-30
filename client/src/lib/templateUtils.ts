@@ -75,14 +75,8 @@ export function validateTemplate(content: string): {
   const variables = extractVariablesFromTemplate(content);
   const issues: string[] = [];
   
-  // Check for unrecognized variables - but make it a warning, not an error
-  const recognizedVariables = AVAILABLE_VARIABLES.map(v => v.name);
-  const unrecognized = variables.filter(v => !recognizedVariables.includes(v));
-  
-  if (unrecognized.length > 0) {
-    // Convert to warning instead of blocking error
-    console.warn(`Note: Unrecognized variables found: ${unrecognized.join(', ')} - they will be left as-is in the template`);
-  }
+  // All variables are accepted - validation is now permissive
+  // Users can use any variables they want and they'll be replaced if data is available
   
   // Check for empty template
   if (!content.trim()) {

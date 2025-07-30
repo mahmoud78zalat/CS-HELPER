@@ -355,7 +355,32 @@ export class SupabaseStorage implements IStorage {
       return [];
     }
 
-    return data.map(this.mapSupabaseUser);
+    // Calculate accurate online status based on last activity
+    const now = new Date();
+    const OFFLINE_THRESHOLD = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+    return data.map(user => {
+      const mappedUser = this.mapSupabaseUser(user);
+      
+      // Determine if user is truly online based on last_seen
+      if (mappedUser.lastSeen) {
+        const lastSeenTime = new Date(mappedUser.lastSeen).getTime();
+        const timeSinceLastSeen = now.getTime() - lastSeenTime;
+        
+        // User is only considered online if they were active within the last 5 minutes
+        mappedUser.isOnline = timeSinceLastSeen < OFFLINE_THRESHOLD;
+        
+        // Log status changes for debugging
+        if (user.is_online !== mappedUser.isOnline) {
+          console.log(`[SupabaseStorage] User ${mappedUser.email} status updated: ${user.is_online} -> ${mappedUser.isOnline} (last seen: ${Math.round(timeSinceLastSeen / 1000)}s ago)`);
+        }
+      } else {
+        // No last seen time means user is offline
+        mappedUser.isOnline = false;
+      }
+      
+      return mappedUser;
+    });
   }
 
   async deleteUser(id: string): Promise<void> {

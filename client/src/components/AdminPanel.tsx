@@ -357,8 +357,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     retry: 5, // Increased retries for Railway deployment
     retryDelay: 2000, // 2 seconds between retries
     enabled: !!currentUser, // Always enabled when user exists - we'll check admin status later
-    staleTime: 5000, // Consider data fresh for 5 seconds
-    gcTime: 30000, // Keep in cache for 30 seconds
+    staleTime: 2000, // Consider data fresh for only 2 seconds for real-time status
+    gcTime: 10000, // Shorter cache time to ensure fresh status updates
+    refetchInterval: 10000, // Refresh every 10 seconds for live status updates
     queryFn: async () => {
       console.log('[AdminPanel] Fetching users via admin endpoint...');
       console.log('[AdminPanel] Current user:', currentUser?.email, currentUser?.role);

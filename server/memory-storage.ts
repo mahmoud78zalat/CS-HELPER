@@ -44,6 +44,36 @@ export class MemoryStorage implements IStorage {
     return this.users.get(id);
   }
 
+  async getUserById(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async createUser(userData: {
+    id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    role?: 'admin' | 'agent';
+  }): Promise<User | null> {
+    const now = new Date();
+    const user: User = {
+      id: userData.id,
+      email: userData.email,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      profileImageUrl: null,
+      role: userData.role || "agent",
+      status: "active",
+      isOnline: true,
+      lastSeen: now,
+      createdAt: now,
+      updatedAt: now,
+    };
+    
+    this.users.set(userData.id, user);
+    return user;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     const now = new Date();
     const existingUser = this.users.get(userData.id);
@@ -67,7 +97,30 @@ export class MemoryStorage implements IStorage {
   }
 
   async getAllUsers(): Promise<User[]> {
-    return Array.from(this.users.values()).sort((a, b) => 
+    const now = new Date();
+    const OFFLINE_THRESHOLD = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+    return Array.from(this.users.values()).map(user => {
+      // Calculate accurate online status based on last activity
+      if (user.lastSeen) {
+        const lastSeenTime = new Date(user.lastSeen).getTime();
+        const timeSinceLastSeen = now.getTime() - lastSeenTime;
+        
+        // User is only considered online if they were active within the last 5 minutes
+        const wasOnline = user.isOnline;
+        user.isOnline = timeSinceLastSeen < OFFLINE_THRESHOLD;
+        
+        // Log status changes for debugging
+        if (wasOnline !== user.isOnline) {
+          console.log(`[MemoryStorage] User ${user.email} status updated: ${wasOnline} -> ${user.isOnline} (last seen: ${Math.round(timeSinceLastSeen / 1000)}s ago)`);
+        }
+      } else {
+        // No last seen time means user is offline
+        user.isOnline = false;
+      }
+      
+      return user;
+    }).sort((a, b) => 
       (a.firstName || "").localeCompare(b.firstName || "") || (a.lastName || "").localeCompare(b.lastName || "")
     );
   }
