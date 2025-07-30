@@ -26,7 +26,7 @@ RUN echo "[Railway Docker Build] Environment check:" && \
     echo "VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:0:50}..." && \
     echo "VITE_SUPABASE_ANON_KEY present: $(test -n "$VITE_SUPABASE_ANON_KEY" && echo yes || echo no)" && \
     echo "[Railway Docker Build] Building frontend..." && \
-    npx vite build --config vite.config.railway.ts && \
+    npx vite build && \
     echo "[Railway Docker Build] Building backend..." && \
     npx esbuild server/index.production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --external:vite --external:@replit/* --external:pg-native --external:cpu-features && \
     echo "[Railway Docker Build] Verifying build output:" && \
@@ -40,11 +40,8 @@ RUN npm prune --production
 # Railway sets PORT environment variable
 ENV PORT=3000
 
-# Start the Express.js server (NOT Caddy)
-CMD ["node", "dist/index.production.js"]
-
 # Expose the port
 EXPOSE $PORT
 
-# Start Caddy web server
-CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
+# Start the Express.js server
+CMD ["node", "dist/index.production.js"]
