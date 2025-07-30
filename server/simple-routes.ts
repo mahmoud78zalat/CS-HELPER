@@ -303,6 +303,56 @@ export function registerRoutes(app: Express): void {
   });
 
   // User Management API routes (bypassing Vite interception)
+  // Main users list endpoint for admin panel  
+  app.get('/api/users', async (req, res) => {
+    try {
+      console.log('[Simple Routes] /api/users called - fetching all users');
+      const users = await storage.getAllUsers();
+      console.log('[Simple Routes] Fetched', users.length, 'users from storage');
+      console.log('[Simple Routes] Sample user:', users[0] ? { id: users[0].id, email: users[0].email, role: users[0].role } : 'No users');
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.json(users);
+    } catch (error) {
+      console.error("[Simple Routes] Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Single user by ID
+  app.get('/api/user/:id', async (req, res) => {
+    try {
+      console.log('[Simple Routes] Getting user by ID:', req.params.id);
+      const { id } = req.params;
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        console.log('[Simple Routes] User not found:', id);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log('[Simple Routes] User found:', user.email, user.role);
+      res.json(user);
+    } catch (error) {
+      console.error("[Simple Routes] Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Create new user
+  app.post('/api/create-user', async (req, res) => {
+    try {
+      console.log('[Simple Routes] Creating user:', req.body.email);
+      const userData = req.body;
+      const user = await storage.upsertUser(userData);
+      console.log('[Simple Routes] User created:', user.email);
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("[Simple Routes] Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
   app.patch('/api/users/:id/role', async (req, res) => {
     console.log('[DirectRoleUpdate] === DIRECT ROLE UPDATE REQUEST START ===');
     console.log('[DirectRoleUpdate] Raw request body:', req.body);
