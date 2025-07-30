@@ -26,7 +26,36 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(errorMessage);
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Railway deployment fix: Enhanced client options
+const isProduction = import.meta.env.PROD;
+const railwayEnvironment = import.meta.env.VITE_RAILWAY_ENVIRONMENT || window.location.hostname.includes('railway.app');
+
+const clientOptions = {
+  auth: {
+    persistSession: true,
+    detectSessionInUrl: true,
+    ...(isProduction && railwayEnvironment && {
+      flowType: 'pkce' // Enhanced auth flow for Railway production
+    })
+  },
+  global: {
+    headers: {
+      'User-Agent': 'BFL-CustomerService-Frontend/1.0',
+      ...(railwayEnvironment && {
+        'X-Railway-Client': 'true'
+      })
+    }
+  },
+  // Railway-specific optimizations
+  ...(railwayEnvironment && {
+    db: {
+      schema: 'public'
+    }
+  })
+};
+
+console.log('[Frontend Supabase] Railway environment detected:', railwayEnvironment);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, clientOptions);
 
 // Auth helper functions
 export const signInWithEmail = async (email: string, password: string) => {

@@ -11,6 +11,7 @@ import {
   insertLiveReplyTemplateSchema as insertTemplateSchema
 } from "@shared/schema";
 import { SupabasePersonalNotesStorage } from './supabase-personal-notes';
+import { railwaySupabaseDebug, railwayHealthCheck } from './railway-supabase-debug';
 // Health check inline - no separate file needed
 import { z } from "zod";
 
@@ -1019,6 +1020,14 @@ export function registerRoutes(app: Express): void {
       res.status(500).json({ message: 'Failed to create template variable category' });
     }
   });
+
+  // Railway deployment debugging endpoints
+  app.get('/api/railway/supabase-debug', railwaySupabaseDebug);
+  app.get('/api/railway/health', railwayHealthCheck);
+  
+  console.log('[Simple Routes] ✅ Railway debugging endpoints registered:');
+  console.log('[Simple Routes]   - /api/railway/supabase-debug (comprehensive diagnostics)');
+  console.log('[Simple Routes]   - /api/railway/health (health check with Supabase status)');
 
   // Note: WebSocket functionality disabled for Vercel serverless deployment
   // Real-time features can be implemented using Supabase real-time subscriptions in the client

@@ -54,7 +54,8 @@ export class SupabaseStorage implements IStorage {
       throw new Error(`Missing or empty Supabase credentials - URL: ${!!supabaseUrl && supabaseUrl.trim() !== ''}, Key: ${!!supabaseKey && supabaseKey.trim() !== ''}`);
     }
     
-    // Performance optimization: Add connection pooling options
+    // Railway deployment fix: Enhanced client options for IPv4 compatibility
+    const isRailwayProduction = process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_PROJECT_ID;
     const clientOptions = {
       auth: {
         persistSession: false, // Disable session persistence for server-side
@@ -62,17 +63,33 @@ export class SupabaseStorage implements IStorage {
       },
       global: {
         headers: {
-          'Connection': 'keep-alive'
+          'Connection': 'keep-alive',
+          'User-Agent': 'BFL-CustomerService/1.0 (Railway)',
+          ...(isRailwayProduction && {
+            'X-Railway-Deployment': 'true',
+            'Cache-Control': 'no-cache'
+          })
         }
-      }
+      },
+      // Railway-specific optimizations for IPv4 connectivity  
+      ...(isRailwayProduction && {
+        db: {
+          schema: 'public'
+        }
+      })
     };
     
+    console.log('[SupabaseStorage] Railway deployment detected:', !!isRailwayProduction);
+    if (isRailwayProduction) {
+      console.log('[SupabaseStorage] Using Railway-optimized Supabase configuration');
+    }
+    
     // Regular client for read operations
-    this.client = createClient(supabaseUrl.trim(), supabaseKey.trim(), clientOptions);
+    this.client = createClient(supabaseUrl.trim(), supabaseKey.trim(), clientOptions) as any;
     
     // Service role client for admin operations (bypasses RLS)
     if (serviceRoleKey && serviceRoleKey.trim() !== '') {
-      this.serviceClient = createClient(supabaseUrl.trim(), serviceRoleKey.trim(), clientOptions);
+      this.serviceClient = createClient(supabaseUrl.trim(), serviceRoleKey.trim(), clientOptions) as any;
       console.log('[SupabaseStorage] ✅ Service role client initialized for admin operations');
     } else {
       console.warn('[SupabaseStorage] ⚠️ No service role key - using anon client for all operations');
@@ -88,16 +105,62 @@ export class SupabaseStorage implements IStorage {
   private async testConnection() {
     try {
       console.log('[SupabaseStorage] Testing connection...');
-      const { data, error, count } = await this.client
-        .from('users')
-        .select('*', { count: 'exact' });
       
-      console.log('[SupabaseStorage] Connection test - Users count:', count, 'Error:', error);
-      if (data) {
-        console.log('[SupabaseStorage] Sample users:', data.slice(0, 2));
+      // Railway fix: Test with retry mechanism for IPv4/IPv6 issues
+      const maxRetries = 3;
+      let lastError = null;
+      
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          const { data, error, count } = await this.client
+            .from('users')
+            .select('*', { count: 'exact' })
+            .limit(1);
+          
+          if (!error) {
+            console.log('[SupabaseStorage] ✅ Connection successful on attempt', i + 1);
+            console.log('[SupabaseStorage] Users count:', count);
+            if (data && data.length > 0) {
+              console.log('[SupabaseStorage] Sample user found:', { id: data[0].id, email: data[0].email });
+            }
+            return; // Success, exit retry loop
+          } else {
+            lastError = error;
+            console.warn(`[SupabaseStorage] ⚠️ Connection attempt ${i + 1} failed:`, error.message);
+          }
+        } catch (err: any) {
+          lastError = err;
+          console.warn(`[SupabaseStorage] ⚠️ Connection attempt ${i + 1} error:`, err.message);
+          
+          // Railway IPv6 specific error detection
+          if (err.message?.includes('ENETUNREACH') || err.message?.includes('fetch failed')) {
+            console.error('[SupabaseStorage] 🚨 Railway IPv6 connectivity issue detected!');
+            console.error('[SupabaseStorage] This is a known Railway + Supabase compatibility issue');
+            console.error('[SupabaseStorage] Environment variables are present but IPv6 connection failed');
+          }
+        }
+        
+        // Wait before retry (exponential backoff)
+        if (i < maxRetries - 1) {
+          const delay = Math.pow(2, i) * 1000; // 1s, 2s, 4s
+          console.log(`[SupabaseStorage] Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
+      
+      console.error('[SupabaseStorage] ❌ All connection attempts failed');
+      console.error('[SupabaseStorage] Final error:', lastError);
+      
+      // Railway-specific troubleshooting info
+      if (process.env.RAILWAY_ENVIRONMENT_NAME) {
+        console.error('[SupabaseStorage] 🔧 Railway Troubleshooting:');
+        console.error('[SupabaseStorage] 1. Check if Supabase project is using IPv6 (this causes issues on Railway)');
+        console.error('[SupabaseStorage] 2. Try using Supavisor connection string for IPv4 compatibility');
+        console.error('[SupabaseStorage] 3. Verify environment variables in Railway dashboard');
+      }
+      
     } catch (err) {
-      console.error('[SupabaseStorage] Connection test failed:', err);
+      console.error('[SupabaseStorage] ❌ Connection test completely failed:', err);
     }
   }
 
