@@ -24,7 +24,9 @@ import {
 import { User, Template, EmailTemplate } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
-import FAQEditor from "@/components/FAQEditor";
+
+import DragDropEmailTemplates from "@/components/DragDropEmailTemplates";
+import DragDropLiveTemplates from "@/components/DragDropLiveTemplates";
 
 import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates, loadColorsFromDatabase } from "@/lib/templateColors";
 import { HexColorPicker } from 'react-colorful';
@@ -1562,64 +1564,22 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </Button>
                 </div>
               ) : (
-                <div className="border rounded-lg">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Genre</TableHead>
-                        <TableHead>Team</TableHead>
-                        <TableHead>Usage</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTemplates.map((template: any) => (
-                        <TableRow key={template.id}>
-                          <TableCell className="font-medium">{template.name}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{template.category}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{template.genre}</Badge>
-                          </TableCell>
-                          <TableCell>{template.concernedTeam || 'General'}</TableCell>
-                          <TableCell className="text-center">{template.usageCount || 0}</TableCell>
-                          <TableCell>
-                            <Badge variant={template.isActive ? "default" : "secondary"}>
-                              {template.isActive ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setEditingTemplate(template);
-                                  setShowTemplateForm(true);
-                                }}
-                                title="Edit Template"
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeleteTemplate(template.id)}
-                                className="text-red-600 hover:text-red-700"
-                                title="Delete Template"
-                              >
-                                <Trash className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium text-slate-700 mb-3">
+                    Live Chat Templates with Drag & Drop Ordering
+                  </h4>
+                  <DragDropLiveTemplates
+                    templates={filteredTemplates.map((t: any) => ({
+                      ...t,
+                      concernedTeam: t.concernedTeam || 'General'
+                    }))}
+                    onEdit={(template) => {
+                      setEditingTemplate(template);
+                      setIsEmailTemplate(false);
+                      setShowTemplateForm(true);
+                    }}
+                    onDelete={handleDeleteTemplate}
+                  />
                 </div>
               )}
             </div>
@@ -2033,63 +1993,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
               {emailTemplatesLoading ? (
                 <div>Loading email templates...</div>
               ) : (
-                <div className="space-y-2">
-                  {filteredEmailTemplates.map((template: any) => (
-                    <Card key={template.id} className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-medium">{template.name}</h4>
-                            <Badge variant="outline" className="text-xs">
-                              {template.genre || 'Standard'}
-                            </Badge>
-                            {template.concernedTeam && (
-                              <Badge variant="secondary" className="text-xs">
-                                {template.concernedTeam}
-                              </Badge>
-                            )}
-                          </div>
-                          {template.subject && (
-                            <p className="text-sm text-slate-600 mb-1">
-                              <strong>Subject:</strong> {template.subject}
-                            </p>
-                          )}
-                          <p className="text-sm text-slate-600">
-                            {template.content?.substring(0, 100)}...
-                          </p>
-                          {template.warningNote && (
-                            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-                              <strong>Warning:</strong> {template.warningNote}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 ml-4">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditingTemplate(template);
-                              setIsEmailTemplate(true);
-                              setShowTemplateForm(true);
-                            }}
-                            title="Edit Template"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteEmailTemplate(template.id)}
-                            className="text-red-600 hover:text-red-700"
-                            title="Delete Email Template"
-                          >
-                            <Trash className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
+                <DragDropEmailTemplates
+                  templates={filteredEmailTemplates}
+                  onEdit={(template) => {
+                    setEditingTemplate(template);
+                    setIsEmailTemplate(true);
+                    setShowTemplateForm(true);
+                  }}
+                  onDelete={handleDeleteEmailTemplate}
+                />
               )}
             </div>
           </TabsContent>
@@ -2263,12 +2175,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </CardContent>
                 </Card>
 
-                {/* FAQ Management Section */}
-                <Card>
-                  <CardContent className="p-0">
-                    <FAQEditor />
-                  </CardContent>
-                </Card>
+
 
                 {/* Template Configuration Section */}
                 <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowConfigManager(true)}>

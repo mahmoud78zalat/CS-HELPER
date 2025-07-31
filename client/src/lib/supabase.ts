@@ -17,21 +17,6 @@ if (import.meta.env.MODE === 'development') {
 const hasValidUrl = supabaseUrl && supabaseUrl.trim() !== '' && supabaseUrl !== 'undefined';
 const hasValidKey = supabaseAnonKey && supabaseAnonKey.trim() !== '' && supabaseAnonKey !== 'undefined';
 
-if (!hasValidUrl || !hasValidKey) {
-  const errorMessage = 'Missing required Supabase environment variables. Please check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your deployment environment.';
-  
-  // Only log detailed errors in development
-  if (import.meta.env.MODE === 'development') {
-    console.error('[Frontend Supabase] MISSING REQUIRED CREDENTIALS!');
-    console.error('[Frontend Supabase] URL:', hasValidUrl ? 'Present' : 'MISSING');
-    console.error('[Frontend Supabase] Key:', hasValidKey ? 'Present' : 'MISSING');
-    console.error('[Frontend Supabase] Available env vars:', Object.keys(import.meta.env).filter(key => key.includes('SUPABASE')));
-    console.error('[Frontend Supabase] Required variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY');
-  }
-  
-  throw new Error(errorMessage);
-}
-
 // Railway deployment fix: Enhanced client options with IPv4 compatibility
 const isProduction = import.meta.env.PROD;
 const railwayEnvironment = import.meta.env.VITE_RAILWAY_ENVIRONMENT || 
@@ -73,6 +58,21 @@ const clientOptions = {
     }
   })
 };
+
+if (!hasValidUrl || !hasValidKey) {
+  const errorMessage = 'Missing required Supabase environment variables. Please check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your deployment environment.';
+  
+  // Only log detailed errors in development
+  if (import.meta.env.MODE === 'development') {
+    console.error('[Frontend Supabase] MISSING REQUIRED CREDENTIALS!');
+    console.error('[Frontend Supabase] URL:', hasValidUrl ? 'Present' : 'MISSING');
+    console.error('[Frontend Supabase] Key:', hasValidKey ? 'Present' : 'MISSING');
+    console.error('[Frontend Supabase] Available env vars:', Object.keys(import.meta.env).filter(key => key.includes('SUPABASE')));
+    console.error('[Frontend Supabase] Required variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY');
+  }
+  
+  throw new Error(errorMessage);
+}
 
 console.log('[Frontend Supabase] Railway environment detected:', railwayEnvironment);
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, clientOptions);
