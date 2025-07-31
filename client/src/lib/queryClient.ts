@@ -14,32 +14,45 @@ export async function apiRequest(
   data?: unknown | undefined,
   userId?: string,
 ): Promise<Response> {
-  // Try multiple ways to get user ID
+  // Try multiple ways to get user information
   let currentUserId = userId;
+  let userEmail = '';
+  let userRole = '';
   
   if (!currentUserId) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       currentUserId = session?.user?.id;
+      userEmail = session?.user?.email || '';
     } catch (error) {
       console.warn('[apiRequest] Failed to get session, using fallback');
     }
   }
   
-  // Fallback to stored user ID in localStorage
+  // Fallback to stored user data in localStorage
   if (!currentUserId) {
     const storedUser = localStorage.getItem('current_user_id');
+    const storedEmail = localStorage.getItem('current_user_email');
+    const storedRole = localStorage.getItem('current_user_role');
     if (storedUser) {
       currentUserId = storedUser;
+      userEmail = storedEmail || '';
+      userRole = storedRole || '';
     }
   }
   
   const headers: Record<string, string> = {
     ...(data ? { "Content-Type": "application/json" } : {}),
     ...(currentUserId ? { "x-user-id": currentUserId } : {}),
+    ...(userEmail ? { "x-user-email": userEmail } : {}),
+    ...(userRole ? { "x-user-role": userRole } : {}),
   };
 
-  console.log('[apiRequest] Making request to:', url, 'with user ID:', currentUserId ? 'present' : 'missing');
+  console.log('[apiRequest] Making request to:', url, 'with user:', {
+    id: currentUserId ? 'present' : 'missing',
+    email: userEmail || 'missing',
+    role: userRole || 'missing'
+  });
 
   const res = await fetch(url, {
     method,

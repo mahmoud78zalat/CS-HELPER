@@ -42,15 +42,16 @@ export function registerRoutes(app: Express): void {
     try {
       const validatedData = insertLiveReplyTemplateSchema.parse(req.body);
       
-      // Extract user email from headers (set by authentication middleware)
-      const userEmail = req.headers['x-user-email'] || req.headers['x-replit-user-name'] || 'system';
+      // Extract user info from headers (set by authentication middleware)
+      const userId = req.headers['x-user-id'] as string;
+      const userEmail = req.headers['x-user-email'] as string;
       
-      console.log('[LiveReplyTemplates] Creating template with createdBy:', userEmail);
+      console.log('[LiveReplyTemplates] Creating template with user:', { id: userId, email: userEmail });
       
-      // Add createdBy as the user's email
+      // Use user ID as createdBy (required by schema foreign key)
       const templateData = {
         ...validatedData,
-        createdBy: userEmail as string
+        createdBy: userId || 'system'
       };
       
       const template = await storage.createLiveReplyTemplate(templateData);
@@ -138,15 +139,16 @@ export function registerRoutes(app: Express): void {
     try {
       const validatedData = insertEmailTemplateSchema.parse(req.body);
       
-      // Extract user email from headers (set by authentication middleware)
-      const userEmail = req.headers['x-user-email'] || req.headers['x-replit-user-name'] || 'system';
+      // Extract user info from headers (set by authentication middleware)
+      const userId = req.headers['x-user-id'] as string;
+      const userEmail = req.headers['x-user-email'] as string;
       
-      console.log('[EmailTemplates] Creating template with createdBy:', userEmail);
+      console.log('[EmailTemplates] Creating template with user:', { id: userId, email: userEmail });
       
-      // Add createdBy as the user's email
+      // Use user ID as createdBy (required by schema foreign key)
       const templateData = {
         ...validatedData,
-        createdBy: userEmail as string
+        createdBy: userId || 'system'
       };
       
       const template = await storage.createEmailTemplate(templateData);

@@ -510,13 +510,13 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createLiveReplyTemplate(template: InsertLiveReplyTemplate): Promise<LiveReplyTemplate> {
-    // Ensure created_by always has a value
+    // Ensure created_by always has a valid user ID
     const templateWithDefaults: any = {
       ...template,
-      createdBy: template.createdBy || 'system' // Use provided createdBy or default to 'system'
+      createdBy: template.createdBy || 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Use provided createdBy or default user ID
     };
     
-    console.log('[SupabaseStorage] Creating live reply template with createdBy:', templateWithDefaults.createdBy);
+    console.log('[SupabaseStorage] Creating live reply template with createdBy (user ID):', templateWithDefaults.createdBy);
     
     const { data, error } = await this.client
       .from('live_reply_templates')

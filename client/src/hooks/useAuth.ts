@@ -56,6 +56,8 @@ export function useAuth() {
         setIsLoading(false);
         stopHeartbeat();
         localStorage.removeItem('current_user_id');
+        localStorage.removeItem('current_user_email');
+        localStorage.removeItem('current_user_role');
         return;
       }
       
@@ -132,8 +134,10 @@ export function useAuth() {
             const userData = JSON.parse(responseText);
             console.log('[Auth] ✅ Existing user found:', userData.email, userData.role);
             
-            // Store user ID in localStorage for apiRequest function
+            // Store user information in localStorage for apiRequest function
             localStorage.setItem('current_user_id', userData.id);
+            localStorage.setItem('current_user_email', userData.email);
+            localStorage.setItem('current_user_role', userData.role);
             
             setUser(userData);
             setIsLoading(false);
