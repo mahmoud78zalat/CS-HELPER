@@ -94,9 +94,30 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch template variables
+  // Fetch template variables with explicit queryFn
   const { data: variables = [], isLoading: variablesLoading, error: variablesError } = useQuery({
-    queryKey: ['/api/template-variables'],
+    queryKey: ['template-variables'],
+    queryFn: async () => {
+      console.log('[VariableManager] Starting fetch for template variables...');
+      const response = await fetch('/api/template-variables', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      console.log('[VariableManager] Fetch response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[VariableManager] Fetch error:', errorText);
+        throw new Error(`Failed to fetch variables: ${response.status} ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('[VariableManager] Fetched variables:', data);
+      return data;
+    },
     enabled: isOpen,
   });
 
@@ -134,7 +155,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
+      queryClient.invalidateQueries({ queryKey: ['template-variables'] });
       toast({ title: "Success", description: "Variable created successfully" });
       resetForm();
       setIsAdding(false);
@@ -156,7 +177,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
+      queryClient.invalidateQueries({ queryKey: ['template-variables'] });
       toast({ title: "Success", description: "Variable updated successfully" });
       resetForm();
       setEditingId(null);
@@ -175,7 +196,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       if (!response.ok) throw new Error('Failed to delete variable');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
+      queryClient.invalidateQueries({ queryKey: ['template-variables'] });
       toast({ title: "Success", description: "Variable deleted successfully" });
     },
     onError: (error: any) => {
