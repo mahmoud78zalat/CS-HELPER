@@ -920,9 +920,17 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Email Template update mutation
   const updateEmailTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      console.log('[AdminPanel] Updating email template:', id, 'with data:', data);
-      const response = await apiRequest('PUT', `/api/email-templates/${id}`, data);
-      return response;
+      console.log('[AdminPanel] 🚀 Starting email template update:', id, 'with data:', data);
+      try {
+        const response = await apiRequest('PUT', `/api/email-templates/${id}`, data);
+        console.log('[AdminPanel] ✅ Update request successful, response:', response.status);
+        const result = await response.json();
+        console.log('[AdminPanel] 📦 Update result:', result);
+        return result;
+      } catch (error) {
+        console.error('[AdminPanel] ❌ Update request failed:', error);
+        throw error;
+      }
     },
     onSuccess: async () => {
       // Force refetch email templates immediately

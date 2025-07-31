@@ -183,8 +183,8 @@ export function registerRoutes(app: Express): void {
       // Extract user email from headers for tracking who edited the template
       const userEmail = req.headers['x-user-email'] || req.headers['x-replit-user-name'] || 'system';
       
-      console.log('[EmailTemplates] Updating template', id, 'by user:', userEmail);
-      console.log('[EmailTemplates] Update data:', req.body);
+      console.log('[EmailTemplates] 🔄 PUT REQUEST RECEIVED - Updating template', id, 'by user:', userEmail);
+      console.log('[EmailTemplates] 📝 Full update data:', JSON.stringify(req.body, null, 2));
       
       // Validate without strict schema to handle updates
       let templateData = req.body;
@@ -197,6 +197,7 @@ export function registerRoutes(app: Express): void {
       }
       
       const template = await storage.updateEmailTemplate(id, templateData);
+      console.log('[EmailTemplates] ✅ Template updated successfully:', template.name);
       res.json(template);
     } catch (error) {
       if (error instanceof z.ZodError) {
