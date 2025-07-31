@@ -429,7 +429,7 @@ export default function HorizontalGroupedTemplates({
         const targetGroupId = overContext.groupId;
         
         console.log('[DragDrop] Cross-group move - template', templateId, 'to group', targetGroupId);
-        moveTemplateToGroupMutation.mutate({ templateId, groupId: targetGroupId });
+        moveTemplateToGroupMutation.mutate({ templateId, groupId: targetGroupId || undefined });
         return;
       }
 
@@ -460,20 +460,7 @@ export default function HorizontalGroupedTemplates({
 
   return (
     <div className="space-y-6">
-      {/* Create Group Button */}
-      {onCreateGroup && (
-        <div className="flex justify-end">
-          <Button
-            onClick={onCreateGroup}
-            variant="outline"
-            size="sm"
-            className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Group
-          </Button>
-        </div>
-      )}
+      {/* Removed duplicate Create Group button - now only in AdminPanel "Manage Groups" */}
 
       <DndContext 
         sensors={sensors}

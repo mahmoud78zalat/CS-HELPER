@@ -16,14 +16,41 @@ export default function TemplatesArea() {
   // Fetch template groups instead of individual templates
   const { data: templateGroups, isLoading: groupsLoading } = useTemplateGroups();
   
+  // Enhanced search functionality - now includes group names
+  const searchQuery = searchTerm.toLowerCase();
+  
+  // Filter templates by search term including group names
+  const searchFilteredTemplates = (templates: any[]) => {
+    if (!searchTerm) return templates;
+    
+    return templates.filter(template => {
+      const content = customerData.language === 'ar' ? template.contentAr : template.contentEn;
+      
+      // Find the group this template belongs to
+      const templateGroup = templateGroups?.find((group: any) => 
+        template.groupId === group.id || 
+        (!template.groupId && template.genre === group.name)
+      );
+      
+      const groupName = templateGroup?.name?.toLowerCase() || '';
+      const groupDescription = templateGroup?.description?.toLowerCase() || '';
+      
+      return template.name.toLowerCase().includes(searchQuery) ||
+             content.toLowerCase().includes(searchQuery) ||
+             template.genre.toLowerCase().includes(searchQuery) ||
+             template.category.toLowerCase().includes(searchQuery) ||
+             groupName.includes(searchQuery) ||
+             groupDescription.includes(searchQuery);
+    });
+  };
+  
   // Still fetch all templates for search functionality
   const { data: allTemplates, isLoading: templatesLoading } = useTemplates({
-    search: searchTerm || undefined,
     isActive: true,
   });
 
   const isLoading = groupsLoading || templatesLoading;
-  const templates = allTemplates || [];
+  const templates = searchFilteredTemplates(allTemplates || []);
 
   // Group templates by their group assignment
   const groupedTemplates = templates?.reduce((acc, template) => {
@@ -44,14 +71,14 @@ export default function TemplatesArea() {
   return (
     <>
       {/* Mobile-responsive Search Bar */}
-      <div className="bg-white border-b border-slate-200 px-3 lg:px-6 py-3 lg:py-4">
+      <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 lg:px-6 py-3 lg:py-4">
         <div className="max-w-2xl">
           <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 h-4 w-4" />
             <Input
               type="text"
-              className="w-full pl-10 pr-4 py-2 lg:py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm lg:text-base"
-              placeholder="Search templates..."
+              className="w-full pl-10 pr-4 py-2 lg:py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm lg:text-base bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
+              placeholder="Search templates, groups, or descriptions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -61,16 +88,16 @@ export default function TemplatesArea() {
       </div>
 
       {/* Mobile-responsive Templates Content */}
-      <div className="flex-1 overflow-y-auto bg-slate-50 p-3 lg:p-6">
+      <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 p-3 lg:p-6">
         <div className="w-full">
           <div className="mb-4 lg:mb-6">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl lg:text-2xl font-bold text-slate-800">Reply Templates</h2>
-              <div className="text-xs bg-slate-100 px-2 py-1 rounded-full">
+              <h2 className="text-xl lg:text-2xl font-bold text-slate-800 dark:text-slate-200">Reply Templates</h2>
+              <div className="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full dark:text-slate-300">
                 {customerData.language === 'ar' ? '🇸🇦 Arabic' : '🇬🇧 English'}
               </div>
             </div>
-            <p className="text-sm lg:text-base text-slate-600">
+            <p className="text-sm lg:text-base text-slate-600 dark:text-slate-400">
               Click on any template to instantly copy it to your clipboard. Switch language in Customer Info to see templates in {customerData.language === 'ar' ? 'Arabic' : 'English'}.
             </p>
           </div>
@@ -94,7 +121,7 @@ export default function TemplatesArea() {
                 // Show search results grouped by genre when searching
                 Object.entries(groupedTemplates).map(([genre, genreTemplates]) => (
                   <div key={genre} className="template-category">
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center">
                       <div className={`w-2 h-2 rounded-full mr-3 ${getGenreColor(genre).background.replace('100', '500')}`}></div>
                       {genre} Templates
                     </h3>
@@ -118,19 +145,19 @@ export default function TemplatesArea() {
                   
                   return (
                     <div key={group.id} className="template-category">
-                      <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center">
                         <div 
-                          className="w-3 h-3 rounded-full mr-3 border-2 border-white shadow-sm"
+                          className="w-3 h-3 rounded-full mr-3 border-2 border-white dark:border-slate-800 shadow-sm"
                           style={{ backgroundColor: group.color }}
                         />
-                        <FolderOpen className="w-4 h-4 mr-2 text-slate-600" />
+                        <FolderOpen className="w-4 h-4 mr-2 text-slate-600 dark:text-slate-400" />
                         {group.name}
-                        <span className="ml-2 text-sm text-slate-500 font-normal">
+                        <span className="ml-2 text-sm text-slate-500 dark:text-slate-400 font-normal">
                           ({groupTemplates.length} templates)
                         </span>
                       </h3>
                       {group.description && (
-                        <p className="text-sm text-slate-600 mb-4 ml-9">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 ml-9">
                           {group.description}
                         </p>
                       )}

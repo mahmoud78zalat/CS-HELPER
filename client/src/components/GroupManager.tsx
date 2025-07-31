@@ -6,10 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Trash, Edit, Palette, FolderOpen, GripVertical, Plus } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Trash, Edit, Palette, FolderOpen, GripVertical, Plus, FileText, ArrowRight, Check } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTemplates } from "@/hooks/useTemplates";
 import {
   DndContext,
   closestCenter,
@@ -150,9 +154,16 @@ export default function GroupManager({
     color: "#3b82f6"
   });
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [selectedTemplates, setSelectedTemplates] = useState<string[]>([]);
   const [localGroups, setLocalGroups] = useState(groups);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch all templates for template selector
+  const { data: allTemplates = [], isLoading: templatesLoading } = useTemplates({
+    isActive: true,
+  });
 
   // Update local groups when props change
   useEffect(() => {
@@ -170,6 +181,9 @@ export default function GroupManager({
         color: editingGroup.color
       });
       setShowCreateForm(true);
+      // Load templates belonging to this group
+      const groupTemplates = allTemplates.filter(t => t.groupId === editingGroup.id);
+      setSelectedTemplates(groupTemplates.map(t => t.id));
     } else {
       setFormData({
         name: "",
@@ -177,8 +191,9 @@ export default function GroupManager({
         color: "#3b82f6"
       });
       setShowCreateForm(false);
+      setSelectedTemplates([]);
     }
-  }, [editingGroup]);
+  }, [editingGroup, allTemplates]);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -245,6 +260,28 @@ export default function GroupManager({
   };
 
 
+
+  // Template assignment mutation
+  const assignTemplatesToGroupMutation = useMutation({
+    mutationFn: async ({ templateIds, groupId }: { templateIds: string[], groupId: string }) => {
+      const promises = templateIds.map(templateId => 
+        apiRequest('PATCH', `/api/live-reply-templates/${templateId}`, { groupId })
+      );
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
+      toast({ title: "Templates assigned to group successfully" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to assign templates", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
 
   const deleteGroupMutation = useMutation({
     mutationFn: async (groupId: string) => {
@@ -412,6 +449,100 @@ export default function GroupManager({
                     ))}
                   </div>
                 </div>
+
+                {/* Template Selector */}
+                {editingGroup && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Assign Templates to Group ({selectedTemplates.length} selected)
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowTemplateSelector(!showTemplateSelector)}
+                        className="text-xs"
+                      >
+                        {showTemplateSelector ? 'Hide Templates' : 'Select Templates'}
+                        <ArrowRight className={`h-3 w-3 ml-1 transition-transform ${showTemplateSelector ? 'rotate-90' : ''}`} />
+                      </Button>
+                    </div>
+                    
+                    {showTemplateSelector && (
+                      <Card className="border border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-900/10">
+                        <CardContent className="p-3">
+                          <ScrollArea className="h-48">
+                            {templatesLoading ? (
+                              <div className="text-center py-4 text-gray-500">Loading templates...</div>
+                            ) : allTemplates.length === 0 ? (
+                              <div className="text-center py-4 text-gray-500">No templates available</div>
+                            ) : (
+                              <div className="space-y-2">
+                                {allTemplates.map((template) => (
+                                  <div
+                                    key={template.id}
+                                    className={`flex items-center gap-2 p-2 rounded border transition-all ${
+                                      selectedTemplates.includes(template.id)
+                                        ? 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 shadow-sm'
+                                        : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-700'
+                                    }`}
+                                  >
+                                    <Checkbox
+                                      checked={selectedTemplates.includes(template.id)}
+                                      onCheckedChange={(checked) => {
+                                        if (checked) {
+                                          setSelectedTemplates(prev => [...prev, template.id]);
+                                        } else {
+                                          setSelectedTemplates(prev => prev.filter(id => id !== template.id));
+                                        }
+                                      }}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                        {template.name}
+                                      </p>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        {template.category} • {template.genre}
+                                        {template.groupId && template.groupId !== editingGroup?.id && (
+                                          <span className="text-amber-600 dark:text-amber-400 ml-1">
+                                            (in another group)
+                                          </span>
+                                        )}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </ScrollArea>
+                          {selectedTemplates.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-green-200 dark:border-green-800">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => {
+                                  if (editingGroup) {
+                                    assignTemplatesToGroupMutation.mutate({
+                                      templateIds: selectedTemplates,
+                                      groupId: editingGroup.id
+                                    });
+                                  }
+                                }}
+                                disabled={assignTemplatesToGroupMutation.isPending}
+                                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Assign {selectedTemplates.length} Template{selectedTemplates.length !== 1 ? 's' : ''} to Group
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex gap-2">
                   <Button type="submit" disabled={isLoading}>
