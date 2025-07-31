@@ -76,6 +76,27 @@ const SortableFAQItem = ({ faq, isEditing, onEdit, onSave, onCancel, onDelete, g
                 </div>
                 
                 <div>
+                  <Label htmlFor={`edit-category-${faq.id}`}>Category</Label>
+                  <Select 
+                    value={faq.category} 
+                    onValueChange={(value) => onEdit({ ...faq, category: value })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">General</SelectItem>
+                      <SelectItem value="order_issues">Order Issues</SelectItem>
+                      <SelectItem value="delivery_problems">Delivery Problems</SelectItem>
+                      <SelectItem value="product_inquiry">Product Inquiry</SelectItem>
+                      <SelectItem value="technical_support">Technical Support</SelectItem>
+                      <SelectItem value="billing">Billing</SelectItem>
+                      <SelectItem value="returns">Returns & Refunds</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
                   <Label htmlFor={`edit-answer-${faq.id}`}>Answer *</Label>
                   <Textarea
                     id={`edit-answer-${faq.id}`}
@@ -352,8 +373,8 @@ export default function FAQEditor() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <CardHeader className="px-0">
+    <div className="max-w-4xl mx-auto p-6 max-h-[80vh] overflow-y-auto">
+      <CardHeader className="px-0 sticky top-0 bg-white z-10 border-b">
         <CardTitle className="flex items-center justify-between">
           <span>FAQ Management</span>
           <Button

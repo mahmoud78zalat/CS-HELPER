@@ -142,19 +142,20 @@ export default function DragDropLiveTemplates({ templates, onEdit, onDelete, onP
     })
   );
 
-  // Save order mutation
+  // Save global order mutation (universal for all users)
   const saveOrderMutation = useMutation({
     mutationFn: async (orderedItems: LiveTemplate[]) => {
-      const updates = orderedItems.map((item, index) => ({
-        id: item.id,
-        order: index
+      const ordering = orderedItems.map((item, index) => ({
+        item_id: item.id,
+        display_order: index
       }));
       
-      return apiRequest('POST', '/api/templates/reorder', { updates });
+      return apiRequest('POST', '/api/global-ordering/live_reply_templates', { ordering });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
-      toast({ title: "Live template order saved successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/global-ordering', 'live_reply_templates'] });
+      toast({ title: "Template order updated globally for all users" });
     },
     onError: (error: any) => {
       toast({ 

@@ -1390,6 +1390,35 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // Global ordering routes for universal drag-and-drop
+  app.get('/api/global-ordering/:contentType', async (req, res) => {
+    try {
+      const { contentType } = req.params;
+      console.log('[Simple Routes] Getting global ordering for:', contentType);
+      const ordering = await storage.getGlobalOrdering(contentType);
+      res.json(ordering);
+    } catch (error) {
+      console.error('[Simple Routes] Error fetching global ordering:', error);
+      res.status(500).json({ message: 'Failed to fetch global ordering' });
+    }
+  });
+
+  app.post('/api/global-ordering/:contentType', async (req, res) => {
+    try {
+      const { contentType } = req.params;
+      const { ordering } = req.body;
+      console.log('[Simple Routes] Saving global ordering for:', contentType, ordering);
+      await storage.saveGlobalOrdering(contentType, ordering);
+      res.json({ message: 'Global ordering saved successfully' });
+    } catch (error) {
+      console.error('[Simple Routes] Error saving global ordering:', error);
+      res.status(500).json({ 
+        message: 'Failed to save global ordering', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
   console.log('[Simple Routes] ✅ All routes registered successfully!');
   console.log('[Simple Routes] 📋 Total API routes available:');
   console.log('[Simple Routes]   - Live Reply Templates: /api/live-reply-templates');
@@ -1399,6 +1428,7 @@ export function registerRoutes(app: Express): void {
   console.log('[Simple Routes]   - Color Settings: /api/color-settings');
   console.log('[Simple Routes]   - FAQs: /api/faqs');
   console.log('[Simple Routes]   - User Ordering: /api/user-ordering/:contentType');
+  console.log('[Simple Routes]   - Global Ordering: /api/global-ordering/:contentType');
 
   // Note: WebSocket functionality disabled for Vercel serverless deployment
   // Real-time features can be implemented using Supabase real-time subscriptions in the client

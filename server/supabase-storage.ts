@@ -1661,6 +1661,8 @@ export class SupabaseStorage implements IStorage {
       name: data.name,
       subject: data.subject,
       content: data.content,
+      contentEn: data.content_en || data.content,
+      contentAr: data.content_ar || '',
       category: data.category,
       genre: data.genre,
       concernedTeam: data.concerned_team,
@@ -2417,41 +2419,38 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
-  // User ordering operations for drag-and-drop
-  async getUserOrdering(userId: string, contentType: string): Promise<Array<{item_id: string, display_order: number}>> {
+  // Global ordering operations for drag-and-drop (universal for all users)
+  async getGlobalOrdering(contentType: string): Promise<Array<{item_id: string, display_order: number}>> {
     try {
       const { data, error } = await this.client
-        .from('user_ordering_preferences')
+        .from('global_ordering_preferences')
         .select('item_id, display_order')
-        .eq('user_id', userId)
         .eq('content_type', contentType)
         .order('display_order', { ascending: true });
 
       if (error) {
-        console.error('[SupabaseStorage] Error fetching user ordering:', error);
+        console.error('[SupabaseStorage] Error fetching global ordering:', error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('[SupabaseStorage] Error in getUserOrdering:', error);
+      console.error('[SupabaseStorage] Error in getGlobalOrdering:', error);
       return [];
     }
   }
 
-  async saveUserOrdering(userId: string, contentType: string, ordering: Array<{item_id: string, display_order: number}>): Promise<void> {
+  async saveGlobalOrdering(contentType: string, ordering: Array<{item_id: string, display_order: number}>): Promise<void> {
     try {
       // Delete existing ordering preferences for this content type
       await this.client
-        .from('user_ordering_preferences')
+        .from('global_ordering_preferences')
         .delete()
-        .eq('user_id', userId)
         .eq('content_type', contentType);
 
       // Insert new ordering preferences
       if (ordering.length > 0) {
         const insertData = ordering.map(item => ({
-          user_id: userId,
           content_type: contentType,
           item_id: item.item_id,
           display_order: item.display_order,
@@ -2460,18 +2459,29 @@ export class SupabaseStorage implements IStorage {
         }));
 
         const { error } = await this.client
-          .from('user_ordering_preferences')
+          .from('global_ordering_preferences')
           .insert(insertData);
 
         if (error) {
-          console.error('[SupabaseStorage] Error saving user ordering:', error);
+          console.error('[SupabaseStorage] Error saving global ordering:', error);
           throw error;
         }
       }
     } catch (error) {
-      console.error('[SupabaseStorage] Error in saveUserOrdering:', error);
+      console.error('[SupabaseStorage] Error in saveGlobalOrdering:', error);
       throw error;
     }
+  }
+
+  // Legacy user ordering methods (kept for backward compatibility)
+  async getUserOrdering(userId: string, contentType: string): Promise<Array<{item_id: string, display_order: number}>> {
+    // Redirect to global ordering for consistency
+    return this.getGlobalOrdering(contentType);
+  }
+
+  async saveUserOrdering(userId: string, contentType: string, ordering: Array<{item_id: string, display_order: number}>): Promise<void> {
+    // Redirect to global ordering for consistency
+    return this.saveGlobalOrdering(contentType, ordering);
   }
 
   // Note: CRUD operations for categories, genres, concerned teams, and email categories 
