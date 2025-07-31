@@ -135,6 +135,30 @@ Development mode: Authentication streamlined with auto-admin access for developm
 
 The system is designed to be deployed on Replit with automatic environment provisioning, but can be adapted for other cloud platforms with minimal configuration changes.
 
+## Recent Changes (July 31, 2025)
+
+**FAQ System Enhancement & Database Setup (July 31, 2025 - 11:00 AM)**:
+✓ **FAQ BUTTON DISCO EFFECT FIX**: Removed constant animation - now only pulses when new FAQs are added and user hasn't viewed them
+✓ **CONDITIONAL FAQ NOTIFICATIONS**: Added localStorage tracking for last viewed FAQ time with intelligent new FAQ detection
+✓ **SMART FAQ BUTTON BEHAVIOR**: Button now changes from disco-like animation to normal appearance after user clicks FAQ
+✓ **DATABASE SETUP SCRIPT CREATED**: Complete SQL script (DATABASE_SETUP.sql) for FAQ and user ordering tables
+✓ **FAQ TABLE SCHEMA**: Full FAQ management with categories, ordering, active status, and Supabase sync tracking
+✓ **USER ORDERING SYSTEM**: Drag-and-drop preferences table with PostgreSQL functions for bulk updates
+✓ **COMPREHENSIVE PERMISSIONS**: Row Level Security policies for FAQ access and user-specific ordering preferences
+
+**Technical Implementation**:
+- Added hasNewFAQ state tracking in Header component with useEffect monitoring FAQ creation dates
+- Implemented handleFAQClick function that marks FAQs as viewed and stops animation
+- Created conditional styling that only shows pulse/ping animations when hasNewFAQ is true
+- Enhanced FAQ query with proper error handling and stale time configuration
+- Database script includes sample FAQ data, utility functions, and complete permission setup
+
+**User Experience Improvements**:
+- FAQ button now provides clear visual feedback only when relevant (new content available)  
+- Eliminates distracting constant animation that was occurring regardless of FAQ status
+- Preserves notification behavior for genuine new FAQ additions
+- Maintains responsive design for both mobile and desktop FAQ button variants
+
 ## Vercel Deployment Setup (January 24, 2025)
 
 **VERCEL DEPLOYMENT READY**:

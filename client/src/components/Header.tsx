@@ -19,6 +19,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
   const [agentName, setAgentName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [siteName, setSiteName] = useState('Customer Service Platform');
+  const [hasNewFAQ, setHasNewFAQ] = useState(false);
 
   // Fetch site content from Supabase
   const { data: siteContent } = useQuery({
@@ -34,6 +35,22 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
     },
     retry: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Check for new FAQs that user hasn't viewed
+  const { data: faqs } = useQuery({
+    queryKey: ['/api/faqs'],
+    queryFn: async () => {
+      const response = await fetch('/api/faqs', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch FAQs');
+      return await response.json();
+    },
+    retry: 1,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   // Update site name when site content is fetched
@@ -52,6 +69,24 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
       }
     }
   }, [siteContent]);
+
+  // Check for new FAQs that user hasn't viewed
+  useEffect(() => {
+    if (faqs && Array.isArray(faqs) && faqs.length > 0) {
+      const lastViewedFAQTime = localStorage.getItem('lastViewedFAQTime');
+      const lastViewedTime = lastViewedFAQTime ? new Date(lastViewedFAQTime) : new Date(0);
+      
+      // Check if there are FAQs newer than the last viewed time
+      const hasNewFAQs = faqs.some((faq: any) => {
+        const faqCreatedAt = new Date(faq.createdAt || faq.created_at);
+        return faqCreatedAt > lastViewedTime && faq.isActive !== false;
+      });
+      
+      setHasNewFAQ(hasNewFAQs);
+    } else {
+      setHasNewFAQ(false);
+    }
+  }, [faqs]);
 
   // Initialize agent name from user data
   useEffect(() => {
@@ -75,6 +110,13 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
   const handleNameSave = () => {
     setIsEditingName(false);
     localStorage.setItem('selectedAgentName', agentName);
+  };
+
+  const handleFAQClick = () => {
+    // Mark FAQs as viewed when user clicks the FAQ button
+    localStorage.setItem('lastViewedFAQTime', new Date().toISOString());
+    setHasNewFAQ(false);
+    onFAQ();
   };
 
   // Check if user is admin
@@ -159,13 +201,19 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
               </Button>
 
               <Button 
-                onClick={onFAQ}
+                onClick={handleFAQClick}
                 size="sm"
                 variant="outline"
-                className="relative bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 text-yellow-700 dark:text-yellow-400 p-2 rounded-lg hover:shadow-lg transition-all duration-200 animate-pulse"
+                className={`relative p-2 rounded-lg hover:shadow-lg transition-all duration-200 ${
+                  hasNewFAQ 
+                    ? 'bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 text-yellow-700 dark:text-yellow-400 animate-pulse' 
+                    : 'bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-200 hover:bg-slate-200 dark:hover:bg-gray-600'
+                }`}
               >
                 <HelpCircle className="w-4 h-4" />
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
+                {hasNewFAQ && (
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
+                )}
               </Button>
 
               <Button 
@@ -210,13 +258,19 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
               </Button>
 
               <Button 
-                onClick={onFAQ}
+                onClick={handleFAQClick}
                 variant="outline"
-                className="relative bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 text-yellow-700 dark:text-yellow-400 px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-200 animate-pulse"
+                className={`relative px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-200 ${
+                  hasNewFAQ 
+                    ? 'bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 text-yellow-700 dark:text-yellow-400 animate-pulse' 
+                    : 'bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-200 hover:bg-slate-200 dark:hover:bg-gray-600'
+                }`}
               >
                 <HelpCircle className="w-4 h-4 mr-2" />
                 FAQ
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
+                {hasNewFAQ && (
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
+                )}
               </Button>
 
               <Button 
