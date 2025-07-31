@@ -921,16 +921,32 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const updateEmailTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
       console.log('[AdminPanel] 🚀 Starting email template update:', id, 'with data:', data);
-      try {
-        const response = await apiRequest('PUT', `/api/email-templates/${id}`, data);
-        console.log('[AdminPanel] ✅ Update request successful, response:', response.status);
-        const result = await response.json();
-        console.log('[AdminPanel] 📦 Update result:', result);
-        return result;
-      } catch (error) {
-        console.error('[AdminPanel] ❌ Update request failed:', error);
-        throw error;
+      
+      // Retry logic for network issues
+      let lastError;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`[AdminPanel] Attempt ${attempt}/3 for template ${id}`);
+          const response = await apiRequest('PUT', `/api/email-templates/${id}`, data);
+          console.log('[AdminPanel] ✅ Update request successful, response:', response.status);
+          const result = await response.json();
+          console.log('[AdminPanel] 📦 Update result:', result);
+          return result;
+        } catch (error) {
+          console.error(`[AdminPanel] ❌ Attempt ${attempt} failed:`, error);
+          lastError = error;
+          
+          // If it's not a network error or last attempt, rethrow immediately
+          if (attempt === 3 || (error as any)?.message?.includes('400')) {
+            throw error;
+          }
+          
+          // Wait a bit before retrying
+          await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+        }
       }
+      
+      throw lastError;
     },
     onSuccess: async () => {
       // Force refetch email templates immediately
