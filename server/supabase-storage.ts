@@ -2329,7 +2329,12 @@ export class SupabaseStorage implements IStorage {
 
   async createFaq(faq: any): Promise<any> {
     try {
-      const { data, error } = await this.client
+      console.log('[SupabaseStorage] Creating new FAQ:', faq.question);
+      
+      // Use service client for RLS bypass if needed, otherwise use regular client
+      const client = this.serviceClient || this.client;
+      
+      const { data, error } = await client
         .from('faqs')
         .insert({
           question: faq.question,
@@ -2346,8 +2351,11 @@ export class SupabaseStorage implements IStorage {
 
       if (error) {
         console.error('[SupabaseStorage] Error creating FAQ:', error);
+        console.error('[SupabaseStorage] Create failed - Error code:', error.code);
         throw error;
       }
+
+      console.log('[SupabaseStorage] FAQ created successfully:', data.question);
 
       return {
         id: data.id,
@@ -2368,6 +2376,23 @@ export class SupabaseStorage implements IStorage {
 
   async updateFaq(id: string, faq: any): Promise<any> {
     try {
+      console.log('[SupabaseStorage] Updating FAQ with ID:', id);
+      console.log('[SupabaseStorage] Update data:', faq);
+      
+      // First check if the FAQ exists
+      const { data: existingFaq, error: fetchError } = await this.client
+        .from('faqs')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) {
+        console.error('[SupabaseStorage] FAQ not found for update:', fetchError);
+        throw new Error(`FAQ with ID ${id} not found`);
+      }
+
+      console.log('[SupabaseStorage] Found existing FAQ:', existingFaq.question);
+
       const updateData: any = {
         updated_at: new Date().toISOString()
       };
@@ -2379,7 +2404,12 @@ export class SupabaseStorage implements IStorage {
       if (faq.order !== undefined) updateData.order = faq.order;
       if (faq.isActive !== undefined) updateData.is_active = faq.isActive;
 
-      const { data, error } = await this.client
+      console.log('[SupabaseStorage] Applying update data:', updateData);
+
+      // Use service client for RLS bypass if needed, otherwise use regular client
+      const client = this.serviceClient || this.client;
+      
+      const { data, error } = await client
         .from('faqs')
         .update(updateData)
         .eq('id', id)
@@ -2388,8 +2418,11 @@ export class SupabaseStorage implements IStorage {
 
       if (error) {
         console.error('[SupabaseStorage] Error updating FAQ:', error);
+        console.error('[SupabaseStorage] Update failed - ID:', id, 'Error code:', error.code);
         throw error;
       }
+
+      console.log('[SupabaseStorage] FAQ updated successfully:', data.question);
 
       return {
         id: data.id,
@@ -2410,15 +2443,23 @@ export class SupabaseStorage implements IStorage {
 
   async deleteFaq(id: string): Promise<void> {
     try {
-      const { error } = await this.client
+      console.log('[SupabaseStorage] Deleting FAQ with ID:', id);
+      
+      // Use service client for RLS bypass if needed, otherwise use regular client
+      const client = this.serviceClient || this.client;
+      
+      const { error } = await client
         .from('faqs')
         .delete()
         .eq('id', id);
 
       if (error) {
         console.error('[SupabaseStorage] Error deleting FAQ:', error);
+        console.error('[SupabaseStorage] Delete failed - ID:', id, 'Error code:', error.code);
         throw error;
       }
+
+      console.log('[SupabaseStorage] FAQ deleted successfully');
     } catch (error) {
       console.error('[SupabaseStorage] Error in deleteFaq:', error);
       throw error;

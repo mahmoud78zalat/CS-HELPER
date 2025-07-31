@@ -422,7 +422,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   />
                   <div className="mt-2 p-3 bg-slate-50 rounded-md border">
                     <p className="text-sm text-slate-600 font-medium mb-1">Preview:</p>
-                    <p className="text-sm text-slate-800">{getFinalSubject() || 'No subject entered'}</p>
+                    <p className="text-sm text-slate-800">{getFinalSubject() || selectedTemplate?.name || 'No subject entered'}</p>
                   </div>
                   <Button
                     variant="link"
@@ -482,7 +482,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   <div className="space-y-6">
                     <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 py-3 rounded-r-md">
                       <h4 className="font-semibold text-slate-700 text-base mb-2">Subject:</h4>
-                      <p className="text-base text-slate-800">{getFinalSubject() || 'No subject set'}</p>
+                      <p className="text-base text-slate-800">{getFinalSubject() || selectedTemplate?.name || 'No subject set'}</p>
                     </div>
                     
                     {selectedTemplate?.warningNote && (
