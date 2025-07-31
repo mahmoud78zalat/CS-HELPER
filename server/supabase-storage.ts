@@ -3002,13 +3002,30 @@ export class SupabaseStorage implements IStorage {
 
       const acknowledgments = await this.getUserAnnouncementAcknowledgments(userId);
       
-      return announcements.filter(announcement => {
+      const unacknowledgedAnnouncements = announcements.filter(announcement => {
         const hasAcknowledged = acknowledgments.some(ack => 
           ack.announcementId === announcement.id && 
           ack.version >= (announcement.version || 1)
         );
         return !hasAcknowledged;
       });
+
+      // Map snake_case to camelCase for frontend compatibility
+      return unacknowledgedAnnouncements.map(announcement => ({
+        id: announcement.id,
+        title: announcement.title,
+        content: announcement.content,
+        isActive: announcement.is_active,
+        backgroundColor: announcement.background_color,
+        textColor: announcement.text_color,
+        borderColor: announcement.border_color,
+        priority: announcement.priority,
+        createdBy: announcement.created_by,
+        createdAt: announcement.created_at, // Keep as string since API expects string
+        updatedAt: announcement.updated_at, // Keep as string since API expects string
+        version: announcement.version,
+        lastAnnouncedAt: announcement.last_announced_at, // Keep as string since API expects string
+      }));
     } catch (error) {
       console.error('[SupabaseStorage] Error in getUnacknowledgedAnnouncements:', error);
       return [];

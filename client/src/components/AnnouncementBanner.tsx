@@ -14,11 +14,11 @@ interface Announcement {
   textColor: string;
   borderColor: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdBy?: string;
+  createdAt: string; // Changed from Date to string since API returns string
+  updatedAt: string; // Changed from Date to string since API returns string
   version?: number;
-  lastAnnouncedAt?: Date;
+  lastAnnouncedAt?: string; // Changed from Date to string since API returns string
 }
 
 const priorityIcons = {
@@ -36,7 +36,7 @@ const priorityColors = {
 };
 
 export function AnnouncementBanner() {
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAcknowledging, setIsAcknowledging] = useState(false);
@@ -51,10 +51,17 @@ export function AnnouncementBanner() {
         // Use the persistent notification API to get unacknowledged announcements
         const response = await fetch(`/api/persistent/user/${user.id}/unacknowledged-announcements`);
         if (response.ok) {
-          const announcements = await response.json();
-          if (announcements && announcements.length > 0) {
-            const firstAnnouncement = announcements[0];
-            setAnnouncement(firstAnnouncement);
+          const fetchedAnnouncements = await response.json();
+          if (fetchedAnnouncements && fetchedAnnouncements.length > 0) {
+            // Sort by priority (urgent > high > medium > low) and then by creation date
+            const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+            const sortedAnnouncements = fetchedAnnouncements.sort((a: Announcement, b: Announcement) => {
+              const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
+              if (priorityDiff !== 0) return priorityDiff;
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+            
+            setAnnouncements(sortedAnnouncements);
             setIsVisible(true);
           }
         } else {
@@ -62,32 +69,39 @@ export function AnnouncementBanner() {
           console.log('Persistent API failed, using fallback method');
           const response = await fetch(`/api/announcements/unacknowledged/${user.id}`);
           if (response.ok) {
-            const announcements = await response.json();
-            if (announcements && announcements.length > 0) {
-              const firstAnnouncement = announcements[0];
-              
-              // Check if this announcement was already acknowledged locally (version-aware)
-              const localKey = `announcement_ack_${user.id}_${firstAnnouncement.id}`;
-              const localAckData = localStorage.getItem(localKey);
-              
-              let shouldShow = true;
-              
-              if (localAckData) {
-                try {
-                  const ackData = JSON.parse(localAckData);
-                  const localVersion = ackData.version || 1;
-                  const currentVersion = firstAnnouncement.version || 1;
-                  
-                  // Show announcement if it's been re-announced (version bumped)
-                  shouldShow = currentVersion > localVersion;
-                } catch (e) {
-                  // If parsing fails, treat as not acknowledged
-                  shouldShow = true;
+            const fetchedAnnouncements = await response.json();
+            if (fetchedAnnouncements && fetchedAnnouncements.length > 0) {
+              // Filter announcements that haven't been acknowledged locally
+              const unacknowledgedAnnouncements = fetchedAnnouncements.filter((announcement: Announcement) => {
+                const localKey = `announcement_ack_${user.id}_${announcement.id}`;
+                const localAckData = localStorage.getItem(localKey);
+                
+                if (localAckData) {
+                  try {
+                    const ackData = JSON.parse(localAckData);
+                    const localVersion = ackData.version || 1;
+                    const currentVersion = announcement.version || 1;
+                    
+                    // Show announcement if it's been re-announced (version bumped)
+                    return currentVersion > localVersion;
+                  } catch (e) {
+                    // If parsing fails, treat as not acknowledged
+                    return true;
+                  }
                 }
-              }
+                return true;
+              });
               
-              if (shouldShow) {
-                setAnnouncement(firstAnnouncement);
+              if (unacknowledgedAnnouncements.length > 0) {
+                // Sort by priority and date
+                const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+                const sortedAnnouncements = unacknowledgedAnnouncements.sort((a: Announcement, b: Announcement) => {
+                  const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
+                  if (priorityDiff !== 0) return priorityDiff;
+                  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                });
+                
+                setAnnouncements(sortedAnnouncements);
                 setIsVisible(true);
               }
             }
@@ -103,57 +117,53 @@ export function AnnouncementBanner() {
     fetchUnacknowledgedAnnouncements();
   }, [user?.id]);
 
-  const handleAcknowledge = async () => {
-    if (!announcement || !user?.id || isAcknowledging) return;
+  const handleAcknowledgeAll = async () => {
+    if (!announcements.length || !user?.id || isAcknowledging) return;
 
     setIsAcknowledging(true);
 
     try {
       // Hide the modal immediately for better UX
       setIsVisible(false);
-      setAnnouncement(null);
+      
+      // Process all announcements
+      const acknowledgmentPromises = announcements.map(async (announcement) => {
+        try {
+          // Try to sync to persistent notification system first
+          const response = await fetch(`/api/persistent/announcements/${announcement.id}/acknowledge`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              userId: user.id,
+              version: announcement.version || 1
+            }),
+          });
 
-      // Try to sync to persistent notification system first
-      try {
-        const response = await fetch(`/api/persistent/announcements/${announcement.id}/acknowledge`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
+          if (response.ok) {
+            // Successfully acknowledged via persistent API
+            console.log(`Announcement ${announcement.id} acknowledged via persistent API`);
+            return { success: true, id: announcement.id };
+          } else {
+            throw new Error(`Persistent API failed with status ${response.status}`);
+          }
+        } catch (persistentError) {
+          console.warn(`Persistent API failed for ${announcement.id}, falling back to original method:`, persistentError);
+          
+          // Fallback: Store acknowledgment in localStorage immediately for instant feedback with version tracking
+          const localKey = `announcement_ack_${user.id}_${announcement.id}`;
+          const ackData = {
             userId: user.id,
-            version: announcement.version || 1
-          }),
-        });
+            announcementId: announcement.id,
+            acknowledgedAt: new Date().toISOString(),
+            version: announcement.version || 1,
+            synced: false
+          };
+          localStorage.setItem(localKey, JSON.stringify(ackData));
 
-        if (response.ok) {
-          // Successfully acknowledged via persistent API
-          console.log('Announcement acknowledged via persistent API');
-          return;
-        } else {
-          throw new Error(`Persistent API failed with status ${response.status}`);
-        }
-      } catch (persistentError) {
-        console.warn('Persistent API failed, falling back to original method:', persistentError);
-        
-        // Fallback: Store acknowledgment in localStorage immediately for instant feedback with version tracking
-        const localKey = `announcement_ack_${user.id}_${announcement.id}`;
-        const ackData = {
-          userId: user.id,
-          announcementId: announcement.id,
-          acknowledgedAt: new Date().toISOString(),
-          version: announcement.version || 1,
-          synced: false
-        };
-        localStorage.setItem(localKey, JSON.stringify(ackData));
-
-        // Try to sync to original database with retry mechanism
-        let syncAttempts = 0;
-        const maxRetries = 2;
-        
-        const attemptSync = async (): Promise<boolean> => {
+          // Try to sync to original database
           try {
-            syncAttempts++;
             const response = await fetch(`/api/announcements/${announcement.id}/acknowledge`, {
               method: 'POST',
               headers: {
@@ -166,118 +176,129 @@ export function AnnouncementBanner() {
               // Mark as synced in localStorage
               const updatedAckData = { ...ackData, synced: true };
               localStorage.setItem(localKey, JSON.stringify(updatedAckData));
-              return true;
+              return { success: true, id: announcement.id };
             } else {
               const errorText = await response.text();
               throw new Error(`Server responded with ${response.status}: ${errorText}`);
             }
           } catch (syncError) {
-            console.error(`Sync attempt ${syncAttempts} failed:`, syncError);
-            
-            if (syncAttempts < maxRetries) {
-              // Wait 1 second before retry
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              return attemptSync();
-            }
-            return false;
+            console.error(`Sync failed for announcement ${announcement.id}:`, syncError);
+            return { success: false, id: announcement.id, error: syncError };
           }
-        };
-
-        const syncSuccess = await attemptSync();
-        
-        if (!syncSuccess) {
-          toast({
-            title: "Acknowledgment recorded locally",
-            description: "Your acknowledgment was saved but couldn't sync to server after 2 attempts.",
-            variant: "default",
-          });
         }
+      });
+
+      const results = await Promise.allSettled(acknowledgmentPromises);
+      const failedAcknowledgments = results
+        .map((result, index) => ({ result, announcement: announcements[index] }))
+        .filter(({ result }) => result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.success));
+
+      if (failedAcknowledgments.length > 0) {
+        toast({
+          title: "Some acknowledgments failed",
+          description: `${failedAcknowledgments.length} out of ${announcements.length} acknowledgments couldn't be synced to server.`,
+          variant: "default",
+        });
       }
+
+      // Clear announcements array
+      setAnnouncements([]);
+      
     } catch (error) {
-      console.error('Error acknowledging announcement:', error);
+      console.error('Error acknowledging announcements:', error);
       toast({
-        title: "Error saving acknowledgment",
-        description: "There was an issue saving your acknowledgment. Please try again.",
+        title: "Error saving acknowledgments",
+        description: "There was an issue saving your acknowledgments. Please try again.",
         variant: "destructive",
       });
-      // If everything fails, show the announcement again
+      // If everything fails, show the announcements again
       setIsVisible(true);
     } finally {
       setIsAcknowledging(false);
     }
   };
 
-  if (isLoading || !announcement || !isVisible) {
+  if (isLoading || !announcements.length || !isVisible) {
     return null;
   }
 
-  const IconComponent = priorityIcons[announcement.priority];
-  const iconColorClass = priorityColors[announcement.priority];
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <Card 
-        className="mx-auto max-w-2xl w-full shadow-2xl border-2 animate-in fade-in-0 zoom-in-95 duration-300"
-        style={{
-          backgroundColor: announcement.backgroundColor,
-          color: announcement.textColor,
-          borderColor: announcement.borderColor,
-        }}
-      >
-        <div className="p-6">
-          <div className="flex items-start gap-4 mb-4">
-            <IconComponent className={`h-6 w-6 mt-0.5 flex-shrink-0 ${iconColorClass}`} />
+      <div className="mx-auto max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="space-y-4">
+          {announcements.map((announcement, index) => {
+            const IconComponent = priorityIcons[announcement.priority];
+            const iconColorClass = priorityColors[announcement.priority];
             
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-xl mb-3">{announcement.title}</h3>
-              <div 
-                className="prose prose-sm max-w-none leading-relaxed"
-                style={{ color: announcement.textColor }}
-                dangerouslySetInnerHTML={{ __html: announcement.content }}
-              />
-            </div>
+            return (
+              <Card 
+                key={announcement.id}
+                className="shadow-2xl border-2 animate-in fade-in-0 zoom-in-95 duration-300"
+                style={{
+                  backgroundColor: announcement.backgroundColor,
+                  color: announcement.textColor,
+                  borderColor: announcement.borderColor,
+                  transform: `translateY(${index * 4}px)`,
+                  opacity: 1 - (index * 0.1),
+                }}
+              >
+                <div className="p-6">
+                  <div className="flex items-start gap-4 mb-4">
+                    <IconComponent className={`h-6 w-6 mt-0.5 flex-shrink-0 ${iconColorClass}`} />
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-xl mb-3">{announcement.title}</h3>
+                      <div 
+                        className="prose prose-sm max-w-none leading-relaxed"
+                        style={{ color: announcement.textColor }}
+                        dangerouslySetInnerHTML={{ __html: announcement.content }}
+                      />
+                    </div>
 
-            <Button
-              onClick={() => setIsVisible(false)}
-              variant="ghost"
-              size="sm"
-              className="flex-shrink-0 hover:bg-white/10 p-2 opacity-60 hover:opacity-100"
-              style={{ color: announcement.textColor }}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+                    {index === 0 && (
+                      <Button
+                        onClick={() => setIsVisible(false)}
+                        variant="ghost"
+                        size="sm"
+                        className="flex-shrink-0 hover:bg-white/10 p-2 opacity-60 hover:opacity-100"
+                        style={{ color: announcement.textColor }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
 
-          <div className="flex items-center justify-between mb-4 text-xs opacity-75">
-            <span>Priority: {announcement.priority.charAt(0).toUpperCase() + announcement.priority.slice(1)}</span>
-            <span>Created: {new Date(announcement.createdAt).toLocaleDateString()}</span>
-          </div>
-
-          <div className="flex justify-end">
-            <Button
-              onClick={handleAcknowledge}
-              disabled={isAcknowledging}
-              className="px-6 py-2 font-semibold shadow-lg hover:shadow-xl transition-all"
-              style={{ 
-                backgroundColor: announcement.textColor,
-                color: announcement.backgroundColor,
-              }}
-            >
-              {isAcknowledging ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-transparent mr-2"></div>
-                  Processing...
+                  <div className="flex items-center justify-between mb-4 text-xs opacity-75">
+                    <span>Priority: {announcement.priority.charAt(0).toUpperCase() + announcement.priority.slice(1)}</span>
+                    <span>Created: {new Date(announcement.createdAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Got it
-                </>
-              )}
-            </Button>
-          </div>
+              </Card>
+            );
+          })}
         </div>
-      </Card>
+        
+        {/* Single acknowledgment button for all announcements */}
+        <div className="mt-6 flex justify-center">
+          <Button
+            onClick={handleAcknowledgeAll}
+            disabled={isAcknowledging}
+            className="px-8 py-3 font-semibold shadow-lg hover:shadow-xl transition-all bg-white text-gray-900 hover:bg-gray-100 border-2 border-gray-300"
+          >
+            {isAcknowledging ? (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-b-transparent mr-3"></div>
+                Processing...
+              </div>
+            ) : (
+              <>
+                <CheckCircle className="h-5 w-5 mr-3" />
+                Got it ({announcements.length} announcement{announcements.length > 1 ? 's' : ''})
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
