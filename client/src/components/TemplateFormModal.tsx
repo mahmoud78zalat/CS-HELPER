@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
+import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { 
   extractVariablesFromTemplate, 
   validateTemplate, 
@@ -21,6 +22,8 @@ import {
   User, Package, Settings, Clock, Check, Plus
 } from "lucide-react";
 import { Template } from "@shared/schema";
+import DraggableVariable from "./DraggableVariable";
+import DroppableTextarea from "./DroppableTextarea";
 
 interface TemplateFormModalProps {
   template?: Template | any | null; // Allow any to handle email templates
@@ -57,6 +60,7 @@ export default function TemplateFormModal({
   const [selectedCategory, setSelectedCategory] = useState<'customer' | 'order' | 'system' | 'time' | 'all'>('all');
   const [templateValidation, setTemplateValidation] = useState<{ isValid: boolean; issues: string[]; variables: string[] } | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const [activeField, setActiveField] = useState<'contentEn' | 'contentAr' | null>(null);
 
   // Fetch dynamic data for dropdowns
   const { data: templateCategories = [] } = useQuery<{id: string, name: string}[]>({
@@ -173,23 +177,44 @@ export default function TemplateFormModal({
 
   // Removed Quick Template Starters as requested
 
-  const insertVariable = (variableName: string) => {
+  const insertVariable = (variableName: string, targetField?: 'contentEn' | 'contentAr') => {
     const variable = `{${variableName.toLowerCase()}}`;
-    const textarea = document.getElementById('contentEn') as HTMLTextAreaElement;
+    const fieldToUse = targetField || activeField || 'contentEn';
+    const textareaId = fieldToUse === 'contentAr' ? 'contentAr' : 'contentEn';
+    const textarea = document.getElementById(textareaId) as HTMLTextAreaElement;
+    
     if (textarea) {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      const currentContent = formData.contentEn;
-      const currentContentAr = formData.contentAr;
+      const currentContent = fieldToUse === 'contentAr' ? formData.contentAr : formData.contentEn;
       const newContent = currentContent.substring(0, start) + variable + currentContent.substring(end);
       
-      setFormData(prev => ({ ...prev, contentEn: newContent }));
+      setFormData(prev => ({ 
+        ...prev, 
+        [fieldToUse]: newContent 
+      }));
       
       // Set cursor position after inserted variable
       setTimeout(() => {
         textarea.focus();
         textarea.setSelectionRange(start + variable.length, start + variable.length);
       }, 0);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.data.current?.type === 'variable') {
+      const variableName = active.data.current.variableName;
+      const dropTargetId = over.id as string;
+      
+      // Determine which field the variable was dropped on
+      if (dropTargetId === 'droppable-contentEn') {
+        insertVariable(variableName, 'contentEn');
+      } else if (dropTargetId === 'droppable-contentAr') {
+        insertVariable(variableName, 'contentAr');
+      }
     }
   };
 
@@ -256,13 +281,14 @@ export default function TemplateFormModal({
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="content">Content & Variables</TabsTrigger>
-              <TabsTrigger value="preview">Preview</TabsTrigger>
-            </TabsList>
+        <DndContext onDragEnd={handleDragEnd}>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="content">Content & Variables</TabsTrigger>
+                <TabsTrigger value="preview">Preview</TabsTrigger>
+              </TabsList>
             
             <TabsContent value="basic" className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -367,11 +393,14 @@ export default function TemplateFormModal({
                   {/* English Content */}
                   <div className="space-y-2">
                     <Label htmlFor="contentEn">English Content *</Label>
-                    <Textarea
+                    <DroppableTextarea
                       id="contentEn"
                       name="contentEn"
                       value={formData.contentEn}
-                      onChange={(e) => handleInputChange('contentEn', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('contentEn', e.target.value);
+                        setActiveField('contentEn');
+                      }}
                       placeholder="Write your template content in English. Use {variable_name} for dynamic content..."
                       rows={8}
                       required
@@ -383,11 +412,14 @@ export default function TemplateFormModal({
                   {!isEmailTemplate && (
                     <div className="space-y-2">
                       <Label htmlFor="contentAr">Arabic Content *</Label>
-                      <Textarea
+                      <DroppableTextarea
                         id="contentAr"
                         name="contentAr"
                         value={formData.contentAr}
-                        onChange={(e) => handleInputChange('contentAr', e.target.value)}
+                        onChange={(e) => {
+                          handleInputChange('contentAr', e.target.value);
+                          setActiveField('contentAr');
+                        }}
                         placeholder="اكتب محتوى القالب باللغة العربية. استخدم {variable_name} للمحتوى المتغير..."
                         rows={8}
                         required
@@ -449,24 +481,11 @@ export default function TemplateFormModal({
                         </CardHeader>
                         <CardContent className="space-y-2 max-h-64 overflow-y-auto">
                           {filteredVariables.map((variable) => (
-                            <div
+                            <DraggableVariable
                               key={variable.name}
-                              className="p-2 border rounded cursor-pointer hover:bg-muted"
-                              onClick={() => insertVariable(variable.name)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <Badge variant="secondary" className="text-xs">
-                                  {variable.name}
-                                </Badge>
-                                <Plus size={12} />
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {variable.description}
-                              </p>
-                              <p className="text-xs text-blue-600 mt-1">
-                                e.g., {variable.example}
-                              </p>
-                            </div>
+                              variable={variable}
+                              onInsert={insertVariable}
+                            />
                           ))}
                         </CardContent>
                       </Card>
@@ -539,6 +558,7 @@ export default function TemplateFormModal({
             </Button>
           </div>
         </form>
+        </DndContext>
       </DialogContent>
     </Dialog>
   );
