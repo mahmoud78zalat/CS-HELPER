@@ -1667,19 +1667,44 @@ export class SupabaseStorage implements IStorage {
   }
 
   private mapToSupabaseEmailTemplate(template: any): any {
-    return {
+    // Handle legacy database with 'content' field while maintaining support for new structure
+    let content = '';
+    if (template.contentEn && template.contentAr) {
+      // If both languages are provided, use English as primary content for legacy compatibility
+      content = template.contentEn;
+    } else if (template.contentEn) {
+      content = template.contentEn;
+    } else if (template.contentAr) {
+      content = template.contentAr;
+    } else if (template.content) {
+      content = template.content;
+    }
+
+    console.log('[SupabaseStorage] Mapping email template:', {
       name: template.name,
-      subject: template.subject,
-      content: template.content,
-      category: template.category,
-      genre: template.genre,
-      concerned_team: template.concernedTeam,
-      warning_note: template.warningNote,
-      variables: template.variables,
-      stage_order: template.stageOrder,
-      is_active: template.isActive,
-      usage_count: template.usageCount || 0,
-    };
+      contentEn: template.contentEn,
+      contentAr: template.contentAr,
+      mappedContent: content
+    });
+
+    // Create mapped object with only fields that exist in the database
+    const mapped: any = {};
+    mapped.name = template.name;
+    mapped.subject = template.subject;
+    mapped.content = content; // Legacy field for database compatibility
+    mapped.category = template.category;
+    mapped.genre = template.genre;
+    mapped.concerned_team = template.concernedTeam;
+    if (template.warningNote !== undefined) mapped.warning_note = template.warningNote;
+    if (template.variables !== undefined) mapped.variables = template.variables;
+    mapped.stage_order = template.stageOrder;
+    mapped.is_active = template.isActive;
+    mapped.usage_count = template.usageCount || 0;
+    
+
+
+    console.log('[SupabaseStorage] Final mapped object:', mapped);
+    return mapped;
   }
 
   private mapSupabaseSiteContent(data: any): SiteContent {

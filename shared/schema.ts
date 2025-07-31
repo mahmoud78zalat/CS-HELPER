@@ -69,12 +69,15 @@ export const emailTemplates = pgTable("email_templates", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name").notNull(),
   subject: text("subject").notNull(),
-  contentEn: text("content_en").notNull(),
-  contentAr: text("content_ar").notNull(),
+  // Legacy content field for database compatibility
+  content: text("content"),
+  // New bilingual fields (optional for backward compatibility)
+  contentEn: text("content_en"),
+  contentAr: text("content_ar"),
   category: varchar("category").notNull(),
   genre: varchar("genre").notNull(),
   concernedTeam: varchar("concerned_team").notNull(),
-  escalationLevel: varchar("escalation_level").default("Standard").notNull(),
+
   warningNote: text("warning_note"),
   variables: text("variables").array(),
   stageOrder: integer("stage_order").default(1).notNull(),
@@ -216,6 +219,17 @@ export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit
   usageCount: true,
   supabaseId: true,
   lastSyncedAt: true,
+}).extend({
+  // Custom validation: at least one content field must be provided
+  contentEn: z.string().optional(),
+  contentAr: z.string().optional(),
+  content: z.string().optional(),
+}).refine((data) => {
+  // At least one content field must be provided
+  return data.contentEn || data.contentAr || data.content;
+}, {
+  message: "At least one content field (contentEn, contentAr, or content) must be provided",
+  path: ["content"],
 });
 
 export const insertLiveReplyUsageSchema = createInsertSchema(liveReplyUsage).omit({
