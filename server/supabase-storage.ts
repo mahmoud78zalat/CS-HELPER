@@ -548,6 +548,8 @@ export class SupabaseStorage implements IStorage {
     if (template.category !== undefined) updateData.category = template.category;
     if (template.genre !== undefined) updateData.genre = template.genre;
     if (template.variables !== undefined) updateData.variables = template.variables;
+    if (template.groupId !== undefined) updateData.group_id = template.groupId;
+    if (template.groupOrder !== undefined) updateData.group_order = template.groupOrder;
     if (template.stageOrder !== undefined) updateData.stage_order = template.stageOrder;
     if (template.isActive !== undefined) updateData.is_active = template.isActive;
     

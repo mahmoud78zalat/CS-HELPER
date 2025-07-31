@@ -459,13 +459,13 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           </div>
 
           {/* Right Panel: Variable Management - ALWAYS VISIBLE */}
-          <div className="w-80 border-l border-slate-200 flex flex-col bg-blue-50">
-            <div className="p-4 border-b border-slate-200 bg-blue-100">
-              <h3 className="font-medium flex items-center gap-2 text-blue-800">
+          <div className="w-80 border-l border-slate-200 dark:border-slate-700 flex flex-col bg-blue-50 dark:bg-slate-800">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-blue-100 dark:bg-slate-700">
+              <h3 className="font-medium flex items-center gap-2 text-blue-800 dark:text-blue-200">
                 <Edit3 className="h-4 w-4" />
                 Live Template Variables
               </h3>
-              <p className="text-xs text-blue-600 mt-1">
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                 Variables found: <span className="font-semibold">{uniqueVariables.length}</span> | Updates live preview
               </p>
             </div>
@@ -483,7 +483,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                       
                       return (
                         <div key={category}>
-                          <h4 className="font-medium text-sm text-slate-700 mb-2 capitalize bg-slate-100 px-2 py-1 rounded">
+                          <h4 className="font-medium text-sm text-slate-700 dark:text-slate-300 mb-2 capitalize bg-slate-100 dark:bg-slate-600 px-2 py-1 rounded">
                             {category} Variables
                           </h4>
                           <div className="space-y-3">
@@ -492,18 +492,18 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                               const isFromCustomerData = ['customer_name', 'customername', 'CUSTOMER_NAME', 'customer_email', 'CUSTOMER_EMAIL', 'customer_phone', 'CUSTOMER_PHONE', 'customer_country', 'gender', 'GENDER', 'order_id', 'ORDER_ID', 'awb_number', 'AWB_NUMBER', 'order_status', 'ORDER_STATUS', 'tracking_number', 'item_name', 'delivery_date', 'waiting_time', 'WAITING_TIME'].includes(variable.key);
                               
                               return (
-                                <div key={variable.key} className={`${hasValue ? 'bg-green-50 border border-green-200 rounded p-2' : ''}`}>
-                                  <Label htmlFor={variable.key} className={`text-xs font-medium flex items-center gap-2 ${hasValue ? 'text-green-700' : ''}`}>
+                                <div key={variable.key} className={`${hasValue ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded p-2' : ''}`}>
+                                  <Label htmlFor={variable.key} className={`text-xs font-medium flex items-center gap-2 ${hasValue ? 'text-green-700 dark:text-green-300' : 'text-slate-700 dark:text-slate-300'}`}>
                                     {variable.label}
-                                    {hasValue && <span className="text-xs bg-green-100 px-1 rounded">✓ Active</span>}
-                                    {isFromCustomerData && <span className="text-xs bg-blue-100 px-1 rounded">Auto</span>}
+                                    {hasValue && <span className="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200 px-1 rounded">✓ Active</span>}
+                                    {isFromCustomerData && <span className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 px-1 rounded">Auto</span>}
                                   </Label>
                                   <Input
                                     id={variable.key}
                                     value={variableValues[variable.key] || ''}
                                     onChange={(e) => handleVariableChange(variable.key, e.target.value)}
                                     placeholder={variable.placeholder}
-                                    className={`text-xs mt-1 ${hasValue ? 'border-green-300 bg-white' : ''}`}
+                                    className={`text-xs mt-1 ${hasValue ? 'border-green-300 dark:border-green-600 bg-white dark:bg-slate-700' : 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100'}`}
                                   />
                                 </div>
                               );
@@ -522,7 +522,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                       
                       return (
                         <div>
-                          <h4 className="font-medium text-sm text-slate-700 mb-2 bg-orange-100 px-2 py-1 rounded">
+                          <h4 className="font-medium text-sm text-slate-700 dark:text-slate-300 mb-2 bg-orange-100 dark:bg-orange-900/30 px-2 py-1 rounded">
                             Custom Variables
                           </h4>
                           <div className="space-y-3">
@@ -530,18 +530,18 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                               const hasValue = !!variableValues[variable];
                               
                               return (
-                                <div key={variable} className={`${hasValue ? 'bg-orange-50 border border-orange-200 rounded p-2' : ''}`}>
-                                  <Label htmlFor={variable} className={`text-xs font-medium flex items-center gap-2 ${hasValue ? 'text-orange-700' : ''}`}>
+                                <div key={variable} className={`${hasValue ? 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded p-2' : ''}`}>
+                                  <Label htmlFor={variable} className={`text-xs font-medium flex items-center gap-2 ${hasValue ? 'text-orange-700 dark:text-orange-300' : 'text-slate-700 dark:text-slate-300'}`}>
                                     {variable.toUpperCase()}
-                                    {hasValue && <span className="text-xs bg-orange-100 px-1 rounded">✓ Active</span>}
-                                    <span className="text-xs bg-orange-100 px-1 rounded">Custom</span>
+                                    {hasValue && <span className="text-xs bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-200 px-1 rounded">✓ Active</span>}
+                                    <span className="text-xs bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-200 px-1 rounded">Custom</span>
                                   </Label>
                                   <Input
                                     id={variable}
                                     value={variableValues[variable] || ''}
                                     onChange={(e) => handleVariableChange(variable, e.target.value)}
                                     placeholder={`Enter ${variable.toLowerCase()} here...`}
-                                    className={`text-xs mt-1 ${hasValue ? 'border-orange-300 bg-white' : ''}`}
+                                    className={`text-xs mt-1 ${hasValue ? 'border-orange-300 dark:border-orange-600 bg-white dark:bg-slate-700' : 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100'}`}
                                   />
                                 </div>
                               );
@@ -552,9 +552,10 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                     })()}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-slate-500">
+                  <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                    <Edit3 className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No variables found</p>
-                    <p className="text-xs mt-1">Type in the email content to see variables</p>
+                    <p className="text-xs mt-1 text-slate-400 dark:text-slate-500">Type in the email content to see variables</p>
                   </div>
                 )}
               </div>
