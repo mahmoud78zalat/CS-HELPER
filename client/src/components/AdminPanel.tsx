@@ -425,18 +425,21 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     },
   });
 
-  // Templates query
-  const { data: templates = [], isLoading: templatesLoading } = useQuery<Template[]>({
-    queryKey: ['/api/templates'],
+  // Templates query with real-time updates
+  const { data: templates = [], isLoading: templatesLoading, refetch: refetchTemplates } = useQuery<Template[]>({
+    queryKey: ['/api/live-reply-templates'],
     retry: false,
+    staleTime: 5000, // 5 seconds for real-time feel
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
-  // Live reply template groups query with enhanced error handling
+  // Live reply template groups query with enhanced error handling and real-time updates
   const { data: templateGroups = [], isLoading: groupsLoading, error: groupsError, refetch: refetchGroups } = useQuery({
     queryKey: ['/api/live-reply-template-groups'],
     queryFn: async () => {
       try {
         const result = await apiRequest('GET', '/api/live-reply-template-groups');
+        console.log('[AdminPanel] Template groups fetched:', result);
         // Ensure we always return an array
         return Array.isArray(result) ? result : [];
       } catch (error) {
@@ -446,7 +449,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       }
     },
     retry: 3,
-    staleTime: 30000,
+    staleTime: 5000, // 5 seconds for real-time feel
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
     onError: (error: any) => {
       console.error('Failed to load template groups:', error);
       toast({
@@ -881,14 +885,76 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     userRoleMutation.mutate({ userId, role });
   };
 
+  // Group creation mutation for live reply templates
+  const createGroupMutation = useMutation({
+    mutationFn: async (groupData: any) => {
+      console.log('[AdminPanel] Creating group with data:', groupData);
+      
+      const response = await apiRequest('POST', '/api/live-reply-template-groups', {
+        name: groupData.name,
+        description: groupData.description || '',
+        color: groupData.color,
+        orderIndex: templateGroups.length || 0,
+        isActive: true
+      });
+      
+      return response;
+    },
+    onSuccess: async () => {
+      // Force refetch of both templates and groups
+      await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
+      await refetchGroups();
+      await refetchTemplates();
+      
+      toast({
+        title: "Success",
+        description: "Template group created successfully!",
+      });
+    },
+    onError: (error) => {
+      console.error('Group creation error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create template group",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Group update mutation
+  const updateGroupMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return await apiRequest('PUT', `/api/live-reply-template-groups/${id}`, data);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
+      await refetchGroups();
+      toast({
+        title: "Success",
+        description: "Template group updated successfully!",
+      });
+    },
+    onError: (error) => {
+      console.error('Group update error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update template group",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Live Chat Template create mutation
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData: any) => {
-      await apiRequest('POST', '/api/templates', templateData);
+      return await apiRequest('POST', '/api/live-reply-templates', templateData);
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
-      await realTimeService.broadcastTemplateUpdate();
+      // Invalidate and refetch for immediate updates
+      await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/live-reply-templates'] });
+      refetchTemplates(); // Force immediate refresh
       setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
@@ -897,6 +963,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
     },
     onError: (error) => {
+      console.error('Live template creation error:', error);
       toast({
         title: "Error",
         description: "Failed to create live chat template",
@@ -908,11 +975,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Live Chat Template update mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      await apiRequest('PUT', `/api/templates/${id}`, data);
+      return await apiRequest('PUT', `/api/live-reply-templates/${id}`, data);
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
-      await realTimeService.broadcastTemplateUpdate();
+      // Invalidate and refetch for immediate updates
+      await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/live-reply-templates'] });
+      refetchTemplates(); // Force immediate refresh
       setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
@@ -921,6 +990,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
     },
     onError: (error) => {
+      console.error('Live template update error:', error);
       toast({
         title: "Error",
         description: "Failed to update live chat template",
@@ -1026,9 +1096,34 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
 
 
-  const handleDeleteTemplate = (templateId: string) => {
+  const handleDeleteTemplate = async (templateId: string) => {
     if (confirm('Are you sure you want to delete this live chat template?')) {
-      deleteTemplateMutation.mutate(templateId);
+      try {
+        console.log('[AdminPanel] 🗑️ Deleting template:', templateId);
+        
+        // Direct API call for immediate response
+        await apiRequest('DELETE', `/api/live-reply-templates/${templateId}`);
+        
+        // Force immediate refresh of templates and groups
+        await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
+        await queryClient.refetchQueries({ queryKey: ['/api/live-reply-templates'] });
+        await refetchTemplates();
+        await refetchGroups();
+        
+        toast({
+          title: "Template deleted",
+          description: "Successfully removed from system",
+          duration: 3000,
+        });
+        
+      } catch (error) {
+        console.error('[AdminPanel] ❌ Error in handleDeleteTemplate:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete template. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   }
 
@@ -2370,6 +2465,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         }}
         editingGroup={editingGroup}
         onEditGroup={setEditingGroup}
+        onCreateGroup={createGroupMutation.mutate}
+        onUpdateGroup={updateGroupMutation.mutate}
       />
 
       </DialogContent>

@@ -219,6 +219,100 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // Live Reply Template Groups routes
+  app.get('/api/live-reply-template-groups', async (req, res) => {
+    try {
+      const groups = await storage.getLiveReplyTemplateGroups();
+      res.json(groups);
+    } catch (error) {
+      console.error("Error fetching live reply template groups:", error);
+      res.status(500).json({ message: "Failed to fetch live reply template groups" });
+    }
+  });
+
+  app.post('/api/live-reply-template-groups', async (req, res) => {
+    try {
+      const validatedData = insertLiveReplyTemplateGroupSchema.parse(req.body);
+      
+      // Extract user info from headers
+      const userId = req.headers['x-user-id'] as string;
+      const userEmail = req.headers['x-user-email'] as string;
+      
+      console.log('[LiveReplyTemplateGroups] Creating group with user:', { id: userId, email: userEmail });
+      
+      const groupData = {
+        ...validatedData,
+        createdBy: userId || userEmail || 'system'
+      };
+      
+      const group = await storage.createLiveReplyTemplateGroup(groupData);
+      res.status(201).json(group);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid group data", errors: error.errors });
+      }
+      console.error("Error creating live reply template group:", error);
+      res.status(500).json({ message: "Failed to create live reply template group" });
+    }
+  });
+
+  app.put('/api/live-reply-template-groups/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertLiveReplyTemplateGroupSchema.partial().parse(req.body);
+      
+      const group = await storage.updateLiveReplyTemplateGroup(id, validatedData);
+      if (!group) {
+        return res.status(404).json({ message: "Live reply template group not found" });
+      }
+      
+      res.json(group);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid group data", errors: error.errors });
+      }
+      console.error("Error updating live reply template group:", error);
+      res.status(500).json({ message: "Failed to update live reply template group" });
+    }
+  });
+
+  app.delete('/api/live-reply-template-groups/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteLiveReplyTemplateGroup(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Live reply template group not found" });
+      }
+      
+      res.json({ message: "Live reply template group deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting live reply template group:", error);
+      res.status(500).json({ message: "Failed to delete live reply template group" });
+    }
+  });
+
+  app.post('/api/live-reply-template-groups/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates must be an array" });
+      }
+      
+      const success = await storage.reorderLiveReplyTemplateGroups(updates);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to reorder groups" });
+      }
+      
+      res.json({ message: "Groups reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering live reply template groups:", error);
+      res.status(500).json({ message: "Failed to reorder live reply template groups" });
+    }
+  });
+
   // Email Template routes (for internal team communication)
   app.get('/api/email-templates', async (req, res) => {
     try {

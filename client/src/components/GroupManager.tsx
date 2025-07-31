@@ -46,6 +46,8 @@ interface GroupManagerProps {
   onClose: () => void;
   editingGroup?: TemplateGroup | null;
   onEditGroup?: (group: TemplateGroup | null) => void;
+  onCreateGroup?: (groupData: any) => void;
+  onUpdateGroup?: (data: { id: string; data: any }) => void;
 }
 
 const colorOptions = [
@@ -138,7 +140,9 @@ export default function GroupManager({
   isOpen, 
   onClose, 
   editingGroup, 
-  onEditGroup 
+  onEditGroup,
+  onCreateGroup,
+  onUpdateGroup
 }: GroupManagerProps) {
   const [formData, setFormData] = useState({
     name: "",
@@ -201,51 +205,45 @@ export default function GroupManager({
     },
   });
 
-  const createGroupMutation = useMutation({
-    mutationFn: async (groupData: typeof formData) => {
-      const dataToSend = {
-        ...groupData,
-        orderIndex: Math.max(...(Array.isArray(groups) ? groups : []).map(g => g.orderIndex || 0), 0) + 1
-      };
-      return apiRequest('POST', '/api/live-reply-template-groups', dataToSend);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
-      toast({ title: "Group created successfully" });
-      setShowCreateForm(false);
-      setFormData({ name: "", description: "", color: "#3b82f6" });
-    },
-    onError: (error: any) => {
-      console.error('Create group error:', error);
-      toast({ 
-        title: "Failed to create group", 
-        description: error?.message || "An error occurred",
-        variant: "destructive" 
+  // Handle create group using prop mutation
+  const handleCreateGroup = () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter a group name",
+        variant: "destructive"
       });
-    },
-  });
+      return;
+    }
 
-  const updateGroupMutation = useMutation({
-    mutationFn: async (groupData: typeof formData) => {
-      if (!editingGroup) throw new Error("No group selected for editing");
-      return apiRequest('PUT', `/api/live-reply-template-groups/${editingGroup.id}`, groupData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
-      toast({ title: "Group updated successfully" });
+    const groupData = {
+      ...formData,
+      orderIndex: Math.max(...(Array.isArray(groups) ? groups : []).map(g => g.orderIndex || 0), 0) + 1
+    };
+
+    if (onCreateGroup) {
+      onCreateGroup(groupData);
       setShowCreateForm(false);
-      onEditGroup?.(null);
       setFormData({ name: "", description: "", color: "#3b82f6" });
-    },
-    onError: (error: any) => {
-      console.error('Update group error:', error);
-      toast({ 
-        title: "Failed to update group", 
-        description: error?.message || "An error occurred",
-        variant: "destructive" 
+    }
+  };
+
+  // Handle update group using prop mutation
+  const handleUpdateGroup = () => {
+    if (!editingGroup) return;
+    
+    if (onUpdateGroup) {
+      onUpdateGroup({
+        id: editingGroup.id,
+        data: formData
       });
-    },
-  });
+      setShowCreateForm(false);
+      setFormData({ name: "", description: "", color: "#3b82f6" });
+      onEditGroup?.(null);
+    }
+  };
+
+
 
   const deleteGroupMutation = useMutation({
     mutationFn: async (groupId: string) => {
@@ -296,9 +294,9 @@ export default function GroupManager({
     }
 
     if (editingGroup) {
-      updateGroupMutation.mutate(formData);
+      handleUpdateGroup();
     } else {
-      createGroupMutation.mutate(formData);
+      handleCreateGroup();
     }
   };
 
@@ -315,9 +313,7 @@ export default function GroupManager({
     onClose();
   };
 
-  const isLoading = createGroupMutation.isPending || 
-                   updateGroupMutation.isPending || 
-                   deleteGroupMutation.isPending ||
+  const isLoading = deleteGroupMutation.isPending ||
                    reorderGroupsMutation.isPending;
 
   return (

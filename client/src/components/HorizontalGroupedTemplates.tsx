@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash, GripHorizontal, Eye, Plus, FolderOpen, Palette } from "lucide-react";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay, useDroppable } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -147,8 +147,8 @@ const SortableTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
   );
 };
 
-// Sortable Group Component
-const SortableGroupComponent = ({ group, onEditGroup, children }: {
+// Droppable Group Component
+const DroppableGroupComponent = ({ group, onEditGroup, children }: {
   group: TemplateGroup;
   onEditGroup?: (group: TemplateGroup) => void;
   children: React.ReactNode;
@@ -156,11 +156,15 @@ const SortableGroupComponent = ({ group, onEditGroup, children }: {
   const {
     attributes,
     listeners,
-    setNodeRef,
+    setNodeRef: setSortableRef,
     transform,
     transition,
     isDragging,
   } = useSortable({ id: `group-${group.id}` });
+
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: `group-${group.id}`,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -169,8 +173,16 @@ const SortableGroupComponent = ({ group, onEditGroup, children }: {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={isDragging ? 'z-50' : ''}>
-      <Card className="mb-4 bg-slate-50 dark:bg-slate-900/50 border-l-4 border-t-0 border-r-0 border-b-0" style={{ borderLeftColor: group.color }}>
+    <div ref={setSortableRef} style={style} className={isDragging ? 'z-50' : ''}>
+      <Card 
+        ref={setDroppableRef}
+        className={`mb-4 border-l-4 border-t-0 border-r-0 border-b-0 transition-all duration-200 ${
+          isOver 
+            ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600 shadow-lg scale-[1.02]' 
+            : 'bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800/50'
+        }`} 
+        style={{ borderLeftColor: group.color }}
+      >
         <CardHeader className="p-3 pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -189,6 +201,11 @@ const SortableGroupComponent = ({ group, onEditGroup, children }: {
                 <Badge variant="outline" className="text-xs px-1.5 py-0.5 h-auto">
                   {group.templates.length}
                 </Badge>
+                {isOver && (
+                  <Badge className="text-xs px-1.5 py-0.5 h-auto bg-blue-600 text-white">
+                    Drop Here
+                  </Badge>
+                )}
               </div>
             </div>
             
@@ -212,9 +229,14 @@ const SortableGroupComponent = ({ group, onEditGroup, children }: {
           )}
         </CardHeader>
         
-        <CardContent className="p-3 pt-0">
+        <CardContent className={`p-3 pt-0 transition-all duration-200 ${isOver ? 'bg-blue-25 dark:bg-blue-900/10' : ''}`}>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 dark:scrollbar-thumb-slate-600 dark:scrollbar-track-slate-800">
             {children}
+            {group.templates.length === 0 && (
+              <div className="flex items-center justify-center h-20 w-full border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 dark:text-slate-400 text-sm">
+                Drop templates here or create new ones
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -325,6 +347,28 @@ export default function HorizontalGroupedTemplates({
     },
   });
 
+  // Move template to group mutation
+  const moveTemplateToGroupMutation = useMutation({
+    mutationFn: async ({ templateId, groupId }: { templateId: string; groupId?: string }) => {
+      return apiRequest('PUT', `/api/live-reply-templates/${templateId}`, { 
+        groupId: groupId || undefined,
+        groupOrder: 0 // Reset group order when moving to new group
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
+      toast({ title: "Template moved to group successfully" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to move template", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -342,6 +386,16 @@ export default function HorizontalGroupedTemplates({
         setGroupedData(newGroupOrder);
         saveGroupOrderMutation.mutate(newGroupOrder);
       }
+      return;
+    }
+
+    // Handle dropping template on group header (move to group)
+    if (!active.id.toString().startsWith('group-') && over.id.toString().startsWith('group-')) {
+      const templateId = active.id.toString();
+      const targetGroupId = over.id.toString().replace('group-', '');
+      
+      console.log('[DragDrop] Moving template', templateId, 'to group', targetGroupId);
+      moveTemplateToGroupMutation.mutate({ templateId, groupId: targetGroupId });
       return;
     }
 
@@ -364,29 +418,41 @@ export default function HorizontalGroupedTemplates({
     };
 
     const activeContext = findTemplateContext(active.id);
-    const overContext = findTemplateContext(over.id);
 
-    if (!activeContext || !overContext) return;
+    // If dropping template on another template, check if it's cross-group movement
+    if (activeContext && !over.id.toString().startsWith('group-')) {
+      const overContext = findTemplateContext(over.id);
+      
+      if (overContext && activeContext.groupId !== overContext.groupId) {
+        // Cross-group movement: move template to the target group
+        const templateId = active.id.toString();
+        const targetGroupId = overContext.groupId;
+        
+        console.log('[DragDrop] Cross-group move - template', templateId, 'to group', targetGroupId);
+        moveTemplateToGroupMutation.mutate({ templateId, groupId: targetGroupId });
+        return;
+      }
 
-    // Same context reordering
-    if (activeContext.type === overContext.type && activeContext.groupId === overContext.groupId) {
-      if (activeContext.type === 'ungrouped') {
-        const newUngrouped = arrayMove(ungroupedTemplates, activeContext.index, overContext.index);
-        setUngroupedTemplates(newUngrouped);
-        saveTemplateOrderMutation.mutate({ orderedTemplates: newUngrouped });
-      } else {
-        // Grouped templates reordering
-        const group = groupedData.find(g => g.id === activeContext.groupId);
-        if (group) {
-          const newTemplates = arrayMove(group.templates, activeContext.index, overContext.index);
-          const newGroupedData = groupedData.map(g => 
-            g.id === activeContext.groupId ? { ...g, templates: newTemplates } : g
-          );
-          setGroupedData(newGroupedData);
-          saveTemplateOrderMutation.mutate({ 
-            groupId: activeContext.groupId || undefined, 
-            orderedTemplates: newTemplates 
-          });
+      // Same group reordering
+      if (activeContext && overContext && activeContext.type === overContext.type && activeContext.groupId === overContext.groupId) {
+        if (activeContext.type === 'ungrouped') {
+          const newUngrouped = arrayMove(ungroupedTemplates, activeContext.index, overContext.index);
+          setUngroupedTemplates(newUngrouped);
+          saveTemplateOrderMutation.mutate({ orderedTemplates: newUngrouped });
+        } else {
+          // Grouped templates reordering
+          const group = groupedData.find(g => g.id === activeContext.groupId);
+          if (group) {
+            const newTemplates = arrayMove(group.templates, activeContext.index, overContext.index);
+            const newGroupedData = groupedData.map(g => 
+              g.id === activeContext.groupId ? { ...g, templates: newTemplates } : g
+            );
+            setGroupedData(newGroupedData);
+            saveTemplateOrderMutation.mutate({ 
+              groupId: activeContext.groupId || undefined, 
+              orderedTemplates: newTemplates 
+            });
+          }
         }
       }
     }
@@ -417,7 +483,7 @@ export default function HorizontalGroupedTemplates({
         {/* Grouped Templates */}
         <SortableContext items={groupedData.map(group => `group-${group.id}`)} strategy={horizontalListSortingStrategy}>
           {groupedData.map((group) => (
-            <SortableGroupComponent 
+            <DroppableGroupComponent 
               key={group.id} 
               group={group} 
               onEditGroup={onEditGroup}
@@ -433,7 +499,7 @@ export default function HorizontalGroupedTemplates({
                   />
                 ))}
               </SortableContext>
-            </SortableGroupComponent>
+            </DroppableGroupComponent>
           ))}
         </SortableContext>
 
