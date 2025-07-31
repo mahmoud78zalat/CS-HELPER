@@ -157,7 +157,16 @@ export function registerRoutes(app: Express): void {
 
   app.post('/api/live-reply-template-groups', async (req, res) => {
     try {
+      console.log('[LiveReplyTemplateGroups] POST request received');
+      console.log('[LiveReplyTemplateGroups] Request body:', req.body);
+      console.log('[LiveReplyTemplateGroups] Request headers:', {
+        'x-user-id': req.headers['x-user-id'],
+        'x-user-email': req.headers['x-user-email'],
+        'content-type': req.headers['content-type']
+      });
+      
       const validatedData = insertLiveReplyTemplateGroupSchema.parse(req.body);
+      console.log('[LiveReplyTemplateGroups] Validation successful, data:', validatedData);
       
       // Extract user info from headers
       const userId = req.headers['x-user-id'] as string;
@@ -165,19 +174,26 @@ export function registerRoutes(app: Express): void {
       
       console.log('[LiveReplyTemplateGroups] Creating group with user:', { id: userId, email: userEmail });
       
-      const groupData = {
-        ...validatedData,
-        createdBy: userId || userEmail || 'system'
-      };
+      // Note: Not adding createdBy field since it's not in the schema
+      const groupData = validatedData;
+      
+      console.log('[LiveReplyTemplateGroups] Final group data for storage:', groupData);
       
       const group = await storage.createLiveReplyTemplateGroup(groupData);
+      console.log('[LiveReplyTemplateGroups] Group created successfully:', group);
+      
       res.status(201).json(group);
     } catch (error) {
+      console.error('[LiveReplyTemplateGroups] Error occurred:', error);
+      console.log('[LiveReplyTemplateGroups] Error stack:', error?.stack);
+      
       if (error instanceof z.ZodError) {
+        console.log('[LiveReplyTemplateGroups] Zod validation error:', error.errors);
         return res.status(400).json({ message: "Invalid group data", errors: error.errors });
       }
-      console.error("Error creating live reply template group:", error);
-      res.status(500).json({ message: "Failed to create live reply template group" });
+      
+      console.error("[LiveReplyTemplateGroups] Storage error:", error);
+      res.status(500).json({ message: "Failed to create live reply template group", error: error?.message });
     }
   });
 

@@ -889,18 +889,36 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const createGroupMutation = useMutation({
     mutationFn: async (groupData: any) => {
       console.log('[AdminPanel] Creating group with data:', groupData);
+      console.log('[AdminPanel] Current user context:', currentUser);
+      console.log('[AdminPanel] Template groups length:', templateGroups.length);
       
-      const response = await apiRequest('POST', '/api/live-reply-template-groups', {
+      const requestPayload = {
         name: groupData.name,
         description: groupData.description || '',
         color: groupData.color,
         orderIndex: templateGroups.length || 0,
         isActive: true
-      });
+      };
       
-      return response;
+      console.log('[AdminPanel] Request payload:', requestPayload);
+      
+      try {
+        const response = await apiRequest('POST', '/api/live-reply-template-groups', requestPayload);
+        console.log('[AdminPanel] Group creation response:', response);
+        return response;
+      } catch (error) {
+        console.error('[AdminPanel] Group creation apiRequest failed:', error);
+        console.log('[AdminPanel] Error details:', {
+          message: error?.message,
+          status: error?.status,
+          response: error?.response
+        });
+        throw error;
+      }
     },
     onSuccess: async () => {
+      console.log('[AdminPanel] Group creation successful, invalidating queries...');
+      
       // Force refetch of both templates and groups
       await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
@@ -913,10 +931,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
     },
     onError: (error) => {
-      console.error('Group creation error:', error);
+      console.error('[AdminPanel] Group creation mutation error:', error);
+      console.log('[AdminPanel] Error type:', typeof error);
+      console.log('[AdminPanel] Error keys:', Object.keys(error || {}));
+      
       toast({
         title: "Error",
-        description: "Failed to create template group",
+        description: `Failed to create template group: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     },

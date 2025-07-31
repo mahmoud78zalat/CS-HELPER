@@ -54,12 +54,33 @@ export async function apiRequest(
     role: userRole || 'missing'
   });
 
+  if (method === 'POST' && url.includes('/api/live-reply-template-groups')) {
+    console.log('[apiRequest] Template group creation - detailed debug:');
+    console.log('[apiRequest] Headers:', headers);
+    console.log('[apiRequest] Body data:', data);
+    console.log('[apiRequest] Body JSON:', data ? JSON.stringify(data) : 'no body');
+  }
+
   const res = await fetch(url, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
+
+  if (method === 'POST' && url.includes('/api/live-reply-template-groups')) {
+    console.log('[apiRequest] Template group response status:', res.status);
+    console.log('[apiRequest] Template group response headers:', Object.fromEntries(res.headers.entries()));
+    
+    // Clone response to read body without consuming it
+    const clonedRes = res.clone();
+    try {
+      const responseText = await clonedRes.text();
+      console.log('[apiRequest] Template group response body:', responseText);
+    } catch (e) {
+      console.log('[apiRequest] Could not read response body:', e);
+    }
+  }
 
   await throwIfResNotOk(res);
   return res;
