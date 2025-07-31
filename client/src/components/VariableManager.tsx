@@ -10,6 +10,7 @@ import { Plus, X, Edit2, Save, Trash2, Variable, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import DragDropVariableManager from "./DragDropVariableManager";
 
 interface TemplateVariable {
   id: string;
@@ -19,7 +20,8 @@ interface TemplateVariable {
   example: string;
   defaultValue?: string;
   isSystem: boolean;
-  createdBy: string;
+  order?: number;
+  createdBy?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -448,70 +450,26 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
             </div>
           )}
 
-          {/* Variables List */}
+          {/* Variables List with Drag-and-Drop */}
           {!variablesLoading && (
-            <Card>
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  {(variables as TemplateVariable[] || []).map((variable: TemplateVariable) => (
-                    <div key={variable.id} className="flex items-start justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <code className="bg-slate-100 px-2 py-1 rounded text-sm font-mono">
-                            {`{${variable.name}}`}
-                          </code>
-                          <Badge variant="outline" className={`text-xs ${getCategoryColor(variable.category)}`}>
-                            {variable.category}
-                          </Badge>
-                          {variable.isSystem && (
-                            <Badge variant="secondary" className="text-xs">
-                              System
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-slate-700 mb-1">{variable.description}</p>
-                        <div className="text-xs text-slate-500">
-                          <span><strong>Example:</strong> {variable.example}</span>
-                          {variable.defaultValue && (
-                            <span className="ml-4"><strong>Default:</strong> {variable.defaultValue}</span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-1 ml-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => startEditing(variable)}
-                          disabled={variable.isSystem}
-                        >
-                          <Edit2 className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => deleteVariable(variable.id)}
-                          className="text-red-600 hover:bg-red-50"
-                          disabled={variable.isSystem || deleteVariableMutation.isPending}
-                        >
-                          {deleteVariableMutation.isPending ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3 w-3" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {(!variables || (variables as TemplateVariable[]).length === 0) && (
-                  <p className="text-sm text-slate-500 text-center py-8">
-                    No template variables found. Add some above.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Template Variables (Drag to Reorder)</h3>
+              {(variables as TemplateVariable[] || []).length > 0 ? (
+                <DragDropVariableManager
+                  variables={variables as TemplateVariable[]}
+                  onEdit={startEditing}
+                  onDelete={(variable) => deleteVariable(variable.id)}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <p className="text-sm text-slate-500">
+                      No template variables found. Add some above.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
 
           {!variablesLoading && (

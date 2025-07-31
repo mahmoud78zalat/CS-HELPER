@@ -114,6 +114,31 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // Live reply template reorder endpoint for drag-and-drop functionality
+  app.post('/api/live-reply-templates/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[LiveReplyTemplates] Reordering live reply templates:', updates);
+
+      // Update each template's order
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateLiveReplyTemplate(update.id, { stageOrder: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "Live reply template order updated successfully" });
+    } catch (error) {
+      console.error("Error reordering live reply templates:", error);
+      res.status(500).json({ message: "Failed to reorder live reply templates" });
+    }
+  });
+
   // Email Template routes (for internal team communication)
   app.get('/api/email-templates', async (req, res) => {
     try {
@@ -239,6 +264,31 @@ export function registerRoutes(app: Express): void {
     } catch (error) {
       console.error("Error recording email template usage:", error);
       res.status(500).json({ message: "Failed to record email template usage" });
+    }
+  });
+
+  // Email template reorder endpoint for drag-and-drop functionality
+  app.post('/api/email-templates/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[EmailTemplates] Reordering email templates:', updates);
+
+      // Update each template's order
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateEmailTemplate(update.id, { stageOrder: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "Email template order updated successfully" });
+    } catch (error) {
+      console.error("Error reordering email templates:", error);
+      res.status(500).json({ message: "Failed to reorder email templates" });
     }
   });
 
@@ -1173,6 +1223,31 @@ export function registerRoutes(app: Express): void {
     } catch (error) {
       console.error('[API] Error deleting template variable category:', error);
       res.status(500).json({ message: 'Failed to delete template variable category' });
+    }
+  });
+
+  // Template variables reorder endpoint for drag-and-drop functionality
+  app.post('/api/template-variables/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[TemplateVariables] Reordering template variables:', updates);
+
+      // Update each variable's order
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateTemplateVariable(update.id, { order: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "Template variables order updated successfully" });
+    } catch (error) {
+      console.error("Error reordering template variables:", error);
+      res.status(500).json({ message: "Failed to reorder template variables" });
     }
   });
 

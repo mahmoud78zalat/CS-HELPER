@@ -1767,8 +1767,7 @@ export class SupabaseStorage implements IStorage {
       
       let query = this.client
         .from('template_variables')
-        .select('*')
-        .order('name', { ascending: true });
+        .select('*');
 
       if (filters?.category) {
         query = query.eq('category', filters.category);
@@ -1780,7 +1779,8 @@ export class SupabaseStorage implements IStorage {
         query = query.eq('is_system', filters.isSystem);
       }
 
-      const { data, error } = await query;
+      // Order by manual order first, then by name for consistency
+      const { data, error } = await query.order('order', { ascending: true }).order('name', { ascending: true });
 
       if (error) {
         console.error('[SupabaseStorage] Error fetching template variables:', error);
@@ -1795,6 +1795,7 @@ export class SupabaseStorage implements IStorage {
         example: item.example,
         defaultValue: item.default_value,
         isSystem: item.is_system,
+        order: item.order || 0,
         createdBy: item.created_by,
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at)

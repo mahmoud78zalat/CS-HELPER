@@ -1,38 +1,38 @@
 import { useState } from "react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { arrayMove } from "@dnd-kit/sortable";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash, GripHorizontal, Code } from "lucide-react";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { Badge } from "@/components/ui/badge";
+import { GripVertical, Edit2, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 
-interface Variable {
+interface TemplateVariable {
   id: string;
   name: string;
-  value: string;
+  description: string;
   category: string;
-  description?: string;
+  example: string;
+  defaultValue?: string;
+  isSystem: boolean;
   order?: number;
-  isActive: boolean;
+  createdBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-interface DragDropVariableManagerProps {
-  variables: Variable[];
-  onEdit: (variable: Variable) => void;
-  onDelete: (variableId: string) => void;
+interface SortableVariableItemProps {
+  variable: TemplateVariable;
+  onEdit: (variable: TemplateVariable) => void;
+  onDelete: (variable: TemplateVariable) => void;
 }
 
-// Sortable Variable Item Component
-const SortableVariableItem = ({ variable, onEdit, onDelete }: {
-  variable: Variable;
-  onEdit: (variable: Variable) => void;
-  onDelete: (variableId: string) => void;
-}) => {
+function SortableVariableItem({ variable, onEdit, onDelete }: SortableVariableItemProps) {
   const {
     attributes,
     listeners,
@@ -48,92 +48,68 @@ const SortableVariableItem = ({ variable, onEdit, onDelete }: {
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      'customer': 'bg-blue-50 text-blue-700 border-blue-200',
-      'order': 'bg-green-50 text-green-700 border-green-200',
-      'system': 'bg-purple-50 text-purple-700 border-purple-200',
-      'time': 'bg-orange-50 text-orange-700 border-orange-200',
-      'default': 'bg-gray-50 text-gray-700 border-gray-200'
-    };
-    return colors[category.toLowerCase()] || colors.default;
-  };
-
   return (
-    <Card 
-      ref={setNodeRef} 
-      style={style} 
-      className={`${isDragging ? 'shadow-lg z-50' : ''} ${!variable.isActive ? 'opacity-60' : ''} hover:shadow-md transition-shadow`}
-    >
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <div 
-            {...attributes} 
-            {...listeners} 
-            className="cursor-grab active:cursor-grabbing mt-2 p-1 hover:bg-gray-100 rounded"
-          >
-            <GripHorizontal className="h-4 w-4 text-gray-400" />
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Code className="h-4 w-4 text-gray-500" />
-                  <h4 className="font-mono text-sm font-medium text-slate-800">
-                    {`{{${variable.name}}}`}
-                  </h4>
-                  {!variable.isActive && (
-                    <Badge variant="secondary" className="text-xs">Disabled</Badge>
-                  )}
-                </div>
-                
-                <div className="mb-2">
-                  <Badge className={`text-xs ${getCategoryColor(variable.category)}`}>
-                    {variable.category}
-                  </Badge>
-                </div>
-                
-                {variable.description && (
-                  <p className="text-xs text-slate-600 mb-2">{variable.description}</p>
+    <div ref={setNodeRef} style={style} className="touch-none">
+      <Card className={`transition-all duration-200 ${isDragging ? 'shadow-lg z-50' : ''}`}>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            {/* Drag Handle */}
+            <div
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <GripVertical className="h-5 w-5" />
+            </div>
+
+            {/* Variable Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-medium text-sm truncate">{variable.name}</h3>
+                {variable.isSystem && (
+                  <Badge variant="secondary" className="text-xs">System</Badge>
                 )}
-                
-                <div className="bg-gray-50 rounded px-2 py-1">
-                  <p className="text-xs font-mono text-gray-700 line-clamp-1">
-                    {variable.value && typeof variable.value === 'string' && variable.value.length > 0 ? 
-                      variable.value : 
-                      'No value set'
-                    }
-                  </p>
-                </div>
               </div>
-              
-              <div className="flex gap-1 ml-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEdit(variable)}
-                  title="Edit Variable"
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onDelete(variable.id)}
-                  className="text-red-600 hover:text-red-700"
-                  title="Delete Variable"
-                >
-                  <Trash className="h-3 w-3" />
-                </Button>
+              <p className="text-xs text-gray-600 mb-2 line-clamp-2">{variable.description}</p>
+              <div className="flex items-center gap-2 text-xs">
+                <Badge variant="outline" className="text-xs">{variable.category}</Badge>
+                <span className="text-gray-500">Example: {variable.example}</span>
               </div>
             </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(variable)}
+                className="h-8 w-8 p-0"
+              >
+                <Edit2 className="h-4 w-4" />
+              </Button>
+              {!variable.isSystem && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(variable)}
+                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
-};
+}
+
+interface DragDropVariableManagerProps {
+  variables: TemplateVariable[];
+  onEdit: (variable: TemplateVariable) => void;
+  onDelete: (variable: TemplateVariable) => void;
+}
 
 export default function DragDropVariableManager({ variables, onEdit, onDelete }: DragDropVariableManagerProps) {
   const [items, setItems] = useState(variables);
@@ -149,7 +125,7 @@ export default function DragDropVariableManager({ variables, onEdit, onDelete }:
 
   // Save order mutation
   const saveOrderMutation = useMutation({
-    mutationFn: async (orderedItems: Variable[]) => {
+    mutationFn: async (orderedItems: TemplateVariable[]) => {
       const updates = orderedItems.map((item, index) => ({
         id: item.id,
         order: index
@@ -170,6 +146,18 @@ export default function DragDropVariableManager({ variables, onEdit, onDelete }:
     },
   });
 
+  // Update items when variables prop changes
+  useState(() => {
+    if (variables.length > 0) {
+      // Ensure variables have order property
+      const variablesWithOrder = variables.map((v, index) => ({ 
+        ...v, 
+        order: v.order !== undefined ? v.order : index 
+      }));
+      setItems(variablesWithOrder);
+    }
+  });
+
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
 
@@ -184,13 +172,6 @@ export default function DragDropVariableManager({ variables, onEdit, onDelete }:
       saveOrderMutation.mutate(newItems);
     }
   };
-
-  // Update items when variables prop changes
-  useState(() => {
-    if (variables.length > 0) {
-      setItems(variables);
-    }
-  });
 
   return (
     <DndContext 

@@ -353,6 +353,7 @@ export const templateVariables = pgTable("template_variables", {
   example: text("example").notNull(),
   defaultValue: text("default_value"),
   isSystem: boolean("is_system").default(false).notNull(),
+  order: integer("order").default(0).notNull(), // For drag-and-drop ordering
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
