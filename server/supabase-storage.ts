@@ -3,7 +3,9 @@ import { railwaySupabase } from './railway-supabase-client';
 import type { 
   User, 
   UpsertUser,
-  LiveReplyTemplate, 
+  LiveReplyTemplate,
+  LiveReplyTemplateGroup,
+  InsertLiveReplyTemplateGroup,
   EmailTemplate, 
   InsertLiveReplyTemplate,
   InsertEmailTemplate,
@@ -822,6 +824,154 @@ export class SupabaseStorage implements IStorage {
     }
 
     return data?.length || 0;
+  }
+
+  // Live Reply Template Group operations
+  async getLiveReplyTemplateGroups(): Promise<LiveReplyTemplateGroup[]> {
+    const { data, error } = await this.client
+      .from('live_reply_template_groups')
+      .select('*')
+      .order('order_index', { ascending: true });
+
+    if (error) {
+      console.error('[SupabaseStorage] Error fetching live reply template groups:', error);
+      throw new Error(`Failed to fetch live reply template groups: ${error.message}`);
+    }
+
+    return data?.map((group: any) => ({
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      color: group.color,
+      isActive: group.is_active,
+      orderIndex: group.order_index,
+      createdAt: new Date(group.created_at),
+      updatedAt: new Date(group.updated_at),
+    })) || [];
+  }
+
+  async getLiveReplyTemplateGroup(id: string): Promise<LiveReplyTemplateGroup | undefined> {
+    const { data, error } = await this.client
+      .from('live_reply_template_groups')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return undefined; // Not found
+      console.error('[SupabaseStorage] Error fetching live reply template group:', error);
+      throw new Error(`Failed to fetch live reply template group: ${error.message}`);
+    }
+
+    return data ? {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      color: data.color,
+      isActive: data.is_active,
+      orderIndex: data.order_index,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+    } : undefined;
+  }
+
+  async createLiveReplyTemplateGroup(group: InsertLiveReplyTemplateGroup): Promise<LiveReplyTemplateGroup> {
+    // Find next order index if not provided
+    if (group.orderIndex === undefined) {
+      const { data: maxOrderData } = await this.client
+        .from('live_reply_template_groups')
+        .select('order_index')
+        .order('order_index', { ascending: false })
+        .limit(1);
+
+      group.orderIndex = (maxOrderData?.[0]?.order_index || 0) + 1;
+    }
+
+    const { data, error } = await this.client
+      .from('live_reply_template_groups')
+      .insert({
+        name: group.name,
+        description: group.description || null,
+        color: group.color || '#3b82f6',
+        is_active: group.isActive !== undefined ? group.isActive : true,
+        order_index: group.orderIndex,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] Error creating live reply template group:', error);
+      throw new Error(`Failed to create live reply template group: ${error.message}`);
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      color: data.color,
+      isActive: data.is_active,
+      orderIndex: data.order_index,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+    };
+  }
+
+  async updateLiveReplyTemplateGroup(id: string, group: Partial<InsertLiveReplyTemplateGroup>): Promise<LiveReplyTemplateGroup> {
+    const updateData: any = {};
+    if (group.name !== undefined) updateData.name = group.name;
+    if (group.description !== undefined) updateData.description = group.description;
+    if (group.color !== undefined) updateData.color = group.color;
+    if (group.isActive !== undefined) updateData.is_active = group.isActive;
+    if (group.orderIndex !== undefined) updateData.order_index = group.orderIndex;
+
+    const { data, error } = await this.client
+      .from('live_reply_template_groups')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] Error updating live reply template group:', error);
+      throw new Error(`Failed to update live reply template group: ${error.message}`);
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      color: data.color,
+      isActive: data.is_active,
+      orderIndex: data.order_index,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+    };
+  }
+
+  async deleteLiveReplyTemplateGroup(id: string): Promise<void> {
+    const { error } = await this.client
+      .from('live_reply_template_groups')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('[SupabaseStorage] Error deleting live reply template group:', error);
+      throw new Error(`Failed to delete live reply template group: ${error.message}`);
+    }
+  }
+
+  async reorderLiveReplyTemplateGroups(updates: Array<{ id: string; orderIndex: number }>): Promise<void> {
+    for (const update of updates) {
+      const { error } = await this.client
+        .from('live_reply_template_groups')
+        .update({ order_index: update.orderIndex })
+        .eq('id', update.id);
+
+      if (error) {
+        console.error('[SupabaseStorage] Error reordering live reply template group:', error);
+        throw new Error(`Failed to reorder live reply template group: ${error.message}`);
+      }
+    }
   }
 
   // Legacy template operations (backward compatibility)

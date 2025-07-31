@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { 
   insertLiveReplyTemplateSchema, 
+  insertLiveReplyTemplateGroupSchema,
   insertEmailTemplateSchema, 
   insertSiteContentSchema,
   insertPersonalNoteSchema,
@@ -127,8 +128,12 @@ export function registerRoutes(app: Express): void {
 
       // Update each template's order
       for (const update of updates) {
-        if (update.id && typeof update.order === 'number') {
-          await storage.updateLiveReplyTemplate(update.id, { stageOrder: update.order });
+        if (update.id && (typeof update.order === 'number' || typeof update.groupOrder === 'number' || typeof update.stageOrder === 'number')) {
+          const updateData: any = {};
+          if (typeof update.order === 'number') updateData.stageOrder = update.order;
+          if (typeof update.groupOrder === 'number') updateData.groupOrder = update.groupOrder;
+          if (typeof update.stageOrder === 'number') updateData.stageOrder = update.stageOrder;
+          await storage.updateLiveReplyTemplate(update.id, updateData);
         }
       }
 
@@ -136,6 +141,81 @@ export function registerRoutes(app: Express): void {
     } catch (error) {
       console.error("Error reordering live reply templates:", error);
       res.status(500).json({ message: "Failed to reorder live reply templates" });
+    }
+  });
+
+  // Live reply template groups CRUD endpoints
+  app.get('/api/live-reply-template-groups', async (req, res) => {
+    try {
+      const groups = await storage.getLiveReplyTemplateGroups();
+      res.json(groups);
+    } catch (error) {
+      console.error("Error fetching live reply template groups:", error);
+      res.status(500).json({ message: "Failed to fetch live reply template groups" });
+    }
+  });
+
+  app.post('/api/live-reply-template-groups', async (req, res) => {
+    try {
+      const validatedData = insertLiveReplyTemplateGroupSchema.parse(req.body);
+      
+      console.log('[LiveReplyTemplateGroups] Creating group:', validatedData);
+      
+      const group = await storage.createLiveReplyTemplateGroup(validatedData);
+      res.status(201).json(group);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid group data", errors: error.errors });
+      }
+      console.error("Error creating live reply template group:", error);
+      res.status(500).json({ message: "Failed to create live reply template group" });
+    }
+  });
+
+  app.put('/api/live-reply-template-groups/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertLiveReplyTemplateGroupSchema.partial().parse(req.body);
+      
+      console.log('[LiveReplyTemplateGroups] Updating group', id, ':', validatedData);
+      
+      const group = await storage.updateLiveReplyTemplateGroup(id, validatedData);
+      res.json(group);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid group data", errors: error.errors });
+      }
+      console.error("Error updating live reply template group:", error);
+      res.status(500).json({ message: "Failed to update live reply template group" });
+    }
+  });
+
+  app.delete('/api/live-reply-template-groups/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteLiveReplyTemplateGroup(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting live reply template group:", error);
+      res.status(500).json({ message: "Failed to delete live reply template group" });
+    }
+  });
+
+  app.post('/api/live-reply-template-groups/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[LiveReplyTemplateGroups] Reordering groups:', updates);
+
+      await storage.reorderLiveReplyTemplateGroups(updates);
+      res.status(200).json({ message: "Live reply template group order updated successfully" });
+    } catch (error) {
+      console.error("Error reordering live reply template groups:", error);
+      res.status(500).json({ message: "Failed to reorder live reply template groups" });
     }
   });
 

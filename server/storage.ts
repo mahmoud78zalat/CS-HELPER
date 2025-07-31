@@ -1,6 +1,7 @@
 import {
   users,
   liveReplyTemplates,
+  liveReplyTemplateGroups,
   emailTemplates,
   liveReplyUsage,
   emailTemplateUsage,
@@ -13,6 +14,8 @@ import {
   type User,
   type UpsertUser,
   type LiveReplyTemplate,
+  type LiveReplyTemplateGroup,
+  type InsertLiveReplyTemplateGroup,
   type EmailTemplate,
   type InsertLiveReplyTemplate,
   type InsertEmailTemplate,
@@ -62,12 +65,21 @@ export interface IStorage {
   updateUserRole(id: string, role: "admin" | "agent"): Promise<void>;
   deleteUser(id: string): Promise<void>;
 
+  // Live reply template group operations
+  getLiveReplyTemplateGroups(): Promise<LiveReplyTemplateGroup[]>;
+  getLiveReplyTemplateGroup(id: string): Promise<LiveReplyTemplateGroup | undefined>;
+  createLiveReplyTemplateGroup(group: InsertLiveReplyTemplateGroup): Promise<LiveReplyTemplateGroup>;
+  updateLiveReplyTemplateGroup(id: string, group: Partial<InsertLiveReplyTemplateGroup>): Promise<LiveReplyTemplateGroup>;
+  deleteLiveReplyTemplateGroup(id: string): Promise<void>;
+  reorderLiveReplyTemplateGroups(updates: Array<{ id: string; orderIndex: number }>): Promise<void>;
+
   // Live reply template operations (for live chat)
   getLiveReplyTemplates(filters?: {
     category?: string;
     genre?: string;
     search?: string;
     isActive?: boolean;
+    groupId?: string;
   }): Promise<LiveReplyTemplate[]>;
   getLiveReplyTemplate(id: string): Promise<LiveReplyTemplate | undefined>;
   createLiveReplyTemplate(template: InsertLiveReplyTemplate): Promise<LiveReplyTemplate>;

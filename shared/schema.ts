@@ -45,6 +45,21 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Live reply template groups for organizing templates
+export const liveReplyTemplateGroups = pgTable("live_reply_template_groups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  color: varchar("color").default("#3b82f6").notNull(),
+  orderIndex: integer("order_index").default(0).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(),
+  lastSyncedAt: timestamp("last_synced_at"),
+});
+
 // Live chat reply templates for customer interactions
 export const liveReplyTemplates = pgTable("live_reply_templates", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -54,7 +69,9 @@ export const liveReplyTemplates = pgTable("live_reply_templates", {
   category: varchar("category").notNull(),
   genre: varchar("genre").notNull(),
   variables: text("variables").array(),
+  groupId: uuid("group_id").references(() => liveReplyTemplateGroups.id),
   stageOrder: integer("stage_order").default(1).notNull(),
+  groupOrder: integer("group_order").default(0).notNull(), // Order within the group
   isActive: boolean("is_active").default(true).notNull(),
   usageCount: integer("usage_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -179,8 +196,16 @@ export const usersRelations = relations(users, ({ many }) => ({
   faqAcks: many(userFaqAcks),
 }));
 
-export const liveReplyTemplatesRelations = relations(liveReplyTemplates, ({ many }) => ({
+export const liveReplyTemplateGroupsRelations = relations(liveReplyTemplateGroups, ({ many }) => ({
+  templates: many(liveReplyTemplates),
+}));
+
+export const liveReplyTemplatesRelations = relations(liveReplyTemplates, ({ many, one }) => ({
   usage: many(liveReplyUsage),
+  group: one(liveReplyTemplateGroups, {
+    fields: [liveReplyTemplates.groupId],
+    references: [liveReplyTemplateGroups.id],
+  }),
 }));
 
 export const emailTemplatesRelations = relations(emailTemplates, ({ many }) => ({
@@ -244,6 +269,14 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const insertLiveReplyTemplateGroupSchema = createInsertSchema(liveReplyTemplateGroups).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
 });
 
 export const insertLiveReplyTemplateSchema = createInsertSchema(liveReplyTemplates).omit({
@@ -328,6 +361,9 @@ export const insertUserFaqAckSchema = createInsertSchema(userFaqAcks).omit({
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+export type InsertLiveReplyTemplateGroup = z.infer<typeof insertLiveReplyTemplateGroupSchema>;
+export type LiveReplyTemplateGroup = typeof liveReplyTemplateGroups.$inferSelect;
+
 export type InsertLiveReplyTemplate = z.infer<typeof insertLiveReplyTemplateSchema>;
 export type LiveReplyTemplate = typeof liveReplyTemplates.$inferSelect;
 
@@ -354,9 +390,6 @@ export type Faq = typeof faqs.$inferSelect;
 
 export type InsertUserFaqAck = z.infer<typeof insertUserFaqAckSchema>;
 export type UserFaqAck = typeof userFaqAcks.$inferSelect;
-
-export type InsertUserAnnouncementAck = z.infer<typeof insertUserAnnouncementAckSchema>;
-export type UserAnnouncementAck = typeof userAnnouncementAcks.$inferSelect;
 
 // Personal Notes Schema
 export const personalNotes = pgTable("personal_notes", {

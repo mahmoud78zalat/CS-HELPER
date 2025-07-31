@@ -19,14 +19,15 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { realTimeService } from "@/lib/realTimeService";
 import { 
   X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
-  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save, Loader2, HelpCircle
+  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save, Loader2, HelpCircle, FolderOpen
 } from "lucide-react";
 import { User, Template, EmailTemplate } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
 
 import DragDropEmailTemplates from "@/components/DragDropEmailTemplates";
-import DragDropLiveTemplates from "@/components/DragDropLiveTemplates";
+import HorizontalGroupedTemplates from "@/components/HorizontalGroupedTemplates";
+import GroupManager from "@/components/GroupManager";
 import FAQEditor from "@/components/FAQEditor";
 
 import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates, loadColorsFromDatabase } from "@/lib/templateColors";
@@ -47,6 +48,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [templateSearchTerm, setTemplateSearchTerm] = useState('');
   const [emailTemplateSearchTerm, setEmailTemplateSearchTerm] = useState('');
   const [showConfigManager, setShowConfigManager] = useState(false);
+  const [showGroupManager, setShowGroupManager] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<any>(null);
 
   const [siteContentValues, setSiteContentValues] = useState<{[key: string]: string}>({});
   const [genreColors, setGenreColors] = useState<Record<string, any>>({});
@@ -426,6 +429,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const { data: templates = [], isLoading: templatesLoading } = useQuery<Template[]>({
     queryKey: ['/api/templates'],
     retry: false,
+  });
+
+  // Live reply template groups query
+  const { data: templateGroups = [], isLoading: groupsLoading, refetch: refetchGroups } = useQuery({
+    queryKey: ['/api/live-reply-template-groups'],
+    retry: false,
+    staleTime: 0,
   });
 
   // Email Templates query with proper typing
@@ -1566,20 +1576,38 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-slate-700 mb-3">
-                    Live Chat Templates with Drag & Drop Ordering
-                  </h4>
-                  <DragDropLiveTemplates
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-sm font-medium text-slate-700">
+                      Live Chat Templates - Horizontal Grouped Display
+                    </h4>
+                    <Button
+                      onClick={() => setShowGroupManager(true)}
+                      variant="outline"
+                      size="sm"
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <FolderOpen className="h-4 w-4 mr-2" />
+                      Manage Groups
+                    </Button>
+                  </div>
+                  <HorizontalGroupedTemplates
                     templates={filteredTemplates.map((t: any) => ({
                       ...t,
+                      content: t.contentEn || t.content || '',
                       concernedTeam: t.concernedTeam || 'General'
                     }))}
+                    groups={templateGroups}
                     onEdit={(template) => {
                       setEditingTemplate(template);
                       setIsEmailTemplate(false);
                       setShowTemplateForm(true);
                     }}
                     onDelete={handleDeleteTemplate}
+                    onCreateGroup={() => setShowGroupManager(true)}
+                    onEditGroup={(group) => {
+                      setEditingGroup(group);
+                      setShowGroupManager(true);
+                    }}
                   />
                 </div>
               )}
@@ -2304,6 +2332,17 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       {/* Template Config Manager */}
       <TemplateConfigManager isOpen={showConfigManager} onClose={() => setShowConfigManager(false)} />
 
+      {/* Group Manager */}
+      <GroupManager
+        groups={templateGroups}
+        isOpen={showGroupManager}
+        onClose={() => {
+          setShowGroupManager(false);
+          setEditingGroup(null);
+        }}
+        editingGroup={editingGroup}
+        onEditGroup={setEditingGroup}
+      />
 
       </DialogContent>
     </Dialog>

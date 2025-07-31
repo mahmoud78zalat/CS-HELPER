@@ -2,6 +2,8 @@ import {
   type User,
   type UpsertUser,
   type LiveReplyTemplate,
+  type LiveReplyTemplateGroup,
+  type InsertLiveReplyTemplateGroup,
   type EmailTemplate,
   type InsertLiveReplyTemplate,
   type InsertEmailTemplate,
@@ -27,6 +29,7 @@ import type { IStorage } from "./storage";
 export class MemoryStorage implements IStorage {
   private users = new Map<string, User>();
   private liveReplyTemplates = new Map<string, LiveReplyTemplate>();
+  private liveReplyTemplateGroups = new Map<string, LiveReplyTemplateGroup>();
   private emailTemplates = new Map<string, EmailTemplate>();
   private liveReplyUsage = new Map<string, LiveReplyUsage>();
   private emailTemplateUsage = new Map<string, EmailTemplateUsage>();
@@ -280,6 +283,70 @@ export class MemoryStorage implements IStorage {
   async getLiveReplyUsageStats(templateId: string): Promise<number> {
     return Array.from(this.liveReplyUsage.values())
       .filter(usage => usage.templateId === templateId).length;
+  }
+
+  // Live Reply Template Group operations
+  async getLiveReplyTemplateGroups(): Promise<LiveReplyTemplateGroup[]> {
+    return Array.from(this.liveReplyTemplateGroups.values())
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+  }
+
+  async getLiveReplyTemplateGroup(id: string): Promise<LiveReplyTemplateGroup | undefined> {
+    return this.liveReplyTemplateGroups.get(id);
+  }
+
+  async createLiveReplyTemplateGroup(group: InsertLiveReplyTemplateGroup): Promise<LiveReplyTemplateGroup> {
+    const id = nanoid();
+    const now = new Date();
+    
+    // Find next order index
+    const existingGroups = Array.from(this.liveReplyTemplateGroups.values());
+    const maxOrder = existingGroups.length > 0 ? Math.max(...existingGroups.map(g => g.orderIndex)) : 0;
+    
+    const newGroup: LiveReplyTemplateGroup = {
+      id,
+      name: group.name,
+      description: group.description || null,
+      color: group.color || '#3b82f6',
+      isActive: group.isActive !== undefined ? group.isActive : true,
+      orderIndex: group.orderIndex !== undefined ? group.orderIndex : maxOrder + 1,
+      createdAt: now,
+      updatedAt: now,
+    };
+    
+    this.liveReplyTemplateGroups.set(id, newGroup);
+    return newGroup;
+  }
+
+  async updateLiveReplyTemplateGroup(id: string, group: Partial<InsertLiveReplyTemplateGroup>): Promise<LiveReplyTemplateGroup> {
+    const existingGroup = this.liveReplyTemplateGroups.get(id);
+    if (!existingGroup) {
+      throw new Error("Group not found");
+    }
+
+    const updatedGroup: LiveReplyTemplateGroup = {
+      ...existingGroup,
+      ...group,
+      updatedAt: new Date(),
+    };
+
+    this.liveReplyTemplateGroups.set(id, updatedGroup);
+    return updatedGroup;
+  }
+
+  async deleteLiveReplyTemplateGroup(id: string): Promise<void> {
+    this.liveReplyTemplateGroups.delete(id);
+  }
+
+  async reorderLiveReplyTemplateGroups(updates: Array<{ id: string; orderIndex: number }>): Promise<void> {
+    for (const update of updates) {
+      const group = this.liveReplyTemplateGroups.get(update.id);
+      if (group) {
+        group.orderIndex = update.orderIndex;
+        group.updatedAt = new Date();
+        this.liveReplyTemplateGroups.set(update.id, group);
+      }
+    }
   }
 
   // Email Template operations
