@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,10 +6,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Trash, Edit, Palette, FolderOpen } from "lucide-react";
+import { Trash, Edit, Palette, FolderOpen, GripVertical, Plus } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface TemplateGroup {
   id: string;
@@ -42,6 +61,78 @@ const colorOptions = [
   "#6b7280", // gray
 ];
 
+// Sortable Group Item Component
+function SortableGroupItem({ group, onEdit, onDelete }: {
+  group: TemplateGroup;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: group.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+
+  return (
+    <Card 
+      ref={setNodeRef} 
+      style={style}
+      className={`group-item ${isDragging ? 'dragging' : ''}`}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <div
+            {...attributes}
+            {...listeners}
+            className="drag-handle cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+          >
+            <GripVertical className="h-4 w-4 text-gray-400" />
+          </div>
+          <div
+            className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
+            style={{ backgroundColor: group.color }}
+          />
+          <div className="flex-1">
+            <h4 className="font-medium text-sm">{group.name}</h4>
+            {group.description && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {group.description}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onEdit}
+              className="h-8 w-8 p-0"
+            >
+              <Edit className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+            >
+              <Trash className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
+  );
+}
+
 export default function GroupManager({ 
   groups, 
   isOpen, 
@@ -55,11 +146,17 @@ export default function GroupManager({
     color: "#3b82f6"
   });
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [localGroups, setLocalGroups] = useState(groups);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Update local groups when props change
+  useEffect(() => {
+    setLocalGroups(groups.sort((a, b) => a.orderIndex - b.orderIndex));
+  }, [groups]);
+
   // Initialize form when editing
-  useState(() => {
+  useEffect(() => {
     if (editingGroup) {
       setFormData({
         name: editingGroup.name,
@@ -75,11 +172,39 @@ export default function GroupManager({
       });
       setShowCreateForm(false);
     }
+  }, [editingGroup]);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Group reordering mutation
+  const reorderGroupsMutation = useMutation({
+    mutationFn: async (updates: { id: string; orderIndex: number }[]) => {
+      return apiRequest('POST', '/api/live-reply-template-groups/reorder', { updates });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to reorder groups", 
+        description: error.message,
+        variant: "destructive" 
+      });
+      // Revert to original order
+      setLocalGroups(groups.sort((a, b) => a.orderIndex - b.orderIndex));
+    },
   });
 
   const createGroupMutation = useMutation({
     mutationFn: async (groupData: typeof formData) => {
-      return apiRequest('POST', '/api/live-reply-template-groups', groupData);
+      const dataToSend = {
+        ...groupData,
+        orderIndex: Math.max(...groups.map(g => g.orderIndex || 0), 0) + 1
+      };
+      return apiRequest('POST', '/api/live-reply-template-groups', dataToSend);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
@@ -88,9 +213,10 @@ export default function GroupManager({
       setFormData({ name: "", description: "", color: "#3b82f6" });
     },
     onError: (error: any) => {
+      console.error('Create group error:', error);
       toast({ 
         title: "Failed to create group", 
-        description: error.message,
+        description: error?.message || "An error occurred",
         variant: "destructive" 
       });
     },
@@ -109,9 +235,10 @@ export default function GroupManager({
       setFormData({ name: "", description: "", color: "#3b82f6" });
     },
     onError: (error: any) => {
+      console.error('Update group error:', error);
       toast({ 
         title: "Failed to update group", 
-        description: error.message,
+        description: error?.message || "An error occurred",
         variant: "destructive" 
       });
     },
@@ -126,13 +253,34 @@ export default function GroupManager({
       toast({ title: "Group deleted successfully" });
     },
     onError: (error: any) => {
+      console.error('Delete group error:', error);
       toast({ 
         title: "Failed to delete group", 
-        description: error.message,
+        description: error?.message || "An error occurred",
         variant: "destructive" 
       });
     },
   });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = localGroups.findIndex(group => group.id === active.id);
+      const newIndex = localGroups.findIndex(group => group.id === over.id);
+
+      const newGroups = arrayMove(localGroups, oldIndex, newIndex);
+      setLocalGroups(newGroups);
+
+      // Create updates array with new order indices
+      const updates = newGroups.map((group, index) => ({
+        id: group.id,
+        orderIndex: index + 1
+      }));
+
+      reorderGroupsMutation.mutate(updates);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,7 +300,7 @@ export default function GroupManager({
   };
 
   const handleDelete = (groupId: string) => {
-    if (confirm("Are you sure you want to delete this group? This will not delete the templates, they will become ungrouped.")) {
+    if (confirm("Are you sure you want to delete this group? This action cannot be undone.")) {
       deleteGroupMutation.mutate(groupId);
     }
   };
@@ -164,9 +312,14 @@ export default function GroupManager({
     onClose();
   };
 
+  const isLoading = createGroupMutation.isPending || 
+                   updateGroupMutation.isPending || 
+                   deleteGroupMutation.isPending ||
+                   reorderGroupsMutation.isPending;
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5" />
@@ -174,173 +327,129 @@ export default function GroupManager({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Create/Edit Form */}
-          {(showCreateForm || editingGroup) && (
-            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-              <CardHeader>
-                <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200">
-                  {editingGroup ? "Edit Group" : "Create New Group"}
-                </h3>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Group Name</Label>
-                      <Input
-                        id="name"
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="e.g., Customer Support, Sales, Technical"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="color">Color</Label>
-                      <div className="flex gap-2 flex-wrap mt-1">
-                        {colorOptions.map((color) => (
-                          <button
-                            key={color}
-                            type="button"
-                            className={`w-6 h-6 rounded-full border-2 ${
-                              formData.color === color 
-                                ? 'border-slate-900 dark:border-slate-100' 
-                                : 'border-slate-300 dark:border-slate-600'
-                            }`}
-                            style={{ backgroundColor: color }}
-                            onClick={() => setFormData({ ...formData, color })}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="description">Description (Optional)</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Brief description of this group's purpose..."
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button 
-                      type="submit" 
-                      disabled={createGroupMutation.isPending || updateGroupMutation.isPending}
-                    >
-                      {editingGroup ? "Update Group" : "Create Group"}
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => {
-                        setShowCreateForm(false);
-                        onEditGroup?.(null);
-                        setFormData({ name: "", description: "", color: "#3b82f6" });
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Create Button */}
-          {!showCreateForm && !editingGroup && (
+        <div className="space-y-4">
+          {/* Add Group Button */}
+          {!showCreateForm && (
             <Button 
               onClick={() => setShowCreateForm(true)}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+              className="w-full"
+              variant="outline"
             >
-              <FolderOpen className="h-4 w-4 mr-2" />
-              Create New Group
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Group
             </Button>
           )}
 
-          {/* Existing Groups */}
-          <div>
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-              Existing Groups ({groups.length})
+          {/* Create/Edit Form */}
+          {showCreateForm && (
+            <Card className="p-4 border-2 border-dashed">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Group Name *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter group name"
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Optional description"
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div>
+                  <Label className="flex items-center gap-2 mb-2">
+                    <Palette className="h-4 w-4" />
+                    Color
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {colorOptions.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`w-8 h-8 rounded-full border-2 transition-all ${
+                          formData.color === color
+                            ? 'border-gray-900 dark:border-gray-100 scale-110'
+                            : 'border-gray-300 dark:border-gray-600 hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setFormData(prev => ({ ...prev, color }))}
+                        disabled={isLoading}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={isLoading}>
+                    {editingGroup ? 'Update Group' : 'Create Group'}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      onEditGroup?.(null);
+                      setFormData({ name: "", description: "", color: "#3b82f6" });
+                    }}
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </Card>
+          )}
+
+          {/* Groups List with Drag and Drop */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Existing Groups (drag to reorder)
             </h3>
             
-            {groups.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+            {localGroups.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <FolderOpen className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>No groups created yet</p>
-                <p className="text-xs">Create your first group to organize templates</p>
+                <p className="text-sm">Create your first group to get started</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {groups.map((group) => (
-                  <Card key={group.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3 flex-1">
-                          <div 
-                            className="w-4 h-4 rounded-full mt-0.5 flex-shrink-0"
-                            style={{ backgroundColor: group.color }}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-slate-800 dark:text-slate-200 text-sm">
-                              {group.name}
-                            </h4>
-                            {group.description && (
-                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                {group.description}
-                              </p>
-                            )}
-                            <div className="flex gap-2 mt-2">
-                              <Badge variant="outline" className="text-xs">
-                                {group.templates?.length || 0} templates
-                              </Badge>
-                              <Badge 
-                                variant={group.isActive ? "secondary" : "outline"} 
-                                className="text-xs"
-                              >
-                                {group.isActive ? "Active" : "Inactive"}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-1 ml-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onEditGroup?.(group)}
-                            className="h-7 w-7 p-0"
-                            title="Edit Group"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(group.id)}
-                            className="h-7 w-7 p-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                            title="Delete Group"
-                          >
-                            <Trash className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={localGroups.map(g => g.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-2">
+                    {localGroups.map(group => (
+                      <SortableGroupItem
+                        key={group.id}
+                        group={group}
+                        onEdit={() => onEditGroup?.(group)}
+                        onDelete={() => handleDelete(group.id)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={isLoading}>
             Close
           </Button>
         </DialogFooter>

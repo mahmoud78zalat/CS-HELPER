@@ -73,6 +73,9 @@ Development mode: Authentication streamlined with auto-admin access for developm
 **Live Reply Templates** - For direct customer interactions in live chat:
 - Quick copy-to-clipboard functionality for instant responses
 - Variable substitution (customer_name, order_id, time_frame, etc.)
+- **Horizontal Grouped Layout** (July 2025): Templates now display in medium-width columns (240px) for efficient scanning
+- **Template Groups**: Organized by customizable groups with drag-and-drop functionality
+- **Compact Design**: Clean, space-efficient layout prioritizing agent usability
 - Category-based organization (Orders, General, Apology, Technical)
 - Usage tracking and analytics for optimization
 - No subject line (chat-focused content only)

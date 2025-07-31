@@ -71,74 +71,74 @@ const SortableTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
     <Card 
       ref={setNodeRef} 
       style={style} 
-      className={`min-w-[280px] max-w-[320px] ${isDragging ? 'shadow-lg z-50' : ''} hover:shadow-md transition-shadow bg-white dark:bg-slate-800`}
+      className={`w-[240px] ${isDragging ? 'shadow-lg z-50' : ''} hover:shadow-md transition-shadow bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700`}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-start gap-2">
           <div 
             {...attributes} 
             {...listeners} 
-            className="cursor-grab active:cursor-grabbing mt-1 p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
+            className="cursor-grab active:cursor-grabbing mt-0.5 p-0.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
           >
-            <GripHorizontal className="h-4 w-4 text-gray-400" />
+            <GripHorizontal className="h-3 w-3 text-gray-400" />
           </div>
           
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2">
-              <h4 className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate pr-2">
+            <div className="flex items-start justify-between mb-1.5">
+              <h4 className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate pr-1">
                 {template.name}
               </h4>
               
-              <div className="flex gap-1 flex-shrink-0">
+              <div className="flex gap-0.5 flex-shrink-0">
                 {onPreview && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => onPreview(template)}
-                    className="h-6 w-6 p-0"
+                    className="h-5 w-5 p-0 hover:bg-slate-100 dark:hover:bg-slate-700"
                     title="Preview Template"
                   >
-                    <Eye className="h-3 w-3" />
+                    <Eye className="h-2.5 w-2.5" />
                   </Button>
                 )}
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit(template)}
-                  className="h-6 w-6 p-0"
+                  className="h-5 w-5 p-0 hover:bg-slate-100 dark:hover:bg-slate-700"
                   title="Edit Template"
                 >
-                  <Edit className="h-3 w-3" />
+                  <Edit className="h-2.5 w-2.5" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(template.id)}
-                  className="h-6 w-6 p-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                  className="h-5 w-5 p-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                   title="Delete Template"
                 >
-                  <Trash className="h-3 w-3" />
+                  <Trash className="h-2.5 w-2.5" />
                 </Button>
               </div>
             </div>
             
             <div className="flex gap-1 mb-2 flex-wrap">
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs px-1.5 py-0.5 h-auto">
                 {template.genre}
               </Badge>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs px-1.5 py-0.5 h-auto">
                 {template.category}
               </Badge>
               {template.usageCount !== undefined && template.usageCount > 0 && (
-                <Badge variant="outline" className="text-xs bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300">
+                <Badge variant="outline" className="text-xs px-1.5 py-0.5 h-auto bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300">
                   {template.usageCount}x
                 </Badge>
               )}
             </div>
             
-            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed">
-              {(template.contentEn || template.content || '').substring(0, 120)}
-              {(template.contentEn || template.content || '').length > 120 ? '...' : ''}
+            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+              {(template.contentEn || template.content || '').substring(0, 90)}
+              {(template.contentEn || template.content || '').length > 90 ? '...' : ''}
             </p>
           </div>
         </div>
@@ -170,24 +170,24 @@ const SortableGroupComponent = ({ group, onEditGroup, children }: {
 
   return (
     <div ref={setNodeRef} style={style} className={isDragging ? 'z-50' : ''}>
-      <Card className="mb-6 bg-slate-50 dark:bg-slate-900/50 border-2" style={{ borderColor: group.color }}>
-        <CardHeader className="p-4 pb-3">
+      <Card className="mb-4 bg-slate-50 dark:bg-slate-900/50 border-l-4 border-t-0 border-r-0 border-b-0" style={{ borderLeftColor: group.color }}>
+        <CardHeader className="p-3 pb-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div 
                 {...attributes} 
                 {...listeners} 
-                className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-200 dark:hover:bg-slate-700 rounded"
+                className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-gray-200 dark:hover:bg-slate-700 rounded"
               >
-                <GripHorizontal className="h-4 w-4 text-gray-400" />
+                <GripHorizontal className="h-3 w-3 text-gray-400" />
               </div>
               <div className="flex items-center gap-2">
-                <FolderOpen className="h-4 w-4" style={{ color: group.color }} />
+                <FolderOpen className="h-3.5 w-3.5" style={{ color: group.color }} />
                 <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   {group.name}
                 </h3>
-                <Badge variant="outline" className="text-xs">
-                  {group.templates.length} templates
+                <Badge variant="outline" className="text-xs px-1.5 py-0.5 h-auto">
+                  {group.templates.length}
                 </Badge>
               </div>
             </div>
@@ -197,7 +197,7 @@ const SortableGroupComponent = ({ group, onEditGroup, children }: {
                 variant="ghost"
                 size="sm"
                 onClick={() => onEditGroup(group)}
-                className="h-7 w-7 p-0"
+                className="h-6 w-6 p-0 hover:bg-slate-200 dark:hover:bg-slate-700"
                 title="Edit Group"
               >
                 <Palette className="h-3 w-3" />
@@ -206,14 +206,14 @@ const SortableGroupComponent = ({ group, onEditGroup, children }: {
           </div>
           
           {group.description && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 ml-9">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 ml-6">
               {group.description}
             </p>
           )}
         </CardHeader>
         
-        <CardContent className="p-4 pt-0">
-          <div className="flex gap-4 overflow-x-auto pb-2">
+        <CardContent className="p-3 pt-0">
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 dark:scrollbar-thumb-slate-600 dark:scrollbar-track-slate-800">
             {children}
           </div>
         </CardContent>

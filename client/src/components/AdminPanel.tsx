@@ -431,12 +431,30 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     retry: false,
   });
 
-  // Live reply template groups query
-  const { data: templateGroups = [], isLoading: groupsLoading, refetch: refetchGroups } = useQuery({
+  // Live reply template groups query with enhanced error handling
+  const { data: templateGroups = [], isLoading: groupsLoading, error: groupsError, refetch: refetchGroups } = useQuery({
     queryKey: ['/api/live-reply-template-groups'],
-    retry: false,
-    staleTime: 0,
+    queryFn: () => apiRequest('GET', '/api/live-reply-template-groups'),
+    retry: 3,
+    staleTime: 30000,
+    onError: (error: any) => {
+      console.error('Failed to load template groups:', error);
+      toast({
+        title: "Failed to load template groups",
+        description: "The table may need to be created in Supabase. Check console for details.",
+        variant: "destructive"
+      });
+    }
   });
+
+  // Debug logging for groups
+  useEffect(() => {
+    console.log('[AdminPanel] Groups state:', { 
+      groups: templateGroups, 
+      loading: groupsLoading, 
+      error: groupsError 
+    });
+  }, [templateGroups, groupsLoading, groupsError]);
 
   // Email Templates query with proper typing
   const { data: emailTemplates = [], isLoading: emailTemplatesLoading } = useQuery<EmailTemplate[]>({
