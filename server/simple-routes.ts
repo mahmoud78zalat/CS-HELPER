@@ -1249,7 +1249,10 @@ export function registerRoutes(app: Express): void {
         search: search as string || undefined,
         isSystem: isSystem === 'true' ? true : isSystem === 'false' ? false : undefined
       });
-      res.json(variables);
+      
+      // Sort by order property to ensure consistent ordering across all components
+      const sortedVariables = variables.sort((a, b) => (a.order || 0) - (b.order || 0));
+      res.json(sortedVariables);
     } catch (error) {
       console.error('[API] Error fetching template variables:', error);
       res.status(500).json({ message: 'Failed to fetch template variables' });

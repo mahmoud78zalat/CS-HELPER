@@ -2073,6 +2073,17 @@ export class SupabaseStorage implements IStorage {
     try {
       await this.ensureDynamicTablesExist();
       
+      // Get the highest order number and add 1 for new variable
+      const { data: existingVars } = await this.client
+        .from('template_variables')
+        .select('order')
+        .order('order', { ascending: false })
+        .limit(1);
+      
+      const nextOrder = existingVars && existingVars.length > 0 
+        ? (existingVars[0].order || 0) + 1 
+        : 0;
+      
       const { data, error } = await this.client
         .from('template_variables')
         .insert({
@@ -2082,6 +2093,7 @@ export class SupabaseStorage implements IStorage {
           example: variable.example,
           default_value: variable.defaultValue,
           is_system: variable.isSystem || false,
+          order: variable.order !== undefined ? variable.order : nextOrder,
           created_by: variable.createdBy,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -2102,6 +2114,7 @@ export class SupabaseStorage implements IStorage {
         example: data.example,
         defaultValue: data.default_value,
         isSystem: data.is_system,
+        order: data.order || 0,
         createdBy: data.created_by,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
@@ -2114,16 +2127,22 @@ export class SupabaseStorage implements IStorage {
 
   async updateTemplateVariable(id: string, variable: any): Promise<any> {
     try {
+      // Build update object dynamically to include order field when provided
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+      
+      // Only include fields that are provided (allows partial updates)
+      if (variable.name !== undefined) updateData.name = variable.name;
+      if (variable.description !== undefined) updateData.description = variable.description;
+      if (variable.category !== undefined) updateData.category = variable.category;
+      if (variable.example !== undefined) updateData.example = variable.example;
+      if (variable.defaultValue !== undefined) updateData.default_value = variable.defaultValue;
+      if (variable.order !== undefined) updateData.order = variable.order;
+
       const { data, error } = await this.client
         .from('template_variables')
-        .update({
-          name: variable.name,
-          description: variable.description,
-          category: variable.category,
-          example: variable.example,
-          default_value: variable.defaultValue,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -2141,6 +2160,7 @@ export class SupabaseStorage implements IStorage {
         example: data.example,
         defaultValue: data.default_value,
         isSystem: data.is_system,
+        order: data.order || 0,
         createdBy: data.created_by,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)

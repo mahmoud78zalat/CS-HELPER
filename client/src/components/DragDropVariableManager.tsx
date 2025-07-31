@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
@@ -134,6 +134,8 @@ export default function DragDropVariableManager({ variables, onEdit, onDelete }:
       return apiRequest('POST', '/api/template-variables/reorder', { updates });
     },
     onSuccess: () => {
+      // Invalidate all template variables cache keys to ensure real-time sync
+      queryClient.invalidateQueries({ queryKey: ['template-variables'] });
       queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
       toast({ title: "Variable order saved successfully" });
     },
@@ -147,16 +149,18 @@ export default function DragDropVariableManager({ variables, onEdit, onDelete }:
   });
 
   // Update items when variables prop changes
-  useState(() => {
+  useEffect(() => {
     if (variables.length > 0) {
-      // Ensure variables have order property
-      const variablesWithOrder = variables.map((v, index) => ({ 
-        ...v, 
-        order: v.order !== undefined ? v.order : index 
-      }));
-      setItems(variablesWithOrder);
+      // Sort variables by order property and ensure they have order
+      const sortedVariables = [...variables]
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map((v, index) => ({ 
+          ...v, 
+          order: v.order !== undefined ? v.order : index 
+        }));
+      setItems(sortedVariables);
     }
-  });
+  }, [variables]);
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;

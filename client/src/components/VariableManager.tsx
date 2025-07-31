@@ -116,7 +116,8 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       
       const data = await response.json();
       console.log('[VariableManager] Fetched variables:', data);
-      return data;
+      // Sort by order property to ensure consistent ordering
+      return data.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
     },
     enabled: isOpen,
   });
@@ -155,7 +156,9 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all template variables cache keys to ensure real-time sync
       queryClient.invalidateQueries({ queryKey: ['template-variables'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
       toast({ title: "Success", description: "Variable created successfully" });
       resetForm();
       setIsAdding(false);
@@ -177,7 +180,9 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all template variables cache keys to ensure real-time sync
       queryClient.invalidateQueries({ queryKey: ['template-variables'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
       toast({ title: "Success", description: "Variable updated successfully" });
       resetForm();
       setEditingId(null);
@@ -196,7 +201,9 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       if (!response.ok) throw new Error('Failed to delete variable');
     },
     onSuccess: () => {
+      // Invalidate all template variables cache keys to ensure real-time sync
       queryClient.invalidateQueries({ queryKey: ['template-variables'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
       toast({ title: "Success", description: "Variable deleted successfully" });
     },
     onError: (error: any) => {

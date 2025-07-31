@@ -21,6 +21,15 @@ export function useDynamicVariables() {
   // Fetch all template variables from Supabase
   const { data: variables = [], isLoading: variablesLoading, error: variablesError } = useQuery<DynamicVariable[]>({
     queryKey: ['/api/template-variables'],
+    queryFn: async () => {
+      const response = await fetch('/api/template-variables');
+      if (!response.ok) {
+        throw new Error('Failed to fetch template variables');
+      }
+      const data = await response.json();
+      // Sort by order property to ensure consistent ordering across all components
+      return data.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+    },
   });
 
   // Fetch variable categories from Supabase
