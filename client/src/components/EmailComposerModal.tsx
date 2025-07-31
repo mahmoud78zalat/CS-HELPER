@@ -296,8 +296,8 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-[98vw] max-h-[98vh] w-[98vw] h-[98vh] overflow-hidden p-0">
-        <DialogHeader className="p-6 pb-4 border-b bg-white">
-          <DialogTitle className="flex items-center gap-2 text-xl">
+        <DialogHeader className="p-6 pb-4 border-b bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+          <DialogTitle className="flex items-center gap-2 text-xl text-slate-900 dark:text-slate-100">
             <Send className="h-6 w-6" />
             Email Template Composer - Full Screen
           </DialogTitle>
@@ -305,9 +305,9 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
 
         <div className="flex h-[calc(100vh-120px)] gap-4">
           {/* Left Panel: Template Selection */}
-          <div className="w-80 border-r border-slate-200 flex flex-col">
-            <div className="p-4 border-b border-slate-200">
-              <h3 className="font-semibold mb-3">Email Templates</h3>
+          <div className="w-80 border-r border-slate-200 dark:border-slate-700 flex flex-col bg-white dark:bg-slate-800">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+              <h3 className="font-semibold mb-3 text-slate-900 dark:text-slate-100">Email Templates</h3>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
                 <Input
@@ -322,7 +322,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             
             <div className="flex-1 overflow-y-auto p-4">
               {templatesLoading ? (
-                <div className="text-center py-8 text-slate-500">
+                <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                   <p className="text-sm">Loading templates...</p>
                 </div>
               ) : (
@@ -332,14 +332,14 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                       key={template.id}
                       className={`cursor-pointer transition-all hover:border-blue-500 hover:shadow-md ${
                         selectedTemplate?.id === template.id 
-                          ? 'border-blue-500 bg-blue-50 shadow-md' 
-                          : 'border-slate-200'
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md' 
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
                       }`}
                       onClick={() => handleTemplateSelect(template)}
                     >
                       <CardContent className="p-3">
-                        <h4 className="font-medium text-slate-800 mb-1">{template.name}</h4>
-                        <div className="text-xs text-slate-500 mb-2">
+                        <h4 className="font-medium text-slate-800 dark:text-slate-200 mb-1">{template.name}</h4>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">
                           To: {template.concernedTeam}
                         </div>
                         <div className="flex gap-1 mb-2">
@@ -350,7 +350,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                             {template.category}
                           </Badge>
                         </div>
-                        <p className="text-xs text-slate-600 line-clamp-2">
+                        <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
                           {template.content.substring(0, 80)}...
                         </p>
                       </CardContent>
@@ -358,12 +358,12 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   ))}
                   
                   {filteredTemplates.length === 0 && !templatesLoading && (
-                    <div className="text-center py-8 text-slate-500">
+                    <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                       <p className="text-sm">No email templates found</p>
                       <p className="text-xs mt-1">
                         {searchTerm ? 'Try adjusting your search terms' : 'Create templates from Admin Panel'}
                       </p>
-                      <p className="text-xs mt-2 text-blue-600">
+                      <p className="text-xs mt-2 text-blue-600 dark:text-blue-400">
                         Debug: {Array.isArray(templates) ? templates.length : 0} templates loaded
                       </p>
                     </div>
@@ -374,8 +374,8 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           </div>
 
           {/* Middle Panel: Email Composition */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <div className="p-4 border-b border-slate-200">
+          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-800">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <Badge className="bg-purple-100 text-purple-700">

@@ -350,9 +350,8 @@ export default function HorizontalGroupedTemplates({
   // Move template to group mutation
   const moveTemplateToGroupMutation = useMutation({
     mutationFn: async ({ templateId, groupId }: { templateId: string; groupId?: string }) => {
-      return apiRequest('PUT', `/api/live-reply-templates/${templateId}`, { 
-        groupId: groupId || undefined,
-        groupOrder: 0 // Reset group order when moving to new group
+      return apiRequest('POST', `/api/live-reply-templates/${templateId}/move-to-group`, { 
+        groupId: groupId || undefined
       });
     },
     onSuccess: () => {
