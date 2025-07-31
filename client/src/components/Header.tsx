@@ -13,7 +13,7 @@ interface HeaderProps {
   onFAQ: () => void;
 }
 
-export default function Header({ onEmailComposer, onAdminPanel, onAbout }: HeaderProps) {
+export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }: HeaderProps) {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [agentName, setAgentName] = useState('');
