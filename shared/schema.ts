@@ -230,7 +230,6 @@ export const insertLiveReplyTemplateSchema = createInsertSchema(liveReplyTemplat
   createdAt: true,
   updatedAt: true,
   usageCount: true,
-  createdBy: true,
   supabaseId: true,
   lastSyncedAt: true,
 });
@@ -240,7 +239,6 @@ export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit
   createdAt: true,
   updatedAt: true,
   usageCount: true,
-  createdBy: true,
   supabaseId: true,
   lastSyncedAt: true,
 });

@@ -213,13 +213,14 @@ export class MemoryStorage implements IStorage {
       stageOrder: template.stageOrder || 1,
       isActive: template.isActive !== undefined ? template.isActive : true,
       usageCount: 0,
-      createdBy: "system", // Default value for memory storage
+      createdBy: template.createdBy || "system",
       createdAt: now,
       updatedAt: now,
       supabaseId: null,
       lastSyncedAt: null,
     };
     
+    console.log('[MemoryStorage] Created template with createdBy:', newTemplate.createdBy);
     this.liveReplyTemplates.set(id, newTemplate);
     return newTemplate;
   }

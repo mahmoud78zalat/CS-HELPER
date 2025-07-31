@@ -42,10 +42,15 @@ export function registerRoutes(app: Express): void {
     try {
       const validatedData = insertLiveReplyTemplateSchema.parse(req.body);
       
-      // Add createdBy as a required field for template creation
+      // Extract user email from headers (set by authentication middleware)
+      const userEmail = req.headers['x-user-email'] || req.headers['x-replit-user-name'] || 'system';
+      
+      console.log('[LiveReplyTemplates] Creating template with createdBy:', userEmail);
+      
+      // Add createdBy as the user's email
       const templateData = {
         ...validatedData,
-        createdBy: 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Default admin user
+        createdBy: userEmail as string
       };
       
       const template = await storage.createLiveReplyTemplate(templateData);
@@ -63,6 +68,13 @@ export function registerRoutes(app: Express): void {
     try {
       const { id } = req.params;
       const validatedData = insertLiveReplyTemplateSchema.partial().parse(req.body);
+      
+      // Extract user email from headers for tracking who edited the template
+      const userEmail = req.headers['x-user-email'] || req.headers['x-replit-user-name'] || 'system';
+      
+      console.log('[LiveReplyTemplates] Updating template', id, 'by user:', userEmail);
+      
+      // Don't update createdBy on edit, but log who made the edit
       const template = await storage.updateLiveReplyTemplate(id, validatedData);
       res.json(template);
     } catch (error) {
@@ -126,10 +138,15 @@ export function registerRoutes(app: Express): void {
     try {
       const validatedData = insertEmailTemplateSchema.parse(req.body);
       
-      // Add createdBy as a required field for template creation
+      // Extract user email from headers (set by authentication middleware)
+      const userEmail = req.headers['x-user-email'] || req.headers['x-replit-user-name'] || 'system';
+      
+      console.log('[EmailTemplates] Creating template with createdBy:', userEmail);
+      
+      // Add createdBy as the user's email
       const templateData = {
         ...validatedData,
-        createdBy: 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Default admin user
+        createdBy: userEmail as string
       };
       
       const template = await storage.createEmailTemplate(templateData);
@@ -147,6 +164,12 @@ export function registerRoutes(app: Express): void {
     try {
       const { id } = req.params;
       const validatedData = insertEmailTemplateSchema.partial().parse(req.body);
+      
+      // Extract user email from headers for tracking who edited the template
+      const userEmail = req.headers['x-user-email'] || req.headers['x-replit-user-name'] || 'system';
+      
+      console.log('[EmailTemplates] Updating template', id, 'by user:', userEmail);
+      
       const template = await storage.updateEmailTemplate(id, validatedData);
       res.json(template);
     } catch (error) {

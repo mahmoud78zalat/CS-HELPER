@@ -513,8 +513,10 @@ export class SupabaseStorage implements IStorage {
     // Ensure created_by always has a value
     const templateWithDefaults: any = {
       ...template,
-      createdBy: 'f765c1de-f9b5-4615-8c09-8cdde8152a07' // Always provide a valid user ID as default
+      createdBy: template.createdBy || 'system' // Use provided createdBy or default to 'system'
     };
+    
+    console.log('[SupabaseStorage] Creating live reply template with createdBy:', templateWithDefaults.createdBy);
     
     const { data, error } = await this.client
       .from('live_reply_templates')
@@ -543,13 +545,13 @@ export class SupabaseStorage implements IStorage {
     
     // Only include fields that are actually provided in the update
     if (template.name !== undefined) updateData.name = template.name;
-    if (template.content !== undefined) updateData.content = template.content;
+    if (template.contentEn !== undefined) updateData.content_en = template.contentEn;
+    if (template.contentAr !== undefined) updateData.content_ar = template.contentAr;
     if (template.category !== undefined) updateData.category = template.category;
     if (template.genre !== undefined) updateData.genre = template.genre;
     if (template.variables !== undefined) updateData.variables = template.variables;
     if (template.stageOrder !== undefined) updateData.stage_order = template.stageOrder;
     if (template.isActive !== undefined) updateData.is_active = template.isActive;
-    if (template.usageCount !== undefined) updateData.usage_count = template.usageCount;
     
 
     
@@ -743,7 +745,7 @@ export class SupabaseStorage implements IStorage {
     if (template.variables !== undefined) updateData.variables = template.variables;
     if (template.stageOrder !== undefined) updateData.stage_order = template.stageOrder;
     if (template.isActive !== undefined) updateData.is_active = template.isActive;
-    if (template.usageCount !== undefined) updateData.usage_count = template.usageCount;
+
     
 
     

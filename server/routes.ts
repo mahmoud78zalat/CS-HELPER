@@ -234,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const templateData = insertLiveReplyTemplateSchema.parse({
         ...req.body,
-        createdBy: req.user.claims.sub,
+        createdBy: currentUser.email || req.user.claims.sub,
       });
 
       const template = await storage.createTemplate(templateData);
@@ -257,6 +257,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { id } = req.params;
       const updateData = insertLiveReplyTemplateSchema.partial().parse(req.body);
+
+      console.log('[Templates] Updating template', id, 'by user:', currentUser.email);
+
+      const template = await storage.updateTemplate(id, updateData);
+      res.json(template);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid template data", errors: error.errors });
+      }
+      console.error("Error updating template:", error);
+      res.status(500).json({ message: "Failed to update template" });
+    }
+  });
+
+  app.put('/api/templates/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.user.claims.sub);
+      if (currentUser?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { id } = req.params;
+      const updateData = insertLiveReplyTemplateSchema.partial().parse(req.body);
+
+      console.log('[Templates] Updating template', id, 'by user:', currentUser.email);
 
       const template = await storage.updateTemplate(id, updateData);
       res.json(template);
