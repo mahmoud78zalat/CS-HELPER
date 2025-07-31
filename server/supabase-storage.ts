@@ -1200,7 +1200,7 @@ export class SupabaseStorage implements IStorage {
 
   // Enhanced announcement acknowledgment operations
   async markAnnouncementAsSeen(userId: string, announcementId: string): Promise<void> {
-    const { error } = await this.client
+    const { error } = await this.serviceClient
       .from('user_announcement_acks')
       .upsert({
         user_id: userId,
@@ -1215,7 +1215,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async getUserSeenAnnouncements(userId: string): Promise<string[]> {
-    const { data, error } = await this.client
+    const { data, error } = await this.serviceClient
       .from('user_announcement_acks')
       .select('announcement_id')
       .eq('user_id', userId);
@@ -1246,7 +1246,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async getUserAnnouncementAck(userId: string, announcementId: string): Promise<UserAnnouncementAck | undefined> {
-    const { data, error } = await this.client
+    const { data, error } = await this.serviceClient
       .from('user_announcement_acks')
       .select('*')
       .eq('user_id', userId)
@@ -2799,7 +2799,7 @@ export class SupabaseStorage implements IStorage {
       
       console.log(`[SupabaseStorage] Acknowledging FAQ ${faqId} for user ${userId}`);
       
-      const { error } = await this.client
+      const { error } = await this.serviceClient
         .from('faq_acknowledgments')
         .upsert({
           user_id: userId,
@@ -2825,7 +2825,7 @@ export class SupabaseStorage implements IStorage {
 
   async getUserFaqAcknowledgments(userId: string): Promise<string[]> {
     try {
-      const { data, error } = await this.client
+      const { data, error } = await this.serviceClient
         .from('faq_acknowledgments')
         .select('faq_id')
         .eq('user_id', userId);
@@ -2844,7 +2844,7 @@ export class SupabaseStorage implements IStorage {
 
   async hasUserSeenFaq(userId: string, faqId: string): Promise<boolean> {
     try {
-      const { data, error } = await this.client
+      const { data, error } = await this.serviceClient
         .from('faq_acknowledgments')
         .select('id')
         .eq('user_id', userId)
@@ -2870,7 +2870,7 @@ export class SupabaseStorage implements IStorage {
       
       console.log(`[SupabaseStorage] Acknowledging announcement ${announcementId} v${version} for user ${userId}`);
       
-      const { error } = await this.client
+      const { error } = await this.serviceClient
         .from('announcement_acknowledgments')
         .upsert({
           user_id: userId,
@@ -2897,7 +2897,7 @@ export class SupabaseStorage implements IStorage {
 
   async getUserAnnouncementAcknowledgments(userId: string): Promise<Array<{announcementId: string, version: number}>> {
     try {
-      const { data, error } = await this.client
+      const { data, error } = await this.serviceClient
         .from('announcement_acknowledgments')
         .select('announcement_id, announcement_version')
         .eq('user_id', userId);
@@ -2919,7 +2919,7 @@ export class SupabaseStorage implements IStorage {
 
   async hasUserSeenAnnouncement(userId: string, announcementId: string, version: number = 1): Promise<boolean> {
     try {
-      const { data, error } = await this.client
+      const { data, error } = await this.serviceClient
         .from('announcement_acknowledgments')
         .select('id')
         .eq('user_id', userId)
