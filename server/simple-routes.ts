@@ -1683,6 +1683,138 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // =============================================================================
+  // PERSISTENT NOTIFICATION ROUTES (Supabase-based replacements for localStorage)
+  // =============================================================================
+  
+  // Persistent FAQ Acknowledgments - replaces localStorage FAQ disco states
+  app.post('/api/persistent/faqs/:id/acknowledge', async (req, res) => {
+    try {
+      const { id: faqId } = req.params;
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      await storage.acknowledgeFaq(userId, faqId);
+      res.status(200).json({ message: "FAQ persistently acknowledged" });
+    } catch (error) {
+      console.error("Error persistently acknowledging FAQ:", error);
+      res.status(500).json({ message: "Failed to acknowledge FAQ" });
+    }
+  });
+
+  app.get('/api/persistent/user/:userId/faq-acknowledgments', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const acknowledgments = await storage.getUserFaqAcknowledgments(userId);
+      res.json(acknowledgments);
+    } catch (error) {
+      console.error("Error getting persistent FAQ acknowledgments:", error);
+      res.status(500).json({ message: "Failed to get FAQ acknowledgments" });
+    }
+  });
+
+  app.get('/api/persistent/user/:userId/faq/:faqId/seen', async (req, res) => {
+    try {
+      const { userId, faqId } = req.params;
+      const seen = await storage.hasUserSeenFaq(userId, faqId);
+      res.json({ seen });
+    } catch (error) {
+      console.error("Error checking if FAQ seen:", error);
+      res.status(500).json({ message: "Failed to check FAQ status" });
+    }
+  });
+
+  // Persistent Announcement Acknowledgments - replaces localStorage "Got it" states
+  app.post('/api/persistent/announcements/:id/acknowledge', async (req, res) => {
+    try {
+      const { id: announcementId } = req.params;
+      const { userId, version = 1 } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      await storage.acknowledgeAnnouncement(userId, announcementId, Number(version));
+      res.status(200).json({ message: "Announcement persistently acknowledged" });
+    } catch (error) {
+      console.error("Error persistently acknowledging announcement:", error);
+      res.status(500).json({ message: "Failed to acknowledge announcement" });
+    }
+  });
+
+  app.get('/api/persistent/user/:userId/announcement-acknowledgments', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const acknowledgments = await storage.getUserAnnouncementAcknowledgments(userId);
+      res.json(acknowledgments);
+    } catch (error) {
+      console.error("Error getting persistent announcement acknowledgments:", error);
+      res.status(500).json({ message: "Failed to get announcement acknowledgments" });
+    }
+  });
+
+  app.get('/api/persistent/user/:userId/announcement/:announcementId/seen', async (req, res) => {
+    try {
+      const { userId, announcementId } = req.params;
+      const { version = 1 } = req.query;
+      const seen = await storage.hasUserSeenAnnouncement(userId, announcementId, Number(version));
+      res.json({ seen });
+    } catch (error) {
+      console.error("Error checking if announcement seen:", error);
+      res.status(500).json({ message: "Failed to check announcement status" });
+    }
+  });
+
+  // Get unacknowledged items for notification count/badges
+  app.get('/api/persistent/user/:userId/unacknowledged-faqs', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const unacknowledged = await storage.getUnacknowledgedFaqs(userId);
+      res.json(unacknowledged);
+    } catch (error) {
+      console.error("Error getting unacknowledged FAQs:", error);
+      res.status(500).json({ message: "Failed to get unacknowledged FAQs" });
+    }
+  });
+
+  app.get('/api/persistent/user/:userId/unacknowledged-announcements', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const unacknowledged = await storage.getUnacknowledgedAnnouncements(userId);
+      res.json(unacknowledged);
+    } catch (error) {
+      console.error("Error getting unacknowledged announcements:", error);
+      res.status(500).json({ message: "Failed to get unacknowledged announcements" });
+    }
+  });
+
+  // User Notification Preferences  
+  app.get('/api/persistent/user/:userId/notification-preferences', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const preferences = await storage.getUserNotificationPreferences(userId);
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error getting notification preferences:", error);
+      res.status(500).json({ message: "Failed to get notification preferences" });
+    }
+  });
+
+  app.post('/api/persistent/user/:userId/notification-preferences', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const preferences = req.body;
+      await storage.updateUserNotificationPreferences(userId, preferences);
+      res.status(200).json({ message: "Notification preferences updated" });
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ message: "Failed to update notification preferences" });
+    }
+  });
+
   console.log('[Simple Routes] ✅ All routes registered successfully!');
   console.log('[Simple Routes] 📋 Total API routes available:');
   console.log('[Simple Routes]   - Live Reply Templates: /api/live-reply-templates');

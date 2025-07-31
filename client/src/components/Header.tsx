@@ -70,23 +70,56 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
     }
   }, [siteContent]);
 
-  // Check for new FAQs that user hasn't viewed
+  // Check for new FAQs that user hasn't viewed (using Supabase persistence)
   useEffect(() => {
-    if (faqs && Array.isArray(faqs) && faqs.length > 0) {
-      const lastViewedFAQTime = localStorage.getItem('lastViewedFAQTime');
-      const lastViewedTime = lastViewedFAQTime ? new Date(lastViewedFAQTime) : new Date(0);
-      
-      // Check if there are FAQs newer than the last viewed time
-      const hasNewFAQs = faqs.some((faq: any) => {
-        const faqCreatedAt = new Date(faq.createdAt || faq.created_at);
-        return faqCreatedAt > lastViewedTime && faq.isActive !== false;
-      });
-      
-      setHasNewFAQ(hasNewFAQs);
-    } else {
-      setHasNewFAQ(false);
-    }
-  }, [faqs]);
+    const checkForNewFAQs = async () => {
+      if (!user?.id || !faqs || !Array.isArray(faqs) || faqs.length === 0) {
+        setHasNewFAQ(false);
+        return;
+      }
+
+      try {
+        // Get user's FAQ acknowledgments from Supabase
+        const response = await fetch(`/api/persistent/user/${user.id}/faq-acknowledgments`);
+        if (response.ok) {
+          const acknowledgments = await response.json();
+          const acknowledgedFaqIds = new Set(acknowledgments);
+          
+          // Check if there are active FAQs that haven't been acknowledged
+          const hasUnacknowledgedFAQs = faqs.some((faq: any) => {
+            return faq.isActive !== false && !acknowledgedFaqIds.has(faq.id);
+          });
+          
+          setHasNewFAQ(hasUnacknowledgedFAQs);
+        } else {
+          // Fallback to old localStorage method if Supabase fails
+          const lastViewedFAQTime = localStorage.getItem('lastViewedFAQTime');
+          const lastViewedTime = lastViewedFAQTime ? new Date(lastViewedFAQTime) : new Date(0);
+          
+          const hasNewFAQs = faqs.some((faq: any) => {
+            const faqCreatedAt = new Date(faq.createdAt || faq.created_at);
+            return faqCreatedAt > lastViewedTime && faq.isActive !== false;
+          });
+          
+          setHasNewFAQ(hasNewFAQs);
+        }
+      } catch (error) {
+        console.error('Error checking FAQ acknowledgments:', error);
+        // Fallback to localStorage
+        const lastViewedFAQTime = localStorage.getItem('lastViewedFAQTime');
+        const lastViewedTime = lastViewedFAQTime ? new Date(lastViewedFAQTime) : new Date(0);
+        
+        const hasNewFAQs = faqs.some((faq: any) => {
+          const faqCreatedAt = new Date(faq.createdAt || faq.created_at);
+          return faqCreatedAt > lastViewedTime && faq.isActive !== false;
+        });
+        
+        setHasNewFAQ(hasNewFAQs);
+      }
+    };
+
+    checkForNewFAQs();
+  }, [faqs, user?.id]);
 
   // Initialize agent name from user data
   useEffect(() => {
@@ -112,10 +145,49 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
     localStorage.setItem('selectedAgentName', agentName);
   };
 
-  const handleFAQClick = () => {
-    // Mark FAQs as viewed when user clicks the FAQ button
-    localStorage.setItem('lastViewedFAQTime', new Date().toISOString());
-    setHasNewFAQ(false);
+  const handleFAQClick = async () => {
+    if (!user?.id) {
+      onFAQ();
+      return;
+    }
+
+    try {
+      // Mark all active FAQs as acknowledged when user opens FAQ modal
+      if (faqs && Array.isArray(faqs)) {
+        const acknowledgmentPromises = faqs
+          .filter((faq: any) => faq.isActive !== false)
+          .map(async (faq: any) => {
+            try {
+              await fetch(`/api/persistent/faqs/${faq.id}/acknowledge`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId: user.id }),
+              });
+            } catch (error) {
+              console.error(`Error acknowledging FAQ ${faq.id}:`, error);
+            }
+          });
+
+        // Wait for all acknowledgments to complete (but don't block UI)
+        Promise.all(acknowledgmentPromises).catch(error => 
+          console.error('Error acknowledging FAQs:', error)
+        );
+      }
+
+      // Remove disco animation immediately
+      setHasNewFAQ(false);
+      
+      // Fallback: also update localStorage for backward compatibility
+      localStorage.setItem('lastViewedFAQTime', new Date().toISOString());
+    } catch (error) {
+      console.error('Error in handleFAQClick:', error);
+      // Fallback to localStorage only
+      localStorage.setItem('lastViewedFAQTime', new Date().toISOString());
+      setHasNewFAQ(false);
+    }
+
     onFAQ();
   };
 

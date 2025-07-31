@@ -2787,4 +2787,264 @@ export class SupabaseStorage implements IStorage {
   // Note: CRUD operations for categories, genres, concerned teams, and email categories 
   // are already defined above in lines 1045-1350. The duplicate methods below have been removed
   // to prevent build errors.
+
+  // =============================================================================
+  // PERSISTENT NOTIFICATION SYSTEM
+  // =============================================================================
+  
+  // FAQ Acknowledgments - replaces localStorage for FAQ disco states
+  async acknowledgeFaq(userId: string, faqId: string): Promise<void> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      console.log(`[SupabaseStorage] Acknowledging FAQ ${faqId} for user ${userId}`);
+      
+      const { error } = await this.client
+        .from('faq_acknowledgments')
+        .upsert({
+          user_id: userId,
+          faq_id: faqId,
+          acknowledged_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,faq_id'
+        });
+
+      if (error) {
+        console.error('[SupabaseStorage] Error acknowledging FAQ:', error);
+        throw error;
+      }
+      
+      console.log(`[SupabaseStorage] Successfully acknowledged FAQ ${faqId} for user ${userId}`);
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in acknowledgeFaq:', error);
+      throw error;
+    }
+  }
+
+  async getUserFaqAcknowledgments(userId: string): Promise<string[]> {
+    try {
+      const { data, error } = await this.client
+        .from('faq_acknowledgments')
+        .select('faq_id')
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching FAQ acknowledgments:', error);
+        return [];
+      }
+
+      return data?.map(item => item.faq_id) || [];
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getUserFaqAcknowledgments:', error);
+      return [];
+    }
+  }
+
+  async hasUserSeenFaq(userId: string, faqId: string): Promise<boolean> {
+    try {
+      const { data, error } = await this.client
+        .from('faq_acknowledgments')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('faq_id', faqId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('[SupabaseStorage] Error checking FAQ acknowledgment:', error);
+        return false;
+      }
+
+      return !!data;
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in hasUserSeenFaq:', error);
+      return false;
+    }
+  }
+
+  // Announcement Acknowledgments - replaces localStorage for "Got it" states
+  async acknowledgeAnnouncement(userId: string, announcementId: string, version: number = 1): Promise<void> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      console.log(`[SupabaseStorage] Acknowledging announcement ${announcementId} v${version} for user ${userId}`);
+      
+      const { error } = await this.client
+        .from('announcement_acknowledgments')
+        .upsert({
+          user_id: userId,
+          announcement_id: announcementId,
+          announcement_version: version,
+          acknowledged_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,announcement_id,announcement_version'
+        });
+
+      if (error) {
+        console.error('[SupabaseStorage] Error acknowledging announcement:', error);
+        throw error;
+      }
+      
+      console.log(`[SupabaseStorage] Successfully acknowledged announcement ${announcementId} v${version} for user ${userId}`);
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in acknowledgeAnnouncement:', error);
+      throw error;
+    }
+  }
+
+  async getUserAnnouncementAcknowledgments(userId: string): Promise<Array<{announcementId: string, version: number}>> {
+    try {
+      const { data, error } = await this.client
+        .from('announcement_acknowledgments')
+        .select('announcement_id, announcement_version')
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching announcement acknowledgments:', error);
+        return [];
+      }
+
+      return data?.map(item => ({
+        announcementId: item.announcement_id,
+        version: item.announcement_version
+      })) || [];
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getUserAnnouncementAcknowledgments:', error);
+      return [];
+    }
+  }
+
+  async hasUserSeenAnnouncement(userId: string, announcementId: string, version: number = 1): Promise<boolean> {
+    try {
+      const { data, error } = await this.client
+        .from('announcement_acknowledgments')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('announcement_id', announcementId)
+        .gte('announcement_version', version)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('[SupabaseStorage] Error checking announcement acknowledgment:', error);
+        return false;
+      }
+
+      return !!data;
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in hasUserSeenAnnouncement:', error);
+      return false;
+    }
+  }
+
+  // User Notification Preferences
+  async getUserNotificationPreferences(userId: string): Promise<any> {
+    try {
+      const { data, error } = await this.client
+        .from('user_notification_preferences')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('[SupabaseStorage] Error fetching notification preferences:', error);
+        return {
+          disableFaqNotifications: false,
+          disableAnnouncementNotifications: false
+        };
+      }
+
+      return data ? {
+        id: data.id,
+        userId: data.user_id,
+        disableFaqNotifications: data.disable_faq_notifications,
+        disableAnnouncementNotifications: data.disable_announcement_notifications,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      } : {
+        disableFaqNotifications: false,
+        disableAnnouncementNotifications: false
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getUserNotificationPreferences:', error);
+      return {
+        disableFaqNotifications: false,
+        disableAnnouncementNotifications: false
+      };
+    }
+  }
+
+  async updateUserNotificationPreferences(userId: string, preferences: any): Promise<void> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const { error } = await this.client
+        .from('user_notification_preferences')
+        .upsert({
+          user_id: userId,
+          disable_faq_notifications: preferences.disableFaqNotifications,
+          disable_announcement_notifications: preferences.disableAnnouncementNotifications,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('[SupabaseStorage] Error updating notification preferences:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in updateUserNotificationPreferences:', error);
+      throw error;
+    }
+  }
+
+  // Helper method to get unacknowledged items for a user
+  async getUnacknowledgedFaqs(userId: string): Promise<any[]> {
+    try {
+      const { data: faqs } = await this.client
+        .from('faqs')
+        .select('*')
+        .eq('is_active', true)
+        .order('order', { ascending: true });
+
+      if (!faqs) return [];
+
+      const acknowledgments = await this.getUserFaqAcknowledgments(userId);
+      
+      return faqs.filter(faq => !acknowledgments.includes(faq.id));
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getUnacknowledgedFaqs:', error);
+      return [];
+    }
+  }
+
+  async getUnacknowledgedAnnouncements(userId: string): Promise<any[]> {
+    try {
+      const { data: announcements } = await this.client
+        .from('announcements')
+        .select('*')
+        .eq('is_active', true)
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (!announcements) return [];
+
+      const acknowledgments = await this.getUserAnnouncementAcknowledgments(userId);
+      
+      return announcements.filter(announcement => {
+        const hasAcknowledged = acknowledgments.some(ack => 
+          ack.announcementId === announcement.id && 
+          ack.version >= (announcement.version || 1)
+        );
+        return !hasAcknowledged;
+      });
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getUnacknowledgedAnnouncements:', error);
+      return [];
+    }
+  }
 }

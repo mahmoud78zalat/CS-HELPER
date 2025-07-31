@@ -212,6 +212,25 @@ export interface IStorage {
   // Announcement seen tracking
   markAnnouncementAsSeen(userId: string, announcementId: string): Promise<void>;
   getUserSeenAnnouncements(userId: string): Promise<string[]>;
+
+  // Persistent notification system (Supabase-based replacements for localStorage)
+  // FAQ Acknowledgments - replaces localStorage for FAQ disco states
+  acknowledgeFaq(userId: string, faqId: string): Promise<void>;
+  getUserFaqAcknowledgments(userId: string): Promise<string[]>;
+  hasUserSeenFaq(userId: string, faqId: string): Promise<boolean>;
+  
+  // Announcement Acknowledgments - replaces localStorage for "Got it" states
+  acknowledgeAnnouncement(userId: string, announcementId: string, version?: number): Promise<void>;
+  getUserAnnouncementAcknowledgments(userId: string): Promise<Array<{announcementId: string, version: number}>>;
+  hasUserSeenAnnouncement(userId: string, announcementId: string, version?: number): Promise<boolean>;
+  
+  // User Notification Preferences
+  getUserNotificationPreferences(userId: string): Promise<any>;
+  updateUserNotificationPreferences(userId: string, preferences: any): Promise<void>;
+  
+  // Helper methods to get unacknowledged items
+  getUnacknowledgedFaqs(userId: string): Promise<any[]>;
+  getUnacknowledgedAnnouncements(userId: string): Promise<any[]>;
 }
 
 // DatabaseStorage class commented out for beta testing

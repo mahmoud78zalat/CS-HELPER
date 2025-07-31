@@ -48,35 +48,48 @@ export function AnnouncementBanner() {
       if (!user?.id) return;
 
       try {
-        const response = await fetch(`/api/announcements/unacknowledged/${user.id}`);
+        // Use the persistent notification API to get unacknowledged announcements
+        const response = await fetch(`/api/persistent/user/${user.id}/unacknowledged-announcements`);
         if (response.ok) {
           const announcements = await response.json();
           if (announcements && announcements.length > 0) {
             const firstAnnouncement = announcements[0];
-            
-            // Check if this announcement was already acknowledged locally (version-aware)
-            const localKey = `announcement_ack_${user.id}_${firstAnnouncement.id}`;
-            const localAckData = localStorage.getItem(localKey);
-            
-            let shouldShow = true;
-            
-            if (localAckData) {
-              try {
-                const ackData = JSON.parse(localAckData);
-                const localVersion = ackData.version || 1;
-                const currentVersion = firstAnnouncement.version || 1;
-                
-                // Show announcement if it's been re-announced (version bumped)
-                shouldShow = currentVersion > localVersion;
-              } catch (e) {
-                // If parsing fails, treat as not acknowledged
-                shouldShow = true;
+            setAnnouncement(firstAnnouncement);
+            setIsVisible(true);
+          }
+        } else {
+          // Fallback to original method if persistent API fails
+          console.log('Persistent API failed, using fallback method');
+          const response = await fetch(`/api/announcements/unacknowledged/${user.id}`);
+          if (response.ok) {
+            const announcements = await response.json();
+            if (announcements && announcements.length > 0) {
+              const firstAnnouncement = announcements[0];
+              
+              // Check if this announcement was already acknowledged locally (version-aware)
+              const localKey = `announcement_ack_${user.id}_${firstAnnouncement.id}`;
+              const localAckData = localStorage.getItem(localKey);
+              
+              let shouldShow = true;
+              
+              if (localAckData) {
+                try {
+                  const ackData = JSON.parse(localAckData);
+                  const localVersion = ackData.version || 1;
+                  const currentVersion = firstAnnouncement.version || 1;
+                  
+                  // Show announcement if it's been re-announced (version bumped)
+                  shouldShow = currentVersion > localVersion;
+                } catch (e) {
+                  // If parsing fails, treat as not acknowledged
+                  shouldShow = true;
+                }
               }
-            }
-            
-            if (shouldShow) {
-              setAnnouncement(firstAnnouncement);
-              setIsVisible(true);
+              
+              if (shouldShow) {
+                setAnnouncement(firstAnnouncement);
+                setIsVisible(true);
+              }
             }
           }
         }
@@ -96,65 +109,89 @@ export function AnnouncementBanner() {
     setIsAcknowledging(true);
 
     try {
-      // Store acknowledgment in localStorage immediately for instant feedback with version tracking
-      const localKey = `announcement_ack_${user.id}_${announcement.id}`;
-      const ackData = {
-        userId: user.id,
-        announcementId: announcement.id,
-        acknowledgedAt: new Date().toISOString(),
-        version: announcement.version || 1,
-        synced: false
-      };
-      localStorage.setItem(localKey, JSON.stringify(ackData));
-
-      // Hide the modal immediately
+      // Hide the modal immediately for better UX
       setIsVisible(false);
       setAnnouncement(null);
 
-      // Try to sync to database with retry mechanism
-      let syncAttempts = 0;
-      const maxRetries = 2;
-      
-      const attemptSync = async (): Promise<boolean> => {
-        try {
-          syncAttempts++;
-          const response = await fetch(`/api/announcements/${announcement.id}/acknowledge`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId: user.id }),
-          });
-
-          if (response.ok) {
-            // Mark as synced in localStorage
-            const updatedAckData = { ...ackData, synced: true };
-            localStorage.setItem(localKey, JSON.stringify(updatedAckData));
-            return true;
-          } else {
-            const errorText = await response.text();
-            throw new Error(`Server responded with ${response.status}: ${errorText}`);
-          }
-        } catch (syncError) {
-          console.error(`Sync attempt ${syncAttempts} failed:`, syncError);
-          
-          if (syncAttempts < maxRetries) {
-            // Wait 1 second before retry
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            return attemptSync();
-          }
-          return false;
-        }
-      };
-
-      const syncSuccess = await attemptSync();
-      
-      if (!syncSuccess) {
-        toast({
-          title: "Acknowledgment recorded locally",
-          description: "Your acknowledgment was saved but couldn't sync to server after 2 attempts.",
-          variant: "default",
+      // Try to sync to persistent notification system first
+      try {
+        const response = await fetch(`/api/persistent/announcements/${announcement.id}/acknowledge`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            userId: user.id,
+            version: announcement.version || 1
+          }),
         });
+
+        if (response.ok) {
+          // Successfully acknowledged via persistent API
+          console.log('Announcement acknowledged via persistent API');
+          return;
+        } else {
+          throw new Error(`Persistent API failed with status ${response.status}`);
+        }
+      } catch (persistentError) {
+        console.warn('Persistent API failed, falling back to original method:', persistentError);
+        
+        // Fallback: Store acknowledgment in localStorage immediately for instant feedback with version tracking
+        const localKey = `announcement_ack_${user.id}_${announcement.id}`;
+        const ackData = {
+          userId: user.id,
+          announcementId: announcement.id,
+          acknowledgedAt: new Date().toISOString(),
+          version: announcement.version || 1,
+          synced: false
+        };
+        localStorage.setItem(localKey, JSON.stringify(ackData));
+
+        // Try to sync to original database with retry mechanism
+        let syncAttempts = 0;
+        const maxRetries = 2;
+        
+        const attemptSync = async (): Promise<boolean> => {
+          try {
+            syncAttempts++;
+            const response = await fetch(`/api/announcements/${announcement.id}/acknowledge`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ userId: user.id }),
+            });
+
+            if (response.ok) {
+              // Mark as synced in localStorage
+              const updatedAckData = { ...ackData, synced: true };
+              localStorage.setItem(localKey, JSON.stringify(updatedAckData));
+              return true;
+            } else {
+              const errorText = await response.text();
+              throw new Error(`Server responded with ${response.status}: ${errorText}`);
+            }
+          } catch (syncError) {
+            console.error(`Sync attempt ${syncAttempts} failed:`, syncError);
+            
+            if (syncAttempts < maxRetries) {
+              // Wait 1 second before retry
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              return attemptSync();
+            }
+            return false;
+          }
+        };
+
+        const syncSuccess = await attemptSync();
+        
+        if (!syncSuccess) {
+          toast({
+            title: "Acknowledgment recorded locally",
+            description: "Your acknowledgment was saved but couldn't sync to server after 2 attempts.",
+            variant: "default",
+          });
+        }
       }
     } catch (error) {
       console.error('Error acknowledging announcement:', error);
@@ -163,7 +200,7 @@ export function AnnouncementBanner() {
         description: "There was an issue saving your acknowledgment. Please try again.",
         variant: "destructive",
       });
-      // If even localStorage fails, show the announcement again
+      // If everything fails, show the announcement again
       setIsVisible(true);
     } finally {
       setIsAcknowledging(false);

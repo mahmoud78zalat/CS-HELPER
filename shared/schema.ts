@@ -188,6 +188,44 @@ export const userFaqAcks = pgTable("user_faq_acks", {
   lastSyncedAt: timestamp("last_synced_at"),
 });
 
+// New persistent notification tables for Supabase integration
+// FAQ Acknowledgments - replaces localStorage for FAQ disco states
+export const faqAcknowledgments = pgTable("faq_acknowledgments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  faqId: uuid("faq_id").references(() => faqs.id).notNull(),
+  acknowledgedAt: timestamp("acknowledged_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  // Ensure one acknowledgment per user per FAQ
+  index("unique_faq_ack").on(table.userId, table.faqId)
+]);
+
+// Announcement Acknowledgments - replaces localStorage for "Got it" states  
+export const announcementAcknowledgments = pgTable("announcement_acknowledgments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  announcementId: uuid("announcement_id").references(() => announcements.id).notNull(),
+  acknowledgedAt: timestamp("acknowledged_at").defaultNow(),
+  announcementVersion: integer("announcement_version").default(1).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  // Ensure one acknowledgment per user per announcement version
+  index("unique_announcement_ack").on(table.userId, table.announcementId, table.announcementVersion)
+]);
+
+// User Notification Preferences for future customization
+export const userNotificationPreferences = pgTable("user_notification_preferences", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => users.id).notNull().unique(),
+  disableFaqNotifications: boolean("disable_faq_notifications").default(false).notNull(),
+  disableAnnouncementNotifications: boolean("disable_announcement_notifications").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   liveReplyUsage: many(liveReplyUsage),
@@ -261,6 +299,36 @@ export const userFaqAcksRelations = relations(userFaqAcks, ({ one }) => ({
   faq: one(faqs, {
     fields: [userFaqAcks.faqId],
     references: [faqs.id],
+  }),
+}));
+
+// New persistent notification relations
+export const faqAcknowledgmentsRelations = relations(faqAcknowledgments, ({ one }) => ({
+  user: one(users, {
+    fields: [faqAcknowledgments.userId],
+    references: [users.id],
+  }),
+  faq: one(faqs, {
+    fields: [faqAcknowledgments.faqId],
+    references: [faqs.id],
+  }),
+}));
+
+export const announcementAcknowledgmentsRelations = relations(announcementAcknowledgments, ({ one }) => ({
+  user: one(users, {
+    fields: [announcementAcknowledgments.userId],
+    references: [users.id],
+  }),
+  announcement: one(announcements, {
+    fields: [announcementAcknowledgments.announcementId],
+    references: [announcements.id],
+  }),
+}));
+
+export const userNotificationPreferencesRelations = relations(userNotificationPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [userNotificationPreferences.userId],
+    references: [users.id],
   }),
 }));
 
@@ -357,6 +425,27 @@ export const insertUserFaqAckSchema = createInsertSchema(userFaqAcks).omit({
   lastSyncedAt: true,
 });
 
+// New persistent notification schemas
+export const insertFaqAcknowledgmentSchema = createInsertSchema(faqAcknowledgments).omit({
+  id: true,
+  acknowledgedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAnnouncementAcknowledgmentSchema = createInsertSchema(announcementAcknowledgments).omit({
+  id: true,
+  acknowledgedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserNotificationPreferencesSchema = createInsertSchema(userNotificationPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -390,6 +479,16 @@ export type Faq = typeof faqs.$inferSelect;
 
 export type InsertUserFaqAck = z.infer<typeof insertUserFaqAckSchema>;
 export type UserFaqAck = typeof userFaqAcks.$inferSelect;
+
+// New persistent notification types
+export type InsertFaqAcknowledgment = z.infer<typeof insertFaqAcknowledgmentSchema>;
+export type FaqAcknowledgment = typeof faqAcknowledgments.$inferSelect;
+
+export type InsertAnnouncementAcknowledgment = z.infer<typeof insertAnnouncementAcknowledgmentSchema>;
+export type AnnouncementAcknowledgment = typeof announcementAcknowledgments.$inferSelect;
+
+export type InsertUserNotificationPreferences = z.infer<typeof insertUserNotificationPreferencesSchema>;
+export type UserNotificationPreferences = typeof userNotificationPreferences.$inferSelect;
 
 // Personal Notes Schema
 export const personalNotes = pgTable("personal_notes", {
