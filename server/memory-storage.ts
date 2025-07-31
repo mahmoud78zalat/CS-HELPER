@@ -852,4 +852,34 @@ export class MemoryStorage implements IStorage {
     // Memory storage doesn't persist ordering, just log
     console.log(`[MemoryStorage] saveUserOrdering for ${userId}, ${contentType}:`, ordering.length, 'items');
   }
+
+  // Global ordering operations
+  async getGlobalOrdering(contentType: string): Promise<Array<{item_id: string, display_order: number}>> {
+    console.log(`[MemoryStorage] getGlobalOrdering for ${contentType} - returning empty (no persistence)`);
+    return [];
+  }
+
+  async saveGlobalOrdering(contentType: string, ordering: Array<{item_id: string, display_order: number}>): Promise<void> {
+    console.log(`[MemoryStorage] saveGlobalOrdering for ${contentType}:`, ordering.length, 'items');
+  }
+
+  // FAQ seen tracking
+  async markFaqAsSeen(userId: string, faqId: string): Promise<void> {
+    console.log(`[MemoryStorage] markFaqAsSeen for user ${userId}, FAQ ${faqId}`);
+  }
+
+  async getUserSeenFaqs(userId: string): Promise<string[]> {
+    console.log(`[MemoryStorage] getUserSeenFaqs for user ${userId} - returning empty`);
+    return [];
+  }
+
+  // Announcement seen tracking
+  async markAnnouncementAsSeen(userId: string, announcementId: string): Promise<void> {
+    console.log(`[MemoryStorage] markAnnouncementAsSeen for user ${userId}, announcement ${announcementId}`);
+  }
+
+  async getUserSeenAnnouncements(userId: string): Promise<string[]> {
+    console.log(`[MemoryStorage] getUserSeenAnnouncements for user ${userId} - returning empty`);
+    return [];
+  }
 }

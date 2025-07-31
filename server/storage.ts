@@ -200,6 +200,18 @@ export interface IStorage {
   // User ordering operations for drag-and-drop
   getUserOrdering(userId: string, contentType: string): Promise<Array<{item_id: string, display_order: number}>>;
   saveUserOrdering(userId: string, contentType: string, ordering: Array<{item_id: string, display_order: number}>): Promise<void>;
+
+  // Global ordering operations
+  getGlobalOrdering(contentType: string): Promise<Array<{item_id: string, display_order: number}>>;
+  saveGlobalOrdering(contentType: string, ordering: Array<{item_id: string, display_order: number}>): Promise<void>;
+
+  // FAQ seen tracking
+  markFaqAsSeen(userId: string, faqId: string): Promise<void>;
+  getUserSeenFaqs(userId: string): Promise<string[]>;
+
+  // Announcement seen tracking
+  markAnnouncementAsSeen(userId: string, announcementId: string): Promise<void>;
+  getUserSeenAnnouncements(userId: string): Promise<string[]>;
 }
 
 // DatabaseStorage class commented out for beta testing

@@ -115,6 +115,40 @@ const SortableFAQItem = ({ faq, isEditing, onEdit, onSave, onCancel, onDelete, g
                   />
                 </div>
                 
+                <div className="flex items-center gap-4">
+                  <div>
+                    <Label htmlFor={`edit-icon-${faq.id}`}>Icon</Label>
+                    <Select 
+                      value={faq.icon || 'HelpCircle'} 
+                      onValueChange={(value) => onEdit({ ...faq, icon: value })}
+                    >
+                      <SelectTrigger className="mt-1 w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="HelpCircle">Help Circle</SelectItem>
+                        <SelectItem value="Settings">Settings</SelectItem>
+                        <SelectItem value="Users">Users</SelectItem>
+                        <SelectItem value="CreditCard">Billing</SelectItem>
+                        <SelectItem value="Wrench">Technical</SelectItem>
+                        <SelectItem value="Info">Information</SelectItem>
+                        <SelectItem value="MessageCircle">Support</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`edit-active-${faq.id}`}
+                      checked={faq.isActive}
+                      onChange={(e) => onEdit({ ...faq, isActive: e.target.checked })}
+                      className="rounded"
+                    />
+                    <Label htmlFor={`edit-active-${faq.id}`}>Active</Label>
+                  </div>
+                </div>
+                
                 <div className="flex items-center gap-4 pt-2">
                   <Button
                     onClick={onSave}
