@@ -171,28 +171,41 @@ export function registerRoutes(app: Express): void {
       res.status(201).json(template);
     } catch (error) {
       console.error("Error creating email template:", error);
-      res.status(500).json({ message: "Failed to create email template", error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ message: "Failed to create email template", error: errorMessage });
     }
   });
 
   app.put('/api/email-templates/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const validatedData = insertEmailTemplateSchema.partial().parse(req.body);
       
       // Extract user email from headers for tracking who edited the template
       const userEmail = req.headers['x-user-email'] || req.headers['x-replit-user-name'] || 'system';
       
       console.log('[EmailTemplates] Updating template', id, 'by user:', userEmail);
+      console.log('[EmailTemplates] Update data:', req.body);
       
-      const template = await storage.updateEmailTemplate(id, validatedData);
+      // Validate without strict schema to handle updates
+      let templateData = req.body;
+      
+      // Handle both old and new schema formats for updates
+      if (templateData.content && !templateData.contentEn) {
+        templateData.contentEn = templateData.content;
+        templateData.contentAr = templateData.content;
+        delete templateData.content;
+      }
+      
+      const template = await storage.updateEmailTemplate(id, templateData);
       res.json(template);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('[EmailTemplates] Validation error:', error.errors);
         return res.status(400).json({ message: "Invalid template data", errors: error.errors });
       }
       console.error("Error updating email template:", error);
-      res.status(500).json({ message: "Failed to update email template" });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ message: "Failed to update email template", error: errorMessage });
     }
   });
 

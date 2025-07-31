@@ -890,6 +890,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Email Template create mutation  
   const createEmailTemplateMutation = useMutation({
     mutationFn: async (templateData: any) => {
+      console.log('[AdminPanel] Creating email template with data:', templateData);
       const response = await apiRequest('POST', '/api/email-templates', templateData);
       return response;
     },
@@ -904,11 +905,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         description: "Email template created successfully!",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Email template creation error:', error);
+      const errorMessage = error?.message || error?.error || 'Failed to create email template';
+      const details = error?.errors ? error.errors.map((e: any) => e.message).join(', ') : '';
       toast({
         title: "Error",
-        description: "Failed to create email template",
+        description: details ? `${errorMessage}: ${details}` : errorMessage,
         variant: "destructive",
       });
     },
@@ -917,6 +920,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Email Template update mutation
   const updateEmailTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      console.log('[AdminPanel] Updating email template:', id, 'with data:', data);
       const response = await apiRequest('PUT', `/api/email-templates/${id}`, data);
       return response;
     },
@@ -931,11 +935,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         description: "Email template updated successfully!",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Email template update error:', error);
+      const errorMessage = error?.message || error?.error || 'Failed to update email template';
+      const details = error?.errors ? error.errors.map((e: any) => e.message).join(', ') : '';
       toast({
         title: "Error",
-        description: "Failed to update email template",
+        description: details ? `${errorMessage}: ${details}` : errorMessage,
         variant: "destructive",
       });
     },
