@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTemplates } from "@/hooks/useTemplates";
+import { useTemplateGroups } from "@/hooks/useTemplateGroups";
 import { useCustomerData } from "@/hooks/useCustomerData";
 import TemplateCard from "./TemplateCard";
-import { Search } from "lucide-react";
+import { Search, FolderOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getGenreColor } from '@/lib/templateColors';
 
@@ -12,21 +13,33 @@ export default function TemplatesArea() {
   const [searchTerm, setSearchTerm] = useState('');
   const { customerData } = useCustomerData();
 
-  const { data: allTemplates, isLoading } = useTemplates({
+  // Fetch template groups instead of individual templates
+  const { data: templateGroups, isLoading: groupsLoading } = useTemplateGroups();
+  
+  // Still fetch all templates for search functionality
+  const { data: allTemplates, isLoading: templatesLoading } = useTemplates({
     search: searchTerm || undefined,
     isActive: true,
   });
 
-  // All templates are now bilingual, no need to filter by language
+  const isLoading = groupsLoading || templatesLoading;
   const templates = allTemplates || [];
 
+  // Group templates by their group assignment
   const groupedTemplates = templates?.reduce((acc, template) => {
-    if (!acc[template.genre]) {
-      acc[template.genre] = [];
+    // For search results, group by genre for backward compatibility
+    const groupKey = template.genre;
+    if (!acc[groupKey]) {
+      acc[groupKey] = [];
     }
-    acc[template.genre].push(template);
+    acc[groupKey].push(template);
     return acc;
   }, {} as Record<string, typeof templates>) || {};
+
+  // Filter active groups and sort by orderIndex
+  const activeGroups = (templateGroups || [])
+    .filter((group: any) => group.isActive)
+    .sort((a: any, b: any) => a.orderIndex - b.orderIndex);
 
   return (
     <>
@@ -77,26 +90,80 @@ export default function TemplatesArea() {
             </div>
           ) : (
             <div className="space-y-6">
-              {Object.entries(groupedTemplates).map(([genre, genreTemplates]) => (
-                <div key={genre} className="template-category">
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                    <div className={`w-2 h-2 rounded-full mr-3 ${getGenreColor(genre).background.replace('100', '500')}`}></div>
-                    {genre} Templates
-                  </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
-                    {genreTemplates.map((template) => (
-                      <TemplateCard key={template.id} template={template} />
-                    ))}
+              {searchTerm ? (
+                // Show search results grouped by genre when searching
+                Object.entries(groupedTemplates).map(([genre, genreTemplates]) => (
+                  <div key={genre} className="template-category">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                      <div className={`w-2 h-2 rounded-full mr-3 ${getGenreColor(genre).background.replace('100', '500')}`}></div>
+                      {genre} Templates
+                    </h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
+                      {genreTemplates.map((template) => (
+                        <TemplateCard key={template.id} template={template} />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                // Show organized groups when not searching
+                activeGroups.map((group: any) => {
+                  // Get templates for this group by groupId, fallback to genre matching
+                  const groupTemplates = templates.filter((template: any) => 
+                    template.groupId === group.id || 
+                    (!template.groupId && template.genre === group.name)
+                  );
+                  
+                  if (groupTemplates.length === 0) return null;
+                  
+                  return (
+                    <div key={group.id} className="template-category">
+                      <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                        <div 
+                          className="w-3 h-3 rounded-full mr-3 border-2 border-white shadow-sm"
+                          style={{ backgroundColor: group.color }}
+                        />
+                        <FolderOpen className="w-4 h-4 mr-2 text-slate-600" />
+                        {group.name}
+                        <span className="ml-2 text-sm text-slate-500 font-normal">
+                          ({groupTemplates.length} templates)
+                        </span>
+                      </h3>
+                      {group.description && (
+                        <p className="text-sm text-slate-600 mb-4 ml-9">
+                          {group.description}
+                        </p>
+                      )}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
+                        {groupTemplates.map((template) => (
+                          <TemplateCard key={template.id} template={template} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           )}
 
-          {!isLoading && templates?.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-slate-500 text-lg">No templates found matching your criteria.</p>
-            </div>
+          {!isLoading && (
+            searchTerm ? (
+              templates?.length === 0 && (
+                <div className="text-center py-12">
+                  <Search className="h-16 w-16 mx-auto mb-4 text-slate-300" />
+                  <p className="text-slate-500 text-lg">No templates found matching "{searchTerm}"</p>
+                  <p className="text-slate-400 text-sm mt-2">Try adjusting your search terms or browse groups below</p>
+                </div>
+              )
+            ) : (
+              activeGroups.length === 0 && (
+                <div className="text-center py-12">
+                  <FolderOpen className="h-16 w-16 mx-auto mb-4 text-slate-300" />
+                  <p className="text-slate-500 text-lg">No template groups available</p>
+                  <p className="text-slate-400 text-sm mt-2">Template groups need to be created in the Admin Panel</p>
+                </div>
+              )
+            )
           )}
         </div>
       </div>

@@ -1859,6 +1859,8 @@ export class SupabaseStorage implements IStorage {
       category: data.category,
       genre: data.genre,
       variables: data.variables,
+      groupId: data.group_id,
+      groupOrder: data.group_order || 0,
       stageOrder: data.stage_order,
       isActive: data.is_active,
       usageCount: data.usage_count,

@@ -185,7 +185,7 @@ export function registerRoutes(app: Express): void {
       res.status(201).json(group);
     } catch (error) {
       console.error('[LiveReplyTemplateGroups] Error occurred:', error);
-      console.log('[LiveReplyTemplateGroups] Error stack:', error?.stack);
+      console.log('[LiveReplyTemplateGroups] Error stack:', (error as Error)?.stack);
       
       if (error instanceof z.ZodError) {
         console.log('[LiveReplyTemplateGroups] Zod validation error:', error.errors);
@@ -193,7 +193,7 @@ export function registerRoutes(app: Express): void {
       }
       
       console.error("[LiveReplyTemplateGroups] Storage error:", error);
-      res.status(500).json({ message: "Failed to create live reply template group", error: error?.message });
+      res.status(500).json({ message: "Failed to create live reply template group", error: (error as Error)?.message });
     }
   });
 
@@ -220,11 +220,18 @@ export function registerRoutes(app: Express): void {
   app.delete('/api/live-reply-template-groups/:id', async (req, res) => {
     try {
       const { id } = req.params;
+      console.log('[LiveReplyTemplateGroups] DELETE request for group ID:', id);
+      
       await storage.deleteLiveReplyTemplateGroup(id);
-      res.status(204).send();
+      
+      console.log('[LiveReplyTemplateGroups] Group deleted successfully');
+      res.status(200).json({ message: "Group deleted successfully" });
     } catch (error) {
       console.error("Error deleting live reply template group:", error);
-      res.status(500).json({ message: "Failed to delete live reply template group" });
+      res.status(500).json({ 
+        message: "Failed to delete live reply template group",
+        error: (error as Error)?.message || 'Unknown error'
+      });
     }
   });
 
@@ -241,6 +248,22 @@ export function registerRoutes(app: Express): void {
     } catch (error) {
       console.error("Error reordering live reply template groups:", error);
       res.status(500).json({ message: "Failed to reorder live reply template groups" });
+    }
+  });
+
+  // Move template to group endpoint
+  app.post('/api/live-reply-templates/:id/move-to-group', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { groupId } = req.body;
+      
+      console.log('[LiveReplyTemplates] Moving template', id, 'to group', groupId);
+      
+      const template = await storage.updateLiveReplyTemplate(id, { groupId });
+      res.json(template);
+    } catch (error) {
+      console.error("Error moving template to group:", error);
+      res.status(500).json({ message: "Failed to move template to group" });
     }
   });
 
