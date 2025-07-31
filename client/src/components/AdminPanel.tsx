@@ -1101,11 +1101,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <span className="hidden lg:inline">Site Content</span>
                 <span className="lg:hidden">Content</span>
               </TabsTrigger>
-              <TabsTrigger value="faqs" className="text-xs lg:text-sm p-2 lg:p-3">
-                <Info className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
-                <span className="hidden lg:inline">FAQ Management</span>
-                <span className="lg:hidden">FAQs</span>
-              </TabsTrigger>
+
 
             </TabsList>
 
@@ -2353,9 +2349,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="faqs" className="flex-1 overflow-y-auto">
-            <FAQEditor userId={currentUser?.id} />
-          </TabsContent>
+
         </Tabs>
         </div>
 

@@ -41,49 +41,8 @@ export class MemoryStorage implements IStorage {
   }
 
   private initializeSampleData(): void {
-    // Add sample FAQ data
-    const sampleFaqs: Faq[] = [
-      {
-        id: 'faq-1',
-        question: 'How do I track my order?',
-        answer: 'You can track your order by entering your order number in the "Check Order" section of our website. You will receive real-time updates on your order status.',
-        category: 'orders',
-        order: 1,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        supabaseId: null,
-        lastSyncedAt: null,
-      },
-      {
-        id: 'faq-2',
-        question: 'What are your business hours?',
-        answer: 'Our customer service team is available Monday through Friday from 9 AM to 6 PM EST. For urgent matters, you can reach us through our 24/7 live chat support.',
-        category: 'general',
-        order: 2,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        supabaseId: null,
-        lastSyncedAt: null,
-      },
-      {
-        id: 'faq-3',
-        question: 'How do I return an item?',
-        answer: 'To return an item, please contact our customer service team within 30 days of purchase. We will provide you with a return authorization and shipping instructions.',
-        category: 'returns',
-        order: 3,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        supabaseId: null,
-        lastSyncedAt: null,
-      },
-    ];
-
-    sampleFaqs.forEach(faq => {
-      this.faqs.set(faq.id, faq);
-    });
+    // FAQ data will be fetched from database only - no hardcoded data
+    console.log('[MemoryStorage] FAQ system configured to use database data only');
   }
 
 
@@ -349,7 +308,7 @@ export class MemoryStorage implements IStorage {
       const searchLower = filters.search.toLowerCase();
       templates = templates.filter(t => 
         t.name.toLowerCase().includes(searchLower) ||
-        t.content.toLowerCase().includes(searchLower) ||
+        (t.content && t.content.toLowerCase().includes(searchLower)) ||
         t.subject.toLowerCase().includes(searchLower) ||
         t.category.toLowerCase().includes(searchLower) ||
         t.genre.toLowerCase().includes(searchLower) ||
@@ -376,7 +335,9 @@ export class MemoryStorage implements IStorage {
       id,
       name: template.name,
       subject: template.subject,
-      content: template.content,
+      content: template.content || '',
+      contentEn: template.contentEn || template.content || '',
+      contentAr: template.contentAr || '',
       category: template.category,
       genre: template.genre,
       concernedTeam: template.concernedTeam,
@@ -385,7 +346,6 @@ export class MemoryStorage implements IStorage {
       stageOrder: template.stageOrder || 1,
       isActive: template.isActive !== undefined ? template.isActive : true,
       usageCount: 0,
-
       createdAt: now,
       updatedAt: now,
       supabaseId: null,
@@ -812,5 +772,17 @@ export class MemoryStorage implements IStorage {
 
   async deleteFaq(id: string): Promise<void> {
     this.faqs.delete(id);
+  }
+
+  // User ordering operations (for drag-and-drop functionality)
+  async getUserOrdering(userId: string, contentType: string): Promise<Array<{item_id: string, display_order: number}>> {
+    // Memory storage doesn't persist ordering, return empty array
+    console.log(`[MemoryStorage] getUserOrdering for ${userId}, ${contentType} - returning empty (no persistence)`);
+    return [];
+  }
+
+  async saveUserOrdering(userId: string, contentType: string, ordering: Array<{item_id: string, display_order: number}>): Promise<void> {
+    // Memory storage doesn't persist ordering, just log
+    console.log(`[MemoryStorage] saveUserOrdering for ${userId}, ${contentType}:`, ordering.length, 'items');
   }
 }
