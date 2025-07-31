@@ -32,7 +32,7 @@ export const announcementPriorityEnum = pgEnum("announcement_priority", ["low", 
 
 // User storage table (mandatory for Replit Auth)
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
+  id: uuid("id").primaryKey().notNull(),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
@@ -57,7 +57,7 @@ export const liveReplyTemplates = pgTable("live_reply_templates", {
   stageOrder: integer("stage_order").default(1).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   usageCount: integer("usage_count").default(0).notNull(),
-  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdBy: uuid("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
@@ -79,7 +79,7 @@ export const emailTemplates = pgTable("email_templates", {
   stageOrder: integer("stage_order").default(1).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   usageCount: integer("usage_count").default(0).notNull(),
-  createdBy: varchar("created_by").references(() => users.id),
+  createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
@@ -90,14 +90,14 @@ export const emailTemplates = pgTable("email_templates", {
 export const liveReplyUsage = pgTable("live_reply_usage", {
   id: uuid("id").primaryKey().defaultRandom(),
   templateId: uuid("template_id").references(() => liveReplyTemplates.id).notNull(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
   usedAt: timestamp("used_at").defaultNow(),
 });
 
 export const emailTemplateUsage = pgTable("email_template_usage", {
   id: uuid("id").primaryKey().defaultRandom(),
   templateId: uuid("template_id").references(() => emailTemplates.id).notNull(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
   usedAt: timestamp("used_at").defaultNow(),
 });
 
@@ -105,7 +105,7 @@ export const siteContent = pgTable("site_content", {
   id: uuid("id").primaryKey().defaultRandom(),
   key: varchar("key").unique().notNull(),
   content: text("content").notNull(),
-  updatedBy: varchar("updated_by").references(() => users.id).notNull(),
+  updatedBy: uuid("updated_by").references(() => users.id).notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
   supabaseId: uuid("supabase_id").unique(), // Maps to Supabase record
@@ -124,7 +124,7 @@ export const announcements = pgTable("announcements", {
   priority: announcementPriorityEnum("priority").default("medium").notNull(),
   version: integer("version").default(1).notNull(), // Version for re-announce functionality
   lastAnnouncedAt: timestamp("last_announced_at").defaultNow(), // Track when last announced
-  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdBy: uuid("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
@@ -135,7 +135,7 @@ export const announcements = pgTable("announcements", {
 // User announcement acknowledgments to track who has seen announcements
 export const userAnnouncementAcks = pgTable("user_announcement_acks", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
   announcementId: uuid("announcement_id").references(() => announcements.id).notNull(),
   acknowledgedAt: timestamp("acknowledged_at").defaultNow(),
   // Supabase sync tracking
@@ -351,7 +351,7 @@ export const templateVariableCategories = pgTable("template_variable_categories"
   displayName: varchar("display_name").notNull(),
   color: varchar("color").default("#3b82f6").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
-  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdBy: uuid("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
