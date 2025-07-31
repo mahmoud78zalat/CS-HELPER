@@ -100,7 +100,10 @@ const SortableVariableItem = ({ variable, onEdit, onDelete }: {
                 
                 <div className="bg-gray-50 rounded px-2 py-1">
                   <p className="text-xs font-mono text-gray-700 line-clamp-1">
-                    {variable.value}
+                    {variable.value && typeof variable.value === 'string' && variable.value.length > 0 ? 
+                      variable.value : 
+                      'No value set'
+                    }
                   </p>
                 </div>
               </div>

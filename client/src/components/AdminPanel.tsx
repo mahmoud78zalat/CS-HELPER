@@ -19,7 +19,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { realTimeService } from "@/lib/realTimeService";
 import { 
   X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
-  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save, Loader2
+  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save, Loader2, HelpCircle
 } from "lucide-react";
 import { User, Template, EmailTemplate } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
@@ -27,6 +27,7 @@ import TemplateConfigManager from "@/components/TemplateConfigManager";
 
 import DragDropEmailTemplates from "@/components/DragDropEmailTemplates";
 import DragDropLiveTemplates from "@/components/DragDropLiveTemplates";
+import FAQEditor from "@/components/FAQEditor";
 
 import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates, loadColorsFromDatabase } from "@/lib/templateColors";
 import { HexColorPicker } from 'react-colorful';
@@ -2175,7 +2176,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </CardContent>
                 </Card>
 
-
+                {/* FAQ Management Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <HelpCircle className="h-5 w-5" />
+                      FAQ Management
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Manage frequently asked questions with drag-and-drop ordering</p>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <FAQEditor />
+                  </CardContent>
+                </Card>
 
                 {/* Template Configuration Section */}
                 <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowConfigManager(true)}>

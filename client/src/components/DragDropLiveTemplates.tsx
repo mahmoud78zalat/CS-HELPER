@@ -86,7 +86,10 @@ const SortableLiveTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
                 </div>
                 
                 <p className="text-xs text-slate-500 line-clamp-2">
-                  {template.content.substring(0, 120)}...
+                  {template.content && template.content.length > 0 ? 
+                    template.content.substring(0, 120) + (template.content.length > 120 ? '...' : '') : 
+                    'No content available'
+                  }
                 </p>
               </div>
               
