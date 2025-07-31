@@ -434,7 +434,17 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Live reply template groups query with enhanced error handling
   const { data: templateGroups = [], isLoading: groupsLoading, error: groupsError, refetch: refetchGroups } = useQuery({
     queryKey: ['/api/live-reply-template-groups'],
-    queryFn: () => apiRequest('GET', '/api/live-reply-template-groups'),
+    queryFn: async () => {
+      try {
+        const result = await apiRequest('GET', '/api/live-reply-template-groups');
+        // Ensure we always return an array
+        return Array.isArray(result) ? result : [];
+      } catch (error) {
+        console.error('Failed to load template groups:', error);
+        // Return empty array on error to prevent crashes
+        return [];
+      }
+    },
     retry: 3,
     staleTime: 30000,
     onError: (error: any) => {

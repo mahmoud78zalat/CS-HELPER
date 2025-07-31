@@ -71,7 +71,7 @@ const SortableTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
     <Card 
       ref={setNodeRef} 
       style={style} 
-      className={`w-[240px] ${isDragging ? 'shadow-lg z-50' : ''} hover:shadow-md transition-shadow bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700`}
+      className={`w-[280px] min-w-[280px] max-w-[280px] ${isDragging ? 'shadow-lg z-50' : ''} hover:shadow-md transition-shadow bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700`}
     >
       <CardContent className="p-3">
         <div className="flex items-start gap-2">
@@ -85,7 +85,7 @@ const SortableTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
           
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-1.5">
-              <h4 className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate pr-1">
+              <h4 className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate pr-2 flex-1 min-w-0">
                 {template.name}
               </h4>
               
@@ -136,9 +136,9 @@ const SortableTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
               )}
             </div>
             
-            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-              {(template.contentEn || template.content || '').substring(0, 90)}
-              {(template.contentEn || template.content || '').length > 90 ? '...' : ''}
+            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed">
+              {(template.contentEn || template.content || '').substring(0, 140)}
+              {(template.contentEn || template.content || '').length > 140 ? '...' : ''}
             </p>
           </div>
         </div>
@@ -384,7 +384,7 @@ export default function HorizontalGroupedTemplates({
           );
           setGroupedData(newGroupedData);
           saveTemplateOrderMutation.mutate({ 
-            groupId: activeContext.groupId, 
+            groupId: activeContext.groupId || undefined, 
             orderedTemplates: newTemplates 
           });
         }

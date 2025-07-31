@@ -152,7 +152,9 @@ export default function GroupManager({
 
   // Update local groups when props change
   useEffect(() => {
-    setLocalGroups(groups.sort((a, b) => a.orderIndex - b.orderIndex));
+    // Ensure groups is an array before sorting
+    const groupsArray = Array.isArray(groups) ? groups : [];
+    setLocalGroups(groupsArray.sort((a, b) => a.orderIndex - b.orderIndex));
   }, [groups]);
 
   // Initialize form when editing
@@ -194,7 +196,8 @@ export default function GroupManager({
         variant: "destructive" 
       });
       // Revert to original order
-      setLocalGroups(groups.sort((a, b) => a.orderIndex - b.orderIndex));
+      const groupsArray = Array.isArray(groups) ? groups : [];
+      setLocalGroups(groupsArray.sort((a, b) => a.orderIndex - b.orderIndex));
     },
   });
 
@@ -202,7 +205,7 @@ export default function GroupManager({
     mutationFn: async (groupData: typeof formData) => {
       const dataToSend = {
         ...groupData,
-        orderIndex: Math.max(...groups.map(g => g.orderIndex || 0), 0) + 1
+        orderIndex: Math.max(...(Array.isArray(groups) ? groups : []).map(g => g.orderIndex || 0), 0) + 1
       };
       return apiRequest('POST', '/api/live-reply-template-groups', dataToSend);
     },
