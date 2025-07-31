@@ -438,10 +438,25 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     queryKey: ['/api/live-reply-template-groups'],
     queryFn: async () => {
       try {
-        const result = await apiRequest('GET', '/api/live-reply-template-groups');
+        const response = await apiRequest('GET', '/api/live-reply-template-groups');
+        const result = await response.json();
         console.log('[AdminPanel] Template groups fetched:', result);
-        // Ensure we always return an array
-        return Array.isArray(result) ? result : [];
+        console.log('[AdminPanel] Template groups type:', typeof result);
+        console.log('[AdminPanel] Template groups isArray:', Array.isArray(result));
+        
+        // Handle different response formats
+        if (Array.isArray(result)) {
+          return result;
+        } else if (result && typeof result === 'object' && result.data && Array.isArray(result.data)) {
+          return result.data;
+        } else if (result && typeof result === 'object') {
+          // If it's an object but not an array, convert to array or return empty
+          console.warn('[AdminPanel] Unexpected response format for groups:', result);
+          return [];
+        } else {
+          console.warn('[AdminPanel] Invalid response for groups:', result);
+          return [];
+        }
       } catch (error) {
         console.error('Failed to load template groups:', error);
         // Return empty array on error to prevent crashes
@@ -449,8 +464,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       }
     },
     retry: 3,
-    staleTime: 5000, // 5 seconds for real-time feel
-    refetchInterval: 10000, // Auto-refresh every 10 seconds
+    staleTime: 2000, // Shorter stale time for real-time feel
+    refetchInterval: 8000, // Auto-refresh every 8 seconds
     onError: (error: any) => {
       console.error('Failed to load template groups:', error);
       toast({
@@ -664,8 +679,33 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
       await apiRequest('PATCH', `/api/users/${userId}/role`, { role });
     },
+    onMutate: async ({ userId, role }) => {
+      // Cancel any outgoing refetches to avoid optimistic update conflicts
+      await queryClient.cancelQueries({ queryKey: ['/api/admin/users'] });
+
+      // Snapshot the previous value
+      const previousUsers = queryClient.getQueryData(['/api/admin/users']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['/api/admin/users'], (old: User[]) => {
+        if (!old) return old;
+        return old.map(user => 
+          user.id === userId 
+            ? { ...user, role: role as 'admin' | 'agent', updatedAt: new Date() }
+            : user
+        );
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousUsers };
+    },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      // Invalidate and refetch for real-time updates
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/users'] })
+      ]);
+      
       // Broadcast user update to all connected users
       await realTimeService.broadcastUserUpdate();
       toast({
@@ -673,6 +713,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         description: "User permissions changed successfully",
         duration: 3000,
       });
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, rollback to the previous value
+      if (context?.previousUsers) {
+        queryClient.setQueryData(['/api/admin/users'], context.previousUsers);
+      }
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -904,8 +950,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       
       try {
         const response = await apiRequest('POST', '/api/live-reply-template-groups', requestPayload);
-        console.log('[AdminPanel] Group creation response:', response);
-        return response;
+        const result = await response.json();
+        console.log('[AdminPanel] Group creation response:', result);
+        return result;
       } catch (error) {
         console.error('[AdminPanel] Group creation apiRequest failed:', error);
         console.log('[AdminPanel] Error details:', {
@@ -916,21 +963,61 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         throw error;
       }
     },
-    onSuccess: async () => {
-      console.log('[AdminPanel] Group creation successful, invalidating queries...');
+    onMutate: async (groupData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['/api/live-reply-template-groups'] });
+
+      // Snapshot the previous value
+      const previousGroups = queryClient.getQueryData(['/api/live-reply-template-groups']);
+
+      // Optimistically add the new group
+      const tempGroup = {
+        id: `temp-${Date.now()}`,
+        name: groupData.name,
+        description: groupData.description || '',
+        color: groupData.color,
+        orderIndex: templateGroups.length || 0,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      queryClient.setQueryData(['/api/live-reply-template-groups'], (old: any) => {
+        const oldGroups = Array.isArray(old) ? old : [];
+        return [...oldGroups, tempGroup];
+      });
+
+      return { previousGroups, tempGroup };
+    },
+    onSuccess: async (newGroup, variables, context) => {
+      console.log('[AdminPanel] Group creation successful, invalidating queries...', newGroup);
       
-      // Force refetch of both templates and groups
-      await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
-      await refetchGroups();
-      await refetchTemplates();
+      // Remove optimistic update and add real data
+      queryClient.setQueryData(['/api/live-reply-template-groups'], (old: any) => {
+        const oldGroups = Array.isArray(old) ? old : [];
+        // Remove temp group and add real group
+        const filteredGroups = oldGroups.filter(g => g.id !== context?.tempGroup?.id);
+        return [...filteredGroups, newGroup];
+      });
+      
+      // Force complete cache refresh for real-time updates
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/live-reply-template-groups'] })
+      ]);
       
       toast({
         title: "Success",
         description: "Template group created successfully!",
       });
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
+      // Rollback optimistic update
+      if (context?.previousGroups) {
+        queryClient.setQueryData(['/api/live-reply-template-groups'], context.previousGroups);
+      }
+      
       console.error('[AdminPanel] Group creation mutation error:', error);
       console.log('[AdminPanel] Error type:', typeof error);
       console.log('[AdminPanel] Error keys:', Object.keys(error || {}));
@@ -946,7 +1033,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Group update mutation
   const updateGroupMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      return await apiRequest('PUT', `/api/live-reply-template-groups/${id}`, data);
+      const response = await apiRequest('PUT', `/api/live-reply-template-groups/${id}`, data);
+      return await response.json();
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
@@ -969,7 +1057,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Live Chat Template create mutation
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData: any) => {
-      return await apiRequest('POST', '/api/live-reply-templates', templateData);
+      const response = await apiRequest('POST', '/api/live-reply-templates', templateData);
+      return await response.json();
     },
     onSuccess: async () => {
       // Invalidate and refetch for immediate updates
@@ -996,7 +1085,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Live Chat Template update mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      return await apiRequest('PUT', `/api/live-reply-templates/${id}`, data);
+      const response = await apiRequest('PUT', `/api/live-reply-templates/${id}`, data);
+      return await response.json();
     },
     onSuccess: async () => {
       // Invalidate and refetch for immediate updates
@@ -1025,7 +1115,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     mutationFn: async (templateData: any) => {
       console.log('[AdminPanel] Creating email template with data:', templateData);
       const response = await apiRequest('POST', '/api/email-templates', templateData);
-      return response;
+      return await response.json();
     },
     onSuccess: async () => {
       // Force refetch email templates immediately

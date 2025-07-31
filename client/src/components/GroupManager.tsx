@@ -191,7 +191,8 @@ export default function GroupManager({
   // Group reordering mutation
   const reorderGroupsMutation = useMutation({
     mutationFn: async (updates: { id: string; orderIndex: number }[]) => {
-      return apiRequest('POST', '/api/live-reply-template-groups/reorder', { updates });
+      const response = await apiRequest('POST', '/api/live-reply-template-groups/reorder', { updates });
+      return await response.json();
     },
     onError: (error: any) => {
       toast({ 
@@ -247,13 +248,37 @@ export default function GroupManager({
 
   const deleteGroupMutation = useMutation({
     mutationFn: async (groupId: string) => {
-      return apiRequest('DELETE', `/api/live-reply-template-groups/${groupId}`);
+      const response = await apiRequest('DELETE', `/api/live-reply-template-groups/${groupId}`);
+      return await response.json();
+    },
+    onMutate: async (groupId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['/api/live-reply-template-groups'] });
+
+      // Snapshot the previous value
+      const previousGroups = queryClient.getQueryData(['/api/live-reply-template-groups']);
+
+      // Optimistically remove the group
+      queryClient.setQueryData(['/api/live-reply-template-groups'], (old: any[]) => {
+        if (!old) return old;
+        return old.filter(group => group.id !== groupId);
+      });
+
+      return { previousGroups };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
+      // Invalidate for real-time updates across all components
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] })
+      ]);
       toast({ title: "Group deleted successfully" });
     },
-    onError: (error: any) => {
+    onError: (error: any, variables, context) => {
+      // Rollback on error
+      if (context?.previousGroups) {
+        queryClient.setQueryData(['/api/live-reply-template-groups'], context.previousGroups);
+      }
       console.error('Delete group error:', error);
       toast({ 
         title: "Failed to delete group", 
