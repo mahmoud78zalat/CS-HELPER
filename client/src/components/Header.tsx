@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/context/ThemeContext";
-import { Headphones, Mail, Settings, Info, LogOut, Edit3, Sun, Moon } from "lucide-react";
+import { Headphones, Mail, Settings, Info, LogOut, Edit3, Sun, Moon, HelpCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -10,6 +10,7 @@ interface HeaderProps {
   onEmailComposer: () => void;
   onAdminPanel: () => void;
   onAbout: () => void;
+  onFAQ: () => void;
 }
 
 export default function Header({ onEmailComposer, onAdminPanel, onAbout }: HeaderProps) {
@@ -158,6 +159,16 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
               </Button>
 
               <Button 
+                onClick={onFAQ}
+                size="sm"
+                variant="outline"
+                className="relative bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 text-yellow-700 dark:text-yellow-400 p-2 rounded-lg hover:shadow-lg transition-all duration-200 animate-pulse"
+              >
+                <HelpCircle className="w-4 h-4" />
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
+              </Button>
+
+              <Button 
                 onClick={onAbout}
                 size="sm"
                 variant="outline"
@@ -198,6 +209,24 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout }: Heade
                 {theme === 'light' ? 'Dark' : 'Light'}
               </Button>
 
+              <Button 
+                onClick={onFAQ}
+                variant="outline"
+                className="relative bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 text-yellow-700 dark:text-yellow-400 px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-200 animate-pulse"
+              >
+                <HelpCircle className="w-4 h-4 mr-2" />
+                FAQ
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
+              </Button>
+
+              <Button 
+                onClick={onAbout}
+                variant="outline"
+                className="px-4 py-2 rounded-lg transition-colors duration-200"
+              >
+                <Info className="w-4 h-4 mr-2" />
+                About
+              </Button>
 
             </div>
 

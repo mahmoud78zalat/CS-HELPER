@@ -114,6 +114,21 @@ export const siteContent = pgTable("site_content", {
   lastSyncedAt: timestamp("last_synced_at"),
 });
 
+// FAQ entries for user help and information
+export const faqs = pgTable("faqs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  category: varchar("category").default("general").notNull(),
+  order: integer("order").default(0).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(), // Maps to Supabase record
+  lastSyncedAt: timestamp("last_synced_at"),
+});
+
 // Global announcements table for admin broadcast messages
 export const announcements = pgTable("announcements", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -266,6 +281,14 @@ export const insertUserAnnouncementAckSchema = createInsertSchema(userAnnounceme
   lastSyncedAt: true,
 });
 
+export const insertFaqSchema = createInsertSchema(faqs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -290,6 +313,9 @@ export type Announcement = typeof announcements.$inferSelect;
 
 export type InsertUserAnnouncementAck = z.infer<typeof insertUserAnnouncementAckSchema>;
 export type UserAnnouncementAck = typeof userAnnouncementAcks.$inferSelect;
+
+export type InsertFaq = z.infer<typeof insertFaqSchema>;
+export type Faq = typeof faqs.$inferSelect;
 
 // Personal Notes Schema
 export const personalNotes = pgTable("personal_notes", {

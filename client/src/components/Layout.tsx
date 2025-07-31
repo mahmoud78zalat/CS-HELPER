@@ -9,6 +9,7 @@ interface LayoutProps {
   onEmailComposer: () => void;
   onAdminPanel: () => void;
   onAbout: () => void;
+  onFAQ: () => void;
 }
 
 export default function Layout({ 
@@ -16,7 +17,8 @@ export default function Layout({
   onCheckOrder, 
   onEmailComposer, 
   onAdminPanel, 
-  onAbout 
+  onAbout,
+  onFAQ 
 }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -25,6 +27,7 @@ export default function Layout({
         onEmailComposer={onEmailComposer}
         onAdminPanel={onAdminPanel}
         onAbout={onAbout}
+        onFAQ={onFAQ}
       />
       
       {/* Responsive layout with sidebar always visible */}

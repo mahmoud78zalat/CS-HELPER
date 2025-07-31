@@ -1452,18 +1452,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         <TableCell>{user.firstName} {user.lastName}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
-                          <Select 
-                            value={user.role} 
-                            onValueChange={(role) => handleUserRoleChange(user.id, role)}
-                          >
-                            <SelectTrigger className="w-24">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="agent">Agent</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                            {user.role}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
@@ -1931,12 +1922,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           {users?.filter(u => u.role === 'admin').length || 0}
                         </Badge>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Blocked/Banned:</span>
-                        <Badge variant="destructive">
-                          {users?.filter(u => u.status === 'blocked' || u.status === 'banned').length || 0}
-                        </Badge>
-                      </div>
+
                     </div>
                   </CardContent>
                 </Card>

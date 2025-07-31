@@ -15,6 +15,8 @@ import {
   type InsertAnnouncement,
   type UserAnnouncementAck,
   type InsertUserAnnouncementAck,
+  type Faq,
+  type InsertFaq,
   // Legacy types for backward compatibility
   type Template,
   type InsertTemplate,
@@ -31,10 +33,57 @@ export class MemoryStorage implements IStorage {
   private siteContent = new Map<string, SiteContent>();
   private announcements = new Map<string, Announcement>();
   private userAnnouncementAcks = new Map<string, UserAnnouncementAck>();
+  private faqs = new Map<string, Faq>();
 
   constructor() {
     console.log('[MemoryStorage] ⚠️  Using memory storage - data will not persist!');
-    // Note: No hardcoded data - everything should come from Supabase
+    this.initializeSampleData();
+  }
+
+  private initializeSampleData(): void {
+    // Add sample FAQ data
+    const sampleFaqs: Faq[] = [
+      {
+        id: 'faq-1',
+        question: 'How do I track my order?',
+        answer: 'You can track your order by entering your order number in the "Check Order" section of our website. You will receive real-time updates on your order status.',
+        category: 'orders',
+        order: 1,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+      },
+      {
+        id: 'faq-2',
+        question: 'What are your business hours?',
+        answer: 'Our customer service team is available Monday through Friday from 9 AM to 6 PM EST. For urgent matters, you can reach us through our 24/7 live chat support.',
+        category: 'general',
+        order: 2,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+      },
+      {
+        id: 'faq-3',
+        question: 'How do I return an item?',
+        answer: 'To return an item, please contact our customer service team within 30 days of purchase. We will provide you with a return authorization and shipping instructions.',
+        category: 'returns',
+        order: 3,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+      },
+    ];
+
+    sampleFaqs.forEach(faq => {
+      this.faqs.set(faq.id, faq);
+    });
   }
 
 
@@ -695,5 +744,73 @@ export class MemoryStorage implements IStorage {
 
   async deleteColorSetting(id: string): Promise<void> {
     throw new Error('Not implemented in memory storage');
+  }
+
+  // FAQ operations
+  async getFaqs(filters?: { category?: string; search?: string; isActive?: boolean; }): Promise<Faq[]> {
+    let faqList = Array.from(this.faqs.values());
+
+    if (filters?.category) {
+      faqList = faqList.filter(f => f.category === filters.category);
+    }
+
+    if (filters?.search) {
+      const searchLower = filters.search.toLowerCase();
+      faqList = faqList.filter(f => 
+        f.question.toLowerCase().includes(searchLower) ||
+        f.answer.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (filters?.isActive !== undefined) {
+      faqList = faqList.filter(f => f.isActive === filters.isActive);
+    }
+
+    return faqList.sort((a, b) => a.order - b.order);
+  }
+
+  async getFaq(id: string): Promise<Faq | undefined> {
+    return this.faqs.get(id);
+  }
+
+  async createFaq(faq: InsertFaq): Promise<Faq> {
+    const id = nanoid();
+    const now = new Date();
+    
+    const newFaq: Faq = {
+      id,
+      question: faq.question,
+      answer: faq.answer,
+      category: faq.category || 'general',
+      order: faq.order || 0,
+      isActive: faq.isActive !== undefined ? faq.isActive : true,
+      createdAt: now,
+      updatedAt: now,
+      supabaseId: null,
+      lastSyncedAt: null,
+    };
+    
+    this.faqs.set(id, newFaq);
+    return newFaq;
+  }
+
+  async updateFaq(id: string, faq: Partial<InsertFaq>): Promise<Faq> {
+    const existingFaq = this.faqs.get(id);
+    if (!existingFaq) {
+      throw new Error("FAQ not found");
+    }
+
+    const updatedFaq: Faq = {
+      ...existingFaq,
+      ...faq,
+      updatedAt: new Date(),
+    };
+
+    this.faqs.set(id, updatedFaq);
+    return updatedFaq;
+  }
+
+  async deleteFaq(id: string): Promise<void> {
+    this.faqs.delete(id);
   }
 }

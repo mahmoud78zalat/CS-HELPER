@@ -22,11 +22,15 @@ import {
 
 interface SidebarProps {
   onCheckOrder: () => void;
+  onEmailComposer: () => void;
+  onAdminPanel: () => void;
   onAbout: () => void;
 }
 
 export default function Sidebar({ 
   onCheckOrder, 
+  onEmailComposer,
+  onAdminPanel,
   onAbout 
 }: SidebarProps) {
   const { user, signOut } = useAuth();

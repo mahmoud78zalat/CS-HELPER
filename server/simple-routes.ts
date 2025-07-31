@@ -7,6 +7,7 @@ import {
   insertEmailTemplateSchema, 
   insertSiteContentSchema,
   insertPersonalNoteSchema,
+  insertFaqSchema,
   // Legacy for backward compatibility
   insertLiveReplyTemplateSchema as insertTemplateSchema
 } from "@shared/schema";
@@ -1287,6 +1288,64 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // FAQ API routes
+  app.get('/api/faqs', async (req, res) => {
+    try {
+      const { category, search, isActive } = req.query;
+      const filters = {
+        category: category as string,
+        search: search as string,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      };
+
+      const faqs = await storage.getFaqs(filters);
+      res.json(faqs);
+    } catch (error) {
+      console.error('[API] Error fetching FAQs:', error);
+      res.status(500).json({ message: 'Failed to fetch FAQs' });
+    }
+  });
+
+  app.post('/api/faqs', async (req, res) => {
+    try {
+      const validatedData = insertFaqSchema.parse(req.body);
+      const faq = await storage.createFaq(validatedData);
+      res.status(201).json(faq);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid FAQ data", errors: error.errors });
+      }
+      console.error('[API] Error creating FAQ:', error);
+      res.status(500).json({ message: 'Failed to create FAQ' });
+    }
+  });
+
+  app.put('/api/faqs/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertFaqSchema.partial().parse(req.body);
+      const faq = await storage.updateFaq(id, validatedData);
+      res.json(faq);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid FAQ data", errors: error.errors });
+      }
+      console.error('[API] Error updating FAQ:', error);
+      res.status(500).json({ message: 'Failed to update FAQ' });
+    }
+  });
+
+  app.delete('/api/faqs/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteFaq(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting FAQ:', error);
+      res.status(500).json({ message: 'Failed to delete FAQ' });
+    }
+  });
+
   // Railway deployment debugging endpoints
   app.get('/api/railway/supabase-debug', railwaySupabaseDebug);
   app.get('/api/railway/health', railwayHealthCheck);
@@ -1301,6 +1360,7 @@ export function registerRoutes(app: Express): void {
   console.log('[Simple Routes]   - Personal Notes: /api/personal-notes');
   console.log('[Simple Routes]   - Template Variables: /api/template-variables');
   console.log('[Simple Routes]   - Color Settings: /api/color-settings');
+  console.log('[Simple Routes]   - FAQs: /api/faqs');
 
   // Note: WebSocket functionality disabled for Vercel serverless deployment
   // Real-time features can be implemented using Supabase real-time subscriptions in the client

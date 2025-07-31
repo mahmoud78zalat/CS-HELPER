@@ -32,6 +32,8 @@ import {
   type InsertTemplateVariableCategory,
   type ColorSetting,
   type InsertColorSetting,
+  type Faq,
+  type InsertFaq,
   // Legacy types for backward compatibility
   type Template,
   type InsertTemplate,
@@ -171,6 +173,17 @@ export interface IStorage {
   getColorSetting(id: string): Promise<ColorSetting | undefined>;
   upsertColorSetting(colorSetting: InsertColorSetting): Promise<ColorSetting>;
   deleteColorSetting(id: string): Promise<void>;
+
+  // FAQ operations
+  getFaqs(filters?: {
+    category?: string;
+    search?: string;
+    isActive?: boolean;
+  }): Promise<Faq[]>;
+  getFaq(id: string): Promise<Faq | undefined>;
+  createFaq(faq: InsertFaq): Promise<Faq>;
+  updateFaq(id: string, faq: Partial<InsertFaq>): Promise<Faq>;
+  deleteFaq(id: string): Promise<void>;
 }
 
 // DatabaseStorage class commented out for beta testing
