@@ -1228,22 +1228,7 @@ export class SupabaseStorage implements IStorage {
     return data ? data.map(ack => ack.announcement_id) : [];
   }
 
-  async acknowledgeAnnouncement(userId: string, announcementId: string): Promise<void> {
-    const { error } = await this.serviceClient
-      .from('user_announcement_acks')
-      .upsert({
-        user_id: userId,
-        announcement_id: announcementId,
-        acknowledged_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id,announcement_id'
-      });
 
-    if (error) {
-      console.error('[SupabaseStorage] Error acknowledging announcement:', error);
-      throw new Error(`Failed to acknowledge announcement: ${error.message}`);
-    }
-  }
 
   async getUserAnnouncementAck(userId: string, announcementId: string): Promise<UserAnnouncementAck | undefined> {
     const { data, error } = await this.serviceClient
@@ -1262,25 +1247,7 @@ export class SupabaseStorage implements IStorage {
     return this.mapSupabaseUserAnnouncementAck(data);
   }
 
-  async getUnacknowledgedAnnouncements(userId: string): Promise<Announcement[]> {
-    const { data, error } = await this.client
-      .from('announcements')
-      .select(`
-        *,
-        user_announcement_acks!left(user_id)
-      `)
-      .eq('is_active', true)
-      .is('user_announcement_acks.user_id', null)
-      .order('priority', { ascending: false })
-      .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('[SupabaseStorage] Error fetching unacknowledged announcements:', error);
-      throw new Error(`Failed to fetch unacknowledged announcements: ${error.message}`);
-    }
-
-    return data.map(this.mapSupabaseAnnouncement);
-  }
 
   async reAnnounce(announcementId: string): Promise<void> {
     // First get the current version
@@ -2028,7 +1995,7 @@ export class SupabaseStorage implements IStorage {
         defaultValue: item.default_value,
         isSystem: item.is_system,
         order: item.order || 0,
-        createdBy: item.created_by,
+        
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at)
       }));
@@ -2059,7 +2026,7 @@ export class SupabaseStorage implements IStorage {
         example: data.example,
         defaultValue: data.default_value,
         isSystem: data.is_system,
-        createdBy: data.created_by,
+        
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
       };
@@ -2094,7 +2061,7 @@ export class SupabaseStorage implements IStorage {
           default_value: variable.defaultValue,
           is_system: variable.isSystem || false,
           order: variable.order !== undefined ? variable.order : nextOrder,
-          created_by: variable.createdBy,
+
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -2115,7 +2082,7 @@ export class SupabaseStorage implements IStorage {
         defaultValue: data.default_value,
         isSystem: data.is_system,
         order: data.order || 0,
-        createdBy: data.created_by,
+        
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
       };
@@ -2161,7 +2128,7 @@ export class SupabaseStorage implements IStorage {
         defaultValue: data.default_value,
         isSystem: data.is_system,
         order: data.order || 0,
-        createdBy: data.created_by,
+        
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
       };
@@ -2210,7 +2177,7 @@ export class SupabaseStorage implements IStorage {
         displayName: item.display_name,
         color: item.color,
         isActive: item.is_active,
-        createdBy: item.created_by,
+        
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at)
       }));
@@ -2239,7 +2206,7 @@ export class SupabaseStorage implements IStorage {
         displayName: data.display_name,
         color: data.color,
         isActive: data.is_active,
-        createdBy: data.created_by,
+        
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
       };
@@ -2260,7 +2227,7 @@ export class SupabaseStorage implements IStorage {
           display_name: category.displayName || category.name,
           color: category.color || 'bg-gray-100 text-gray-800',
           is_active: category.isActive !== false,
-          created_by: category.createdBy,
+          
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -2278,7 +2245,7 @@ export class SupabaseStorage implements IStorage {
         displayName: data.display_name,
         color: data.color,
         isActive: data.is_active,
-        createdBy: data.created_by,
+        
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
       };
@@ -2314,7 +2281,7 @@ export class SupabaseStorage implements IStorage {
         displayName: data.display_name,
         color: data.color,
         isActive: data.is_active,
-        createdBy: data.created_by,
+        
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
       };
@@ -2372,7 +2339,7 @@ export class SupabaseStorage implements IStorage {
         backgroundColor: item.background_color,
         textColor: item.text_color,
         borderColor: item.border_color,
-        createdBy: item.created_by,
+        
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at)
       }));
@@ -2402,7 +2369,7 @@ export class SupabaseStorage implements IStorage {
         backgroundColor: data.background_color,
         textColor: data.text_color,
         borderColor: data.border_color,
-        createdBy: data.created_by,
+        
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
       };
@@ -2457,7 +2424,7 @@ export class SupabaseStorage implements IStorage {
             background_color: colorSetting.backgroundColor,
             text_color: colorSetting.textColor,
             border_color: colorSetting.borderColor,
-            created_by: colorSetting.createdBy,
+            
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
@@ -2480,7 +2447,7 @@ export class SupabaseStorage implements IStorage {
         backgroundColor: data.background_color,
         textColor: data.text_color,
         borderColor: data.border_color,
-        createdBy: data.created_by,
+        
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
       };
