@@ -24,6 +24,7 @@ import {
 import { User, Template, EmailTemplate } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
+import FAQEditor from "@/components/FAQEditor";
 
 import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates, loadColorsFromDatabase } from "@/lib/templateColors";
 import { HexColorPicker } from 'react-colorful';
@@ -1064,7 +1065,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         <div className="flex-1 overflow-hidden p-4 lg:p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
             {/* Mobile-responsive tabs */}
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 mb-4">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-8 mb-4">
               <TabsTrigger value="announcements" className="text-xs lg:text-sm p-2 lg:p-3">
                 <Megaphone className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
                 <span className="hidden lg:inline">Announcements</span>
@@ -1099,6 +1100,11 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <Settings className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
                 <span className="hidden lg:inline">Site Content</span>
                 <span className="lg:hidden">Content</span>
+              </TabsTrigger>
+              <TabsTrigger value="faqs" className="text-xs lg:text-sm p-2 lg:p-3">
+                <Info className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+                <span className="hidden lg:inline">FAQ Management</span>
+                <span className="lg:hidden">FAQs</span>
               </TabsTrigger>
 
             </TabsList>
@@ -2261,6 +2267,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </CardContent>
                 </Card>
 
+                {/* FAQ Management Section */}
+                <Card>
+                  <CardContent className="p-0">
+                    <FAQEditor />
+                  </CardContent>
+                </Card>
+
                 {/* Template Configuration Section */}
                 <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowConfigManager(true)}>
                   <CardHeader>
@@ -2338,6 +2351,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 </ul>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="faqs" className="flex-1 overflow-y-auto">
+            <FAQEditor userId={currentUser?.id} />
           </TabsContent>
         </Tabs>
         </div>

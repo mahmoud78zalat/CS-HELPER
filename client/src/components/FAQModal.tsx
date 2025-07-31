@@ -210,15 +210,7 @@ export default function FAQModal({ open, onClose }: FAQModalProps) {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="mt-6 pt-4 border-t border-gray-200 text-center">
-          <p className="text-sm text-gray-600">
-            Can't find what you're looking for? 
-            <Button variant="link" className="p-0 ml-1 text-blue-600 hover:text-blue-800">
-              Contact our support team
-            </Button>
-          </p>
-        </div>
+
       </DialogContent>
     </Dialog>
   );

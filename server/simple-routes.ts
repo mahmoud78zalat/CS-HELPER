@@ -1353,6 +1353,43 @@ export function registerRoutes(app: Express): void {
   console.log('[Simple Routes] ✅ Railway debugging endpoints registered:');
   console.log('[Simple Routes]   - /api/railway/supabase-debug (comprehensive diagnostics)');
   console.log('[Simple Routes]   - /api/railway/health (health check with Supabase status)');
+  // User Ordering API routes
+  app.get('/api/user-ordering/:contentType', async (req, res) => {
+    try {
+      const { contentType } = req.params;
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID required' });
+      }
+
+      console.log(`[Simple Routes] Getting user ordering for ${contentType} by user ${userId}`);
+      const ordering = await storage.getUserOrdering(userId, contentType);
+      res.json(ordering);
+    } catch (error: any) {
+      console.error(`[Simple Routes] Error getting user ordering:`, error);
+      res.status(500).json({ message: 'Failed to get user ordering' });
+    }
+  });
+
+  app.post('/api/user-ordering/:contentType', async (req, res) => {
+    try {
+      const { contentType } = req.params;
+      const { user_id, ordering } = req.body;
+      
+      if (!user_id || !ordering) {
+        return res.status(400).json({ message: 'User ID and ordering data required' });
+      }
+
+      console.log(`[Simple Routes] Saving user ordering for ${contentType} by user ${user_id}`, ordering);
+      await storage.saveUserOrdering(user_id, contentType, ordering);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error(`[Simple Routes] Error saving user ordering:`, error);
+      res.status(500).json({ message: 'Failed to save user ordering' });
+    }
+  });
+
   console.log('[Simple Routes] ✅ All routes registered successfully!');
   console.log('[Simple Routes] 📋 Total API routes available:');
   console.log('[Simple Routes]   - Live Reply Templates: /api/live-reply-templates');
@@ -1361,6 +1398,7 @@ export function registerRoutes(app: Express): void {
   console.log('[Simple Routes]   - Template Variables: /api/template-variables');
   console.log('[Simple Routes]   - Color Settings: /api/color-settings');
   console.log('[Simple Routes]   - FAQs: /api/faqs');
+  console.log('[Simple Routes]   - User Ordering: /api/user-ordering/:contentType');
 
   // Note: WebSocket functionality disabled for Vercel serverless deployment
   // Real-time features can be implemented using Supabase real-time subscriptions in the client

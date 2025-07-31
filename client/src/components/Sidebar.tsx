@@ -241,16 +241,7 @@ export default function Sidebar({
 
 
 
-            <Button 
-              onClick={onAbout}
-              variant="outline"
-              className="w-full border-slate-300 hover:bg-slate-50 rounded-lg p-2 lg:p-3 transition-colors duration-200"
-            >
-              <div className="flex items-center justify-center lg:justify-start space-x-3">
-                <HelpCircle className="h-4 w-4 text-slate-600" />
-                <span className="hidden lg:block font-medium text-slate-700">About</span>
-              </div>
-            </Button>
+
 
             <Button 
               onClick={handleSignOut}

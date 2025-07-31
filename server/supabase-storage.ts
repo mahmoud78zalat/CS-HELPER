@@ -16,7 +16,9 @@ import type {
   Announcement,
   InsertAnnouncement,
   UserAnnouncementAck,
-  InsertUserAnnouncementAck
+  InsertUserAnnouncementAck,
+  Faq,
+  InsertFaq
 } from '@shared/schema';
 import { IStorage } from './storage';
 
@@ -2246,6 +2248,228 @@ export class SupabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error('[SupabaseStorage] Error in deleteColorSetting:', error);
+      throw error;
+    }
+  }
+
+  // FAQ operations
+  async getFaqs(filters?: { category?: string; search?: string; isActive?: boolean; }): Promise<any[]> {
+    try {
+      let query = this.client
+        .from('faqs')
+        .select('*')
+        .order('order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (filters?.category) {
+        query = query.eq('category', filters.category);
+      }
+      if (filters?.isActive !== undefined) {
+        query = query.eq('is_active', filters.isActive);
+      }
+      if (filters?.search) {
+        query = query.or(`question.ilike.%${filters.search}%,answer.ilike.%${filters.search}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching FAQs:', error);
+        return [];
+      }
+
+      return data.map(item => ({
+        id: item.id,
+        question: item.question,
+        answer: item.answer,
+        category: item.category,
+        order: item.order,
+        isActive: item.is_active,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at
+      }));
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getFaqs:', error);
+      return [];
+    }
+  }
+
+  async getFaq(id: string): Promise<any | undefined> {
+    try {
+      const { data, error } = await this.client
+        .from('faqs')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching FAQ:', error);
+        return undefined;
+      }
+
+      return {
+        id: data.id,
+        question: data.question,
+        answer: data.answer,
+        category: data.category,
+        order: data.order,
+        isActive: data.is_active,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getFaq:', error);
+      return undefined;
+    }
+  }
+
+  async createFaq(faq: any): Promise<any> {
+    try {
+      const { data, error } = await this.client
+        .from('faqs')
+        .insert({
+          question: faq.question,
+          answer: faq.answer,
+          category: faq.category || 'general',
+          order: faq.order || 0,
+          is_active: faq.isActive !== false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error creating FAQ:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        question: data.question,
+        answer: data.answer,
+        category: data.category,
+        order: data.order,
+        isActive: data.is_active,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in createFaq:', error);
+      throw error;
+    }
+  }
+
+  async updateFaq(id: string, faq: any): Promise<any> {
+    try {
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (faq.question !== undefined) updateData.question = faq.question;
+      if (faq.answer !== undefined) updateData.answer = faq.answer;
+      if (faq.category !== undefined) updateData.category = faq.category;
+      if (faq.order !== undefined) updateData.order = faq.order;
+      if (faq.isActive !== undefined) updateData.is_active = faq.isActive;
+
+      const { data, error } = await this.client
+        .from('faqs')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[SupabaseStorage] Error updating FAQ:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        question: data.question,
+        answer: data.answer,
+        category: data.category,
+        order: data.order,
+        isActive: data.is_active,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in updateFaq:', error);
+      throw error;
+    }
+  }
+
+  async deleteFaq(id: string): Promise<void> {
+    try {
+      const { error } = await this.client
+        .from('faqs')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('[SupabaseStorage] Error deleting FAQ:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in deleteFaq:', error);
+      throw error;
+    }
+  }
+
+  // User ordering operations for drag-and-drop
+  async getUserOrdering(userId: string, contentType: string): Promise<Array<{item_id: string, display_order: number}>> {
+    try {
+      const { data, error } = await this.client
+        .from('user_ordering_preferences')
+        .select('item_id, display_order')
+        .eq('user_id', userId)
+        .eq('content_type', contentType)
+        .order('display_order', { ascending: true });
+
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching user ordering:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getUserOrdering:', error);
+      return [];
+    }
+  }
+
+  async saveUserOrdering(userId: string, contentType: string, ordering: Array<{item_id: string, display_order: number}>): Promise<void> {
+    try {
+      // Delete existing ordering preferences for this content type
+      await this.client
+        .from('user_ordering_preferences')
+        .delete()
+        .eq('user_id', userId)
+        .eq('content_type', contentType);
+
+      // Insert new ordering preferences
+      if (ordering.length > 0) {
+        const insertData = ordering.map(item => ({
+          user_id: userId,
+          content_type: contentType,
+          item_id: item.item_id,
+          display_order: item.display_order,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }));
+
+        const { error } = await this.client
+          .from('user_ordering_preferences')
+          .insert(insertData);
+
+        if (error) {
+          console.error('[SupabaseStorage] Error saving user ordering:', error);
+          throw error;
+        }
+      }
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in saveUserOrdering:', error);
       throw error;
     }
   }

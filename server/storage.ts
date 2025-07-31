@@ -184,6 +184,10 @@ export interface IStorage {
   createFaq(faq: InsertFaq): Promise<Faq>;
   updateFaq(id: string, faq: Partial<InsertFaq>): Promise<Faq>;
   deleteFaq(id: string): Promise<void>;
+
+  // User ordering operations for drag-and-drop
+  getUserOrdering(userId: string, contentType: string): Promise<Array<{item_id: string, display_order: number}>>;
+  saveUserOrdering(userId: string, contentType: string, ordering: Array<{item_id: string, display_order: number}>): Promise<void>;
 }
 
 // DatabaseStorage class commented out for beta testing

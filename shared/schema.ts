@@ -430,6 +430,31 @@ export type InsertTemplateVariableCategory = z.infer<typeof insertTemplateVariab
 export type ColorSetting = typeof colorSettings.$inferSelect;
 export type InsertColorSetting = z.infer<typeof insertColorSettingSchema>;
 
+// User ordering preferences for drag-and-drop functionality
+export const userOrderingPreferences = pgTable("user_ordering_preferences", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  contentType: varchar("content_type", { length: 50 }).notNull(), // 'live_reply_templates', 'email_templates', 'faqs', etc.
+  itemId: uuid("item_id").notNull(),
+  displayOrder: integer("display_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_user_ordering_user_content").on(table.userId, table.contentType),
+  index("idx_user_ordering_display_order").on(table.displayOrder),
+]);
+
+// Create insert schema for user ordering preferences
+export const insertUserOrderingPreferenceSchema = createInsertSchema(userOrderingPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Export user ordering types
+export type UserOrderingPreference = typeof userOrderingPreferences.$inferSelect;
+export type InsertUserOrderingPreference = z.infer<typeof insertUserOrderingPreferenceSchema>;
+
 // Legacy template type for backward compatibility (will remove after migration)
 export type Template = LiveReplyTemplate;
 export type InsertTemplate = InsertLiveReplyTemplate;
