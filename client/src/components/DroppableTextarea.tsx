@@ -52,13 +52,11 @@ export default function DroppableTextarea({
   const handleClick = () => {
     setIsActive(true);
     handleSelectionChange();
-    console.log('[DroppableTextarea] Field clicked:', id);
   };
 
   const handleFocus = () => {
     setIsActive(true);
     onFieldFocus?.(id);
-    console.log('[DroppableTextarea] Field focused:', id);
   };
 
   const handleKeyUp = () => {
