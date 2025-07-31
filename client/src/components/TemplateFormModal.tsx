@@ -232,16 +232,7 @@ export default function TemplateFormModal({
         variables: extractVariablesFromTemplate(formData.contentEn + ' ' + formData.contentAr)
       };
       
-      console.log('[TemplateFormModal] 🚀 Submitting template:', {
-        name: templateData.name,
-        isEmailTemplate,
-        hasContent: !!(isEmailTemplate ? templateData.content : (templateData as any).contentEn),
-        fullData: templateData
-      });
-      
-      console.log('[TemplateFormModal] 📤 Calling onSave with data:', templateData);
       onSave(templateData);
-      console.log('[TemplateFormModal] ✅ onSave called successfully');
     } catch (error) {
       console.error('[TemplateFormModal] Error during submit:', error);
     }

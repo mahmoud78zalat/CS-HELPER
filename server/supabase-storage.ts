@@ -717,6 +717,9 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateEmailTemplate(id: string, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate> {
+    console.error('🚨🚨🚨 SUPABASE UPDATE CALLED 🚨🚨🚨', id);
+    console.error('🚨🚨🚨 INPUT DATA:', JSON.stringify(template, null, 2));
+    
     // Create update data manually to avoid any created_by field issues
     const updateData: any = {
       updated_at: new Date().toISOString()
@@ -734,7 +737,7 @@ export class SupabaseStorage implements IStorage {
     if (template.stageOrder !== undefined) updateData.stage_order = template.stageOrder;
     if (template.isActive !== undefined) updateData.is_active = template.isActive;
 
-    
+    console.log('[SupabaseStorage] 📤 Final updateData being sent to Supabase:', updateData);
 
     
     const { data, error } = await this.client
@@ -745,15 +748,20 @@ export class SupabaseStorage implements IStorage {
       .single();
 
     if (error) {
-      console.error('[SupabaseStorage] Error updating email template:', error);
+      console.error('[SupabaseStorage] ❌ Error updating email template:', error);
       throw error;
     }
 
+    console.log('[SupabaseStorage] ✅ Update successful! Raw response data:', data);
+    
     // Clear email template cache to ensure fresh data
     this.templateCache.clear();
     console.log('[SupabaseStorage] Cleared email template cache after update');
+    
+    const mappedResult = this.mapSupabaseEmailTemplate(data);
+    console.log('[SupabaseStorage] 📦 Final mapped result:', mappedResult);
 
-    return this.mapSupabaseEmailTemplate(data);
+    return mappedResult;
   }
 
   async deleteEmailTemplate(id: string): Promise<void> {

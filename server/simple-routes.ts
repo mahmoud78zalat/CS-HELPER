@@ -180,33 +180,36 @@ export function registerRoutes(app: Express): void {
     try {
       const { id } = req.params;
       
+      // Create a partial schema for updates (email templates are English-only)
+      const updateSchema = z.object({
+        name: z.string().optional(),
+        subject: z.string().optional(),
+        content: z.string().optional(),
+        category: z.string().optional(),
+        genre: z.string().optional(),
+        concernedTeam: z.string().optional(),
+        warningNote: z.string().optional(),
+        variables: z.array(z.string()).optional(),
+        stageOrder: z.number().optional(),
+        isActive: z.boolean().optional(),
+      });
+      
+      const validatedData = updateSchema.parse(req.body);
+      
       // Extract user email from headers for tracking who edited the template
       const userEmail = req.headers['x-user-email'] || req.headers['x-replit-user-name'] || 'system';
       
-      console.log('[EmailTemplates] 🔄 PUT REQUEST RECEIVED - Updating template', id, 'by user:', userEmail);
-      console.log('[EmailTemplates] 📝 Full update data:', JSON.stringify(req.body, null, 2));
+      console.log('[EmailTemplates] Updating template', id, 'by user:', userEmail);
       
-      // Validate without strict schema to handle updates
-      let templateData = req.body;
-      
-      // Handle both old and new schema formats for updates
-      if (templateData.content && !templateData.contentEn) {
-        templateData.contentEn = templateData.content;
-        templateData.contentAr = templateData.content;
-        delete templateData.content;
-      }
-      
-      const template = await storage.updateEmailTemplate(id, templateData);
-      console.log('[EmailTemplates] ✅ Template updated successfully:', template.name);
+      // Don't update createdBy on edit, but log who made the edit
+      const template = await storage.updateEmailTemplate(id, validatedData);
       res.json(template);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        console.error('[EmailTemplates] Validation error:', error.errors);
         return res.status(400).json({ message: "Invalid template data", errors: error.errors });
       }
       console.error("Error updating email template:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      res.status(500).json({ message: "Failed to update email template", error: errorMessage });
+      res.status(500).json({ message: "Failed to update email template" });
     }
   });
 
