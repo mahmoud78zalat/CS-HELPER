@@ -2285,6 +2285,7 @@ export class SupabaseStorage implements IStorage {
         question: item.question,
         answer: item.answer,
         category: item.category,
+        icon: item.icon,
         order: item.order,
         isActive: item.is_active,
         createdAt: item.created_at,
@@ -2314,6 +2315,7 @@ export class SupabaseStorage implements IStorage {
         question: data.question,
         answer: data.answer,
         category: data.category,
+        icon: data.icon,
         order: data.order,
         isActive: data.is_active,
         createdAt: data.created_at,
@@ -2333,6 +2335,7 @@ export class SupabaseStorage implements IStorage {
           question: faq.question,
           answer: faq.answer,
           category: faq.category || 'general',
+          icon: faq.icon || 'HelpCircle',
           order: faq.order || 0,
           is_active: faq.isActive !== false,
           created_at: new Date().toISOString(),
@@ -2351,6 +2354,7 @@ export class SupabaseStorage implements IStorage {
         question: data.question,
         answer: data.answer,
         category: data.category,
+        icon: data.icon,
         order: data.order,
         isActive: data.is_active,
         createdAt: data.created_at,
@@ -2371,6 +2375,7 @@ export class SupabaseStorage implements IStorage {
       if (faq.question !== undefined) updateData.question = faq.question;
       if (faq.answer !== undefined) updateData.answer = faq.answer;
       if (faq.category !== undefined) updateData.category = faq.category;
+      if (faq.icon !== undefined) updateData.icon = faq.icon;
       if (faq.order !== undefined) updateData.order = faq.order;
       if (faq.isActive !== undefined) updateData.is_active = faq.isActive;
 
@@ -2391,6 +2396,7 @@ export class SupabaseStorage implements IStorage {
         question: data.question,
         answer: data.answer,
         category: data.category,
+        icon: data.icon,
         order: data.order,
         isActive: data.is_active,
         createdAt: data.created_at,

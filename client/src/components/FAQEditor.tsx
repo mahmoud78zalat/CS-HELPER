@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit2, Trash2, Save, X, HelpCircle, GripHorizontal } from "lucide-react";
+import { Plus, Edit2, Trash2, Save, X, HelpCircle, GripHorizontal, Settings, Users, CreditCard, Wrench, Info, MessageCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -22,6 +22,7 @@ interface FAQ {
   question: string;
   answer: string;
   category: string;
+  icon?: string;
   order: number;
   isActive: boolean;
   createdAt: string;
@@ -85,13 +86,20 @@ const SortableFAQItem = ({ faq, isEditing, onEdit, onSave, onCancel, onDelete, g
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="general">General</SelectItem>
-                      <SelectItem value="order_issues">Order Issues</SelectItem>
-                      <SelectItem value="delivery_problems">Delivery Problems</SelectItem>
-                      <SelectItem value="product_inquiry">Product Inquiry</SelectItem>
-                      <SelectItem value="technical_support">Technical Support</SelectItem>
-                      <SelectItem value="billing">Billing</SelectItem>
-                      <SelectItem value="returns">Returns & Refunds</SelectItem>
+                      {availableCategories.length > 0 ? (
+                        availableCategories.map((category: any) => (
+                          <SelectItem key={category.id} value={category.name}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <>
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="support">Support</SelectItem>
+                          <SelectItem value="billing">Billing</SelectItem>
+                          <SelectItem value="technical">Technical</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -188,6 +196,7 @@ export default function FAQEditor() {
     question: '',
     answer: '',
     category: 'general',
+    icon: 'HelpCircle',
     isActive: true
   });
   const [sortedFaqs, setSortedFaqs] = useState<FAQ[]>([]);
@@ -308,6 +317,7 @@ export default function FAQEditor() {
         question: editingFaq.question,
         answer: editingFaq.answer,
         category: editingFaq.category,
+        icon: editingFaq.icon,
         isActive: editingFaq.isActive
       }
     });
@@ -444,6 +454,27 @@ export default function FAQEditor() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div>
+                  <Label htmlFor="new-icon">Icon</Label>
+                  <Select 
+                    value={newFaq.icon} 
+                    onValueChange={(value) => setNewFaq({ ...newFaq, icon: value })}
+                  >
+                    <SelectTrigger className="mt-1 w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="HelpCircle">Help Circle</SelectItem>
+                      <SelectItem value="Settings">Settings</SelectItem>
+                      <SelectItem value="Users">Users</SelectItem>
+                      <SelectItem value="CreditCard">Billing</SelectItem>
+                      <SelectItem value="Wrench">Technical</SelectItem>
+                      <SelectItem value="Info">Information</SelectItem>
+                      <SelectItem value="MessageCircle">Support</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 
                 <div className="flex items-center gap-2">
                   <input
@@ -470,7 +501,7 @@ export default function FAQEditor() {
                   variant="outline"
                   onClick={() => {
                     setIsCreating(false);
-                    setNewFaq({ question: '', answer: '', category: 'general', isActive: true });
+                    setNewFaq({ question: '', answer: '', category: 'general', icon: 'HelpCircle', isActive: true });
                   }}
                 >
                   <X className="h-4 w-4 mr-2" />

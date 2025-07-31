@@ -182,7 +182,9 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     setSelectedTemplate(template);
     
     // Apply variable replacement immediately to show live content
-    const replacedSubject = replaceVariables(template.subject || '');
+    // Use template subject if available, otherwise fallback to template name
+    const subjectToUse = template.subject || template.name || '';
+    const replacedSubject = replaceVariables(subjectToUse);
     const replacedBody = replaceVariables(template.content || '');
     
     setEmailSubject(replacedSubject);

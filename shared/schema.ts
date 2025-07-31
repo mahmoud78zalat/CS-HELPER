@@ -120,6 +120,7 @@ export const faqs = pgTable("faqs", {
   question: text("question").notNull(),
   answer: text("answer").notNull(),
   category: varchar("category").default("general").notNull(),
+  icon: varchar("icon").default("HelpCircle").notNull(), // Lucide icon name
   order: integer("order").default(0).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),

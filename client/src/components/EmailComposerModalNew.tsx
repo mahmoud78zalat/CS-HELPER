@@ -213,7 +213,8 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   // Handle template selection
   const handleTemplateSelect = (template: EmailTemplate) => {
     setSelectedTemplate(template);
-    setEmailSubject(template.subject || '');
+    // Use template subject if available, otherwise fallback to template name
+    setEmailSubject(template.subject || template.name || '');
     setEmailBody(template.content || '');
     
     // Update concerned team in variables
