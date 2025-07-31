@@ -433,7 +433,7 @@ export type InsertColorSetting = z.infer<typeof insertColorSettingSchema>;
 // User ordering preferences for drag-and-drop functionality
 export const userOrderingPreferences = pgTable("user_ordering_preferences", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   contentType: varchar("content_type", { length: 50 }).notNull(), // 'live_reply_templates', 'email_templates', 'faqs', etc.
   itemId: uuid("item_id").notNull(),
   displayOrder: integer("display_order").default(0).notNull(),

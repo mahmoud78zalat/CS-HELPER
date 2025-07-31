@@ -48,7 +48,7 @@ CREATE POLICY "Authenticated users can manage FAQs" ON faqs
 -- Table for storing user-specific drag-and-drop ordering preferences
 CREATE TABLE IF NOT EXISTS user_ordering_preferences (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content_type VARCHAR(50) NOT NULL, -- 'live_reply_templates', 'email_templates', 'faqs', etc.
     item_id UUID NOT NULL, -- ID of the item being ordered
     display_order INTEGER NOT NULL DEFAULT 0,
@@ -77,7 +77,7 @@ CREATE POLICY "Users can manage their own ordering preferences" ON user_ordering
 
 -- Function to get ordered items for a user
 CREATE OR REPLACE FUNCTION get_user_ordered_items(
-    p_user_id UUID, 
+    p_user_id TEXT, 
     p_content_type VARCHAR(50)
 ) 
 RETURNS TABLE(
@@ -101,7 +101,7 @@ $$;
 
 -- Function to update user ordering preferences in bulk
 CREATE OR REPLACE FUNCTION update_user_ordering(
-    p_user_id UUID,
+    p_user_id TEXT,
     p_content_type VARCHAR(50),
     p_item_orders JSONB -- Format: [{"item_id": "uuid", "display_order": 1}, ...]
 )
@@ -171,8 +171,8 @@ CREATE TRIGGER trigger_update_user_ordering_updated_at
 -- Grant necessary permissions to authenticated users
 GRANT ALL ON faqs TO authenticated;
 GRANT ALL ON user_ordering_preferences TO authenticated;
-GRANT EXECUTE ON FUNCTION get_user_ordered_items(UUID, VARCHAR) TO authenticated;
-GRANT EXECUTE ON FUNCTION update_user_ordering(UUID, VARCHAR, JSONB) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_user_ordered_items(TEXT, VARCHAR) TO authenticated;
+GRANT EXECUTE ON FUNCTION update_user_ordering(TEXT, VARCHAR, JSONB) TO authenticated;
 
 -- Grant read permissions to anonymous users for FAQs (public access)
 GRANT SELECT ON faqs TO anon;
@@ -208,7 +208,7 @@ ON CONFLICT DO NOTHING;
 -- SELECT COUNT(*) as ordering_count FROM user_ordering_preferences;
 
 -- Test the utility functions (replace with actual user ID)
--- SELECT * FROM get_user_ordered_items('your-user-id-here'::UUID, 'faqs');
+-- SELECT * FROM get_user_ordered_items('f765c1de-f9b5-4615-8c09-8cdde8152a07', 'faqs');
 
 -- =====================================================
 -- COMPLETION MESSAGE
