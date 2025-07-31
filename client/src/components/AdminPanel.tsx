@@ -917,7 +917,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     },
   });
 
-  // Email Template update mutation
+  // Email Template update mutation  
   const updateEmailTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
       console.log('[AdminPanel] 🚀 Starting email template update:', id, 'with data:', data);
@@ -2355,11 +2355,25 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
           setIsEmailTemplate(false);
         }}
         onSave={(templateData) => {
+          console.log('[AdminPanel] 📥 onSave called with:', templateData);
+          console.log('[AdminPanel] editingTemplate:', editingTemplate);
+          console.log('[AdminPanel] isEmailTemplate:', isEmailTemplate);
+          
           if (editingTemplate) {
             if (isEmailTemplate) {
+              console.log('[AdminPanel] 🚀 About to call updateEmailTemplateMutation with:', {
+                id: editingTemplate.id,
+                data: templateData
+              });
               updateEmailTemplateMutation.mutate({ id: editingTemplate.id, data: templateData });
+              console.log('[AdminPanel] ✅ updateEmailTemplateMutation.mutate called');
             } else {
+              console.log('[AdminPanel] 🚀 About to call updateTemplateMutation with:', {
+                id: editingTemplate.id,
+                data: templateData
+              });
               updateTemplateMutation.mutate({ id: editingTemplate.id, data: templateData });
+              console.log('[AdminPanel] ✅ updateTemplateMutation.mutate called');
             }
           } else {
             if (isEmailTemplate) {
