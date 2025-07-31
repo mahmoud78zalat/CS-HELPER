@@ -13,14 +13,18 @@ if (import.meta.env.MODE === 'development') {
   console.log('[Frontend Supabase] All VITE env vars:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
 }
 
-if (!supabaseUrl || !supabaseAnonKey) {
+// More robust environment variable validation
+const hasValidUrl = supabaseUrl && supabaseUrl.trim() !== '' && supabaseUrl !== 'undefined';
+const hasValidKey = supabaseAnonKey && supabaseAnonKey.trim() !== '' && supabaseAnonKey !== 'undefined';
+
+if (!hasValidUrl || !hasValidKey) {
   const errorMessage = 'Missing required Supabase environment variables. Please check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your deployment environment.';
   
   // Only log detailed errors in development
   if (import.meta.env.MODE === 'development') {
     console.error('[Frontend Supabase] MISSING REQUIRED CREDENTIALS!');
-    console.error('[Frontend Supabase] URL:', supabaseUrl ? 'Present' : 'MISSING');
-    console.error('[Frontend Supabase] Key:', supabaseAnonKey ? 'Present' : 'MISSING');
+    console.error('[Frontend Supabase] URL:', hasValidUrl ? 'Present' : 'MISSING');
+    console.error('[Frontend Supabase] Key:', hasValidKey ? 'Present' : 'MISSING');
     console.error('[Frontend Supabase] Available env vars:', Object.keys(import.meta.env).filter(key => key.includes('SUPABASE')));
     console.error('[Frontend Supabase] Required variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY');
   }

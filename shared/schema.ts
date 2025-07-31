@@ -57,7 +57,6 @@ export const liveReplyTemplates = pgTable("live_reply_templates", {
   stageOrder: integer("stage_order").default(1).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   usageCount: integer("usage_count").default(0).notNull(),
-  createdBy: uuid("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
@@ -79,7 +78,6 @@ export const emailTemplates = pgTable("email_templates", {
   stageOrder: integer("stage_order").default(1).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   usageCount: integer("usage_count").default(0).notNull(),
-  createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
@@ -105,7 +103,6 @@ export const siteContent = pgTable("site_content", {
   id: uuid("id").primaryKey().defaultRandom(),
   key: varchar("key").unique().notNull(),
   content: text("content").notNull(),
-  updatedBy: uuid("updated_by").references(() => users.id).notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
   supabaseId: uuid("supabase_id").unique(), // Maps to Supabase record
@@ -124,7 +121,6 @@ export const announcements = pgTable("announcements", {
   priority: announcementPriorityEnum("priority").default("medium").notNull(),
   version: integer("version").default(1).notNull(), // Version for re-announce functionality
   lastAnnouncedAt: timestamp("last_announced_at").defaultNow(), // Track when last announced
-  createdBy: uuid("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
@@ -145,28 +141,16 @@ export const userAnnouncementAcks = pgTable("user_announcement_acks", {
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
-  liveReplyTemplates: many(liveReplyTemplates),
-  emailTemplates: many(emailTemplates),
   liveReplyUsage: many(liveReplyUsage),
   emailTemplateUsage: many(emailTemplateUsage),
-  siteContentUpdates: many(siteContent),
-  announcements: many(announcements),
   announcementAcks: many(userAnnouncementAcks),
 }));
 
-export const liveReplyTemplatesRelations = relations(liveReplyTemplates, ({ one, many }) => ({
-  createdBy: one(users, {
-    fields: [liveReplyTemplates.createdBy],
-    references: [users.id],
-  }),
+export const liveReplyTemplatesRelations = relations(liveReplyTemplates, ({ many }) => ({
   usage: many(liveReplyUsage),
 }));
 
-export const emailTemplatesRelations = relations(emailTemplates, ({ one, many }) => ({
-  createdBy: one(users, {
-    fields: [emailTemplates.createdBy],
-    references: [users.id],
-  }),
+export const emailTemplatesRelations = relations(emailTemplates, ({ many }) => ({
   usage: many(emailTemplateUsage),
 }));
 
@@ -192,18 +176,7 @@ export const emailTemplateUsageRelations = relations(emailTemplateUsage, ({ one 
   }),
 }));
 
-export const siteContentRelations = relations(siteContent, ({ one }) => ({
-  updatedBy: one(users, {
-    fields: [siteContent.updatedBy],
-    references: [users.id],
-  }),
-}));
-
-export const announcementsRelations = relations(announcements, ({ one, many }) => ({
-  createdBy: one(users, {
-    fields: [announcements.createdBy],
-    references: [users.id],
-  }),
+export const announcementsRelations = relations(announcements, ({ many }) => ({
   acknowledgments: many(userAnnouncementAcks),
 }));
 
@@ -351,7 +324,6 @@ export const templateVariableCategories = pgTable("template_variable_categories"
   displayName: varchar("display_name").notNull(),
   color: varchar("color").default("#3b82f6").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
-  createdBy: uuid("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Supabase sync tracking
@@ -377,12 +349,7 @@ export const colorSettings = pgTable("color_settings", {
 // Relations
 // Relations removed - templateVariables no longer has createdBy field
 
-export const templateVariableCategoriesRelations = relations(templateVariableCategories, ({ one }) => ({
-  createdBy: one(users, {
-    fields: [templateVariableCategories.createdBy],
-    references: [users.id],
-  }),
-}));
+// Relations removed - templateVariableCategories no longer has createdBy field
 
 // Relations removed - colorSettings no longer has createdBy field
 

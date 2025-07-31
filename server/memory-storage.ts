@@ -213,14 +213,14 @@ export class MemoryStorage implements IStorage {
       stageOrder: template.stageOrder || 1,
       isActive: template.isActive !== undefined ? template.isActive : true,
       usageCount: 0,
-      createdBy: template.createdBy || "system",
+
       createdAt: now,
       updatedAt: now,
       supabaseId: null,
       lastSyncedAt: null,
     };
     
-    console.log('[MemoryStorage] Created template with createdBy:', newTemplate.createdBy);
+    console.log('[MemoryStorage] Created template:', newTemplate.name);
     this.liveReplyTemplates.set(id, newTemplate);
     return newTemplate;
   }
@@ -336,7 +336,7 @@ export class MemoryStorage implements IStorage {
       stageOrder: template.stageOrder || 1,
       isActive: template.isActive !== undefined ? template.isActive : true,
       usageCount: 0,
-      createdBy: "system", // Default value for memory storage
+
       createdAt: now,
       updatedAt: now,
       supabaseId: null,
@@ -486,7 +486,6 @@ export class MemoryStorage implements IStorage {
       textColor: announcement.textColor || "#ffffff",
       borderColor: announcement.borderColor || "#1d4ed8",
       priority: announcement.priority || "medium",
-      createdBy: announcement.createdBy,
       createdAt: now,
       updatedAt: now,
       version: 1,

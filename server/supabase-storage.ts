@@ -510,7 +510,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createLiveReplyTemplate(template: InsertLiveReplyTemplate): Promise<LiveReplyTemplate> {
-    console.log('[SupabaseStorage] Creating live reply template with createdBy:', template.createdBy);
+    console.log('[SupabaseStorage] Creating live reply template:', template.name);
     
     const { data, error } = await this.client
       .from('live_reply_templates')
@@ -691,7 +691,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
-    console.log('[SupabaseStorage] Creating email template with createdBy:', template.createdBy);
+    console.log('[SupabaseStorage] Creating email template:', template.name);
     
     const { data, error } = await this.client
       .from('email_templates')
@@ -876,7 +876,6 @@ export class SupabaseStorage implements IStorage {
       .from('site_content')
       .update({
         content: content.content,
-        updated_by: content.updatedBy,
         updated_at: new Date().toISOString()
       })
       .eq('key', content.key)
@@ -937,7 +936,6 @@ export class SupabaseStorage implements IStorage {
         text_color: announcement.textColor,
         border_color: announcement.borderColor,
         priority: announcement.priority,
-        created_by: announcement.createdBy,
       })
       .select()
       .single();
@@ -1626,7 +1624,6 @@ export class SupabaseStorage implements IStorage {
       stageOrder: data.stage_order,
       isActive: data.is_active,
       usageCount: data.usage_count,
-      createdBy: data.created_by,
       createdAt: data.created_at ? new Date(data.created_at) : null,
       updatedAt: data.updated_at ? new Date(data.updated_at) : null,
       supabaseId: data.id, // Supabase ID is the same as the record ID
@@ -1645,7 +1642,6 @@ export class SupabaseStorage implements IStorage {
       stage_order: template.stageOrder,
       is_active: template.isActive,
       usage_count: template.usageCount || 0,
-      created_by: template.createdBy || template.created_by, // Don't set default here - let triggers handle it
     };
   }
 
@@ -1663,7 +1659,6 @@ export class SupabaseStorage implements IStorage {
       stageOrder: data.stage_order,
       isActive: data.is_active,
       usageCount: data.usage_count,
-      createdBy: data.created_by,
       createdAt: data.created_at ? new Date(data.created_at) : null,
       updatedAt: data.updated_at ? new Date(data.updated_at) : null,
       supabaseId: data.id, // Supabase ID is the same as the record ID
@@ -1684,7 +1679,6 @@ export class SupabaseStorage implements IStorage {
       stage_order: template.stageOrder,
       is_active: template.isActive,
       usage_count: template.usageCount || 0,
-      created_by: template.createdBy || template.created_by, // Don't set default here - let triggers handle it
     };
   }
 
@@ -1693,7 +1687,6 @@ export class SupabaseStorage implements IStorage {
       id: data.id,
       key: data.key,
       content: data.content,
-      updatedBy: data.updated_by,
       updatedAt: data.updated_at ? new Date(data.updated_at) : null,
       supabaseId: data.id, // Supabase ID is the same as the record ID
       lastSyncedAt: new Date(), // Always synced since this is from Supabase
@@ -1712,7 +1705,6 @@ export class SupabaseStorage implements IStorage {
       priority: data.priority,
       version: data.version || 1,
       lastAnnouncedAt: data.last_announced_at ? new Date(data.last_announced_at) : null,
-      createdBy: data.created_by,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
       supabaseId: data.supabase_id,
