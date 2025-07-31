@@ -296,11 +296,21 @@ export class MemoryStorage implements IStorage {
   }
 
   async createLiveReplyTemplateGroup(group: InsertLiveReplyTemplateGroup): Promise<LiveReplyTemplateGroup> {
+    console.log('[MemoryStorage] Creating live reply template group:', group.name);
+    
+    // Check for duplicate names
+    const existingGroups = Array.from(this.liveReplyTemplateGroups.values());
+    const duplicateName = existingGroups.find(g => g.name.toLowerCase() === group.name.toLowerCase());
+    
+    if (duplicateName) {
+      console.error('[MemoryStorage] Duplicate group name found:', group.name);
+      throw new Error(`A group with the name "${group.name}" already exists. Please choose a different name.`);
+    }
+    
     const id = nanoid();
     const now = new Date();
     
     // Find next order index
-    const existingGroups = Array.from(this.liveReplyTemplateGroups.values());
     const maxOrder = existingGroups.length > 0 ? Math.max(...existingGroups.map(g => g.orderIndex)) : 0;
     
     const newGroup: LiveReplyTemplateGroup = {
@@ -312,9 +322,12 @@ export class MemoryStorage implements IStorage {
       orderIndex: group.orderIndex !== undefined ? group.orderIndex : maxOrder + 1,
       createdAt: now,
       updatedAt: now,
+      supabaseId: null, // Memory storage doesn't sync to Supabase
+      lastSyncedAt: null,
     };
     
     this.liveReplyTemplateGroups.set(id, newGroup);
+    console.log('[MemoryStorage] Successfully created live reply template group:', id);
     return newGroup;
   }
 

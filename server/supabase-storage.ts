@@ -847,6 +847,8 @@ export class SupabaseStorage implements IStorage {
       orderIndex: group.order_index,
       createdAt: new Date(group.created_at),
       updatedAt: new Date(group.updated_at),
+      supabaseId: group.id, // Use the same ID for Supabase sync
+      lastSyncedAt: new Date(), // Current timestamp for sync tracking
     })) || [];
   }
 
@@ -872,10 +874,14 @@ export class SupabaseStorage implements IStorage {
       orderIndex: data.order_index,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
+      supabaseId: data.id,
+      lastSyncedAt: new Date(),
     } : undefined;
   }
 
   async createLiveReplyTemplateGroup(group: InsertLiveReplyTemplateGroup): Promise<LiveReplyTemplateGroup> {
+    console.log('[SupabaseStorage] Creating live reply template group:', group.name);
+    
     // Find next order index if not provided
     if (group.orderIndex === undefined) {
       const { data: maxOrderData } = await this.client
@@ -901,8 +907,16 @@ export class SupabaseStorage implements IStorage {
 
     if (error) {
       console.error('[SupabaseStorage] Error creating live reply template group:', error);
+      
+      // Handle unique constraint violation specifically
+      if (error.code === '23505' && error.message.includes('live_reply_template_groups_name_key')) {
+        throw new Error(`A group with the name "${group.name}" already exists. Please choose a different name.`);
+      }
+      
       throw new Error(`Failed to create live reply template group: ${error.message}`);
     }
+
+    console.log('[SupabaseStorage] Successfully created live reply template group:', data.id);
 
     return {
       id: data.id,
@@ -913,6 +927,8 @@ export class SupabaseStorage implements IStorage {
       orderIndex: data.order_index,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
+      supabaseId: data.id,
+      lastSyncedAt: new Date(),
     };
   }
 
@@ -945,6 +961,8 @@ export class SupabaseStorage implements IStorage {
       orderIndex: data.order_index,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
+      supabaseId: data.id,
+      lastSyncedAt: new Date(),
     };
   }
 
