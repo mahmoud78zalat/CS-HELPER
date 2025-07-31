@@ -61,6 +61,11 @@ export default function TemplateFormModal({
   const [templateValidation, setTemplateValidation] = useState<{ isValid: boolean; issues: string[]; variables: string[] } | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [activeField, setActiveField] = useState<'contentEn' | 'contentAr' | null>(null);
+  
+  // Debug activeField changes
+  useEffect(() => {
+    console.log('[ActiveField] Changed to:', activeField);
+  }, [activeField]);
 
   // Fetch dynamic data for dropdowns
   const { data: templateCategories = [] } = useQuery<{id: string, name: string}[]>({
@@ -180,6 +185,7 @@ export default function TemplateFormModal({
   const insertVariable = (variableName: string, targetField?: 'contentEn' | 'contentAr') => {
     const variable = `{${variableName.toLowerCase()}}`;
     const fieldToUse = targetField || activeField || 'contentEn';
+    console.log('[InsertVariable] Variable:', variableName, 'Target field:', targetField, 'Active field:', activeField, 'Final field:', fieldToUse);
     const textareaId = fieldToUse === 'contentAr' ? 'contentAr' : 'contentEn';
     const textarea = document.getElementById(textareaId) as HTMLTextAreaElement;
     
@@ -209,11 +215,19 @@ export default function TemplateFormModal({
       const variableName = active.data.current.variableName;
       const dropTargetId = over.id as string;
       
+      console.log('[DragEnd] Variable:', variableName, 'Drop target:', dropTargetId);
+      
       // Determine which field the variable was dropped on
       if (dropTargetId === 'droppable-contentEn') {
+        console.log('[DragEnd] Inserting into English field');
         insertVariable(variableName, 'contentEn');
       } else if (dropTargetId === 'droppable-contentAr') {
+        console.log('[DragEnd] Inserting into Arabic field');
         insertVariable(variableName, 'contentAr');
+      } else {
+        console.log('[DragEnd] Unknown drop target, using active field:', activeField);
+        // Fallback to active field
+        insertVariable(variableName, activeField || 'contentEn');
       }
     }
   };

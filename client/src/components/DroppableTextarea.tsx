@@ -134,7 +134,6 @@ export default function DroppableTextarea({
         dir={dir}
         data-droppable-id={`droppable-${id}`}
         data-cursor-position={cursorPosition}
-        data-insert-variable={insertVariableAtCursor}
       />
       {isActive && (
         <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
