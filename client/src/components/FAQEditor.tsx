@@ -30,7 +30,7 @@ interface FAQ {
 }
 
 // Sortable FAQ Item Component
-const SortableFAQItem = ({ faq, isEditing, onEdit, onSave, onCancel, onDelete, getCategoryColor }: any) => {
+const SortableFAQItem = ({ faq, isEditing, onEdit, onSave, onCancel, onDelete, getCategoryColor, availableCategories }: any) => {
   const {
     attributes,
     listeners,
@@ -240,7 +240,7 @@ export default function FAQEditor() {
     onSuccess: () => {
       toast({ title: "FAQ created successfully" });
       setIsCreating(false);
-      setNewFaq({ question: '', answer: '', category: 'general', isActive: true });
+      setNewFaq({ question: '', answer: '', category: 'general', icon: 'HelpCircle', isActive: true });
       queryClient.invalidateQueries({ queryKey: ['/api/faqs'] });
     },
     onError: (error: any) => {
@@ -539,6 +539,7 @@ export default function FAQEditor() {
                     onCancel={() => setEditingFaq(null)}
                     onDelete={handleDeleteFaq}
                     getCategoryColor={getCategoryColor}
+                    availableCategories={availableCategories}
                   />
                 ))}
               </div>
