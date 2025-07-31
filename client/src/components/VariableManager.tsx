@@ -95,10 +95,20 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
   const queryClient = useQueryClient();
 
   // Fetch template variables
-  const { data: variables = [], isLoading: variablesLoading } = useQuery({
+  const { data: variables = [], isLoading: variablesLoading, error: variablesError } = useQuery({
     queryKey: ['/api/template-variables'],
     enabled: isOpen,
   });
+
+  // Debug logging for variables
+  useEffect(() => {
+    if (isOpen) {
+      console.log('[VariableManager] Modal opened - fetching variables');
+      console.log('[VariableManager] Variables loading:', variablesLoading);
+      console.log('[VariableManager] Variables data:', variables);
+      console.log('[VariableManager] Variables error:', variablesError);
+    }
+  }, [isOpen, variablesLoading, variables, variablesError]);
 
   // Fetch existing template categories from the project instead of template variable categories
   const { data: templateCategories = [], isLoading: templateCategoriesLoading } = useQuery({
