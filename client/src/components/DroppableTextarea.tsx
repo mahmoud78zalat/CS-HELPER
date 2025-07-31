@@ -13,6 +13,7 @@ interface DroppableTextareaProps {
   className?: string;
   dir?: "ltr" | "rtl";
   onVariableInsert?: (variable: string, position: number) => void;
+  onFieldFocus?: (fieldId: string) => void;
 }
 
 export default function DroppableTextarea({
@@ -26,6 +27,7 @@ export default function DroppableTextarea({
   className = "",
   dir = "ltr",
   onVariableInsert,
+  onFieldFocus,
 }: DroppableTextareaProps) {
   const [isActive, setIsActive] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
@@ -50,6 +52,13 @@ export default function DroppableTextarea({
   const handleClick = () => {
     setIsActive(true);
     handleSelectionChange();
+    console.log('[DroppableTextarea] Field clicked:', id);
+  };
+
+  const handleFocus = () => {
+    setIsActive(true);
+    onFieldFocus?.(id);
+    console.log('[DroppableTextarea] Field focused:', id);
   };
 
   const handleKeyUp = () => {
@@ -94,11 +103,13 @@ export default function DroppableTextarea({
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.addEventListener('click', handleClick);
+      textarea.addEventListener('focus', handleFocus);
       textarea.addEventListener('keyup', handleKeyUp);
       textarea.addEventListener('blur', handleBlur);
       
       return () => {
         textarea.removeEventListener('click', handleClick);
+        textarea.removeEventListener('focus', handleFocus);
         textarea.removeEventListener('keyup', handleKeyUp);
         textarea.removeEventListener('blur', handleBlur);
       };

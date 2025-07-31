@@ -185,7 +185,11 @@ export default function TemplateFormModal({
   const insertVariable = (variableName: string, targetField?: 'contentEn' | 'contentAr') => {
     const variable = `{${variableName.toLowerCase()}}`;
     const fieldToUse = targetField || activeField || 'contentEn';
-    console.log('[InsertVariable] Variable:', variableName, 'Target field:', targetField, 'Active field:', activeField, 'Final field:', fieldToUse);
+    console.log('[InsertVariable] Variable:', variableName);
+    console.log('[InsertVariable] Target field:', targetField);
+    console.log('[InsertVariable] Active field:', activeField);
+    console.log('[InsertVariable] Final field to use:', fieldToUse);
+    
     const textareaId = fieldToUse === 'contentAr' ? 'contentAr' : 'contentEn';
     const textarea = document.getElementById(textareaId) as HTMLTextAreaElement;
     
@@ -194,6 +198,10 @@ export default function TemplateFormModal({
       const end = textarea.selectionEnd;
       const currentContent = fieldToUse === 'contentAr' ? formData.contentAr : formData.contentEn;
       const newContent = currentContent.substring(0, start) + variable + currentContent.substring(end);
+      
+      console.log('[InsertVariable] Inserting at position:', start, 'to', end);
+      console.log('[InsertVariable] Current content length:', currentContent.length);
+      console.log('[InsertVariable] New content length:', newContent.length);
       
       setFormData(prev => ({ 
         ...prev, 
@@ -205,6 +213,8 @@ export default function TemplateFormModal({
         textarea.focus();
         textarea.setSelectionRange(start + variable.length, start + variable.length);
       }, 0);
+    } else {
+      console.error('[InsertVariable] Could not find textarea with ID:', textareaId);
     }
   };
 
@@ -419,6 +429,7 @@ export default function TemplateFormModal({
                       rows={8}
                       required
                       className="font-mono text-sm"
+                      onFieldFocus={setActiveField}
                     />
                   </div>
                   
@@ -439,6 +450,7 @@ export default function TemplateFormModal({
                         required
                         className="font-mono text-sm"
                         dir="rtl"
+                        onFieldFocus={setActiveField}
                       />
                     </div>
                   )}
@@ -521,8 +533,15 @@ export default function TemplateFormModal({
                 <CardContent>
                   <div className="space-y-4">
                     <div className="border-l-4 border-blue-500 pl-4">
-                      <h3 className="font-medium">Subject:</h3>
-                      <p className="text-sm">{formData.subject || 'No subject set'}</p>
+                      <h3 className="font-medium">
+                        {isEmailTemplate ? 'Subject:' : 'Template Name:'}
+                      </h3>
+                      <p className="text-sm">
+                        {isEmailTemplate 
+                          ? (formData.subject || 'No subject set')
+                          : (formData.name || 'No template name set')
+                        }
+                      </p>
                     </div>
                     
                     {formData.warningNote && (
