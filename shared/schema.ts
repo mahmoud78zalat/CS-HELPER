@@ -152,8 +152,19 @@ export const announcements = pgTable("announcements", {
 // User announcement acknowledgments to track who has seen announcements
 export const userAnnouncementAcks = pgTable("user_announcement_acks", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").references(() => users.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
   announcementId: uuid("announcement_id").references(() => announcements.id).notNull(),
+  acknowledgedAt: timestamp("acknowledged_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(),
+  lastSyncedAt: timestamp("last_synced_at"),
+});
+
+// User FAQ acknowledgments to track who has seen FAQs
+export const userFaqAcks = pgTable("user_faq_acks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  faqId: uuid("faq_id").references(() => faqs.id).notNull(),
   acknowledgedAt: timestamp("acknowledged_at").defaultNow(),
   // Supabase sync tracking
   supabaseId: uuid("supabase_id").unique(),
@@ -165,6 +176,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   liveReplyUsage: many(liveReplyUsage),
   emailTemplateUsage: many(emailTemplateUsage),
   announcementAcks: many(userAnnouncementAcks),
+  faqAcks: many(userFaqAcks),
 }));
 
 export const liveReplyTemplatesRelations = relations(liveReplyTemplates, ({ many }) => ({
@@ -209,6 +221,21 @@ export const userAnnouncementAcksRelations = relations(userAnnouncementAcks, ({ 
   announcement: one(announcements, {
     fields: [userAnnouncementAcks.announcementId],
     references: [announcements.id],
+  }),
+}));
+
+export const faqsRelations = relations(faqs, ({ many }) => ({
+  userAcks: many(userFaqAcks),
+}));
+
+export const userFaqAcksRelations = relations(userFaqAcks, ({ one }) => ({
+  user: one(users, {
+    fields: [userFaqAcks.userId],
+    references: [users.id],
+  }),
+  faq: one(faqs, {
+    fields: [userFaqAcks.faqId],
+    references: [faqs.id],
   }),
 }));
 
@@ -290,6 +317,13 @@ export const insertFaqSchema = createInsertSchema(faqs).omit({
   lastSyncedAt: true,
 });
 
+export const insertUserFaqAckSchema = createInsertSchema(userFaqAcks).omit({
+  id: true,
+  acknowledgedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -317,6 +351,12 @@ export type UserAnnouncementAck = typeof userAnnouncementAcks.$inferSelect;
 
 export type InsertFaq = z.infer<typeof insertFaqSchema>;
 export type Faq = typeof faqs.$inferSelect;
+
+export type InsertUserFaqAck = z.infer<typeof insertUserFaqAckSchema>;
+export type UserFaqAck = typeof userFaqAcks.$inferSelect;
+
+export type InsertUserAnnouncementAck = z.infer<typeof insertUserAnnouncementAckSchema>;
+export type UserAnnouncementAck = typeof userAnnouncementAcks.$inferSelect;
 
 // Personal Notes Schema
 export const personalNotes = pgTable("personal_notes", {

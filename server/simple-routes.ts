@@ -1494,6 +1494,64 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // FAQ acknowledgment endpoints
+  app.post('/api/faqs/:id/acknowledge', async (req, res) => {
+    try {
+      const { id: faqId } = req.params;
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      await storage.markFaqAsSeen(userId, faqId);
+      res.status(200).json({ message: "FAQ marked as seen successfully" });
+    } catch (error) {
+      console.error("Error marking FAQ as seen:", error);
+      res.status(500).json({ message: "Failed to mark FAQ as seen" });
+    }
+  });
+
+  app.get('/api/user/:userId/seen-faqs', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const seenFaqs = await storage.getUserSeenFaqs(userId);
+      res.json(seenFaqs);
+    } catch (error) {
+      console.error("Error getting user seen FAQs:", error);
+      res.status(500).json({ message: "Failed to get user seen FAQs" });
+    }
+  });
+
+  // Announcement acknowledgment endpoints
+  app.post('/api/announcements/:id/acknowledge', async (req, res) => {
+    try {
+      const { id: announcementId } = req.params;
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      await storage.markAnnouncementAsSeen(userId, announcementId);
+      res.status(200).json({ message: "Announcement marked as seen successfully" });
+    } catch (error) {
+      console.error("Error marking announcement as seen:", error);
+      res.status(500).json({ message: "Failed to mark announcement as seen" });
+    }
+  });
+
+  app.get('/api/user/:userId/seen-announcements', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const seenAnnouncements = await storage.getUserSeenAnnouncements(userId);
+      res.json(seenAnnouncements);
+    } catch (error) {
+      console.error("Error getting user seen announcements:", error);
+      res.status(500).json({ message: "Failed to get user seen announcements" });
+    }
+  });
+
   console.log('[Simple Routes] ✅ All routes registered successfully!');
   console.log('[Simple Routes] 📋 Total API routes available:');
   console.log('[Simple Routes]   - Live Reply Templates: /api/live-reply-templates');
@@ -1502,6 +1560,10 @@ export function registerRoutes(app: Express): void {
   console.log('[Simple Routes]   - Template Variables: /api/template-variables');
   console.log('[Simple Routes]   - Color Settings: /api/color-settings');
   console.log('[Simple Routes]   - FAQs: /api/faqs');
+  console.log('[Simple Routes]   - FAQ Acknowledgments: /api/faqs/:id/acknowledge');
+  console.log('[Simple Routes]   - User Seen FAQs: /api/user/:userId/seen-faqs');
+  console.log('[Simple Routes]   - Announcement Acknowledgments: /api/announcements/:id/acknowledge');
+  console.log('[Simple Routes]   - User Seen Announcements: /api/user/:userId/seen-announcements');
   console.log('[Simple Routes]   - User Ordering: /api/user-ordering/:contentType');
   console.log('[Simple Routes]   - Global Ordering: /api/global-ordering/:contentType');
 

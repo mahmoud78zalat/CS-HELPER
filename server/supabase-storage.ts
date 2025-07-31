@@ -998,6 +998,66 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
+  // FAQ acknowledgment operations
+  async markFaqAsSeen(userId: string, faqId: string): Promise<void> {
+    const { error } = await this.client
+      .from('user_faq_acks')
+      .upsert({
+        user_id: userId,
+        faq_id: faqId,
+        acknowledged_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('[SupabaseStorage] Error marking FAQ as seen:', error);
+      throw new Error(`Failed to mark FAQ as seen: ${error.message}`);
+    }
+  }
+
+  async getUserSeenFaqs(userId: string): Promise<string[]> {
+    const { data, error } = await this.client
+      .from('user_faq_acks')
+      .select('faq_id')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('[SupabaseStorage] Error getting user seen FAQs:', error);
+      throw new Error(`Failed to get user seen FAQs: ${error.message}`);
+    }
+
+    return data ? data.map(ack => ack.faq_id) : [];
+  }
+
+  // Enhanced announcement acknowledgment operations
+  async markAnnouncementAsSeen(userId: string, announcementId: string): Promise<void> {
+    const { error } = await this.client
+      .from('user_announcement_acks')
+      .upsert({
+        user_id: userId,
+        announcement_id: announcementId,
+        acknowledged_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('[SupabaseStorage] Error marking announcement as seen:', error);
+      throw new Error(`Failed to mark announcement as seen: ${error.message}`);
+    }
+  }
+
+  async getUserSeenAnnouncements(userId: string): Promise<string[]> {
+    const { data, error } = await this.client
+      .from('user_announcement_acks')
+      .select('announcement_id')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('[SupabaseStorage] Error getting user seen announcements:', error);
+      throw new Error(`Failed to get user seen announcements: ${error.message}`);
+    }
+
+    return data ? data.map(ack => ack.announcement_id) : [];
+  }
+
   async acknowledgeAnnouncement(userId: string, announcementId: string): Promise<void> {
     const { error } = await this.serviceClient
       .from('user_announcement_acks')
