@@ -102,28 +102,28 @@ export default function TemplatesArea() {
     hasLocalOrdering 
   } = useLocalTemplateOrdering(user?.id || 'anonymous');
 
-  // Group reordering mutation
+  // Group reordering mutation (matches HorizontalGroupedTemplates format)
   const reorderGroupsMutation = useMutation({
-    mutationFn: async (orderedGroupIds: string[]) => {
-      return apiRequest('/api/live-reply-template-groups/reorder', {
-        method: 'POST',
-        body: { orderedGroupIds }
-      });
+    mutationFn: async (orderedGroups: any[]) => {
+      const updates = orderedGroups.map((group, index) => ({
+        id: group.id,
+        orderIndex: index
+      }));
+      
+      return apiRequest('POST', '/api/live-reply-template-groups/reorder', { updates });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
-      toast({
-        title: "Groups reordered successfully",
-        description: "The group order has been updated.",
-      });
+      toast({ title: "Group order saved successfully" });
     },
     onError: (error: any) => {
-      toast({
-        title: "Failed to reorder groups",
-        description: error.message || "An error occurred while reordering groups.",
-        variant: "destructive",
+      toast({ 
+        title: "Failed to save group order", 
+        description: error.message,
+        variant: "destructive" 
       });
-    }
+    },
   });
 
   // Drag and drop sensors
@@ -144,8 +144,7 @@ export default function TemplatesArea() {
       
       if (oldIndex !== -1 && newIndex !== -1) {
         const newGroupOrder = arrayMove(activeGroups, oldIndex, newIndex);
-        const orderedGroupIds = newGroupOrder.map((group: any) => group.id);
-        reorderGroupsMutation.mutate(orderedGroupIds);
+        reorderGroupsMutation.mutate(newGroupOrder);
       }
     }
   };
