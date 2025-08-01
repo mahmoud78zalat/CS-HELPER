@@ -107,6 +107,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns 
                WHERE table_name = 'template_genres' AND column_name = 'category_id') THEN
         
+        -- Insert with ON CONFLICT handling
         INSERT INTO template_genres (name, description, category_id, color, order_index) 
         SELECT 
             'Delayed Delivery', 
@@ -114,7 +115,12 @@ BEGIN
             tc.id, 
             '#ef4444', 
             0
-        FROM template_categories tc WHERE tc.name = 'Delivery Problems';
+        FROM template_categories tc WHERE tc.name = 'Delivery Problems'
+        ON CONFLICT (name) DO UPDATE SET
+            description = EXCLUDED.description,
+            category_id = EXCLUDED.category_id,
+            color = EXCLUDED.color,
+            order_index = EXCLUDED.order_index;
     END IF;
 END $$;
 
@@ -127,43 +133,88 @@ BEGIN
         -- Insert genres for Delivery Problems
         INSERT INTO template_genres (name, description, category_id, color, order_index) 
         SELECT 'Lost Package', 'Templates for lost package situations', tc.id, '#dc2626', 1
-        FROM template_categories tc WHERE tc.name = 'Delivery Problems';
+        FROM template_categories tc WHERE tc.name = 'Delivery Problems'
+        ON CONFLICT (name) DO UPDATE SET
+            description = EXCLUDED.description,
+            category_id = EXCLUDED.category_id,
+            color = EXCLUDED.color,
+            order_index = EXCLUDED.order_index;
 
-        -- Insert genres for General
+        -- Insert genres for General (use different names to avoid conflicts)
         INSERT INTO template_genres (name, description, category_id, color, order_index) 
         SELECT 'Standard Response', 'General standard responses', tc.id, '#3b82f6', 0
-        FROM template_categories tc WHERE tc.name = 'General';
+        FROM template_categories tc WHERE tc.name = 'General'
+        ON CONFLICT (name) DO UPDATE SET
+            description = EXCLUDED.description,
+            category_id = EXCLUDED.category_id,
+            color = EXCLUDED.color,
+            order_index = EXCLUDED.order_index;
 
         INSERT INTO template_genres (name, description, category_id, color, order_index) 
-        SELECT 'Greeting', 'Welcome and greeting templates', tc.id, '#06b6d4', 1
-        FROM template_categories tc WHERE tc.name = 'General';
+        SELECT 'General Greeting', 'Welcome and greeting templates', tc.id, '#06b6d4', 1
+        FROM template_categories tc WHERE tc.name = 'General'
+        ON CONFLICT (name) DO UPDATE SET
+            description = EXCLUDED.description,
+            category_id = EXCLUDED.category_id,
+            color = EXCLUDED.color,
+            order_index = EXCLUDED.order_index;
 
         -- Insert genres for Order Issues
         INSERT INTO template_genres (name, description, category_id, color, order_index) 
         SELECT 'Wrong Order', 'Templates for incorrect orders', tc.id, '#f59e0b', 0
-        FROM template_categories tc WHERE tc.name = 'Order Issues';
+        FROM template_categories tc WHERE tc.name = 'Order Issues'
+        ON CONFLICT (name) DO UPDATE SET
+            description = EXCLUDED.description,
+            category_id = EXCLUDED.category_id,
+            color = EXCLUDED.color,
+            order_index = EXCLUDED.order_index;
 
         INSERT INTO template_genres (name, description, category_id, color, order_index) 
-        SELECT 'Cancellation', 'Order cancellation templates', tc.id, '#fb923c', 1
-        FROM template_categories tc WHERE tc.name = 'Order Issues';
+        SELECT 'Order Cancellation', 'Order cancellation templates', tc.id, '#fb923c', 1
+        FROM template_categories tc WHERE tc.name = 'Order Issues'
+        ON CONFLICT (name) DO UPDATE SET
+            description = EXCLUDED.description,
+            category_id = EXCLUDED.category_id,
+            color = EXCLUDED.color,
+            order_index = EXCLUDED.order_index;
 
         -- Insert genres for Product Inquiry
         INSERT INTO template_genres (name, description, category_id, color, order_index) 
         SELECT 'Product Details', 'Product information inquiries', tc.id, '#10b981', 0
-        FROM template_categories tc WHERE tc.name = 'Product Inquiry';
+        FROM template_categories tc WHERE tc.name = 'Product Inquiry'
+        ON CONFLICT (name) DO UPDATE SET
+            description = EXCLUDED.description,
+            category_id = EXCLUDED.category_id,
+            color = EXCLUDED.color,
+            order_index = EXCLUDED.order_index;
 
         INSERT INTO template_genres (name, description, category_id, color, order_index) 
-        SELECT 'Availability', 'Product availability questions', tc.id, '#059669', 1
-        FROM template_categories tc WHERE tc.name = 'Product Inquiry';
+        SELECT 'Product Availability', 'Product availability questions', tc.id, '#059669', 1
+        FROM template_categories tc WHERE tc.name = 'Product Inquiry'
+        ON CONFLICT (name) DO UPDATE SET
+            description = EXCLUDED.description,
+            category_id = EXCLUDED.category_id,
+            color = EXCLUDED.color,
+            order_index = EXCLUDED.order_index;
 
         -- Insert genres for Return follow ups
         INSERT INTO template_genres (name, description, category_id, color, order_index) 
         SELECT 'Return Status', 'Return status update templates', tc.id, '#8b5cf6', 0
-        FROM template_categories tc WHERE tc.name = 'Return follow ups';
+        FROM template_categories tc WHERE tc.name = 'Return follow ups'
+        ON CONFLICT (name) DO UPDATE SET
+            description = EXCLUDED.description,
+            category_id = EXCLUDED.category_id,
+            color = EXCLUDED.color,
+            order_index = EXCLUDED.order_index;
 
         INSERT INTO template_genres (name, description, category_id, color, order_index) 
         SELECT 'Refund Process', 'Refund processing templates', tc.id, '#7c3aed', 1
-        FROM template_categories tc WHERE tc.name = 'Return follow ups';
+        FROM template_categories tc WHERE tc.name = 'Return follow ups'
+        ON CONFLICT (name) DO UPDATE SET
+            description = EXCLUDED.description,
+            category_id = EXCLUDED.category_id,
+            color = EXCLUDED.color,
+            order_index = EXCLUDED.order_index;
         
     END IF;
 END $$;
