@@ -54,22 +54,12 @@ function TemplateConfigManager({ isOpen, onClose }: TemplateConfigManagerProps) 
             <DialogTitle>Template Configuration Manager</DialogTitle>
           </DialogHeader>
           
-          <Tabs defaultValue="categories" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="categories">Categories</TabsTrigger>
-              <TabsTrigger value="genres">Genres</TabsTrigger>
+          <Tabs defaultValue="connected" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="connected">Connected Config</TabsTrigger>
               <TabsTrigger value="teams">Concerned Teams</TabsTrigger>
               <TabsTrigger value="variables">Variables</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="categories">
-              <ConfigTypeManager type="categories" />
-            </TabsContent>
-            
-            <TabsContent value="genres">
-              <ConfigTypeManager type="genres" />
-            </TabsContent>
             
             <TabsContent value="connected">
               <ConnectedConfigManager />
