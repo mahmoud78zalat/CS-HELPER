@@ -67,23 +67,38 @@ export default function TemplateFormModal({
     console.log('[ActiveField] Changed to:', activeField);
   }, [activeField]);
 
-  // Fetch dynamic data for dropdowns
+  // Fetch connected config data for dropdowns
+  const { data: connectedCategories = [] } = useQuery<{id: string, name: string, genres: {id: string, name: string}[]}[]>({
+    queryKey: ['/api/connected-template-categories'],
+  });
+
+  // Fallback to simple categories if connected config is not available
   const { data: templateCategories = [] } = useQuery<{id: string, name: string}[]>({
     queryKey: ['/api/template-categories'],
+    enabled: connectedCategories.length === 0,
   });
 
   const { data: emailCategories = [] } = useQuery<{id: string, name: string}[]>({
     queryKey: ['/api/email-categories'],
-    enabled: isEmailTemplate,
+    enabled: isEmailTemplate && connectedCategories.length === 0,
   });
 
-  // Use template categories as fallback for email templates if email categories are limited
-  const availableCategories = isEmailTemplate ? 
-    (emailCategories.length > 1 ? emailCategories : templateCategories) : 
-    templateCategories;
+  // Use connected categories first, then fallback to simple categories
+  const availableCategories = connectedCategories.length > 0 
+    ? connectedCategories.map(cat => ({ id: cat.id, name: cat.name }))
+    : (isEmailTemplate ? 
+        (emailCategories.length > 1 ? emailCategories : templateCategories) : 
+        templateCategories);
 
+  // Get genres based on selected category from connected config
+  const availableGenres = connectedCategories.length > 0 && formData.category
+    ? connectedCategories.find(cat => cat.id === formData.category)?.genres || []
+    : [];
+
+  // Fallback to simple genres if no connected config
   const { data: templateGenres = [] } = useQuery<{id: string, name: string}[]>({
     queryKey: ['/api/template-genres'],
+    enabled: connectedCategories.length === 0,
   });
 
   const { data: concernedTeams = [] } = useQuery<{id: string, name: string}[]>({
@@ -177,6 +192,18 @@ export default function TemplateFormModal({
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  // Reset genre when category changes (for connected config)
+  useEffect(() => {
+    if (connectedCategories.length > 0 && formData.category) {
+      const selectedCategory = connectedCategories.find(cat => cat.id === formData.category);
+      const currentGenreValid = selectedCategory?.genres.some(genre => genre.id === formData.genre);
+      
+      if (!currentGenreValid && formData.genre) {
+        setFormData(prev => ({ ...prev, genre: '' }));
+      }
+    }
+  }, [formData.category, connectedCategories]);
 
 
 
@@ -344,7 +371,9 @@ export default function TemplateFormModal({
                     </SelectTrigger>
                     <SelectContent>
                       {availableCategories.map((category: any) => (
-                        <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
+                        <SelectItem key={category.id} value={connectedCategories.length > 0 ? category.id : category.name}>
+                          {category.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -352,14 +381,27 @@ export default function TemplateFormModal({
                 
                 <div className="space-y-2">
                   <Label htmlFor="genre">Genre *</Label>
-                  <Select value={formData.genre} onValueChange={(value) => handleInputChange('genre', value)}>
+                  <Select 
+                    value={formData.genre} 
+                    onValueChange={(value) => handleInputChange('genre', value)}
+                    disabled={connectedCategories.length > 0 && !formData.category}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select genre" />
+                      <SelectValue placeholder={
+                        connectedCategories.length > 0 && !formData.category 
+                          ? "Select category first" 
+                          : "Select genre"
+                      } />
                     </SelectTrigger>
                     <SelectContent>
-                      {templateGenres.map((genre: any) => (
-                        <SelectItem key={genre.id} value={genre.name}>{genre.name}</SelectItem>
-                      ))}
+                      {connectedCategories.length > 0 
+                        ? availableGenres.map((genre: any) => (
+                            <SelectItem key={genre.id} value={genre.id}>{genre.name}</SelectItem>
+                          ))
+                        : templateGenres.map((genre: any) => (
+                            <SelectItem key={genre.id} value={genre.name}>{genre.name}</SelectItem>
+                          ))
+                      }
                     </SelectContent>
                   </Select>
                 </div>
