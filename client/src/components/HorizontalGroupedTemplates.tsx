@@ -26,6 +26,8 @@ interface LiveTemplate {
   stageOrder?: number;
   groupOrder?: number;
   usageCount?: number;
+  variables?: string[] | null;
+  isActive?: boolean;
 }
 
 interface TemplateGroup {

@@ -1866,17 +1866,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-sm font-medium text-slate-700">
-                      Live Chat Templates - Horizontal Grouped Display
+                      Live Chat Templates - Drag & Drop Management
                     </h4>
-                    <Button
-                      onClick={() => setShowGroupManager(true)}
-                      variant="outline"
-                      size="sm"
-                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                    >
-                      <FolderOpen className="h-4 w-4 mr-2" />
-                      Manage Groups
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => setShowGroupManager(true)}
+                        variant="outline"
+                        size="sm"
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                      >
+                        <FolderOpen className="h-4 w-4 mr-2" />
+                        Manage Groups
+                      </Button>
+                    </div>
                   </div>
                   <HorizontalGroupedTemplates
                     templates={filteredTemplates.map((t: any) => ({
