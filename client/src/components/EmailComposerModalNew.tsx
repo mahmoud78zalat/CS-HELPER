@@ -366,22 +366,22 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <Dialog open={true} onOpenChange={onClose}>
-        <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full m-0 p-0 overflow-hidden border-0 rounded-none bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
-        <DialogHeader className="p-8 border-b-4 border-purple-300/60 bg-gradient-to-r from-purple-100/90 via-pink-100/90 to-blue-100/90 backdrop-blur-sm shadow-xl">
-          <DialogTitle className="flex items-center gap-4 text-3xl font-black bg-gradient-to-r from-purple-700 via-pink-600 to-blue-600 bg-clip-text text-transparent">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-200 to-pink-200 shadow-2xl border-2 border-purple-300/50 animate-pulse">
-              <Send className="h-8 w-8 text-purple-700" />
+        <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full m-0 p-0 overflow-hidden border-0 rounded-none bg-white">
+        <DialogHeader className="p-6 border-b border-slate-200 bg-white">
+          <DialogTitle className="flex items-center gap-3 text-xl font-semibold text-slate-800">
+            <div className="p-2 rounded-lg bg-blue-50 border border-blue-200">
+              <Send className="h-5 w-5 text-blue-600" />
             </div>
-            🚀 MODERNIZED Email Template Composer
+            Email Template Composer
           </DialogTitle>
         </DialogHeader>
 
-        <PanelGroup direction="horizontal" className="h-[calc(100vh-88px)]" autoSaveId="email-composer-layout-v3">
+        <PanelGroup direction="horizontal" className="h-[calc(100vh-80px)]" autoSaveId="email-composer-layout-v3">
           {/* Left Panel: Template Selection */}
           <Panel defaultSize={25} minSize={20} maxSize={40} id="template-selection" order={1}>
-            <div className="w-full h-full border-r border-slate-200/50 flex flex-col bg-gradient-to-b from-slate-50/80 to-white/90 backdrop-blur-sm">
-            <div className="p-6 border-b border-slate-200/50 bg-white/70 backdrop-blur-sm">
-              <h3 className="font-bold text-xl mb-4 bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent">Select Template</h3>
+            <div className="w-full h-full border-r border-slate-200 flex flex-col bg-slate-50">
+            <div className="p-4 border-b border-slate-200 bg-white">
+              <h3 className="font-semibold text-lg mb-3 text-slate-700">Select Template</h3>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 z-10" />
                 <Input
