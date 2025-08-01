@@ -611,6 +611,52 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                         </div>
                       );
                     })}
+
+                    {/* Other Template Variables - Variables not in predefined categories */}
+                    {(() => {
+                      // Get all predefined variable keys
+                      const predefinedKeys = Object.values(TEMPLATE_VARIABLES).flat().map(v => v.key);
+                      const customSubjectKeys = customSubjectVars;
+                      const allKnownKeys = [...predefinedKeys, ...customSubjectKeys];
+                      
+                      // Find variables that are not in predefined categories or custom subject vars
+                      const otherVariables = uniqueVariables.filter(varName => 
+                        !allKnownKeys.includes(varName)
+                      );
+                      
+                      if (otherVariables.length === 0) return null;
+                      
+                      return (
+                        <div key="other">
+                          <h4 className="font-medium text-sm text-slate-700 mb-2 flex items-center gap-2">
+                            <Plus className="h-3 w-3 text-green-600" />
+                            Template Variables
+                          </h4>
+                          <p className="text-xs text-slate-600 mb-3">
+                            Additional variables found in this template
+                          </p>
+                          <div className="space-y-2">
+                            {otherVariables.map((varName) => (
+                              <div key={varName} className="p-2 bg-white rounded border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs font-mono text-green-600 bg-green-50 px-2 py-1 rounded cursor-grab active:cursor-grabbing hover:bg-green-100 transition-colors inline-flex items-center gap-1">
+                                    <GripVertical className="h-3 w-3" />
+                                    {`{${varName}}`}
+                                  </span>
+                                </div>
+                                <Input
+                                  id={varName}
+                                  value={variableValues[varName] || ''}
+                                  onChange={(e) => handleVariableChange(varName, e.target.value)}
+                                  placeholder={`Enter value for ${varName.replace(/_/g, ' ')}...`}
+                                  className="h-8 text-xs border-slate-200 focus:border-blue-400 focus:ring-blue-200"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 ) : selectedTemplate ? (
                   <div className="text-center py-12 text-slate-500">
