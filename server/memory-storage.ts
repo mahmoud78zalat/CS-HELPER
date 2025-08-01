@@ -157,8 +157,14 @@ export class MemoryStorage implements IStorage {
 
   async deleteUser(id: string): Promise<void> {
     console.log('[MemoryStorage] Deleting user with ID:', id);
+    
+    // For memory storage, we can only delete from our in-memory store
+    // Note: This is a limitation of memory storage - it cannot delete from Supabase Auth
+    console.log('[MemoryStorage] WARNING: Memory storage cannot delete from Supabase Auth');
+    console.log('[MemoryStorage] Only removing user from in-memory store');
+    
     this.users.delete(id);
-    console.log('[MemoryStorage] Successfully deleted user:', id);
+    console.log('[MemoryStorage] Successfully deleted user from memory storage:', id);
   }
 
   async updateUserRole(id: string, role: "admin" | "agent"): Promise<void> {

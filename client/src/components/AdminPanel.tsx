@@ -1894,7 +1894,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         <TableCell>{user.firstName} {user.lastName}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
-                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                          <Badge 
+                            variant={user.role === 'admin' ? 'default' : 'secondary'} 
+                            className={user.role === 'agent' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100' : ''}
+                          >
                             {user.role}
                           </Badge>
                         </TableCell>

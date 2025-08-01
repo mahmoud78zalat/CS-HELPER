@@ -390,17 +390,40 @@ export class SupabaseStorage implements IStorage {
   async deleteUser(id: string): Promise<void> {
     console.log('[SupabaseStorage] Deleting user with ID:', id);
     
-    const { error } = await this.serviceClient
-      .from('users')
-      .delete()
-      .eq('id', id);
+    try {
+      // First, delete from Supabase Auth
+      console.log('[SupabaseStorage] Deleting user from Supabase Auth...');
+      const { error: authError } = await this.serviceClient.auth.admin.deleteUser(id);
+      
+      if (authError) {
+        console.error('[SupabaseStorage] Error deleting user from Auth:', authError);
+        // Continue with database deletion even if auth deletion fails
+        // This handles cases where user might not exist in auth but exists in database
+      } else {
+        console.log('[SupabaseStorage] Successfully deleted user from Supabase Auth:', id);
+      }
 
-    if (error) {
-      console.error('[SupabaseStorage] Error deleting user:', error);
+      // Then, delete from the users table
+      console.log('[SupabaseStorage] Deleting user from database table...');
+      const { error: dbError } = await this.serviceClient
+        .from('users')
+        .delete()
+        .eq('id', id);
+
+      if (dbError) {
+        console.error('[SupabaseStorage] Error deleting user from database:', dbError);
+        throw dbError;
+      }
+
+      console.log('[SupabaseStorage] Successfully deleted user from both Auth and database:', id);
+      
+      // Clear user from cache
+      this.userCache.delete(id);
+      
+    } catch (error) {
+      console.error('[SupabaseStorage] Failed to delete user:', error);
       throw error;
     }
-
-    console.log('[SupabaseStorage] Successfully deleted user:', id);
   }
 
   async updateUserStatus(id: string, status: "active" | "blocked" | "banned"): Promise<void> {
