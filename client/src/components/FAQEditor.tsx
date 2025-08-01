@@ -12,9 +12,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit2, Trash2, Save, X, HelpCircle, GripHorizontal, Settings, Users, CreditCard, Wrench, Info, MessageCircle, ChevronDown, ChevronUp, AlertTriangle, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { useDragAndDrop } from "@/hooks/useDragAndDrop";
+import { useFaqDragAndDrop } from "@/hooks/useFaqDragAndDrop";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -414,12 +414,15 @@ export default function FAQEditor() {
     }
   };
 
-  // Initialize drag and drop functionality  
-  const dragAndDrop = useDragAndDrop({
-    contentType: 'faqs',
+  // Initialize FAQ-specific drag and drop functionality  
+  const dragAndDrop = useFaqDragAndDrop({
     items: sortedFaqs,
     onReorder: (reorderedItems) => {
       setSortedFaqs(reorderedItems);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch FAQ queries to ensure data consistency
+      queryClient.invalidateQueries({ queryKey: ['/api/faqs'] });
     }
   });
 
