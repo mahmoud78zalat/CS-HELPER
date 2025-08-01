@@ -15,8 +15,8 @@ import { Copy, X, Search, Send, Edit3, Sparkles, Plus, GripVertical } from "luci
 import { EmailTemplate } from "@shared/schema";
 import { extractVariablesFromTemplate } from "@/lib/templateUtils";
 import { DndContext, DragEndEvent, useDraggable } from "@dnd-kit/core";
-import { DraggableVariable } from "./DraggableVariable";
-import { DroppableTextarea } from "./DroppableTextarea";
+import DraggableVariable from "./DraggableVariable";
+import DroppableTextarea from "./DroppableTextarea";
 
 interface EmailComposerModalProps {
   onClose: () => void;
@@ -481,7 +481,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                     id="email-body-droppable"
                     name="body"
                     value={emailBody}
-                    onChange={(e) => setEmailBody(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEmailBody(e.target.value)}
                     placeholder="Select a template to populate content..."
                     className="font-mono text-sm resize-none flex-1 min-h-[400px]"
                   />
@@ -510,44 +510,48 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             </div>
 
             {/* Preview Panel */}
-            <div className="flex-1 p-6 bg-gradient-to-br from-slate-50 to-slate-100 overflow-y-auto">
+            <div className="flex-1 p-6 bg-gradient-to-br from-slate-50 to-slate-100 overflow-y-auto min-h-0">
               <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-slate-800">
                 <Sparkles className="h-5 w-5 text-purple-600" />
                 Live Email Preview
               </h3>
               
-              <Card className="shadow-md">
-                <CardContent className="p-6">
-                  <div className="space-y-6">
-                    <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 py-3 rounded-r-md">
-                      <h4 className="font-semibold text-slate-700 text-base mb-2">Subject:</h4>
-                      <p className="text-base text-slate-800">{getFinalSubject() || selectedTemplate?.subject || selectedTemplate?.name || 'No subject set'}</p>
-                    </div>
-                    
-                    {selectedTemplate?.warningNote && (
-                      <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-r-md p-4">
-                        <p className="text-sm text-yellow-800 font-medium">
-                          ⚠️ Important: {selectedTemplate.warningNote}
-                        </p>
+              <div className="h-full flex flex-col">
+                <Card className="shadow-md flex-1 flex flex-col">
+                  <CardContent className="p-6 flex-1 flex flex-col">
+                    <div className="space-y-4 flex-1 flex flex-col">
+                      <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 py-3 rounded-r-md">
+                        <h4 className="font-semibold text-slate-700 text-base mb-2">Subject:</h4>
+                        <p className="text-base text-slate-800">{getFinalSubject() || selectedTemplate?.subject || selectedTemplate?.name || 'No subject set'}</p>
                       </div>
-                    )}
-                    
-                    <div className="border rounded-lg p-6 bg-white shadow-sm">
-                      <h4 className="font-semibold text-slate-700 text-base mb-3">Email Body:</h4>
-                      <pre className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
-                        {getFinalBody() || 'No content yet... Select a template to begin.'}
-                      </pre>
+                      
+                      {selectedTemplate?.warningNote && (
+                        <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-r-md p-4">
+                          <p className="text-sm text-yellow-800 font-medium">
+                            ⚠️ Important: {selectedTemplate.warningNote}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="border rounded-lg p-6 bg-white shadow-sm flex-1 flex flex-col min-h-0">
+                        <h4 className="font-semibold text-slate-700 text-base mb-3">Email Body:</h4>
+                        <div className="flex-1 overflow-y-auto">
+                          <pre className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 h-full">
+                            {getFinalBody() || 'No content yet... Select a template to begin.'}
+                          </pre>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
 
           {/* Right Panel: Variable Management */}
           {selectedTemplate && (
-            <div className="w-[420px] border-l border-slate-200 flex flex-col bg-slate-50 min-w-0">
-              <div className="p-6 border-b border-slate-200 bg-white">
+            <div className="w-[480px] border-l border-slate-200 flex flex-col bg-slate-50 min-w-0">
+              <div className="p-4 border-b border-slate-200 bg-white">
                 <h3 className="font-semibold text-lg flex items-center gap-2 text-slate-800">
                   <Edit3 className="h-5 w-5 text-purple-600" />
                   Template Variables
@@ -557,9 +561,9 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 </p>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 overflow-y-auto p-4">
                 {(uniqueVariables.length > 0 || customSubjectVars.length > 0) ? (
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {/* Custom Subject Variables Section */}
                     {customSubjectVars.length > 0 && (
                       <div>
@@ -570,13 +574,13 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                         <p className="text-sm text-slate-600 mb-4">
                           These variables are used in the email subject line
                         </p>
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                           {customSubjectVars.map((varName) => (
-                            <div key={varName} className="p-4 bg-white rounded-lg border-2 border-purple-200 shadow-sm hover:border-purple-300 transition-all duration-200 hover:shadow-md">
+                            <div key={varName} className="p-3 bg-white rounded-lg border-2 border-purple-200 shadow-sm hover:border-purple-300 transition-all duration-200 hover:shadow-md">
                               <div className="flex items-center gap-2 mb-2">
                                 <DraggableVariable 
                                   variableName={varName}
-                                  className="text-sm font-mono text-purple-600 font-medium bg-purple-50 px-2 py-1 rounded-md cursor-grab active:cursor-grabbing hover:bg-purple-100 transition-colors"
+                                  className="text-xs font-mono text-purple-600 font-medium bg-purple-50 px-2 py-1 rounded-md cursor-grab active:cursor-grabbing hover:bg-purple-100 transition-colors"
                                 >
                                   <GripVertical className="h-3 w-3 mr-1 inline-block" />
                                   {`{${varName}}`}
@@ -587,7 +591,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                                 value={variableValues[varName] || ''}
                                 onChange={(e) => handleVariableChange(varName, e.target.value)}
                                 placeholder={`Enter value for ${varName}...`}
-                                className="h-11 border-purple-200 focus:border-purple-400 text-base focus:ring-purple-200"
+                                className="h-9 text-sm border-purple-200 focus:border-purple-400 focus:ring-purple-200"
                               />
                             </div>
                           ))}
@@ -608,11 +612,11 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                           <h4 className="font-semibold text-base text-slate-700 mb-3 capitalize">
                             {category} Variables
                           </h4>
-                          <div className="space-y-4">
+                          <div className="space-y-3">
                             {categoryVariables.map((variable) => (
-                              <div key={variable.key} className="p-4 bg-white rounded-lg border-2 border-slate-200 shadow-sm hover:border-blue-300 transition-all duration-200 hover:shadow-md">
+                              <div key={variable.key} className="p-3 bg-white rounded-lg border-2 border-slate-200 shadow-sm hover:border-blue-300 transition-all duration-200 hover:shadow-md">
                                 <div className="flex items-center justify-between mb-2">
-                                  <Label htmlFor={variable.key} className="text-sm font-medium text-slate-700">
+                                  <Label htmlFor={variable.key} className="text-xs font-medium text-slate-700">
                                     {variable.label}
                                   </Label>
                                   <DraggableVariable 
@@ -628,7 +632,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                                   value={variableValues[variable.key] || ''}
                                   onChange={(e) => handleVariableChange(variable.key, e.target.value)}
                                   placeholder={variable.placeholder}
-                                  className="h-11 border-slate-200 focus:border-blue-400 text-base focus:ring-blue-200"
+                                  className="h-9 text-sm border-slate-200 focus:border-blue-400 focus:ring-blue-200"
                                 />
                               </div>
                             ))}
