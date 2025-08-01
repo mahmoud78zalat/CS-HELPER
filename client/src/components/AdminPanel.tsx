@@ -56,6 +56,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [siteContentValues, setSiteContentValues] = useState<{[key: string]: string}>({});
   const [genreColors, setGenreColors] = useState<Record<string, any>>({});
   const [categoryColors, setCategoryColors] = useState<Record<string, any>>({});
+  const [groupColors, setGroupColors] = useState<Record<string, any>>({});
   
   // Fetch dynamic categories and genres - Force fresh data
   const { data: dynamicGenres = [], isLoading: genresLoading, refetch: refetchGenres } = useQuery<{id: string, name: string, description: string, isActive: boolean}[]>({
@@ -103,7 +104,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   }, [dynamicGenres, dynamicEmailCategories, dynamicTemplateCategories, genresLoading, emailCategoriesLoading, templateCategoriesLoading]);
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
   const [tempColor, setTempColor] = useState<string>('#3b82f6');
-  const [editingColorType, setEditingColorType] = useState<'genre' | 'category'>('genre');
+  const [editingColorType, setEditingColorType] = useState<'genre' | 'category' | 'group'>('genre');
   
   // Announcement form state
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
@@ -352,8 +353,51 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     }
   };
 
+  // Function to update group color
+  const updateGroupColor = async (groupId: string, color: string) => {
+    try {
+      const response = await apiRequest('PATCH', `/api/live-reply-template-groups/${groupId}`, {
+        color: color
+      });
+      
+      if (response.ok) {
+        const updatedGroup = await response.json();
+        
+        // Update local state
+        setGroupColors(prev => ({
+          ...prev,
+          [groupId]: color
+        }));
+        
+        // Update the template groups query cache
+        queryClient.setQueryData(['/api/live-reply-template-groups'], (old: any) => {
+          const oldGroups = Array.isArray(old) ? old : [];
+          return oldGroups.map((group: any) => 
+            group.id === groupId ? { ...group, color: color } : group
+          );
+        });
+        
+        setColorPickerOpen(null);
+        toast({
+          title: "Group Color Updated",
+          description: `Group color has been saved successfully.`,
+        });
+      } else {
+        throw new Error('Failed to update group color');
+      }
+    } catch (error) {
+      console.error('Error updating group color:', error);
+      toast({
+        title: "Error",
+        description: `Failed to update group color.`,
+        variant: "destructive",
+      });
+      setColorPickerOpen(null);
+    }
+  };
+
   // Function to open color picker
-  const openColorPicker = (key: string, type: 'genre' | 'category') => {
+  const openColorPicker = (key: string, type: 'genre' | 'category' | 'group') => {
     setEditingColorType(type);
     setColorPickerOpen(key);
     // Set initial color based on current color
@@ -1855,10 +1899,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Template Color Management</h3>
-                <p className="text-sm text-slate-600">Customize badge colors for genres and categories</p>
+                <p className="text-sm text-slate-600">Customize badge colors for genres, categories, and groups</p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Genre Colors */}
                 <Card>
                   <CardHeader>
@@ -1982,6 +2026,66 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Group Colors */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      Group Colors
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Configure colors for template groups</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {groupsLoading ? (
+                        <p className="text-sm text-slate-500 text-center py-4">
+                          Loading groups...
+                        </p>
+                      ) : (templateGroups as any[]).length === 0 ? (
+                        <p className="text-sm text-slate-500 text-center py-4">
+                          No groups found. Create groups to manage their colors.
+                        </p>
+                      ) : (
+                        (templateGroups as any[]).map((group: any) => {
+                          return (
+                            <div key={group.id} className="flex items-center justify-between p-3 border dark:border-slate-600 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <Badge 
+                                  className="border"
+                                  style={{ 
+                                    backgroundColor: group.color + '20',
+                                    color: group.color,
+                                    borderColor: group.color + '40'
+                                  }}
+                                >
+                                  {group.name}
+                                </Badge>
+                                <span className="text-xs text-slate-500">
+                                  {group.description || 'Live chat template group'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-6 h-6 rounded-full border-2 border-white dark:border-slate-300 shadow-sm"
+                                  style={{ backgroundColor: group.color }}
+                                  title={`Group color: ${group.color}`}
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openColorPicker(group.id, 'group')}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
     
@@ -2040,8 +2144,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           onClick={() => {
                             if (editingColorType === 'genre') {
                               updateGenreColor(colorPickerOpen, tempColor);
-                            } else {
+                            } else if (editingColorType === 'category') {
                               updateCategoryColor(colorPickerOpen, tempColor);
+                            } else if (editingColorType === 'group') {
+                              updateGroupColor(colorPickerOpen, tempColor);
                             }
                           }}
                           className="flex-1"
