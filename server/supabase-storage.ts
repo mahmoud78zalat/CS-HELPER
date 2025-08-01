@@ -633,14 +633,9 @@ export class SupabaseStorage implements IStorage {
     search?: string;
     isActive?: boolean;
   }): Promise<EmailTemplate[]> {
-    // Create cache key based on filters
-    const cacheKey = JSON.stringify(filters || {});
-    const cached = this.templateCache.get(cacheKey);
-    
-    if (cached && this.isCacheValid(cached.timestamp)) {
-      console.log('[SupabaseStorage] Returning cached email templates');
-      return cached.templates;
-    }
+    // Clear cache to force fresh UUID resolution
+    this.templateCache.clear();
+    console.log('[SupabaseStorage] Cache cleared - fetching fresh email templates with UUID resolution');
     
     let query = this.client
       .from('email_templates')
@@ -675,9 +670,17 @@ export class SupabaseStorage implements IStorage {
 
     const templates = await Promise.all(data.map(async (template) => await this.mapSupabaseEmailTemplateWithNames(template)));
     
-    // Cache the result
-    this.templateCache.set(cacheKey, { templates, timestamp: Date.now() });
-    console.log('[SupabaseStorage] Cached email templates');
+    console.log('[SupabaseStorage] Email templates fetched with UUID resolution:', templates.length);
+    if (templates.length > 0) {
+      console.log('[SupabaseStorage] Sample resolved template:', {
+        id: templates[0].id,
+        name: templates[0].name,
+        category: templates[0].category,
+        genre: templates[0].genre,
+        categoryIsResolved: templates[0].category && !templates[0].category.includes('-'),
+        genreIsResolved: templates[0].genre && !templates[0].genre.includes('-')
+      });
+    }
     
     return templates;
   }

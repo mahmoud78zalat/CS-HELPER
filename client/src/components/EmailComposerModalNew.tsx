@@ -57,6 +57,7 @@ const TEMPLATE_VARIABLES = {
 const SUBJECT_VARIABLES = [
   { key: "order_id", label: "Order ID", placeholder: "ORD123456" },
   { key: "awb", label: "AWB Number", placeholder: "AWB789012" },
+  { key: "awb_number", label: "AWB Number", placeholder: "AWB789012" },
   { key: "mobile_number", label: "Mobile Number", placeholder: "+971501234567" },
   { key: "customer_name", label: "Customer Name", placeholder: "John Doe" },
   { key: "tracking_number", label: "Tracking Number", placeholder: "TRK345678" },
@@ -178,6 +179,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       // Order data
       order_id: customerData.order_id || '',
       awb_number: customerData.awb_number || '',
+      awb: customerData.awb_number || '', // Support both {awb} and {awb_number}
       order_status: customerData.order_status || '',
       tracking_number: customerData.tracking_number || '',
       delivery_date: customerData.delivery_date || '',
@@ -386,7 +388,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 z-10" />
                 <Input
                   type="text"
-                  className="pl-12 h-12 text-base bg-white/80 border-slate-200/60 focus:border-indigo-300 focus:ring-indigo-200/50 rounded-xl shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/90"
+                  className="pl-12 h-10 text-sm bg-white border-slate-300 focus:border-blue-500 focus:ring-blue-200 rounded-md"
                   placeholder="Search templates..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -394,30 +396,30 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
               <div className="space-y-4">
                 {filteredTemplates.map((template: EmailTemplate) => (
                   <Card
                     key={template.id}
-                    className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group ${
+                    className={`cursor-pointer transition-all duration-200 hover:shadow-md group ${
                       selectedTemplate?.id === template.id 
-                        ? 'border-indigo-300 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg ring-2 ring-indigo-200/50' 
-                        : 'border-slate-200/60 bg-white/80 hover:border-indigo-200 hover:bg-white/90 backdrop-blur-sm'
+                        ? 'border-blue-300 bg-blue-50 shadow-md' 
+                        : 'border-slate-200 bg-white hover:border-blue-200'
                     }`}
                     onClick={() => handleTemplateSelect(template)}
                   >
-                    <CardContent className="p-5">
-                      <h4 className="font-bold text-slate-800 mb-3 text-base group-hover:text-indigo-700 transition-colors">{template.name}</h4>
-                      <div className="text-sm text-slate-600 mb-4">
-                        <span className="font-semibold text-slate-700">To:</span> 
-                        <span className="ml-2 px-2 py-1 bg-slate-100 rounded-full text-xs font-medium">{template.concernedTeam}</span>
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold text-slate-800 mb-2 text-sm">{template.name}</h4>
+                      <div className="text-xs text-slate-600 mb-3">
+                        <span className="font-medium text-slate-700">To:</span> 
+                        <span className="ml-2 px-2 py-1 bg-slate-100 rounded text-xs">{template.concernedTeam}</span>
                       </div>
-                      <div className="flex gap-3 flex-wrap">
-                        <Badge variant="secondary" className="text-sm px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-bold shadow-lg animate-bounce">
-                          🎯 GENRE: {template.genre}
+                      <div className="flex gap-2 flex-wrap">
+                        <Badge variant="secondary" className="text-xs px-2 py-1 bg-blue-100 text-blue-800 border border-blue-200">
+                          {template.genre}
                         </Badge>
-                        <Badge variant="outline" className="text-sm px-4 py-2 border-2 border-blue-500 text-blue-700 bg-gradient-to-r from-blue-50 to-cyan-50 font-bold shadow-lg">
-                          📁 CATEGORY: {template.category}
+                        <Badge variant="outline" className="text-xs px-2 py-1 border-slate-300 text-slate-700">
+                          {template.category}
                         </Badge>
                       </div>
                     </CardContent>
@@ -436,16 +438,16 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             </div>
           </Panel>
 
-          <PanelResizeHandle className="w-3 bg-gradient-to-b from-slate-200 to-slate-300 hover:from-indigo-300 hover:to-purple-300 transition-all duration-300 cursor-col-resize active:from-indigo-400 active:to-purple-400 shadow-sm hover:shadow-md relative group">
-            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-white/50 transform -translate-x-1/2 group-hover:bg-white/80 transition-colors"></div>
+          <PanelResizeHandle className="w-2 bg-slate-200 hover:bg-slate-300 transition-colors cursor-col-resize relative">
+            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-slate-400 transform -translate-x-1/2"></div>
           </PanelResizeHandle>
 
           {/* Middle Panel: Email Composition */}
           <Panel defaultSize={40} minSize={25} id="email-composer" order={2}>
-            <div className="w-full h-full flex flex-col bg-gradient-to-br from-white to-slate-50/50 min-w-0">
-            <div className="p-6 border-b border-slate-200/50 flex-1 flex flex-col bg-white/70 backdrop-blur-sm">
-              <div className="flex items-center gap-4 mb-6">
-                <Badge className="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 px-4 py-2 text-sm font-semibold border border-purple-200/50 shadow-sm">
+            <div className="w-full h-full flex flex-col bg-white min-w-0">
+            <div className="p-4 border-b border-slate-200 flex-1 flex flex-col bg-white">
+              <div className="flex items-center gap-3 mb-4">
+                <Badge className="bg-blue-50 text-blue-700 px-3 py-1 text-sm border border-blue-200">
                   To: {selectedTemplate?.concernedTeam || 'Select template first'}
                 </Badge>
               </div>
@@ -502,7 +504,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                     <Button
                       onClick={handleCopyEmail}
                       disabled={!emailSubject || !emailBody}
-                      className="h-9 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                      className="h-9 bg-blue-600 hover:bg-blue-700"
                     >
                       <Copy className="h-4 w-4 mr-2" />
                       Copy Complete Email
@@ -513,15 +515,15 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             </div>
 
             {/* Preview Panel */}
-            <div className="flex-1 p-6 bg-gradient-to-br from-slate-50 to-slate-100 overflow-y-auto min-h-0">
-              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-slate-800">
-                <Sparkles className="h-5 w-5 text-purple-600" />
+            <div className="flex-1 p-4 bg-slate-50 overflow-y-auto min-h-0">
+              <h3 className="font-medium text-base mb-3 flex items-center gap-2 text-slate-700">
+                <Sparkles className="h-4 w-4 text-blue-600" />
                 Live Email Preview
               </h3>
               
               <div className="h-full flex flex-col">
-                <Card className="shadow-md flex-1 flex flex-col">
-                  <CardContent className="p-6 flex-1 flex flex-col">
+                <Card className="shadow-sm flex-1 flex flex-col border-slate-200">
+                  <CardContent className="p-4 flex-1 flex flex-col">
                     <div className="space-y-4 flex-1 flex flex-col">
                       <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 py-3 rounded-r-md">
                         <h4 className="font-semibold text-slate-700 text-base mb-2">Subject:</h4>
@@ -553,41 +555,41 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           </Panel>
 
           {/* Right Panel: Variable Management - Always visible for proper resizing */}
-          <PanelResizeHandle className="w-3 bg-gradient-to-b from-slate-200 to-slate-300 hover:from-purple-300 hover:to-pink-300 transition-all duration-300 cursor-col-resize active:from-purple-400 active:to-pink-400 shadow-sm hover:shadow-md relative group">
-            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-white/50 transform -translate-x-1/2 group-hover:bg-white/80 transition-colors"></div>
+          <PanelResizeHandle className="w-2 bg-slate-200 hover:bg-slate-300 transition-colors cursor-col-resize relative">
+            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-slate-400 transform -translate-x-1/2"></div>
           </PanelResizeHandle>
           <Panel defaultSize={35} minSize={25} maxSize={65} id="variable-editor" order={3}>
-                <div className="w-full h-full border-l border-slate-200/50 flex flex-col bg-gradient-to-br from-slate-50/80 to-purple-50/30 backdrop-blur-sm min-w-0">
-              <div className="p-5 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm">
-                <h3 className="font-bold text-xl flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  <div className="p-2 rounded-xl bg-purple-100/80 shadow-lg border border-purple-200/50">
-                    <Edit3 className="h-5 w-5 text-purple-600" />
+                <div className="w-full h-full border-l border-slate-200 flex flex-col bg-slate-50 min-w-0">
+              <div className="p-4 border-b border-slate-200 bg-white">
+                <h3 className="font-medium text-base flex items-center gap-2 text-slate-700">
+                  <div className="p-2 rounded-lg bg-blue-50 border border-blue-200">
+                    <Edit3 className="h-4 w-4 text-blue-600" />
                   </div>
                   Live Template Variables
                 </h3>
-                <p className="text-sm text-slate-600 mt-3 font-medium">
+                <p className="text-xs text-slate-600 mt-2">
                   {selectedTemplate ? `Variables found: ${uniqueVariables.length + customSubjectVars.length}` : 'Select a template to see variables'}
                 </p>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                 {selectedTemplate && (uniqueVariables.length > 0 || customSubjectVars.length > 0) ? (
                   <div className="space-y-4">
                     {/* Custom Subject Variables Section */}
                     {customSubjectVars.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-base text-slate-700 mb-3 flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-purple-600" />
+                        <h4 className="font-medium text-sm text-slate-700 mb-2 flex items-center gap-2">
+                          <Sparkles className="h-3 w-3 text-blue-600" />
                           Custom Subject Variables
                         </h4>
-                        <p className="text-sm text-slate-600 mb-4">
+                        <p className="text-xs text-slate-600 mb-3">
                           These variables are used in the email subject line
                         </p>
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           {customSubjectVars.map((varName) => (
-                            <div key={varName} className="p-3 bg-white rounded-lg border-2 border-purple-200 shadow-sm hover:border-purple-300 transition-all duration-200 hover:shadow-md">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-xs font-mono text-purple-600 font-medium bg-purple-50 px-2 py-1 rounded-md cursor-grab active:cursor-grabbing hover:bg-purple-100 transition-colors inline-flex items-center gap-1">
+                            <div key={varName} className="p-2 bg-white rounded border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded cursor-grab active:cursor-grabbing hover:bg-blue-100 transition-colors inline-flex items-center gap-1">
                                   <GripVertical className="h-3 w-3" />
                                   {`{${varName}}`}
                                 </span>
@@ -597,7 +599,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                                 value={variableValues[varName] || ''}
                                 onChange={(e) => handleVariableChange(varName, e.target.value)}
                                 placeholder={`Enter value for ${varName}...`}
-                                className="h-9 text-sm border-purple-200 focus:border-purple-400 focus:ring-purple-200"
+                                className="h-8 text-xs border-slate-200 focus:border-blue-400 focus:ring-blue-200"
                               />
                             </div>
                           ))}
@@ -615,13 +617,13 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                       
                       return (
                         <div key={category}>
-                          <h4 className="font-semibold text-base text-slate-700 mb-3 capitalize">
+                          <h4 className="font-medium text-sm text-slate-700 mb-2 capitalize">
                             {category} Variables
                           </h4>
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {categoryVariables.map((variable) => (
-                              <div key={variable.key} className="p-3 bg-white rounded-lg border-2 border-slate-200 shadow-sm hover:border-blue-300 transition-all duration-200 hover:shadow-md">
-                                <div className="flex items-center justify-between mb-2">
+                              <div key={variable.key} className="p-2 bg-white rounded border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
+                                <div className="flex items-center justify-between mb-1">
                                   <Label htmlFor={variable.key} className="text-xs font-medium text-slate-700">
                                     {variable.label}
                                   </Label>
@@ -635,7 +637,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                                   value={variableValues[variable.key] || ''}
                                   onChange={(e) => handleVariableChange(variable.key, e.target.value)}
                                   placeholder={variable.placeholder}
-                                  className="h-9 text-sm border-slate-200 focus:border-blue-400 focus:ring-blue-200"
+                                  className="h-8 text-xs border-slate-200 focus:border-blue-400 focus:ring-blue-200"
                                 />
                               </div>
                             ))}
