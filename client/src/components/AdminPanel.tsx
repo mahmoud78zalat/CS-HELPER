@@ -24,6 +24,7 @@ import {
 import { User, Template, EmailTemplate } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
+import { SimpleTemplateConfigManager } from "@/components/SimpleTemplateConfigManager";
 
 import DragDropEmailTemplates from "@/components/DragDropEmailTemplates";
 import HorizontalGroupedTemplates from "@/components/HorizontalGroupedTemplates";

@@ -197,6 +197,26 @@ export interface IStorage {
   updateFaq(id: string, faq: Partial<InsertFaq>): Promise<Faq>;
   deleteFaq(id: string): Promise<void>;
 
+  // Connected Categories and Genres operations (hierarchical relationship)
+  getConnectedTemplateCategories(): Promise<Array<{
+    id: string;
+    name: string;
+    description: string;
+    color: string;
+    isActive: boolean;
+    orderIndex: number;
+    genres: Array<{
+      id: string;
+      name: string;
+      description: string;
+      color: string;
+      isActive: boolean;
+      orderIndex: number;
+    }>;
+  }>>;
+  createConnectedTemplateCategory(data: {name: string, description: string, color: string, isActive: boolean}): Promise<any>;
+  createConnectedTemplateGenre(data: {name: string, description: string, categoryId: string, color: string, isActive: boolean}): Promise<any>;
+
   // User ordering operations for drag-and-drop
   getUserOrdering(userId: string, contentType: string): Promise<Array<{item_id: string, display_order: number}>>;
   saveUserOrdering(userId: string, contentType: string, ordering: Array<{item_id: string, display_order: number}>): Promise<void>;

@@ -528,7 +528,7 @@ export const templateCategories = pgTable("template_categories", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Template Genres (child table - linked to categories)
+// Template Genres (child table - connected to categories)
 export const templateGenres = pgTable("template_genres", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name").notNull(),
@@ -541,12 +541,11 @@ export const templateGenres = pgTable("template_genres", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Template Categories Relations
+// Relations for connected categories and genres
 export const templateCategoriesRelations = relations(templateCategories, ({ many }) => ({
   genres: many(templateGenres),
 }));
 
-// Template Genres Relations  
 export const templateGenresRelations = relations(templateGenres, ({ one }) => ({
   category: one(templateCategories, {
     fields: [templateGenres.categoryId],
@@ -554,7 +553,7 @@ export const templateGenresRelations = relations(templateGenres, ({ one }) => ({
   }),
 }));
 
-// Insert schemas for template categories and genres
+// Insert schemas for connected categories and genres
 export const insertTemplateCategorySchema = createInsertSchema(templateCategories).omit({
   id: true,
   createdAt: true,
@@ -567,6 +566,7 @@ export const insertTemplateGenreSchema = createInsertSchema(templateGenres).omit
   updatedAt: true,
 });
 
+// Types for connected categories and genres
 export type TemplateCategory = typeof templateCategories.$inferSelect;
 export type InsertTemplateCategory = z.infer<typeof insertTemplateCategorySchema>;
 export type TemplateGenre = typeof templateGenres.$inferSelect;

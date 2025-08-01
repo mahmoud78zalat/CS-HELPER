@@ -65,7 +65,7 @@ export function TemplateConfigurationManager() {
   // Fetch connected categories with genres
   const { data: categories = [], isLoading } = useQuery<ConnectedCategory[]>({
     queryKey: ['/api/connected-template-categories'],
-    queryFn: () => apiRequest('/api/connected-template-categories'),
+    queryFn: () => apiRequest('/api/connected-template-categories').then(data => data),
   });
 
   // Create category mutation
@@ -73,6 +73,7 @@ export function TemplateConfigurationManager() {
     mutationFn: (data: typeof newCategory) => 
       apiRequest('/api/connected-template-categories', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       }),
     onSuccess: () => {
@@ -95,6 +96,7 @@ export function TemplateConfigurationManager() {
     mutationFn: (data: typeof newGenre) => 
       apiRequest('/api/connected-template-genres', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       }),
     onSuccess: () => {
