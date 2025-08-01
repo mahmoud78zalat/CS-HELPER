@@ -11,9 +11,12 @@ import { apiRequest } from "@/lib/queryClient";
 import { useCustomerData } from "@/hooks/useCustomerData";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, X, Search, Send, Edit3, Sparkles, Plus } from "lucide-react";
+import { Copy, X, Search, Send, Edit3, Sparkles, Plus, GripVertical } from "lucide-react";
 import { EmailTemplate } from "@shared/schema";
 import { extractVariablesFromTemplate } from "@/lib/templateUtils";
+import { DndContext, DragEndEvent, useDraggable } from "@dnd-kit/core";
+import { DraggableVariable } from "./DraggableVariable";
+import { DroppableTextarea } from "./DroppableTextarea";
 
 interface EmailComposerModalProps {
   onClose: () => void;
@@ -309,9 +312,39 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     });
   };
 
+  // Handle drag end event for variable drag and drop
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.data.current?.type === 'variable') {
+      const variableName = active.data.current.variableName;
+      const dropTargetId = over.id as string;
+      
+      if (dropTargetId === 'email-body-droppable') {
+        // Insert variable into email body at cursor position
+        const textarea = document.getElementById('body') as HTMLTextAreaElement;
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const variable = `{${variableName}}`;
+          
+          const newValue = emailBody.substring(0, start) + variable + emailBody.substring(end);
+          setEmailBody(newValue);
+          
+          // Set cursor position after inserted variable
+          setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(start + variable.length, start + variable.length);
+          }, 0);
+        }
+      }
+    }
+  };
+
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full m-0 p-0 overflow-hidden border-0 rounded-none">
+    <DndContext onDragEnd={handleDragEnd}>
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full m-0 p-0 overflow-hidden border-0 rounded-none">
         <DialogHeader className="p-6 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-purple-50">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Send className="h-6 w-6 text-blue-600" />
@@ -321,7 +354,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
 
         <div className="flex h-[calc(100vh-80px)] gap-0">
           {/* Left Panel: Template Selection */}
-          <div className="w-96 border-r border-slate-200 flex flex-col bg-slate-50">
+          <div className="w-80 border-r border-slate-200 flex flex-col bg-slate-50">
             <div className="p-6 border-b border-slate-200 bg-white">
               <h3 className="font-semibold text-lg mb-4 text-slate-800">Select Template</h3>
               <div className="relative">
@@ -377,15 +410,15 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           </div>
 
           {/* Middle Panel: Email Composition */}
-          <div className="flex-1 flex flex-col bg-white">
-            <div className="p-6 border-b border-slate-200">
+          <div className="flex-1 flex flex-col bg-white min-w-0">
+            <div className="p-6 border-b border-slate-200 flex-1 flex flex-col">
               <div className="flex items-center gap-4 mb-6">
                 <Badge className="bg-purple-100 text-purple-700 px-3 py-1 text-sm">
                   To: {selectedTemplate?.concernedTeam || 'Select template first'}
                 </Badge>
               </div>
               
-              <div className="space-y-6">
+              <div className="space-y-6 flex-1 flex flex-col">
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <Label htmlFor="emailSubject" className="text-base font-semibold">Subject Line</Label>
@@ -442,15 +475,15 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   </Button>
                 </div>
                 
-                <div>
+                <div className="flex-1 flex flex-col">
                   <Label htmlFor="body" className="text-base font-semibold mb-3 block">Email Body</Label>
-                  <Textarea
-                    id="body"
+                  <DroppableTextarea
+                    id="email-body-droppable"
+                    name="body"
                     value={emailBody}
                     onChange={(e) => setEmailBody(e.target.value)}
                     placeholder="Select a template to populate content..."
-                    rows={16}
-                    className="font-mono text-sm resize-none"
+                    className="font-mono text-sm resize-none flex-1 min-h-[400px]"
                   />
                   <div className="flex gap-3 mt-4">
                     <Button
@@ -513,7 +546,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
 
           {/* Right Panel: Variable Management */}
           {selectedTemplate && (
-            <div className="w-96 border-l border-slate-200 flex flex-col bg-slate-50">
+            <div className="w-[420px] border-l border-slate-200 flex flex-col bg-slate-50 min-w-0">
               <div className="p-6 border-b border-slate-200 bg-white">
                 <h3 className="font-semibold text-lg flex items-center gap-2 text-slate-800">
                   <Edit3 className="h-5 w-5 text-purple-600" />
@@ -537,18 +570,24 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                         <p className="text-sm text-slate-600 mb-4">
                           These variables are used in the email subject line
                         </p>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           {customSubjectVars.map((varName) => (
-                            <div key={varName}>
-                              <Label htmlFor={varName} className="text-sm font-mono text-purple-600 font-medium">
-                                {`{${varName}}`}
-                              </Label>
+                            <div key={varName} className="p-4 bg-white rounded-lg border-2 border-purple-200 shadow-sm hover:border-purple-300 transition-all duration-200 hover:shadow-md">
+                              <div className="flex items-center gap-2 mb-2">
+                                <DraggableVariable 
+                                  variableName={varName}
+                                  className="text-sm font-mono text-purple-600 font-medium bg-purple-50 px-2 py-1 rounded-md cursor-grab active:cursor-grabbing hover:bg-purple-100 transition-colors"
+                                >
+                                  <GripVertical className="h-3 w-3 mr-1 inline-block" />
+                                  {`{${varName}}`}
+                                </DraggableVariable>
+                              </div>
                               <Input
                                 id={varName}
                                 value={variableValues[varName] || ''}
                                 onChange={(e) => handleVariableChange(varName, e.target.value)}
                                 placeholder={`Enter value for ${varName}...`}
-                                className="mt-1 h-10 border-purple-200 focus:border-purple-400"
+                                className="h-11 border-purple-200 focus:border-purple-400 text-base focus:ring-purple-200"
                               />
                             </div>
                           ))}
@@ -569,18 +608,27 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                           <h4 className="font-semibold text-base text-slate-700 mb-3 capitalize">
                             {category} Variables
                           </h4>
-                          <div className="space-y-3">
+                          <div className="space-y-4">
                             {categoryVariables.map((variable) => (
-                              <div key={variable.key}>
-                                <Label htmlFor={variable.key} className="text-sm font-medium">
-                                  {variable.label}
-                                </Label>
+                              <div key={variable.key} className="p-4 bg-white rounded-lg border-2 border-slate-200 shadow-sm hover:border-blue-300 transition-all duration-200 hover:shadow-md">
+                                <div className="flex items-center justify-between mb-2">
+                                  <Label htmlFor={variable.key} className="text-sm font-medium text-slate-700">
+                                    {variable.label}
+                                  </Label>
+                                  <DraggableVariable 
+                                    variableName={variable.key}
+                                    className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-600 cursor-grab active:cursor-grabbing hover:bg-slate-200 transition-colors"
+                                  >
+                                    <GripVertical className="h-3 w-3 mr-1 inline-block" />
+                                    {`{${variable.key}}`}
+                                  </DraggableVariable>
+                                </div>
                                 <Input
                                   id={variable.key}
                                   value={variableValues[variable.key] || ''}
                                   onChange={(e) => handleVariableChange(variable.key, e.target.value)}
                                   placeholder={variable.placeholder}
-                                  className="mt-1 h-10"
+                                  className="h-11 border-slate-200 focus:border-blue-400 text-base focus:ring-blue-200"
                                 />
                               </div>
                             ))}
@@ -600,7 +648,8 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </DndContext>
   );
 }
