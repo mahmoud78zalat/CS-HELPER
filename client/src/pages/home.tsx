@@ -6,7 +6,7 @@ import EmailComposerModal from "@/components/EmailComposerModalNew";
 import AdminPanel from "@/components/AdminPanel";
 import AboutModal from "@/components/AboutModal";
 import FAQModal from "@/components/FAQModal";
-import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -39,8 +39,7 @@ export default function Home() {
     >
       <TemplatesArea />
       
-      {/* Show announcements to all users */}
-      <AnnouncementBanner />
+
       
       {showCheckOrder && (
         <CheckOrderModal onClose={() => setShowCheckOrder(false)} />
