@@ -542,6 +542,7 @@ function ConnectedConfigManager() {
     setExpandedCategories(newExpanded);
   };
 
+  // Helper functions for editing
   const handleEditCategory = (category: ConnectedCategory) => {
     setEditingCategory(category);
     setNewCategory({
@@ -621,19 +622,13 @@ function ConnectedConfigManager() {
   const resetCategoryDialog = () => {
     setEditingCategory(null);
     setNewCategory({ name: '', description: '', color: '#3b82f6', isActive: true });
+    setCategoryDialogOpen(false);
   };
 
   const resetGenreDialog = () => {
     setEditingGenre(null);
     setNewGenre({ name: '', description: '', categoryId: '', color: '#10b981', isActive: true });
-    setNewGenre({
-      name: genre.name,
-      description: genre.description,
-      categoryId,
-      color: genre.color,
-      isActive: genre.isActive,
-    });
-    setGenreDialogOpen(true);
+    setGenreDialogOpen(false);
   };
 
   const handleCreateCategory = () => {
@@ -670,17 +665,7 @@ function ConnectedConfigManager() {
     }
   };
 
-  const resetCategoryDialog = () => {
-    setEditingCategory(null);
-    setNewCategory({ name: '', description: '', color: '#3b82f6', isActive: true });
-    setCategoryDialogOpen(false);
-  };
 
-  const resetGenreDialog = () => {
-    setEditingGenre(null);
-    setNewGenre({ name: '', description: '', categoryId: '', color: '#10b981', isActive: true });
-    setGenreDialogOpen(false);
-  };
 
   return (
     <div className="space-y-4">
