@@ -68,7 +68,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
-  const [showSubjectVariables, setShowSubjectVariables] = useState(false);
+
   
   // Track subject and content changes for variable synchronization
   const [prevSubject, setPrevSubject] = useState('');
@@ -214,7 +214,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     
     const newSubject = beforeCursor + spaceBefore + `{${variable}}` + spaceAfter + afterCursor;
     setEmailSubject(newSubject);
-    setShowSubjectVariables(false);
+
   };
 
   // Handle template selection
@@ -344,13 +344,13 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <Dialog open={true} onOpenChange={onClose}>
-        <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full m-0 p-0 overflow-hidden border-0 rounded-none bg-gradient-to-br from-slate-50 via-white to-slate-100">
-        <DialogHeader className="p-6 border-b border-slate-200/60 bg-gradient-to-r from-indigo-50/80 via-purple-50/80 to-pink-50/80 backdrop-blur-sm">
-          <DialogTitle className="flex items-center gap-3 text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            <div className="p-2 rounded-xl bg-white/50 shadow-lg border border-white/20">
-              <Send className="h-6 w-6 text-indigo-600" />
+        <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full m-0 p-0 overflow-hidden border-0 rounded-none bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+        <DialogHeader className="p-8 border-b-4 border-purple-300/60 bg-gradient-to-r from-purple-100/90 via-pink-100/90 to-blue-100/90 backdrop-blur-sm shadow-xl">
+          <DialogTitle className="flex items-center gap-4 text-3xl font-black bg-gradient-to-r from-purple-700 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-200 to-pink-200 shadow-2xl border-2 border-purple-300/50 animate-pulse">
+              <Send className="h-8 w-8 text-purple-700" />
             </div>
-            Email Template Composer
+            🚀 MODERNIZED Email Template Composer
           </DialogTitle>
         </DialogHeader>
 
@@ -390,12 +390,12 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                         <span className="font-semibold text-slate-700">To:</span> 
                         <span className="ml-2 px-2 py-1 bg-slate-100 rounded-full text-xs font-medium">{template.concernedTeam}</span>
                       </div>
-                      <div className="flex gap-2 flex-wrap">
-                        <Badge variant="secondary" className="text-xs px-3 py-1 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border-0 font-medium">
-                          {template.genre}
+                      <div className="flex gap-3 flex-wrap">
+                        <Badge variant="secondary" className="text-sm px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-bold shadow-lg animate-bounce">
+                          🎯 GENRE: {template.genre}
                         </Badge>
-                        <Badge variant="outline" className="text-xs px-3 py-1 border-indigo-200 text-indigo-700 bg-indigo-50/50 font-medium">
-                          {template.category}
+                        <Badge variant="outline" className="text-sm px-4 py-2 border-2 border-blue-500 text-blue-700 bg-gradient-to-r from-blue-50 to-cyan-50 font-bold shadow-lg">
+                          📁 CATEGORY: {template.category}
                         </Badge>
                       </div>
                     </CardContent>
@@ -430,37 +430,8 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               
               <div className="space-y-6 flex-1 flex flex-col">
                 <div>
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="mb-3">
                     <Label htmlFor="emailSubject" className="text-base font-semibold">Subject Line</Label>
-                    <div className="relative">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowSubjectVariables(!showSubjectVariables)}
-                        className="text-sm h-9"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Variable
-                      </Button>
-                      
-                      {showSubjectVariables && (
-                        <div className="absolute right-0 top-full mt-2 bg-white border border-slate-200 rounded-lg shadow-xl p-3 z-50 min-w-64">
-                          <p className="text-sm text-slate-600 mb-3 font-semibold">Subject Variables</p>
-                          <div className="space-y-2">
-                            {SUBJECT_VARIABLES.map((variable) => (
-                              <button
-                                key={variable.key}
-                                onClick={() => insertSubjectVariable(variable.key)}
-                                className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 rounded-md flex justify-between items-center transition-colors"
-                              >
-                                <span className="font-mono text-blue-600 font-medium">{`{${variable.key}}`}</span>
-                                <span className="text-slate-500">{variable.label}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
                   <Input
                     id="emailSubject"

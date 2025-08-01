@@ -28,10 +28,10 @@ export class SupabaseStorage implements IStorage {
   private client!: SupabaseClient;
   private serviceClient!: SupabaseClient;
   
-  // Performance optimization: Add caching
+  // Performance optimization: Add caching - CACHE DISABLED TO FIX UUID RESOLUTION
   private userCache = new Map<string, { user: User; timestamp: number }>();
   private templateCache = new Map<string, { templates: any[]; timestamp: number }>();
-  private readonly CACHE_TTL = 30000; // 30 seconds cache
+  private readonly CACHE_TTL = 0; // CACHE DISABLED - Forces fresh UUID resolution
 
   constructor() {
     // Railway deployment optimization: Use Railway-specific client if available
