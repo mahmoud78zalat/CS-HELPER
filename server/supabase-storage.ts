@@ -1284,6 +1284,14 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
+  // Helper function to extract variables from text
+  private extractVariablesFromText(text: string): string[] {
+    if (!text) return [];
+    const regex = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
+    const matches = text.match(regex) || [];
+    return matches.map(match => match.slice(1, -1).toUpperCase()); // Convert to uppercase for consistency
+  }
+
   // Dynamic Category and Genre operations
   async getTemplateCategories(): Promise<{id: string, name: string, description: string, isActive: boolean}[]> {
     try {
@@ -2270,7 +2278,7 @@ export class SupabaseStorage implements IStorage {
     if (data.category && data.category.length === 36 && data.category.includes('-')) {
       try {
         const { data: categoryData } = await this.client
-          .from('email_categories')
+          .from('template_categories')
           .select('name')
           .eq('id', data.category)
           .single();
@@ -2300,6 +2308,22 @@ export class SupabaseStorage implements IStorage {
       }
     }
 
+    // Extract variables from subject and content if the variables field is empty
+    let extractedVariables = data.variables || [];
+    if (!extractedVariables || extractedVariables.length === 0) {
+      const subjectVars = this.extractVariablesFromText(data.subject || '');
+      const contentVars = this.extractVariablesFromText(data.content || '');
+      extractedVariables = Array.from(new Set([...subjectVars, ...contentVars]));
+      console.log('[SupabaseStorage] Extracted variables from template:', {
+        id: data.id,
+        name: data.name,
+        subject: data.subject,
+        subjectVars,
+        contentVars,
+        extractedVariables
+      });
+    }
+
     return {
       id: data.id,
       name: data.name,
@@ -2311,7 +2335,7 @@ export class SupabaseStorage implements IStorage {
       genre: genreName,
       concernedTeam: data.concerned_team,
       warningNote: data.warning_note,
-      variables: data.variables,
+      variables: extractedVariables,
       stageOrder: data.stage_order,
       isActive: data.is_active,
       usageCount: data.usage_count,

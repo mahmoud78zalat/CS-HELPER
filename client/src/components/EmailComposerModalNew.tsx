@@ -471,10 +471,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                     placeholder="Select a template to populate subject..."
                     className="h-12 text-base"
                   />
-                  <div className="mt-2 p-3 bg-slate-50 rounded-md border">
-                    <p className="text-sm text-slate-600 font-medium mb-1">Preview:</p>
-                    <p className="text-sm text-slate-800">{getFinalSubject() || selectedTemplate?.name || 'No subject entered'}</p>
-                  </div>
+
                   <Button
                     variant="link"
                     size="sm"
