@@ -1218,6 +1218,32 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // Create connected category
+  app.post('/api/connected-template-categories', async (req: any, res) => {
+    try {
+      console.log('[API] Creating connected template category:', req.body);
+      const category = await storage.createConnectedTemplateCategory(req.body);
+      console.log('[API] Created connected category:', category.id);
+      res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating connected template category:", error);
+      res.status(500).json({ message: "Failed to create connected template category" });
+    }
+  });
+
+  // Create connected genre
+  app.post('/api/connected-template-genres', async (req: any, res) => {
+    try {
+      console.log('[API] Creating connected template genre:', req.body);
+      const genre = await storage.createConnectedTemplateGenre(req.body);
+      console.log('[API] Created connected genre:', genre.id);
+      res.status(201).json(genre);
+    } catch (error) {
+      console.error("Error creating connected template genre:", error);
+      res.status(500).json({ message: "Failed to create connected template genre" });
+    }
+  });
+
   // Create new category
   app.post('/api/connected-template-categories', async (req: any, res) => {
     try {
