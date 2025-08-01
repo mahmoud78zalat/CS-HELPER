@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocalTemplateOrdering } from "@/hooks/useLocalTemplateOrdering";
+import { getGenreColor, getCategoryColor, getGenreBadgeClasses, getCategoryBadgeClasses } from "@/lib/templateColors";
 
 interface LiveTemplate {
   id: string;
@@ -125,10 +126,10 @@ const SortableTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
             </div>
             
             <div className="flex gap-1 mb-2 flex-wrap">
-              <Badge variant="secondary" className="text-xs px-1.5 py-0.5 h-auto">
+              <Badge className={`text-xs px-1.5 py-0.5 h-auto border ${getGenreBadgeClasses(template.genre)}`}>
                 {template.genre}
               </Badge>
-              <Badge variant="outline" className="text-xs px-1.5 py-0.5 h-auto">
+              <Badge className={`text-xs px-1.5 py-0.5 h-auto border ${getCategoryBadgeClasses(template.category)}`}>
                 {template.category}
               </Badge>
               {template.usageCount !== undefined && template.usageCount > 0 && (

@@ -10,6 +10,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getGenreColor, getCategoryColor, getGenreBadgeClasses, getCategoryBadgeClasses } from "@/lib/templateColors";
 
 interface LiveTemplate {
   id: string;
@@ -72,10 +73,10 @@ const SortableLiveTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
                 <h4 className="font-medium text-slate-800 mb-1">{template.name}</h4>
                 
                 <div className="flex gap-2 mb-2">
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge className={`text-xs border ${getGenreBadgeClasses(template.genre)}`}>
                     {template.genre}
                   </Badge>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge className={`text-xs border ${getCategoryBadgeClasses(template.category)}`}>
                     {template.category}
                   </Badge>
                   {template.usageCount !== undefined && (
