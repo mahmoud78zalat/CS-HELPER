@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit2, Trash2, Save, X, HelpCircle, GripHorizontal, Settings, Users, CreditCard, Wrench, Info, MessageCircle } from "lucide-react";
+import { Plus, Edit2, Trash2, Save, X, HelpCircle, GripHorizontal, Settings, Users, CreditCard, Wrench, Info, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -30,7 +30,7 @@ interface FAQ {
 }
 
 // Sortable FAQ Item Component
-const SortableFAQItem = ({ faq, isEditing, onEdit, onSave, onCancel, onDelete, getCategoryColor, availableCategories }: any) => {
+const SortableFAQItem = ({ faq, isEditing, onEdit, onSave, onCancel, onDelete, getCategoryColor, availableCategories, isExpanded, onToggleExpansion }: any) => {
   const {
     attributes,
     listeners,
@@ -164,52 +164,66 @@ const SortableFAQItem = ({ faq, isEditing, onEdit, onSave, onCancel, onDelete, g
                 </div>
               </div>
             ) : (
-              // View Mode
+              // View Mode - Collapsible
               <div>
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-lg mb-2">{faq.question}</h4>
-                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                <div 
+                  className="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-3 px-3 py-2 rounded-lg"
+                  onClick={onToggleExpansion}
+                >
+                  <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 flex-1">{faq.question}</h4>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant="secondary" 
+                        className={getCategoryColor(faq.category)}
+                      >
+                        {faq.category.charAt(0).toUpperCase() + faq.category.slice(1)}
+                      </Badge>
+                      
+                      {!faq.isActive && (
+                        <Badge variant="outline" className="text-red-600 border-red-200">
+                          Inactive
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(faq);
+                        }}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(faq.id);
+                        }}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      {isExpanded ? (
+                        <ChevronUp className="h-5 w-5 text-gray-500" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-500" />
+                      )}
+                    </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge 
-                      variant="secondary" 
-                      className={getCategoryColor(faq.category)}
-                    >
-                      {faq.category.charAt(0).toUpperCase() + faq.category.slice(1)}
-                    </Badge>
-                    
-                    {!faq.isActive && (
-                      <Badge variant="outline" className="text-red-600 border-red-200">
-                        Inactive
-                      </Badge>
-                    )}
+                {isExpanded && (
+                  <div className="mt-4 pl-6 border-l-2 border-gray-200 dark:border-gray-700">
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{faq.answer}</p>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onEdit(faq)}
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      <Edit2 className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onDelete(faq.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>
@@ -234,6 +248,7 @@ export default function FAQEditor() {
     isActive: true
   });
   const [sortedFaqs, setSortedFaqs] = useState<FAQ[]>([]);
+  const [expandedFaqs, setExpandedFaqs] = useState<string[]>([]);
 
   // Fetch existing categories from the same API used everywhere else
   const { data: templateCategories = [] } = useQuery<{id: string, name: string}[]>({
@@ -385,6 +400,15 @@ export default function FAQEditor() {
       setSortedFaqs(faqs);
     }
   }, [faqs]);
+
+  // Toggle FAQ expansion
+  const toggleFaqExpansion = (faqId: string) => {
+    setExpandedFaqs(prev => 
+      prev.includes(faqId) 
+        ? prev.filter(id => id !== faqId)
+        : [...prev, faqId]
+    );
+  };
 
   // Dynamic category colors based on available categories
   const getCategoryColor = (category: string) => {
@@ -574,6 +598,8 @@ export default function FAQEditor() {
                     onDelete={handleDeleteFaq}
                     getCategoryColor={getCategoryColor}
                     availableCategories={availableCategories}
+                    isExpanded={expandedFaqs.includes(faq.id)}
+                    onToggleExpansion={() => toggleFaqExpansion(faq.id)}
                   />
                 ))}
               </div>

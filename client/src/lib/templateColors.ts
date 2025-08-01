@@ -345,6 +345,20 @@ export async function loadColorsFromDatabase() {
   }
 }
 
+// Centralized color options for consistency across all admin panels
+export function getStandardColorOptions() {
+  return [
+    { value: '#3b82f6', label: 'Blue', class: 'bg-blue-500' },
+    { value: '#10b981', label: 'Green', class: 'bg-green-500' },
+    { value: '#f59e0b', label: 'Yellow', class: 'bg-yellow-500' },
+    { value: '#ef4444', label: 'Red', class: 'bg-red-500' },
+    { value: '#8b5cf6', label: 'Purple', class: 'bg-purple-500' },
+    { value: '#06b6d4', label: 'Cyan', class: 'bg-cyan-500' },
+    { value: '#84cc16', label: 'Lime', class: 'bg-lime-500' },
+    { value: '#f97316', label: 'Orange', class: 'bg-orange-500' },
+  ];
+}
+
 // Auto-load colors on module initialization
 if (typeof window !== 'undefined') {
   // Load saved colors first, then sync any missing ones
