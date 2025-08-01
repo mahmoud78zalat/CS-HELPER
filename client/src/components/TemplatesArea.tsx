@@ -8,16 +8,88 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLocalTemplateOrdering } from "@/hooks/useLocalTemplateOrdering";
 import TemplateCard from "./TemplateCard";
 import DragDropTemplateList from "./DragDropTemplateList";
-import { Search, FolderOpen, ArrowUpDown } from "lucide-react";
+import { Search, FolderOpen, ArrowUpDown, GripHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getGenreColor } from '@/lib/templateColors';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+// Sortable Group Component
+function SortableGroupContainer({ group, templates, isDragDropMode, children }: {
+  group: any;
+  templates: any[];
+  isDragDropMode: boolean;
+  children: React.ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: group.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style}
+      className={`template-category ${isDragging ? 'opacity-50' : ''}`}
+    >
+      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center">
+        {isDragDropMode && (
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 mr-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+            title="Drag to reorder group"
+          >
+            <GripHorizontal className="h-4 w-4 text-slate-400" />
+          </div>
+        )}
+        <div 
+          className="w-3 h-3 rounded-full mr-3 border-2 border-white dark:border-slate-800 shadow-sm"
+          style={{ backgroundColor: group.color }}
+        />
+        <FolderOpen className="w-4 h-4 mr-2 text-slate-600 dark:text-slate-400" />
+        {group.name}
+        <span className="ml-2 text-sm text-slate-500 dark:text-slate-400 font-normal">
+          ({templates.length} templates)
+        </span>
+        {isDragDropMode && (
+          <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+            Drag to reorder
+          </span>
+        )}
+      </h3>
+      {group.description && (
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 ml-9">
+          {group.description}
+        </p>
+      )}
+      {children}
+    </div>
+  );
+}
 
 export default function TemplatesArea() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDragDropMode, setIsDragDropMode] = useState(false);
   const { customerData } = useCustomerData();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch template groups instead of individual templates
   const { data: templateGroups, isLoading: groupsLoading } = useTemplateGroups();
@@ -29,6 +101,54 @@ export default function TemplatesArea() {
     resetToAdminOrdering, 
     hasLocalOrdering 
   } = useLocalTemplateOrdering(user?.id || 'anonymous');
+
+  // Group reordering mutation
+  const reorderGroupsMutation = useMutation({
+    mutationFn: async (orderedGroupIds: string[]) => {
+      return apiRequest('/api/live-reply-template-groups/reorder', {
+        method: 'POST',
+        body: { orderedGroupIds }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
+      toast({
+        title: "Groups reordered successfully",
+        description: "The group order has been updated.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to reorder groups",
+        description: error.message || "An error occurred while reordering groups.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle group drag end
+  const handleGroupDragEnd = (event: any) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = activeGroups.findIndex((group: any) => group.id === active.id);
+      const newIndex = activeGroups.findIndex((group: any) => group.id === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newGroupOrder = arrayMove(activeGroups, oldIndex, newIndex);
+        const orderedGroupIds = newGroupOrder.map((group: any) => group.id);
+        reorderGroupsMutation.mutate(orderedGroupIds);
+      }
+    }
+  };
   
   // Enhanced search functionality - now includes group names
   const searchQuery = searchTerm.toLowerCase();
@@ -190,61 +310,55 @@ export default function TemplatesArea() {
                   </div>
                 ))
               ) : (
-                // Show organized groups when not searching
-                activeGroups.map((group: any) => {
-                  // Get templates for this group by groupId, fallback to genre matching
-                  const groupTemplates = templates.filter((template: any) => 
-                    template.groupId === group.id || 
-                    (!template.groupId && template.genre === group.name)
-                  );
-                  
-                  if (groupTemplates.length === 0) return null;
-                  
-                  return (
-                    <div key={group.id} className="template-category">
-                      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center">
-                        <div 
-                          className="w-3 h-3 rounded-full mr-3 border-2 border-white dark:border-slate-800 shadow-sm"
-                          style={{ backgroundColor: group.color }}
-                        />
-                        <FolderOpen className="w-4 h-4 mr-2 text-slate-600 dark:text-slate-400" />
-                        {group.name}
-                        <span className="ml-2 text-sm text-slate-500 dark:text-slate-400 font-normal">
-                          ({groupTemplates.length} templates)
-                        </span>
-                        {isDragDropMode && (
-                          <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
-                            Drag to reorder
-                          </span>
-                        )}
-                      </h3>
-                      {group.description && (
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 ml-9">
-                          {group.description}
-                        </p>
-                      )}
+                // Show organized groups when not searching with drag and drop support
+                <DndContext 
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleGroupDragEnd}
+                >
+                  <SortableContext 
+                    items={activeGroups.map((group: any) => group.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {activeGroups.map((group: any) => {
+                      // Get templates for this group by groupId, fallback to genre matching
+                      const groupTemplates = templates.filter((template: any) => 
+                        template.groupId === group.id || 
+                        (!template.groupId && template.genre === group.name)
+                      );
                       
-                      {isDragDropMode ? (
-                        <DragDropTemplateList 
+                      if (groupTemplates.length === 0) return null;
+                      
+                      return (
+                        <SortableGroupContainer 
+                          key={group.id}
+                          group={group}
                           templates={groupTemplates}
-                          groupName={group.name}
-                          onReorder={(newOrder) => {
-                            // Update local ordering for this group's templates
-                            newOrder.forEach((templateId, index) => {
-                              updateBulkOrdering(newOrder);
-                            });
-                          }}
-                        />
-                      ) : (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
-                          {groupTemplates.map((template) => (
-                            <TemplateCard key={template.id} template={template} />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
+                          isDragDropMode={isDragDropMode}
+                        >
+                          {isDragDropMode ? (
+                            <DragDropTemplateList 
+                              templates={groupTemplates}
+                              groupName={group.name}
+                              onReorder={(newOrder) => {
+                                // Update local ordering for this group's templates
+                                newOrder.forEach((templateId, index) => {
+                                  updateBulkOrdering(newOrder);
+                                });
+                              }}
+                            />
+                          ) : (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
+                              {groupTemplates.map((template) => (
+                                <TemplateCard key={template.id} template={template} />
+                              ))}
+                            </div>
+                          )}
+                        </SortableGroupContainer>
+                      );
+                    })}
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
           )}
