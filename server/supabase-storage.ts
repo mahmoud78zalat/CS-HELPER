@@ -1289,7 +1289,7 @@ export class SupabaseStorage implements IStorage {
     if (!text) return [];
     const regex = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
     const matches = text.match(regex) || [];
-    return matches.map(match => match.slice(1, -1).toUpperCase()); // Convert to uppercase for consistency
+    return matches.map(match => match.slice(1, -1).toLowerCase()); // Convert to lowercase to match frontend expectations
   }
 
   // Dynamic Category and Genre operations
@@ -2321,6 +2321,15 @@ export class SupabaseStorage implements IStorage {
         subjectVars,
         contentVars,
         extractedVariables
+      });
+    } else {
+      // Normalize existing variables to lowercase for frontend compatibility
+      extractedVariables = extractedVariables.map((v: string) => v.toLowerCase());
+      console.log('[SupabaseStorage] Normalized existing variables to lowercase:', {
+        id: data.id,
+        name: data.name,
+        originalVariables: data.variables,
+        normalizedVariables: extractedVariables
       });
     }
 
