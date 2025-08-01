@@ -472,16 +472,39 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                     className="h-12 text-base"
                   />
 
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={handleCopySubject}
-                    disabled={!emailSubject}
-                    className="text-sm p-0 mt-2 h-auto"
-                  >
-                    <Copy className="h-4 w-4 mr-1" />
-                    Copy Subject
-                  </Button>
+                  {/* Copy Action Buttons */}
+                  <div className="flex gap-3 mt-3">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={handleCopySubject}
+                      disabled={!emailSubject}
+                      className="text-sm p-0 h-auto"
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copy Subject
+                    </Button>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={handleCopyBody}
+                      disabled={!emailBody}
+                      className="text-sm p-0 h-auto"
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copy Body
+                    </Button>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={handleCopyEmail}
+                      disabled={!emailSubject || !emailBody}
+                      className="text-sm p-0 h-auto text-blue-600 hover:text-blue-700"
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copy Complete Email
+                    </Button>
+                  </div>
                 </div>
               </div>
               
@@ -496,26 +519,6 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   placeholder="Select a template to populate content..."
                   className="font-mono text-sm resize-none flex-1 min-h-[400px]"
                 />
-                <div className="flex gap-3 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopyBody}
-                    disabled={!emailBody}
-                    className="h-9"
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Body
-                  </Button>
-                  <Button
-                    onClick={handleCopyEmail}
-                    disabled={!emailSubject || !emailBody}
-                    className="h-9 bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Complete Email
-                  </Button>
-                </div>
               </div>
             </div>
           </Panel>
