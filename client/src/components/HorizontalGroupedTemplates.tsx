@@ -260,7 +260,7 @@ export default function HorizontalGroupedTemplates({
 }: HorizontalGroupedTemplatesProps) {
   const [groupedData, setGroupedData] = useState<TemplateGroup[]>([]);
   const [ungroupedTemplates, setUngroupedTemplates] = useState<LiveTemplate[]>([]);
-  const [isDragDropMode, setIsDragDropMode] = useState(true);
+  const isDragDropMode = true; // Always enabled as per user requirement
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();

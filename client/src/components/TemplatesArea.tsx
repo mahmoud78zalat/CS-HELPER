@@ -174,7 +174,7 @@ export default function TemplatesArea() {
                     
                     {isDragDropMode ? (
                       <DragDropTemplateList 
-                        templates={genreTemplates}
+                        templates={genreTemplates as any[]}
                         groupName={genre}
                         onReorder={(newOrder) => {
                           updateBulkOrdering(newOrder);
@@ -182,7 +182,7 @@ export default function TemplatesArea() {
                       />
                     ) : (
                       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
-                        {genreTemplates.map((template) => (
+                        {(genreTemplates as any[]).map((template: any) => (
                           <TemplateCard key={template.id} template={template} />
                         ))}
                       </div>
