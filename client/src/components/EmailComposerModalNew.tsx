@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useCustomerData } from "@/hooks/useCustomerData";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, X, Search, Send, Edit3, Sparkles, Plus, GripVertical } from "lucide-react";
+import { Copy, X, Search, Send, Edit3, Sparkles, Plus } from "lucide-react";
 import { EmailTemplate } from "@shared/schema";
 import { extractVariablesFromTemplate } from "@/lib/templateUtils";
 import { DndContext, DragEndEvent, useDraggable } from "@dnd-kit/core";
@@ -558,8 +558,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                           {customSubjectVars.map((varName) => (
                             <div key={varName} className="p-2 bg-white rounded border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded cursor-grab active:cursor-grabbing hover:bg-blue-100 transition-colors inline-flex items-center gap-1">
-                                  <GripVertical className="h-3 w-3" />
+                                <span className="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">
                                   {`{${varName}}`}
                                 </span>
                               </div>
@@ -596,8 +595,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                                   <Label htmlFor={variable.key} className="text-xs font-medium text-slate-700">
                                     {variable.label}
                                   </Label>
-                                  <span className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-600 cursor-grab active:cursor-grabbing hover:bg-slate-200 transition-colors inline-flex items-center gap-1">
-                                    <GripVertical className="h-3 w-3" />
+                                  <span className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-600">
                                     {`{${variable.key}}`}
                                   </span>
                                 </div>
@@ -642,8 +640,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                             {otherVariables.map((varName) => (
                               <div key={varName} className="p-2 bg-white rounded border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-xs font-mono text-green-600 bg-green-50 px-2 py-1 rounded cursor-grab active:cursor-grabbing hover:bg-green-100 transition-colors inline-flex items-center gap-1">
-                                    <GripVertical className="h-3 w-3" />
+                                  <span className="text-xs font-mono text-green-600 bg-green-50 px-2 py-1 rounded">
                                     {`{${varName}}`}
                                   </span>
                                 </div>
