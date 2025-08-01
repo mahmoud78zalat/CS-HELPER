@@ -9,6 +9,8 @@ Admin should have overpowered capabilities and enhanced control over all templat
 Fix all bugs and ensure dropdown components work correctly.
 Extensive template genres including greeting, CSAT, warning abusive language, apology, thank you, farewell, confirmation, technical support, and holiday/special occasion.
 Development mode: Authentication streamlined with auto-admin access for development purposes.
+Variable Format: ONLY use {variable} format - completely remove [VARIABLE] format support.
+Project Size Optimization: Enhanced gitignore configuration to prevent large download sizes.
 
 ## System Architecture
 
@@ -48,8 +50,9 @@ Key tables include Users, Live Reply Templates, Email Templates, Usage tracking 
 - **Dynamic Content**: Site name, about content, version label, and footer are customizable via Site Content Management.
 - **Theming**: Dark/Light mode toggle with persistence and real-time color sync.
 - **Universal Variable System**: Centralized management of variables through the admin panel.
-- **Enhanced Variable Recognition**: Updated to prioritize {variable} format over [VARIABLE] format, with improved duplicate detection across subjects and content.
-- **Advanced Drag & Drop**: Smooth, flexible drag & drop system with enhanced styling for template variable management.
+- **Exclusive {variable} Format**: Completely removed [VARIABLE] format support, system now exclusively uses {variable} format for all template variables.
+- **Advanced Drag & Drop**: Smooth, flexible drag & drop system with enhanced styling and animated drop zones for template variable management.
+- **Duplicate Variable Prevention**: Intelligent deduplication ensures variables appearing in both subject and content are displayed only once in the variable list.
 - **Persistent Notification System**: Supabase-based tracking of FAQ views and announcement acknowledgments, replacing localStorage for cache-resistant state persistence.
 
 ## External Dependencies

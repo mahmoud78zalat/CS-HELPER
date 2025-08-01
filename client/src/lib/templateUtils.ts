@@ -7,19 +7,15 @@ function escapeRegExp(string: string): string {
 }
 
 export function extractVariablesFromTemplate(content: string): string[] {
-  // Prioritize {variable} format over [VARIABLE] format
-  // Match variables in format {variable_name} (case-sensitive) or [VARIABLENAME] (legacy)
+  // Only support {variable} format - completely removed [VARIABLE] format
+  // Match variables in format {variable_name} (case-sensitive)
   const curlyRegex = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
-  const squareRegex = /\[([A-Z][A-Z0-9_]*)\]/g;
   
   const curlyMatches = content.match(curlyRegex) || [];
-  const squareMatches = content.match(squareRegex) || [];
-  
   const curlyVars = curlyMatches.map(match => match.slice(1, -1)); // Keep original case
-  const squareVars = squareMatches.map(match => match.slice(1, -1)); // Keep uppercase
   
   // Remove duplicates while preserving the original variable names
-  return Array.from(new Set([...curlyVars, ...squareVars]));
+  return Array.from(new Set(curlyVars));
 }
 
 export function replaceVariables(
@@ -59,19 +55,15 @@ export function replaceVariablesInTemplate(
     ...defaultSystemData 
   };
   
-  // Replace variables in both {variable} and [VARIABLE] formats
-  // Handle exact case matching for {variable} format and uppercase for [VARIABLE] format
+  // Replace variables only in {variable} format
+  // Handle exact case matching for {variable} format
   Object.entries(allData).forEach(([key, value]) => {
     if (key && value) {
       const patterns = [
         // Exact case matching for {variable} format
         new RegExp(`\\{${escapeRegExp(key)}\\}`, 'g'),
-        // Case-insensitive matching for backward compatibility
-        new RegExp(`\\{${escapeRegExp(key)}\\}`, 'gi'),
-        // Legacy uppercase format [VARIABLE]
-        new RegExp(`\\[${escapeRegExp(key.toUpperCase())}\\]`, 'g'),
-        new RegExp(`\\{${escapeRegExp(key.toUpperCase())}\\}`, 'g'),
-        new RegExp(`\\{${escapeRegExp(key.toLowerCase())}\\}`, 'g')
+        // Case-insensitive matching for backward compatibility with existing templates
+        new RegExp(`\\{${escapeRegExp(key)}\\}`, 'gi')
       ];
       patterns.forEach(pattern => {
         result = result.replace(pattern, value);
@@ -98,12 +90,12 @@ export function validateTemplate(content: string): {
     issues.push('Template content cannot be empty');
   }
   
-  // Check for malformed variables - accept both uppercase and lowercase
+  // Check for malformed variables - only support {variable} format
   // Only flag truly malformed patterns like incomplete brackets
-  const malformedRegex = /[\[\{][^\[\{\]\}]*[\[\{]|[\]\}][^\[\{\]\}]*[\]\}]/g;
+  const malformedRegex = /\{[^}]*\{|\}[^{]*\}/g;
   const malformed = content.match(malformedRegex);
   if (malformed) {
-    issues.push(`Malformed variable brackets found: ${malformed.join(', ')} - Variables should use single brackets like [VARIABLE_NAME] or {variable_name}`);
+    issues.push(`Malformed variable brackets found: ${malformed.join(', ')} - Variables should use {variable_name} format only`);
   }
   
   return {
