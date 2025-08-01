@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useLocalTemplateOrdering } from "@/hooks/useLocalTemplateOrdering";
+import { useUnifiedTemplateReordering } from "@/hooks/useUnifiedTemplateReordering";
 import { getGenreColor, getCategoryColor, getGenreBadgeClasses, getCategoryBadgeClasses } from "@/lib/templateColors";
 
 interface LiveTemplate {
@@ -264,14 +264,7 @@ export default function HorizontalGroupedTemplates({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  
-  // Initialize local template ordering hook
-  const { 
-    applyLocalOrdering, 
-    updateBulkOrdering, 
-    resetToAdminOrdering, 
-    hasLocalOrdering 
-  } = useLocalTemplateOrdering(user?.id || 'anonymous');
+  const { reorderTemplates, isReordering } = useUnifiedTemplateReordering('live-reply-templates');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -524,7 +517,16 @@ export default function HorizontalGroupedTemplates({
         if (activeContext.type === 'ungrouped') {
           const newUngrouped = arrayMove(ungroupedTemplates, activeContext.index, overContext.index);
           setUngroupedTemplates(newUngrouped);
-          saveTemplateOrderMutation.mutate({ orderedTemplates: newUngrouped });
+          // Use unified reordering system with only stageOrder
+          const updates = newUngrouped.map((template, index) => ({
+            id: template.id,
+            stageOrder: index
+          }));
+          
+          console.log('[HorizontalGroupedTemplates] Sending unified ungrouped reorder request:', updates);
+          
+          // Use unified reordering system
+          reorderTemplates(updates);
         } else {
           // Grouped templates reordering
           const group = groupedData.find(g => g.id === activeContext.groupId);
@@ -534,10 +536,16 @@ export default function HorizontalGroupedTemplates({
               g.id === activeContext.groupId ? { ...g, templates: newTemplates } : g
             );
             setGroupedData(newGroupedData);
-            saveTemplateOrderMutation.mutate({ 
-              groupId: activeContext.groupId || undefined, 
-              orderedTemplates: newTemplates 
-            });
+            // Use unified reordering system with only stageOrder
+            const updates = newTemplates.map((template, index) => ({
+              id: template.id,
+              stageOrder: index
+            }));
+            
+            console.log('[HorizontalGroupedTemplates] Sending unified reorder request:', updates);
+            
+            // Use unified reordering system
+            reorderTemplates(updates);
           }
         }
       }
@@ -552,17 +560,9 @@ export default function HorizontalGroupedTemplates({
           💡 Drag templates to reorder within groups | Drag group headers to reorder folders | Drop templates on group headers to move them
         </span>
         
-        {hasLocalOrdering && (
+        {isReordering && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-600 dark:text-slate-400">Custom ordering active</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={resetToAdminOrdering}
-              className="h-auto py-1 px-2 text-xs"
-            >
-              Reset to default
-            </Button>
+            <span className="text-xs text-slate-600 dark:text-slate-400">Saving order...</span>
           </div>
         )}
       </div>

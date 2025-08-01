@@ -131,16 +131,14 @@ export function registerRoutes(app: Express): void {
         if (update.id) {
           const updateData: any = {};
           
-          // Handle different order field names from frontend
+          // Handle different order field names from frontend - UNIFIED SYSTEM (only stageOrder)
           if (typeof update.order === 'number') {
             updateData.stageOrder = update.order;
-          }
-          if (typeof update.groupOrder === 'number') {
-            updateData.groupOrder = update.groupOrder;
           }
           if (typeof update.stageOrder === 'number') {
             updateData.stageOrder = update.stageOrder;
           }
+          // Remove groupOrder - it doesn't exist in database schema
           
           // Only update if we have valid order data
           if (Object.keys(updateData).length > 0) {
