@@ -88,39 +88,39 @@ const SortableTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
           
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-1.5">
-              <h4 className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate pr-2 flex-1 min-w-0">
+              <h4 className="font-medium text-slate-800 dark:text-slate-200 text-sm flex-1 min-w-0 pr-2">
                 {template.name}
               </h4>
               
-              <div className="flex gap-1 flex-shrink-0">
+              <div className="flex gap-1 flex-shrink-0 ml-auto">
                 {onPreview && (
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => onPreview(template)}
-                    className="h-7 w-7 p-0 hover:bg-slate-100 dark:hover:bg-slate-700"
+                    className="h-8 w-8 p-0 border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
                     title="Preview Template"
                   >
-                    <Eye className="h-3.5 w-3.5" />
+                    <Eye className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                   </Button>
                 )}
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => onEdit(template)}
-                  className="h-7 w-7 p-0 hover:bg-slate-100 dark:hover:bg-slate-700"
+                  className="h-8 w-8 p-0 border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
                   title="Edit Template"
                 >
-                  <Edit className="h-3.5 w-3.5" />
+                  <Edit className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => onDelete(template.id)}
-                  className="h-7 w-7 p-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="h-8 w-8 p-0 border-red-300 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 dark:border-red-600 dark:bg-slate-800 dark:hover:bg-red-900/20 dark:text-red-400 dark:hover:text-red-300"
                   title="Delete Template"
                 >
-                  <Trash className="h-3.5 w-3.5" />
+                  <Trash className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -515,7 +515,7 @@ export default function HorizontalGroupedTemplates({
           
           {isDragDropMode && (
             <span className="text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full">
-              Drag templates to reorder within their groups
+              Drag templates to reorder within groups | Drag groups to reorder folders | Drop templates on group headers to move them
             </span>
           )}
         </div>
@@ -603,41 +603,44 @@ export default function HorizontalGroupedTemplates({
                                 )}
                               </div>
                             </div>
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex gap-1 ml-auto">
                               {onPreview && (
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onPreview(template);
                                   }}
-                                  className="h-8 w-8 p-0"
+                                  className="h-8 w-8 p-0 border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
+                                  title="Preview Template"
                                 >
-                                  <Eye className="h-3 w-3" />
+                                  <Eye className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                                 </Button>
                               )}
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   onEdit(template);
                                 }}
-                                className="h-8 w-8 p-0"
+                                className="h-8 w-8 p-0 border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
+                                title="Edit Template"
                               >
-                                <Edit className="h-3 w-3" />
+                                <Edit className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                               </Button>
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   onDelete(template.id);
                                 }}
-                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                className="h-8 w-8 p-0 border-red-300 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 dark:border-red-600 dark:bg-slate-800 dark:hover:bg-red-900/20 dark:text-red-400 dark:hover:text-red-300"
+                                title="Delete Template"
                               >
-                                <Trash className="h-3 w-3" />
+                                <Trash className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
@@ -657,18 +660,18 @@ export default function HorizontalGroupedTemplates({
 
         {/* Ungrouped Templates */}
         {ungroupedTemplates.length > 0 && (
-          <Card className="bg-gray-50 dark:bg-slate-900/30 border-dashed">
-            <CardHeader className="p-4 pb-3">
-              <div className="flex items-center gap-2">
-                <FolderOpen className="h-4 w-4 text-gray-400" />
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Ungrouped Templates
-                </h3>
-                <Badge variant="outline" className="text-xs">
-                  {ungroupedTemplates.length} templates
-                </Badge>
-              </div>
-            </CardHeader>
+            <Card className="bg-gray-50 dark:bg-slate-900/30 border-dashed">
+              <CardHeader className="p-4 pb-3">
+                <div className="flex items-center gap-2">
+                  <FolderOpen className="h-4 w-4 text-gray-400" />
+                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    Ungrouped Templates
+                  </h3>
+                  <Badge variant="outline" className="text-xs">
+                    {ungroupedTemplates.length} templates
+                  </Badge>
+                </div>
+              </CardHeader>
             
             <CardContent className="p-4 pt-0">
               <div className="flex gap-4 overflow-x-auto pb-2">
@@ -705,41 +708,44 @@ export default function HorizontalGroupedTemplates({
                                   )}
                                 </div>
                               </div>
-                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex gap-1 ml-auto">
                                 {onPreview && (
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       onPreview(template);
                                     }}
-                                    className="h-8 w-8 p-0"
+                                    className="h-8 w-8 p-0 border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
+                                    title="Preview Template"
                                   >
-                                    <Eye className="h-3 w-3" />
+                                    <Eye className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                                   </Button>
                                 )}
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onEdit(template);
                                   }}
-                                  className="h-8 w-8 p-0"
+                                  className="h-8 w-8 p-0 border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
+                                  title="Edit Template"
                                 >
-                                  <Edit className="h-3 w-3" />
+                                  <Edit className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                                 </Button>
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onDelete(template.id);
                                   }}
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                  className="h-8 w-8 p-0 border-red-300 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 dark:border-red-600 dark:bg-slate-800 dark:hover:bg-red-900/20 dark:text-red-400 dark:hover:text-red-300"
+                                  title="Delete Template"
                                 >
-                                  <Trash className="h-3 w-3" />
+                                  <Trash className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>

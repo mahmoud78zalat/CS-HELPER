@@ -65,47 +65,7 @@ export function AnnouncementBanner() {
             setIsVisible(true);
           }
         } else {
-          // Fallback to original method if persistent API fails
-          console.log('Persistent API failed, using fallback method');
-          const response = await fetch(`/api/announcements/unacknowledged/${user.id}`);
-          if (response.ok) {
-            const fetchedAnnouncements = await response.json();
-            if (fetchedAnnouncements && fetchedAnnouncements.length > 0) {
-              // Filter announcements that haven't been acknowledged locally
-              const unacknowledgedAnnouncements = fetchedAnnouncements.filter((announcement: Announcement) => {
-                const localKey = `announcement_ack_${user.id}_${announcement.id}`;
-                const localAckData = localStorage.getItem(localKey);
-                
-                if (localAckData) {
-                  try {
-                    const ackData = JSON.parse(localAckData);
-                    const localVersion = ackData.version || 1;
-                    const currentVersion = announcement.version || 1;
-                    
-                    // Show announcement if it's been re-announced (version bumped)
-                    return currentVersion > localVersion;
-                  } catch (e) {
-                    // If parsing fails, treat as not acknowledged
-                    return true;
-                  }
-                }
-                return true;
-              });
-              
-              if (unacknowledgedAnnouncements.length > 0) {
-                // Sort by priority and date
-                const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
-                const sortedAnnouncements = unacknowledgedAnnouncements.sort((a: Announcement, b: Announcement) => {
-                  const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
-                  if (priorityDiff !== 0) return priorityDiff;
-                  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                });
-                
-                setAnnouncements(sortedAnnouncements);
-                setIsVisible(true);
-              }
-            }
-          }
+          console.log('No unacknowledged announcements from persistent API');
         }
       } catch (error) {
         console.error('Error fetching announcements:', error);
