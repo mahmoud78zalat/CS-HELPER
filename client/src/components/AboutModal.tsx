@@ -111,15 +111,16 @@ export default function AboutModal({ onClose }: AboutModalProps) {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Zap className="h-5 w-5 text-green-500" />
-                  <span>Efficiency Features</span>
+                  <span>Advanced Features</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm text-slate-600">
-                  <li>• Real-time search capabilities</li>
-                  <li>• Keyboard shortcuts support</li>
-                  <li>• Expandable sidebar panels</li>
-                  <li>• Quick action buttons</li>
+                  <li>• Drag & drop template organization</li>
+                  <li>• Real-time collaborative editing</li>
+                  <li>• Smart variable management</li>
+                  <li>• Live announcement system</li>
+                  <li>• Comprehensive toast notifications</li>
                 </ul>
               </CardContent>
             </Card>
@@ -136,6 +137,7 @@ export default function AboutModal({ onClose }: AboutModalProps) {
                   <li>• Role-based access control</li>
                   <li>• Secure authentication system</li>
                   <li>• Admin panel for user management</li>
+                  <li>• Persistent notification system</li>
                   <li>• Real-time user status tracking</li>
                 </ul>
               </CardContent>

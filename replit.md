@@ -56,6 +56,10 @@ Key tables include Users, Live Reply Templates, Email Templates, Usage tracking 
 - **Duplicate Variable Prevention**: Intelligent deduplication ensures variables appearing in both subject and content are displayed only once in the variable list.
 - **Persistent Notification System**: Supabase-based tracking of FAQ views and announcement acknowledgments, replacing localStorage for cache-resistant state persistence.
 - **Centralized Color Management**: Color management has been consolidated to a single dedicated section in the Colors panel, removing color selection capabilities from GroupManager and TemplateConfigurationManager components to maintain consistency and simplify the interface.
+- **Enhanced Drag & Drop System**: Improved collision detection using closestCorners algorithm for smoother template and group folder drag & drop operations, with always-enabled drag & drop for admin users and toggleable for regular users.
+- **Comprehensive Toast Notifications**: Added detailed toast notifications with specific template names, group information, and action details for all drag & drop operations, template moves, and reordering actions.
+- **Fixed Announcement Duplication**: Added unique filtering in Supabase storage layer to prevent duplicate announcements from appearing in the notification system.
+- **Updated About Tool**: Refreshed AboutModal component with current platform features including drag & drop organization, persistent notifications, and advanced template management capabilities.
 
 ## External Dependencies
 

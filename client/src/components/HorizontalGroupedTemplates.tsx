@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash, GripHorizontal, Eye, Plus, FolderOpen, Palette, ArrowUpDown } from "lucide-react";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay, useDroppable } from '@dnd-kit/core';
+import { DndContext, closestCenter, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay, useDroppable } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -345,15 +345,19 @@ export default function HorizontalGroupedTemplates({
       
       return apiRequest('POST', '/api/live-reply-template-groups/reorder', { updates });
     },
-    onSuccess: () => {
+    onSuccess: (_, orderedGroups) => {
       queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
-      toast({ title: "Group order saved successfully" });
+      toast({ 
+        title: "Group folders reordered successfully", 
+        description: `${orderedGroups.length} group folders reorganized`,
+        className: "bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800"
+      });
     },
     onError: (error: any) => {
       toast({ 
-        title: "Failed to save group order", 
-        description: error.message,
+        title: "Failed to reorder group folders", 
+        description: `Could not save new folder arrangement: ${error.message}`,
         variant: "destructive" 
       });
     },
@@ -370,14 +374,21 @@ export default function HorizontalGroupedTemplates({
       
       return apiRequest('POST', '/api/live-reply-templates/reorder', { updates });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
-      toast({ title: "Template order saved successfully" });
+      const groupName = variables.groupId ? 
+        groupedData.find(g => g.id === variables.groupId)?.name || 'Unknown Group' : 
+        'Ungrouped Templates';
+      toast({ 
+        title: "Templates reordered successfully", 
+        description: `${variables.orderedTemplates.length} templates reordered in ${groupName}`,
+        className: "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800"
+      });
     },
     onError: (error: any) => {
       toast({ 
-        title: "Failed to save template order", 
-        description: error.message,
+        title: "Failed to reorder templates", 
+        description: `Could not save new template arrangement: ${error.message}`,
         variant: "destructive" 
       });
     },
@@ -385,24 +396,43 @@ export default function HorizontalGroupedTemplates({
 
   // Move template to group mutation
   const moveTemplateToGroupMutation = useMutation({
-    mutationFn: async ({ templateId, groupId }: { templateId: string; groupId?: string }) => {
+    mutationFn: async ({ templateId, groupId, templateName }: { templateId: string; groupId?: string; templateName?: string }) => {
       return apiRequest('POST', `/api/live-reply-templates/${templateId}/move-to-group`, { 
         groupId: groupId || undefined
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
-      toast({ title: "Template moved to group successfully" });
+      const groupName = groupedData.find(g => g.id === variables.groupId)?.name || 'Ungrouped';
+      toast({ 
+        title: "Template moved successfully", 
+        description: `"${variables.templateName || 'Template'}" moved to ${groupName}`,
+        className: "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800"
+      });
     },
-    onError: (error: any) => {
+    onError: (error: any, variables) => {
       toast({ 
         title: "Failed to move template", 
-        description: error.message,
+        description: `Could not move "${variables.templateName || 'template'}": ${error.message}`,
         variant: "destructive" 
       });
     },
   });
+
+  // Helper function to find template in all groups
+  const findTemplateInAllGroups = (templateId: string) => {
+    // Check ungrouped first
+    const ungroupedTemplate = ungroupedTemplates.find(t => t.id === templateId);
+    if (ungroupedTemplate) return ungroupedTemplate;
+    
+    // Check grouped templates
+    for (const group of groupedData) {
+      const template = group.templates.find(t => t.id === templateId);
+      if (template) return template;
+    }
+    return null;
+  };
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
@@ -436,8 +466,11 @@ export default function HorizontalGroupedTemplates({
       const templateId = active.id.toString();
       const targetGroupId = over.id.toString().replace('group-', '');
       
-      console.log('[DragDrop] Moving template', templateId, 'to group', targetGroupId);
-      moveTemplateToGroupMutation.mutate({ templateId, groupId: targetGroupId });
+      // Find template name for better toast notification
+      const templateName = findTemplateInAllGroups(templateId)?.name || 'Unknown Template';
+      
+      console.log('[DragDrop] Moving template', templateName, 'to group', targetGroupId);
+      moveTemplateToGroupMutation.mutate({ templateId, groupId: targetGroupId, templateName });
       return;
     }
 
@@ -469,9 +502,10 @@ export default function HorizontalGroupedTemplates({
         // Cross-group movement: move template to the target group
         const templateId = active.id.toString();
         const targetGroupId = overContext.groupId;
+        const templateName = findTemplateInAllGroups(templateId)?.name || 'Unknown Template';
         
-        console.log('[DragDrop] Cross-group move - template', templateId, 'to group', targetGroupId);
-        moveTemplateToGroupMutation.mutate({ templateId, groupId: targetGroupId || undefined });
+        console.log('[DragDrop] Cross-group move - template', templateName, 'to group', targetGroupId);
+        moveTemplateToGroupMutation.mutate({ templateId, groupId: targetGroupId || undefined, templateName });
         return;
       }
 
@@ -525,7 +559,7 @@ export default function HorizontalGroupedTemplates({
 
       <DndContext 
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={closestCorners}
         onDragEnd={(event) => {
           if (isDragDropMode) {
             handleDragEnd(event);

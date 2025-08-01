@@ -3488,8 +3488,8 @@ export class SupabaseStorage implements IStorage {
         return !hasAcknowledged;
       });
 
-      // Map snake_case to camelCase for frontend compatibility
-      return unacknowledgedAnnouncements.map(announcement => ({
+      // Map snake_case to camelCase for frontend compatibility and ensure uniqueness
+      const mappedAnnouncements = unacknowledgedAnnouncements.map(announcement => ({
         id: announcement.id,
         title: announcement.title,
         content: announcement.content,
@@ -3504,6 +3504,14 @@ export class SupabaseStorage implements IStorage {
         version: announcement.version,
         lastAnnouncedAt: announcement.last_announced_at, // Keep as string since API expects string
       }));
+
+      // Ensure uniqueness by ID to prevent duplicates
+      const uniqueAnnouncements = mappedAnnouncements.filter((announcement, index, self) => 
+        index === self.findIndex(a => a.id === announcement.id)
+      );
+
+      console.log(`[SupabaseStorage] Found ${uniqueAnnouncements.length} unique unacknowledged announcements for user ${userId}`);
+      return uniqueAnnouncements;
     } catch (error) {
       console.error('[SupabaseStorage] Error in getUnacknowledgedAnnouncements:', error);
       return [];
