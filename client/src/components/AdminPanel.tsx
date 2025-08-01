@@ -32,7 +32,7 @@ import HorizontalGroupedTemplates from "@/components/HorizontalGroupedTemplates"
 import GroupManager from "@/components/GroupManager";
 import FAQEditor from "@/components/FAQEditor";
 
-import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates, loadColorsFromDatabase } from "@/lib/templateColors";
+import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates, loadColorsFromDatabase, getGenreColor, getCategoryColor } from "@/lib/templateColors";
 import { HexColorPicker } from 'react-colorful';
 // Removed QUICK_TEMPLATE_STARTERS import as it's no longer needed
 
@@ -121,14 +121,17 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Initialize colors from dynamic data
+  // Initialize colors from dynamic data with proper fallback chain
   useEffect(() => {
     // Initialize genre colors from dynamic data
     const initialGenreColors: Record<string, any> = {};
     (dynamicGenres as any[]).forEach(genre => {
-      if (!genreColors[genre.name.toLowerCase()]) {
-        // Generate or get existing color
-        initialGenreColors[genre.name.toLowerCase()] = GENRE_COLORS[genre.name.toLowerCase()] || {
+      const genreKey = genre.name.toLowerCase();
+      if (!genreColors[genreKey]) {
+        // Use proper fallback chain: static config -> library function -> default
+        const staticColor = GENRE_COLORS[genreKey];
+        const libraryColor = getGenreColor(genre.name);
+        initialGenreColors[genreKey] = staticColor || libraryColor || {
           background: 'bg-blue-100 dark:bg-blue-900',
           text: 'text-blue-800 dark:text-blue-200',
           border: 'border-blue-200 dark:border-blue-700'
@@ -139,8 +142,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     // Initialize category colors from both email and template categories
     const initialCategoryColors: Record<string, any> = {};
     [...(dynamicEmailCategories as any[]), ...(dynamicTemplateCategories as any[])].forEach(category => {
-      if (!categoryColors[category.name.toLowerCase()]) {
-        initialCategoryColors[category.name.toLowerCase()] = CATEGORY_COLORS[category.name.toLowerCase()] || {
+      const categoryKey = category.name.toLowerCase();
+      if (!categoryColors[categoryKey]) {
+        // Use proper fallback chain: static config -> library function -> default
+        const staticColor = CATEGORY_COLORS[categoryKey];
+        const libraryColor = getCategoryColor(category.name);
+        initialCategoryColors[categoryKey] = staticColor || libraryColor || {
           background: 'bg-green-100 dark:bg-green-900',
           text: 'text-green-800 dark:text-green-200',
           border: 'border-green-200 dark:border-green-700'
@@ -1925,7 +1932,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       ) : (
                         (dynamicGenres as any[]).map((genre: any) => {
                           const genreKey = genre.name.toLowerCase();
-                          const colors = genreColors[genreKey] || {
+                          // First check saved colors, then check static config, then use fallback
+                          const colors = genreColors[genreKey] || 
+                                        GENRE_COLORS[genreKey] || 
+                                        getGenreColor(genre.name) || {
                             background: 'bg-blue-100 dark:bg-blue-900',
                             text: 'text-blue-800 dark:text-blue-200',
                             border: 'border-blue-200 dark:border-blue-700'
@@ -1990,7 +2000,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           ).values()
                         ).map((category: any) => {
                           const categoryKey = category.name.toLowerCase();
-                          const colors = categoryColors[categoryKey] || {
+                          // First check saved colors, then check static config, then use fallback
+                          const colors = categoryColors[categoryKey] || 
+                                        CATEGORY_COLORS[categoryKey] || 
+                                        getCategoryColor(category.name) || {
                             background: 'bg-green-100 dark:bg-green-900',
                             text: 'text-green-800 dark:text-green-200',
                             border: 'border-green-200 dark:border-green-700'

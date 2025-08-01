@@ -417,8 +417,8 @@ export default function FAQEditor() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 max-h-[80vh] overflow-y-auto">
-      <CardHeader className="px-0 sticky top-0 bg-white z-10 border-b">
+    <div className="max-w-4xl mx-auto p-6">
+      <CardHeader className="px-0 sticky top-0 bg-white dark:bg-gray-900 z-10 border-b">
         <CardTitle className="flex items-center justify-between">
           <span>FAQ Management</span>
           <Button
@@ -433,8 +433,8 @@ export default function FAQEditor() {
 
       {/* Create New FAQ */}
       {isCreating && (
-        <Card className="mb-6 border-green-200 bg-green-50">
-          <CardContent className="p-6">
+        <Card className="mb-6 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-700">
+          <CardContent className="p-6 max-h-none overflow-visible">
             <h3 className="text-lg font-semibold mb-4 text-green-800">Create New FAQ</h3>
             <div className="space-y-4">
               <div>
