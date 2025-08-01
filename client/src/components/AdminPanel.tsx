@@ -117,9 +117,99 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     isActive: true
   });
+
+  // Modern confirmation dialog state
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    type: 'template' | 'emailTemplate' | 'announcement' | 'user' | 'group' | 'category' | 'genre' | 'faq';
+    item: any;
+    title: string;
+    description: string;
+  }>({
+    isOpen: false,
+    type: 'template',
+    item: null,
+    title: '',
+    description: ''
+  });
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Helper function to show modern delete confirmation
+  const showDeleteConfirmation = (type: typeof deleteConfirmation.type, item: any, customTitle?: string, customDescription?: string) => {
+    const confirmations = {
+      template: {
+        title: `Delete Template "${item.name}"`,
+        description: `Are you sure you want to delete this live reply template? This action cannot be undone.`
+      },
+      emailTemplate: {
+        title: `Delete Email Template "${item.name}"`,
+        description: `Are you sure you want to delete this email template? This action cannot be undone.`
+      },
+      announcement: {
+        title: `Delete Announcement "${item.title}"`,
+        description: `Are you sure you want to delete this announcement? This action cannot be undone.`
+      },
+      user: {
+        title: `Delete User "${item.email}"`,
+        description: `Are you sure you want to delete this user account? This action cannot be undone.`
+      },
+      group: {
+        title: `Delete Group "${item.name}"`,
+        description: `Are you sure you want to delete this group? This action cannot be undone.`
+      },
+      category: {
+        title: `Delete Category "${item.name}"`,
+        description: `Are you sure you want to delete "${item.name}"? This will also delete all associated genres.`
+      },
+      genre: {
+        title: `Delete Genre "${item.name}"`,
+        description: `Are you sure you want to delete "${item.name}"? This action cannot be undone.`
+      },
+      faq: {
+        title: `Delete FAQ`,
+        description: `Are you sure you want to delete this FAQ? This action cannot be undone.`
+      }
+    };
+
+    const config = confirmations[type];
+    setDeleteConfirmation({
+      isOpen: true,
+      type,
+      item,
+      title: customTitle || config.title,
+      description: customDescription || config.description
+    });
+  };
+
+  // Helper function to handle confirmed deletion
+  const handleConfirmedDelete = async () => {
+    const { type, item } = deleteConfirmation;
+    
+    try {
+      switch (type) {
+        case 'template':
+          await deleteLiveTemplateMutation.mutateAsync(item.id);
+          break;
+        case 'emailTemplate':
+          await deleteEmailTemplateMutation.mutateAsync(item.id);
+          break;
+        case 'announcement':
+          await deleteAnnouncementMutation.mutateAsync(item.id);
+          break;
+        case 'user':
+          await deleteUserMutation.mutateAsync(item.id);
+          break;
+        default:
+          console.error('Unknown delete type:', type);
+      }
+    } catch (error) {
+      console.error('Delete failed:', error);
+    } finally {
+      setDeleteConfirmation(prev => ({ ...prev, isOpen: false }));
+    }
+  };
 
   // Initialize colors from dynamic data with proper fallback chain
   useEffect(() => {
@@ -1297,43 +1387,42 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     },
   });
 
+  // Delete mutations
+  const deleteLiveTemplateMutation = useMutation({
+    mutationFn: async (templateId: string) => {
+      console.log('[AdminPanel] 🗑️ Deleting live template:', templateId);
+      await apiRequest('DELETE', `/api/live-reply-templates/${templateId}`);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/live-reply-templates'] });
+      toast({
+        title: "Template deleted",
+        description: "Live reply template deleted successfully",
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      console.error('[AdminPanel] ❌ Error deleting template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete template. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
 
-  const handleDeleteTemplate = async (templateId: string) => {
-    if (confirm('Are you sure you want to delete this live chat template?')) {
-      try {
-        console.log('[AdminPanel] 🗑️ Deleting template:', templateId);
-        
-        // Direct API call for immediate response
-        await apiRequest('DELETE', `/api/live-reply-templates/${templateId}`);
-        
-        // Force immediate refresh of templates and groups
-        await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
-        await queryClient.refetchQueries({ queryKey: ['/api/live-reply-templates'] });
-        await refetchTemplates();
-        await refetchGroups();
-        
-        toast({
-          title: "Template deleted",
-          description: "Successfully removed from system",
-          duration: 3000,
-        });
-        
-      } catch (error) {
-        console.error('[AdminPanel] ❌ Error in handleDeleteTemplate:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete template. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }
-  }
 
-  const handleDeleteEmailTemplate = (templateId: string) => {
-    if (confirm('Are you sure you want to delete this email template?')) {
-      deleteEmailTemplateMutation.mutate(templateId);
-    }
+
+
+
+  const handleDeleteTemplate = async (template: any) => {
+    showDeleteConfirmation('template', template);
+  };
+
+  const handleDeleteEmailTemplate = (template: any) => {
+    showDeleteConfirmation('emailTemplate', template);
   };
 
 
@@ -2744,6 +2833,45 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         onCreateGroup={createGroupMutation.mutate}
         onUpdateGroup={updateGroupMutation.mutate}
       />
+
+      {/* Modern Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmation.isOpen} onOpenChange={(open) => 
+        setDeleteConfirmation(prev => ({ ...prev, isOpen: open }))
+      }>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              {deleteConfirmation.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              {deleteConfirmation.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
+              disabled={deleteLiveTemplateMutation.isPending || deleteEmailTemplateMutation.isPending || deleteAnnouncementMutation.isPending || deleteUserMutation.isPending}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmedDelete}
+              disabled={deleteLiveTemplateMutation.isPending || deleteEmailTemplateMutation.isPending || deleteAnnouncementMutation.isPending || deleteUserMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {(deleteLiveTemplateMutation.isPending || deleteEmailTemplateMutation.isPending || deleteAnnouncementMutation.isPending || deleteUserMutation.isPending) ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </div>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       </DialogContent>
     </Dialog>

@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit2, Trash2, Save, X, HelpCircle, GripHorizontal, Settings, Users, CreditCard, Wrench, Info, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Edit2, Trash2, Save, X, HelpCircle, GripHorizontal, Settings, Users, CreditCard, Wrench, Info, MessageCircle, ChevronDown, ChevronUp, AlertTriangle, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -249,6 +250,15 @@ export default function FAQEditor() {
   });
   const [sortedFaqs, setSortedFaqs] = useState<FAQ[]>([]);
   const [expandedFaqs, setExpandedFaqs] = useState<string[]>([]);
+  
+  // Delete confirmation dialog state
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    title: '',
+    description: '',
+    faqId: '',
+    faqQuestion: ''
+  });
 
   // Fetch existing categories from the same API used everywhere else
   const { data: templateCategories = [] } = useQuery<{id: string, name: string}[]>({
@@ -372,9 +382,35 @@ export default function FAQEditor() {
     });
   };
 
+  // Helper function to show delete confirmation
+  const showDeleteConfirmation = (faq: FAQ) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      title: 'Delete FAQ',
+      description: `Are you sure you want to delete "${faq.question}"? This action cannot be undone.`,
+      faqId: faq.id,
+      faqQuestion: faq.question
+    });
+  };
+
+  // Handle confirmed delete
+  const handleConfirmedDelete = () => {
+    if (deleteConfirmation.faqId) {
+      deleteFaqMutation.mutate(deleteConfirmation.faqId);
+      setDeleteConfirmation({
+        isOpen: false,
+        title: '',
+        description: '',
+        faqId: '',
+        faqQuestion: ''
+      });
+    }
+  };
+
   const handleDeleteFaq = (id: string) => {
-    if (confirm('Are you sure you want to delete this FAQ? This action cannot be undone.')) {
-      deleteFaqMutation.mutate(id);
+    const faq = sortedFaqs.find(f => f.id === id);
+    if (faq) {
+      showDeleteConfirmation(faq);
     }
   };
 
@@ -607,6 +643,45 @@ export default function FAQEditor() {
           </DndContext>
         )}
       </div>
+
+      {/* AlertDialog for delete confirmation */}
+      <AlertDialog open={deleteConfirmation.isOpen} onOpenChange={(open) => 
+        setDeleteConfirmation(prev => ({ ...prev, isOpen: open }))
+      }>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              {deleteConfirmation.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              {deleteConfirmation.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
+              disabled={deleteFaqMutation.isPending}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmedDelete}
+              disabled={deleteFaqMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {deleteFaqMutation.isPending ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </div>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

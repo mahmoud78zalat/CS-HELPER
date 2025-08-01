@@ -4,11 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Edit2, Save, Trash2, Settings, Variable, Folder, Tag, ChevronDown, ChevronRight, Search, GripVertical, Palette, Pencil } from "lucide-react";
+import { Plus, X, Edit2, Save, Trash2, Settings, Variable, Folder, Tag, ChevronDown, ChevronRight, Search, GripVertical, Palette, Pencil, AlertTriangle, Loader2 } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -373,8 +374,32 @@ function ConnectedConfigManager() {
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
   const [draggedGenre, setDraggedGenre] = useState<string | null>(null);
 
+  // AlertDialog confirmation state
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+  });
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Helper function to show delete confirmation
+  const showDeleteConfirmation = (title: string, description: string, onConfirm: () => void) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      title,
+      description,
+      onConfirm,
+    });
+  };
+
+  // Handle confirmed delete action
+  const handleConfirmedDelete = () => {
+    deleteConfirmation.onConfirm();
+    setDeleteConfirmation({ isOpen: false, title: '', description: '', onConfirm: () => {} });
+  };
 
   // Fetch connected categories with genres
   const { data: categories = [], isLoading } = useQuery<ConnectedCategory[]>({
@@ -631,15 +656,19 @@ function ConnectedConfigManager() {
   };
 
   const handleDeleteCategory = (category: ConnectedCategory) => {
-    if (confirm(`Are you sure you want to delete "${category.name}"? This will also delete all associated genres.`)) {
-      deleteCategoryMutation.mutate(category.id);
-    }
+    showDeleteConfirmation(
+      'Delete Category',
+      `Are you sure you want to delete "${category.name}"? This will also delete all associated genres.`,
+      () => deleteCategoryMutation.mutate(category.id)
+    );
   };
 
   const handleDeleteGenre = (genre: ConnectedGenre) => {
-    if (confirm(`Are you sure you want to delete "${genre.name}"?`)) {
-      deleteGenreMutation.mutate(genre.id);
-    }
+    showDeleteConfirmation(
+      'Delete Genre',
+      `Are you sure you want to delete "${genre.name}"?`,
+      () => deleteGenreMutation.mutate(genre.id)
+    );
   };
 
 
@@ -831,6 +860,45 @@ function ConnectedConfigManager() {
           )}
         </CardContent>
       </Card>
+
+      {/* AlertDialog for delete confirmation */}
+      <AlertDialog open={deleteConfirmation.isOpen} onOpenChange={(open) => 
+        setDeleteConfirmation(prev => ({ ...prev, isOpen: open }))
+      }>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              {deleteConfirmation.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              {deleteConfirmation.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
+              disabled={deleteCategoryMutation.isPending || deleteGenreMutation.isPending}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmedDelete}
+              disabled={deleteCategoryMutation.isPending || deleteGenreMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {(deleteCategoryMutation.isPending || deleteGenreMutation.isPending) ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </div>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

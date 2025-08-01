@@ -5,8 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X, Edit2, Save, Trash2, Variable, Loader2 } from "lucide-react";
+import { Plus, X, Edit2, Save, Trash2, Variable, Loader2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -93,6 +94,15 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Delete confirmation dialog state
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    title: '',
+    description: '',
+    variableId: '',
+    variableName: ''
+  });
 
   // Fetch template variables with explicit queryFn
   const { data: variables = [], isLoading: variablesLoading, error: variablesError } = useQuery({
@@ -337,9 +347,35 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
     });
   };
 
+  // Helper function to show delete confirmation
+  const showDeleteConfirmation = (variable: TemplateVariable) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      title: 'Delete Variable',
+      description: `Are you sure you want to delete the variable "${variable.name}"? This action cannot be undone and may affect templates using this variable.`,
+      variableId: variable.id,
+      variableName: variable.name
+    });
+  };
+
+  // Handle confirmed delete
+  const handleConfirmedDelete = () => {
+    if (deleteConfirmation.variableId) {
+      deleteVariableMutation.mutate(deleteConfirmation.variableId);
+      setDeleteConfirmation({
+        isOpen: false,
+        title: '',
+        description: '',
+        variableId: '',
+        variableName: ''
+      });
+    }
+  };
+
   const deleteVariable = (id: string) => {
-    if (confirm('Are you sure you want to delete this variable?')) {
-      deleteVariableMutation.mutate(id);
+    const variable = variables.find((v: TemplateVariable) => v.id === id);
+    if (variable) {
+      showDeleteConfirmation(variable);
     }
   };
 
@@ -370,7 +406,8 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -520,5 +557,45 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
         </div>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog 
+      open={deleteConfirmation.isOpen} 
+      onOpenChange={(open) => !open && setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-500" />
+            {deleteConfirmation.title}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {deleteConfirmation.description}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel 
+            onClick={() => setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
+            disabled={deleteVariableMutation.isPending}
+          >
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirmedDelete}
+            disabled={deleteVariableMutation.isPending}
+            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+          >
+            {deleteVariableMutation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              'Delete Variable'
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

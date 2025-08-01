@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +10,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash, Edit, Palette, FolderOpen, GripVertical, Plus, FileText, ArrowRight, Check } from "lucide-react";
+import { Trash, Edit, Palette, FolderOpen, GripVertical, Plus, FileText, ArrowRight, Check, AlertTriangle, Loader2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -158,6 +159,15 @@ export default function GroupManager({
   const [localGroups, setLocalGroups] = useState(groups);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Delete confirmation dialog state
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    title: '',
+    description: '',
+    groupId: '',
+    groupName: ''
+  });
 
   // Fetch all templates for template selector
   const { data: allTemplates = [], isLoading: templatesLoading } = useTemplates({
@@ -359,9 +369,35 @@ export default function GroupManager({
     }
   };
 
+  // Helper function to show delete confirmation
+  const showDeleteConfirmation = (group: TemplateGroup) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      title: 'Delete Group',
+      description: `Are you sure you want to delete the group "${group.name}"? This action cannot be undone and will remove all templates from this group.`,
+      groupId: group.id,
+      groupName: group.name
+    });
+  };
+
+  // Handle confirmed delete
+  const handleConfirmedDelete = () => {
+    if (deleteConfirmation.groupId) {
+      deleteGroupMutation.mutate(deleteConfirmation.groupId);
+      setDeleteConfirmation({
+        isOpen: false,
+        title: '',
+        description: '',
+        groupId: '',
+        groupName: ''
+      });
+    }
+  };
+
   const handleDelete = (groupId: string) => {
-    if (confirm("Are you sure you want to delete this group? This action cannot be undone.")) {
-      deleteGroupMutation.mutate(groupId);
+    const group = localGroups.find(g => g.id === groupId);
+    if (group) {
+      showDeleteConfirmation(group);
     }
   };
 
@@ -376,7 +412,8 @@ export default function GroupManager({
                    reorderGroupsMutation.isPending;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -586,5 +623,45 @@ export default function GroupManager({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog 
+      open={deleteConfirmation.isOpen} 
+      onOpenChange={(open) => !open && setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-500" />
+            {deleteConfirmation.title}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {deleteConfirmation.description}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel 
+            onClick={() => setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
+            disabled={deleteGroupMutation.isPending}
+          >
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirmedDelete}
+            disabled={deleteGroupMutation.isPending}
+            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+          >
+            {deleteGroupMutation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              'Delete Group'
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
