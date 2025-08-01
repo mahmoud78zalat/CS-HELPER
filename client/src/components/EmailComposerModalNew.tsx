@@ -198,6 +198,8 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
 
       // Subject-specific variables (limited set)
       ordernumber: customerData.order_id || customerData.awb_number || '',
+      orderid: customerData.order_id || '', // Add orderid variable
+      order_number: customerData.order_id || customerData.awb_number || '',
       AWB: customerData.awb_number || '',
       customernumber: customerData.customer_name?.replace(/\s+/g, '').toUpperCase() + '001' || 'CUST001',
     });
@@ -296,6 +298,13 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const getUniqueTemplateVariables = () => {
     const subjectVars = extractVariablesFromTemplate(emailSubject);
     const bodyVars = extractVariablesFromTemplate(emailBody);
+    
+    console.log('[EmailComposer] Variable extraction debug:', {
+      emailSubject,
+      emailBody,
+      subjectVars,
+      bodyVars
+    });
     
     // Remove duplicates - if a variable appears in both subject and content, show it only once
     return Array.from(new Set([...subjectVars, ...bodyVars]));
@@ -443,20 +452,18 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           </PanelResizeHandle>
 
           {/* Middle Panel: Email Composition */}
-          <Panel defaultSize={40} minSize={25} id="email-composer" order={2}>
+          <Panel defaultSize={50} minSize={35} id="email-composer" order={2}>
             <div className="w-full h-full flex flex-col bg-white min-w-0">
-            <div className="p-4 border-b border-slate-200 flex-1 flex flex-col bg-white">
-              <div className="flex items-center gap-3 mb-4">
-                <Badge className="bg-blue-50 text-blue-700 px-3 py-1 text-sm border border-blue-200">
-                  To: {selectedTemplate?.concernedTeam || 'Select template first'}
-                </Badge>
-              </div>
-              
-              <div className="space-y-6 flex-1 flex flex-col">
-                <div>
-                  <div className="mb-3">
-                    <Label htmlFor="emailSubject" className="text-base font-semibold">Subject Line</Label>
-                  </div>
+              <div className="p-4 border-b border-slate-200 bg-white">
+                <div className="flex items-center gap-3 mb-4">
+                  <Badge className="bg-blue-50 text-blue-700 px-3 py-1 text-sm border border-blue-200">
+                    To: {selectedTemplate?.concernedTeam || 'Select template first'}
+                  </Badge>
+                </div>
+                
+                {/* Subject Line Section */}
+                <div className="mb-4">
+                  <Label htmlFor="emailSubject" className="text-base font-semibold mb-3 block">Subject Line</Label>
                   <Input
                     id="emailSubject"
                     value={emailSubject}
@@ -479,78 +486,40 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                     Copy Subject
                   </Button>
                 </div>
-                
-                <div className="flex-1 flex flex-col">
-                  <Label htmlFor="body" className="text-base font-semibold mb-3 block">Email Body</Label>
-                  <DroppableTextarea
-                    id="email-body-droppable"
-                    name="body"
-                    value={emailBody}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEmailBody(e.target.value)}
-                    placeholder="Select a template to populate content..."
-                    className="font-mono text-sm resize-none flex-1 min-h-[400px]"
-                  />
-                  <div className="flex gap-3 mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCopyBody}
-                      disabled={!emailBody}
-                      className="h-9"
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy Body
-                    </Button>
-                    <Button
-                      onClick={handleCopyEmail}
-                      disabled={!emailSubject || !emailBody}
-                      className="h-9 bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy Complete Email
-                    </Button>
-                  </div>
+              </div>
+              
+              {/* Email Body Section */}
+              <div className="flex-1 flex flex-col p-4">
+                <Label htmlFor="body" className="text-base font-semibold mb-3 block">Email Body</Label>
+                <DroppableTextarea
+                  id="email-body-droppable"
+                  name="body"
+                  value={emailBody}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEmailBody(e.target.value)}
+                  placeholder="Select a template to populate content..."
+                  className="font-mono text-sm resize-none flex-1 min-h-[400px]"
+                />
+                <div className="flex gap-3 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyBody}
+                    disabled={!emailBody}
+                    className="h-9"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Body
+                  </Button>
+                  <Button
+                    onClick={handleCopyEmail}
+                    disabled={!emailSubject || !emailBody}
+                    className="h-9 bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Complete Email
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            {/* Preview Panel */}
-            <div className="flex-1 p-4 bg-slate-50 overflow-y-auto min-h-0">
-              <h3 className="font-medium text-base mb-3 flex items-center gap-2 text-slate-700">
-                <Sparkles className="h-4 w-4 text-blue-600" />
-                Live Email Preview
-              </h3>
-              
-              <div className="h-full flex flex-col">
-                <Card className="shadow-sm flex-1 flex flex-col border-slate-200">
-                  <CardContent className="p-4 flex-1 flex flex-col">
-                    <div className="space-y-4 flex-1 flex flex-col">
-                      <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 py-3 rounded-r-md">
-                        <h4 className="font-semibold text-slate-700 text-base mb-2">Subject:</h4>
-                        <p className="text-base text-slate-800">{getFinalSubject() || selectedTemplate?.subject || selectedTemplate?.name || 'No subject set'}</p>
-                      </div>
-                      
-                      {selectedTemplate?.warningNote && (
-                        <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-r-md p-4">
-                          <p className="text-sm text-yellow-800 font-medium">
-                            ⚠️ Important: {selectedTemplate.warningNote}
-                          </p>
-                        </div>
-                      )}
-                      
-                      <div className="border rounded-lg p-6 bg-white shadow-sm flex-1 flex flex-col min-h-0">
-                        <h4 className="font-semibold text-slate-700 text-base mb-3">Email Body:</h4>
-                        <div className="flex-1 overflow-y-auto">
-                          <pre className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 h-full">
-                            {getFinalBody() || 'No content yet... Select a template to begin.'}
-                          </pre>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
             </div>
           </Panel>
 
@@ -558,7 +527,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           <PanelResizeHandle className="w-2 bg-slate-200 hover:bg-slate-300 transition-colors cursor-col-resize relative">
             <div className="absolute inset-y-0 left-1/2 w-0.5 bg-slate-400 transform -translate-x-1/2"></div>
           </PanelResizeHandle>
-          <Panel defaultSize={35} minSize={25} maxSize={65} id="variable-editor" order={3}>
+          <Panel defaultSize={25} minSize={20} maxSize={40} id="variable-editor" order={3}>
                 <div className="w-full h-full border-l border-slate-200 flex flex-col bg-slate-50 min-w-0">
               <div className="p-4 border-b border-slate-200 bg-white">
                 <h3 className="font-medium text-base flex items-center gap-2 text-slate-700">
