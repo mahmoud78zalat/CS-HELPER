@@ -40,11 +40,21 @@ export function useDragAndDrop({ contentType, items, onReorder }: UseDragAndDrop
           order: index + 1
         }));
 
+        console.log('[useDragAndDrop] Saving ordering:', {
+          contentType,
+          orderData,
+          reorderedItems,
+          apiEndpoint: `/api/user-ordering/${contentType}`
+        });
+
         await apiRequest('POST', `/api/user-ordering/${contentType}`, {
+          user_id: null, // Will be picked up from headers by the server
           ordering: orderData
         });
+        
+        console.log('[useDragAndDrop] Successfully saved ordering');
       } catch (error) {
-        console.error('Failed to save ordering:', error);
+        console.error('[useDragAndDrop] Failed to save ordering:', error);
         // Optionally revert the local state on error
         // onReorder(items);
       }

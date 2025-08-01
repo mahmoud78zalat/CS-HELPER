@@ -30,10 +30,16 @@ export function useLocalTemplateOrdering(userId: string) {
   // Save local ordering to localStorage
   const saveOrdering = (ordering: LocalTemplateOrder[]) => {
     try {
+      console.log('[useLocalTemplateOrdering] Saving ordering:', {
+        storageKey,
+        ordering,
+        userId
+      });
       localStorage.setItem(storageKey, JSON.stringify(ordering));
       setLocalOrdering(ordering);
+      console.log('[useLocalTemplateOrdering] Successfully saved ordering');
     } catch (error) {
-      console.error('Error saving local template ordering:', error);
+      console.error('[useLocalTemplateOrdering] Failed to save ordering:', error);
     }
   };
 
@@ -61,19 +67,34 @@ export function useLocalTemplateOrdering(userId: string) {
 
   // Update local ordering for a specific template (for drag & drop only)
   const updateLocalOrder = (templateId: string, newOrder: number) => {
+    console.log('[useLocalTemplateOrdering] updateLocalOrder called:', {
+      templateId,
+      newOrder,
+      existingLocalOrdering: localOrdering
+    });
+    
     const existing = localOrdering.find(lo => lo.templateId === templateId);
     const updated = existing
       ? { ...existing, localOrder: newOrder, lastReordered: new Date() }
       : { templateId, localOrder: newOrder, lastReordered: new Date() };
 
+    console.log('[useLocalTemplateOrdering] Updated template order:', updated);
+
     const newOrdering = localOrdering.filter(lo => lo.templateId !== templateId);
     newOrdering.push(updated);
     
+    console.log('[useLocalTemplateOrdering] Final new ordering:', newOrdering);
     saveOrdering(newOrdering);
   };
 
   // Bulk update ordering (for drag & drop reorder within a group)
   const updateBulkOrdering = (orderedTemplateIds: string[]) => {
+    console.log('[useLocalTemplateOrdering] updateBulkOrdering called:', {
+      orderedTemplateIds,
+      existingLocalOrdering: localOrdering,
+      userId
+    });
+    
     // Create a mapping of the new orders
     const newOrderMappings = orderedTemplateIds.map((templateId, index) => ({
       templateId,
@@ -81,12 +102,18 @@ export function useLocalTemplateOrdering(userId: string) {
       lastReordered: new Date()
     }));
 
+    console.log('[useLocalTemplateOrdering] New order mappings:', newOrderMappings);
+
     // Update existing ordering by removing old entries for these templates and adding new ones
     const filteredOrdering = localOrdering.filter(
       lo => !orderedTemplateIds.includes(lo.templateId)
     );
     
+    console.log('[useLocalTemplateOrdering] Filtered ordering (removed existing):', filteredOrdering);
+    
     const updatedOrdering = [...filteredOrdering, ...newOrderMappings];
+    console.log('[useLocalTemplateOrdering] Final updated ordering:', updatedOrdering);
+    
     saveOrdering(updatedOrdering);
   };
 

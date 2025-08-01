@@ -437,9 +437,18 @@ export default function HorizontalGroupedTemplates({
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
-    console.log('[DragDrop] handleDragEnd - active:', active?.id, 'over:', over?.id);
+    console.log('[HorizontalGroupedTemplates] handleDragEnd - active:', active?.id, 'over:', over?.id);
+    console.log('[HorizontalGroupedTemplates] handleDragEnd - event details:', {
+      activeId: active?.id,
+      overId: over?.id,
+      activeType: typeof active?.id,
+      overType: typeof over?.id
+    });
     
-    if (!over || active.id === over.id) return;
+    if (!over || active.id === over.id) {
+      console.log('[HorizontalGroupedTemplates] handleDragEnd - No valid drop target or same position');
+      return;
+    }
 
     // Handle group reordering
     if (active.id.toString().startsWith('group-') && over.id.toString().startsWith('group-')) {
@@ -566,6 +575,8 @@ export default function HorizontalGroupedTemplates({
             handleDragEnd(event);
             // Update local ordering when drag ends
             const { active, over } = event;
+            console.log('[HorizontalGroupedTemplates] DndContext onDragEnd - active:', active?.id, 'over:', over?.id);
+            
             if (active && over && active.id !== over.id) {
               // Find which group this template belongs to and update local ordering
               const findTemplateInGroups = (templateId: string) => {
@@ -577,9 +588,14 @@ export default function HorizontalGroupedTemplates({
               };
               
               const result = findTemplateInGroups(active.id.toString());
+              console.log('[HorizontalGroupedTemplates] Template found in groups:', result);
+              
               if (result) {
                 const newOrder = result.templates.map(t => t.id);
+                console.log('[HorizontalGroupedTemplates] Calling updateBulkOrdering with:', newOrder);
                 updateBulkOrdering(newOrder);
+              } else {
+                console.log('[HorizontalGroupedTemplates] No template found in groups for ID:', active.id);
               }
             }
           }

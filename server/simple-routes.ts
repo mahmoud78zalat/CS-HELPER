@@ -1803,13 +1803,26 @@ export function registerRoutes(app: Express): void {
     try {
       const { contentType } = req.params;
       const { user_id, ordering } = req.body;
+      const userId = req.headers['x-user-id'] as string;
       
-      if (!user_id || !ordering) {
+      console.log(`[Simple Routes] User ordering request for ${contentType}:`, {
+        bodyUserId: user_id,
+        headerUserId: userId,
+        ordering,
+        body: req.body,
+        headers: req.headers
+      });
+      
+      // Use userId from headers if not in body
+      const finalUserId = user_id || userId;
+      
+      if (!finalUserId || !ordering) {
+        console.log(`[Simple Routes] Missing data - userId: ${finalUserId}, ordering:`, ordering);
         return res.status(400).json({ message: 'User ID and ordering data required' });
       }
 
-      console.log(`[Simple Routes] Saving user ordering for ${contentType} by user ${user_id}`, ordering);
-      await storage.saveUserOrdering(user_id, contentType, ordering);
+      console.log(`[Simple Routes] Saving user ordering for ${contentType} by user ${finalUserId}`, ordering);
+      await storage.saveUserOrdering(finalUserId, contentType, ordering);
       res.json({ success: true });
     } catch (error: any) {
       console.error(`[Simple Routes] Error saving user ordering:`, error);
