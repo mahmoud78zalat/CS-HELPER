@@ -13,8 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { 
   extractVariablesFromTemplate, 
-  validateTemplate, 
-  getTemplateWarning 
+  validateTemplate
 } from "@/lib/templateUtils";
 import { useDynamicVariables } from "@/hooks/useDynamicVariables";
 import { 
@@ -175,19 +174,7 @@ export default function TemplateFormModal({
     }
   }, [formData.contentEn, formData.contentAr, isEmailTemplate]);
 
-  // Auto-generate warning when category/genre changes
-  useEffect(() => {
-    try {
-      if (formData.category || formData.genre) {
-        const autoWarning = getTemplateWarning(formData.category, formData.genre);
-        if (!formData.warningNote && autoWarning) {
-          setFormData(prev => ({ ...prev, warningNote: autoWarning }));
-        }
-      }
-    } catch (error) {
-      console.error('[TemplateFormModal] Error generating warning:', error);
-    }
-  }, [formData.category, formData.genre, formData.warningNote]);
+  // Removed auto-generation of warning notes - admins will manually write them
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -587,7 +574,9 @@ export default function TemplateFormModal({
                     {formData.warningNote && (
                       <Alert variant="destructive">
                         <AlertTriangle size={16} />
-                        <AlertDescription>{formData.warningNote}</AlertDescription>
+                        <AlertDescription>
+                          <span className="text-red-600">⚠️</span> {formData.warningNote}
+                        </AlertDescription>
                       </Alert>
                     )}
                     

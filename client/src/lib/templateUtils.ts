@@ -105,32 +105,6 @@ export function validateTemplate(content: string): {
   };
 }
 
-export const TEMPLATE_WARNING_PRESETS: Record<string, string> = {
-  'Order Issues': '⚠️ WARNING: Use this template only for order-related problems. Always verify order details before sending.',
-  'Delivery Problems': '⚠️ WARNING: Confirm delivery address and tracking information before using this template.',
-  'Payment Issues': '⚠️ WARNING: Handle payment issues with extra care. Verify customer identity before discussing payment details.',
-  'Returns & Refunds': '⚠️ WARNING: Check return policy and eligibility before promising refunds. Escalate if uncertain.',
-  'Product Inquiry': 'ℹ️ INFO: Use for general product questions. Always provide accurate product information.',
-  'General Support': 'ℹ️ INFO: General purpose template. Customize based on specific customer needs.',
-  'Escalation': '🚨 URGENT: Use only when escalating to management. Include all relevant details and context.',
-  'Follow-up': '📋 FOLLOW-UP: Use for checking on previous issues. Reference original ticket number.',
-  'Courtesy': '😊 COURTESY: Use for positive customer interactions and appreciation messages.',
-  'Greeting': '👋 GREETING: Use for initial customer contact and welcome messages.',
-  'CSAT': '📊 CSAT: Use for customer satisfaction surveys and feedback collection.',
-  'Warning Abusive Language': '🛑 WARNING: Use when addressing inappropriate customer behavior. Handle with extreme care and escalate if necessary.',
-  'Apology': '🙏 APOLOGY: Use for sincere apologies. Ensure genuine empathy and resolution commitment.',
-  'Thank You': '💝 THANK YOU: Use to express gratitude for customer loyalty and patience.',
-  'Farewell': '👋 FAREWELL: Use for closing conversations and ensuring customer satisfaction.',
-  'Confirmation': '✅ CONFIRMATION: Use to confirm actions, changes, or resolutions.',
-  'Information Request': '📋 INFO REQUEST: Use when requesting additional information from customers.',
-  'Technical Support': '🔧 TECHNICAL: Use for technical issues and troubleshooting guidance.',
-  'Holiday/Special Occasion': '🎉 SPECIAL: Use for holiday greetings and special occasion messages.'
-};
-
-export function getTemplateWarning(category: string, genre: string): string {
-  return TEMPLATE_WARNING_PRESETS[category] || 
-         TEMPLATE_WARNING_PRESETS[genre] || 
-         'ℹ️ Please review this template before sending to ensure accuracy and appropriateness.';
-}
+// Removed hardcoded warning presets - admins manually write warning notes
 
 // Quick Template Starters removed as requested - admins can now create dynamic templates with variables in names

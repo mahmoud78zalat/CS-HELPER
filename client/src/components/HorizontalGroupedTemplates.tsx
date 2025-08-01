@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash, GripHorizontal, Eye, Plus, FolderOpen, Palette } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay, useDroppable } from '@dnd-kit/core';
-import { SortableContext, arrayMove, sortableKeyboardCoordinates, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -370,6 +370,8 @@ export default function HorizontalGroupedTemplates({
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
+    console.log('[DragDrop] handleDragEnd - active:', active?.id, 'over:', over?.id);
+    
     if (!over || active.id === over.id) return;
 
     // Handle group reordering
@@ -377,11 +379,16 @@ export default function HorizontalGroupedTemplates({
       const activeGroupId = active.id.toString().replace('group-', '');
       const overGroupId = over.id.toString().replace('group-', '');
       
+      console.log('[DragDrop] Group reorder - activeGroupId:', activeGroupId, 'overGroupId:', overGroupId);
+      
       const oldIndex = groupedData.findIndex(group => group.id === activeGroupId);
       const newIndex = groupedData.findIndex(group => group.id === overGroupId);
       
-      if (oldIndex !== -1 && newIndex !== -1) {
+      console.log('[DragDrop] Group indices - oldIndex:', oldIndex, 'newIndex:', newIndex);
+      
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
         const newGroupOrder = arrayMove(groupedData, oldIndex, newIndex);
+        console.log('[DragDrop] New group order:', newGroupOrder.map(g => g.name));
         setGroupedData(newGroupOrder);
         saveGroupOrderMutation.mutate(newGroupOrder);
       }
@@ -467,7 +474,7 @@ export default function HorizontalGroupedTemplates({
         onDragEnd={handleDragEnd}
       >
         {/* Grouped Templates */}
-        <SortableContext items={groupedData.map(group => `group-${group.id}`)} strategy={horizontalListSortingStrategy}>
+        <SortableContext items={groupedData.map(group => `group-${group.id}`)} strategy={verticalListSortingStrategy}>
           {groupedData.map((group) => (
             <DroppableGroupComponent 
               key={group.id} 
