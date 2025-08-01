@@ -260,9 +260,14 @@ export default function TemplateFormModal({
     e.preventDefault();
     
     try {
-      // Basic validation
-      if (!formData.name.trim()) {
+      // Basic validation - different for email vs live reply templates
+      if (!isEmailTemplate && !formData.name.trim()) {
         console.error('[TemplateFormModal] Template name is required');
+        return;
+      }
+      
+      if (isEmailTemplate && !formData.subject.trim()) {
+        console.error('[TemplateFormModal] Email subject is required');
         return;
       }
       
@@ -278,7 +283,7 @@ export default function TemplateFormModal({
       }
       
       const templateData = isEmailTemplate ? {
-        name: formData.name.trim(),
+        name: formData.subject.trim(), // Use subject as name for email templates
         subject: formData.subject.trim(),
         content: formData.contentEn.trim(),
         category: formData.category,
@@ -329,20 +334,40 @@ export default function TemplateFormModal({
               </TabsList>
             
             <TabsContent value="basic" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              {/* Email Subject - Only for Email Templates (placed at top) */}
+              {isEmailTemplate && (
                 <div className="space-y-2">
-                  <Label htmlFor="name">Template Name *</Label>
+                  <Label htmlFor="subject">Email Subject *</Label>
                   <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="e.g., Order {order_id} Follow-up"
+                    id="subject"
+                    value={formData.subject}
+                    onChange={(e) => handleInputChange('subject', e.target.value)}
+                    placeholder="e.g., Update on Your Order {ordernumber}"
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    💡 Admin tip: You can use variables in template names like {"{order_id}"} or {"{customer_name}"}
+                    💡 Admin tip: You can use variables in email subjects like {"{ordernumber}"} or {"{customername}"}
                   </p>
                 </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                {/* Template Name - Only for Live Reply Templates */}
+                {!isEmailTemplate && (
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Template Name *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      placeholder="e.g., Order {order_id} Follow-up"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      💡 Admin tip: You can use variables in template names like {"{order_id}"} or {"{customer_name}"}
+                    </p>
+                  </div>
+                )}
                 
                 {/* Concerned Team - Only for Email Templates */}
                 {isEmailTemplate && (
@@ -408,20 +433,6 @@ export default function TemplateFormModal({
                 
 
               </div>
-              
-              {/* Email Subject - Only for Email Templates */}
-              {isEmailTemplate && (
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Email Subject *</Label>
-                  <Input
-                    id="subject"
-                    value={formData.subject}
-                    onChange={(e) => handleInputChange('subject', e.target.value)}
-                    placeholder="e.g., Update on Your Order [ORDERNUMBER]"
-                    required
-                  />
-                </div>
-              )}
               
               <div className="space-y-2">
                 <Label htmlFor="warningNote">Warning Note</Label>
@@ -599,7 +610,7 @@ export default function TemplateFormModal({
                         <div className="flex flex-wrap gap-2">
                           {templateValidation.variables.map((variable) => (
                             <Badge key={variable} variant="outline">
-                              [{variable}]
+                              {"{"}{"{"}{variable}{"}"}
                             </Badge>
                           ))}
                         </div>
