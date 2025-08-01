@@ -128,12 +128,25 @@ export function registerRoutes(app: Express): void {
 
       // Update each template's order
       for (const update of updates) {
-        if (update.id && (typeof update.order === 'number' || typeof update.groupOrder === 'number' || typeof update.stageOrder === 'number')) {
+        if (update.id) {
           const updateData: any = {};
-          if (typeof update.order === 'number') updateData.stageOrder = update.order;
-          if (typeof update.groupOrder === 'number') updateData.groupOrder = update.groupOrder;
-          if (typeof update.stageOrder === 'number') updateData.stageOrder = update.stageOrder;
-          await storage.updateLiveReplyTemplate(update.id, updateData);
+          
+          // Handle different order field names from frontend
+          if (typeof update.order === 'number') {
+            updateData.stageOrder = update.order;
+          }
+          if (typeof update.groupOrder === 'number') {
+            updateData.groupOrder = update.groupOrder;
+          }
+          if (typeof update.stageOrder === 'number') {
+            updateData.stageOrder = update.stageOrder;
+          }
+          
+          // Only update if we have valid order data
+          if (Object.keys(updateData).length > 0) {
+            console.log(`[LiveReplyTemplates] Updating template ${update.id} with:`, updateData);
+            await storage.updateLiveReplyTemplate(update.id, updateData);
+          }
         }
       }
 
@@ -1731,6 +1744,32 @@ export function registerRoutes(app: Express): void {
     } catch (error) {
       console.error('[API] Error deleting FAQ:', error);
       res.status(500).json({ message: 'Failed to delete FAQ' });
+    }
+  });
+
+  // FAQ reorder endpoint for drag-and-drop functionality
+  app.post('/api/faqs/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[FAQs] Reordering FAQs:', updates);
+
+      // Update each FAQ's order
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          console.log(`[FAQs] Updating FAQ ${update.id} with order:`, update.order);
+          await storage.updateFaq(update.id, { order: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "FAQ order updated successfully" });
+    } catch (error) {
+      console.error("Error reordering FAQs:", error);
+      res.status(500).json({ message: "Failed to reorder FAQs" });
     }
   });
 
