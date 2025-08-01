@@ -1,7 +1,11 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Headphones, Users, MessageSquare, Zap, Shield, Clock } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { 
+  Headphones, Users, MessageSquare, Clock, Zap, Shield, 
+  Sparkles, Database, Settings, Cpu, Globe, Activity, 
+  Palette, Bell, Lock, BarChart, Search, Mouse
+} from 'lucide-react';
 
 interface AboutModalProps {
   onClose: () => void;
@@ -20,15 +24,15 @@ export default function AboutModal({ onClose }: AboutModalProps) {
     return item?.content || localStorage.getItem(key) || fallback;
   };
 
-  const siteName = getSiteContentValue('site_name', 'Customer Service Platform');
+  const siteName = getSiteContentValue('site_name', 'BFL Customer Service Helper');
   const aboutTitle = getSiteContentValue('about_title', 'Customer Service Helper');
-  const aboutDescription = getSiteContentValue('about_description', 'A comprehensive customer service management tool designed to streamline support operations, template management, and team communications.');
+  const aboutDescription = getSiteContentValue('about_description', 'A comprehensive, enterprise-grade customer service management platform designed to streamline support operations, enhance team productivity, and deliver exceptional customer experiences through intelligent automation and advanced communication tools.');
   const versionLabel = getSiteContentValue('version_label');
   const footerText = getSiteContentValue('footer_text');
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="about-dialog-description">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby="about-dialog-description">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center space-x-2">
@@ -36,167 +40,253 @@ export default function AboutModal({ onClose }: AboutModalProps) {
               <span>About {siteName}</span>
             </DialogTitle>
             <div id="about-dialog-description" className="sr-only">
-              Information about the {siteName} platform and its features
+              Information about the {siteName} platform and its comprehensive features
             </div>
           </div>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
+          {/* Hero Section */}
           <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Headphones className="text-white text-2xl" />
+            <div className="w-20 h-20 bg-gradient-to-r from-blue-500 via-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <Headphones className="text-white text-3xl" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-200 mb-4">
               {siteName}
             </h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
+            <p className="text-slate-600 dark:text-slate-300 max-w-3xl mx-auto text-lg leading-relaxed">
               {aboutDescription}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-blue-500" />
-                  <span>Customer Management</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  {(() => {
-                    const features = getSiteContentValue('about_customer_features');
-                    const defaultFeatures = [
-                      'Centralized customer information storage',
-                      'Auto-save functionality', 
-                      'Order number conversion tools',
-                      'Additional customer details tracking'
-                    ];
-                    const featuresList = features ? JSON.parse(features) : defaultFeatures;
-                    return featuresList.map((feature: string, index: number) => (
-                      <li key={index}>• {feature}</li>
-                    ));
-                  })()}
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <MessageSquare className="h-5 w-5 text-purple-500" />
-                  <span>Template System</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  {(() => {
-                    const features = getSiteContentValue('about_template_features');
-                    const defaultFeatures = [
-                      'Instant template search and filtering',
-                      'One-click copy functionality',
-                      'Variable replacement system',
-                      'Usage tracking and analytics'
-                    ];
-                    const featuresList = features ? JSON.parse(features) : defaultFeatures;
-                    return featuresList.map((feature: string, index: number) => (
-                      <li key={index}>• {feature}</li>
-                    ));
-                  })()}
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Zap className="h-5 w-5 text-green-500" />
-                  <span>Advanced Features</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li>• Drag & drop template organization</li>
-                  <li>• Real-time collaborative editing</li>
-                  <li>• Smart variable management</li>
-                  <li>• Live announcement system</li>
-                  <li>• Comprehensive toast notifications</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-red-500" />
-                  <span>Security & Access</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li>• Role-based access control</li>
-                  <li>• Secure authentication system</li>
-                  <li>• Admin panel for user management</li>
-                  <li>• Persistent notification system</li>
-                  <li>• Real-time user status tracking</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="bg-slate-50 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center">
-              <Clock className="h-5 w-5 mr-2" />
-              Key Features
+          {/* Core Platform Features */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6 flex items-center">
+              <Sparkles className="h-6 w-6 mr-3 text-purple-600" />
+              Enterprise Customer Service Platform
             </h3>
-            <div className="grid md:grid-cols-2 gap-4 text-sm text-slate-600">
+            <div className="grid md:grid-cols-2 gap-8">
               <div>
-                <h4 className="font-medium text-slate-800 mb-2">For Agents:</h4>
-                <ul className="space-y-1">
-                  {(() => {
-                    const features = getSiteContentValue('about_agent_features');
-                    const defaultFeatures = [
-                      'Manage customer information',
-                      'Access reply templates instantly',
-                      'Convert order numbers',
-                      'Create internal emails',
-                      'Track order status'
-                    ];
-                    const featuresList = features ? JSON.parse(features) : defaultFeatures;
-                    return featuresList.map((feature: string, index: number) => (
-                      <li key={index}>• {feature}</li>
-                    ));
-                  })()}
+                <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-4 text-lg flex items-center">
+                  <Users className="h-5 w-5 mr-2 text-blue-600" />
+                  For Customer Service Agents:
+                </h4>
+                <ul className="space-y-3 text-slate-600 dark:text-slate-300">
+                  <li className="flex items-start">
+                    <Database className="h-4 w-4 mr-2 mt-1 text-blue-500 flex-shrink-0" />
+                    <div><span className="font-semibold">Smart Customer Panel:</span> Persistent data storage with auto-save functionality</div>
+                  </li>
+                  <li className="flex items-start">
+                    <Mouse className="h-4 w-4 mr-2 mt-1 text-green-500 flex-shrink-0" />
+                    <div><span className="font-semibold">Drag & Drop Templates:</span> Intuitive organization with live template management</div>
+                  </li>
+                  <li className="flex items-start">
+                    <Search className="h-4 w-4 mr-2 mt-1 text-purple-500 flex-shrink-0" />
+                    <div><span className="font-semibold">Order Conversion Tool:</span> Seamless Order ID ↔ AWB conversion</div>
+                  </li>
+                  <li className="flex items-start">
+                    <MessageSquare className="h-4 w-4 mr-2 mt-1 text-indigo-500 flex-shrink-0" />
+                    <div><span className="font-semibold">Email Composer:</span> Professional internal communication system</div>
+                  </li>
+                  <li className="flex items-start">
+                    <Clock className="h-4 w-4 mr-2 mt-1 text-orange-500 flex-shrink-0" />
+                    <div><span className="font-semibold">Personal Notes:</span> Private workspace with full CRUD operations</div>
+                  </li>
+                  <li className="flex items-start">
+                    <Zap className="h-4 w-4 mr-2 mt-1 text-yellow-500 flex-shrink-0" />
+                    <div><span className="font-semibold">Variable System:</span> Dynamic {'{variable}'} replacement across all templates</div>
+                  </li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-medium text-slate-800 mb-2">For Administrators:</h4>
-                <ul className="space-y-1">
-                  {(() => {
-                    const features = getSiteContentValue('about_admin_features');
-                    const defaultFeatures = [
-                      'Manage user accounts and roles',
-                      'Create and edit templates',
-                      'Monitor usage statistics',
-                      'Configure system settings',
-                      'Track team performance'
-                    ];
-                    const featuresList = features ? JSON.parse(features) : defaultFeatures;
-                    return featuresList.map((feature: string, index: number) => (
-                      <li key={index}>• {feature}</li>
-                    ));
-                  })()}
+                <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-4 text-lg flex items-center">
+                  <Shield className="h-5 w-5 mr-2 text-green-600" />
+                  For System Administrators:
+                </h4>
+                <ul className="space-y-3 text-slate-600 dark:text-slate-300">
+                  <li className="flex items-start">
+                    <Users className="h-4 w-4 mr-2 mt-1 text-red-500 flex-shrink-0" />
+                    <div><span className="font-semibold">User Management:</span> Complete control over user roles, status, and permissions</div>
+                  </li>
+                  <li className="flex items-start">
+                    <Settings className="h-4 w-4 mr-2 mt-1 text-blue-500 flex-shrink-0" />
+                    <div><span className="font-semibold">Template Administration:</span> Advanced template creation, organization, and analytics</div>
+                  </li>
+                  <li className="flex items-start">
+                    <BarChart className="h-4 w-4 mr-2 mt-1 text-green-500 flex-shrink-0" />
+                    <div><span className="font-semibold">Analytics Dashboard:</span> Real-time performance insights and usage tracking</div>
+                  </li>
+                  <li className="flex items-start">
+                    <Bell className="h-4 w-4 mr-2 mt-1 text-purple-500 flex-shrink-0" />
+                    <div><span className="font-semibold">FAQ & Announcements:</span> Dynamic help content with persistent notifications</div>
+                  </li>
+                  <li className="flex items-start">
+                    <Globe className="h-4 w-4 mr-2 mt-1 text-indigo-500 flex-shrink-0" />
+                    <div><span className="font-semibold">White-Label Branding:</span> Complete site customization and theming control</div>
+                  </li>
+                  <li className="flex items-start">
+                    <Palette className="h-4 w-4 mr-2 mt-1 text-pink-500 flex-shrink-0" />
+                    <div><span className="font-semibold">Color Management:</span> Centralized visual organization and theme management</div>
+                  </li>
                 </ul>
               </div>
             </div>
           </div>
 
-          <div className="text-center text-sm text-slate-500">
-            {versionLabel && <p>{versionLabel}</p>}
-            {footerText && <p className={versionLabel ? "mt-1" : ""}>{footerText}</p>}
-            <p className={`text-xs text-slate-400 mt-3 ${(versionLabel || footerText) ? 'border-t pt-3' : ''}`}>
-              Made by Mahmoud Zalat
-            </p>
+          {/* Feature Categories */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            <Card className="border-l-4 border-l-blue-500 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-lg">
+                  <Database className="h-6 w-6 text-blue-500" />
+                  <span>Customer Management</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                  <li>• Centralized customer information hub with persistent storage</li>
+                  <li>• Auto-save functionality with session-based data retention</li>
+                  <li>• Advanced order tracking & conversion tools</li>
+                  <li>• Additional customer details management system</li>
+                  <li>• Real-time data synchronization across sessions</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-purple-500 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-lg">
+                  <MessageSquare className="h-6 w-6 text-purple-500" />
+                  <span>Template Ecosystem</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                  <li>• Advanced drag & drop organization with collision detection</li>
+                  <li>• Hierarchical categories & genres with visual organization</li>
+                  <li>• Intelligent search & filtering with real-time results</li>
+                  <li>• One-click copy functionality with toast notifications</li>
+                  <li>• Comprehensive usage analytics & performance tracking</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-green-500 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-lg">
+                  <Activity className="h-6 w-6 text-green-500" />
+                  <span>Advanced Features</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                  <li>• Real-time user presence tracking with WebSocket</li>
+                  <li>• Persistent notification system via Supabase</li>
+                  <li>• Dark/Light theme switching with real-time sync</li>
+                  <li>• Comprehensive toast notifications for all actions</li>
+                  <li>• Multi-deployment architecture (Vercel, Railway, Replit)</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Technical Architecture */}
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6 flex items-center">
+              <Cpu className="h-6 w-6 mr-3 text-indigo-600" />
+              Technical Architecture & Infrastructure
+            </h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-3 text-lg">Frontend Stack:</h4>
+                <ul className="space-y-2 text-slate-600 dark:text-slate-300">
+                  <li>• <span className="font-medium">React 18</span> with TypeScript for type safety</li>
+                  <li>• <span className="font-medium">Vite</span> for lightning-fast development</li>
+                  <li>• <span className="font-medium">shadcn/ui + Radix UI</span> for accessible components</li>
+                  <li>• <span className="font-medium">TanStack Query</span> for intelligent server state management</li>
+                  <li>• <span className="font-medium">Tailwind CSS</span> with custom theming system</li>
+                  <li>• <span className="font-medium">WebSocket</span> for real-time updates and presence</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-3 text-lg">Backend Infrastructure:</h4>
+                <ul className="space-y-2 text-slate-600 dark:text-slate-300">
+                  <li>• <span className="font-medium">Node.js + Express.js</span> for robust API layer</li>
+                  <li>• <span className="font-medium">Drizzle ORM</span> with PostgreSQL for type-safe database operations</li>
+                  <li>• <span className="font-medium">Supabase</span> for authentication, storage, and real-time features</li>
+                  <li>• <span className="font-medium">Session-based security</span> with PostgreSQL storage</li>
+                  <li>• <span className="font-medium">Multi-platform deployment</span> support and optimization</li>
+                  <li>• <span className="font-medium">Railway, Vercel, Replit</span> compatible architecture</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Security & Performance */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="border-t-4 border-t-red-500">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Lock className="h-5 w-5 text-red-500" />
+                  <span>Security & Access Control</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                  <li>• Role-based access control (Admin/Agent permissions)</li>
+                  <li>• Secure authentication with Supabase Auth integration</li>
+                  <li>• Session-based security with PostgreSQL storage</li>
+                  <li>• Complete user deletion from Auth and database</li>
+                  <li>• Real-time user status and permission management</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-t-4 border-t-blue-500">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <BarChart className="h-5 w-5 text-blue-500" />
+                  <span>Performance & Analytics</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                  <li>• Real-time usage tracking and performance metrics</li>
+                  <li>• Template effectiveness analytics and insights</li>
+                  <li>• User engagement and productivity monitoring</li>
+                  <li>• Comprehensive system activity logging</li>
+                  <li>• Advanced caching with intelligent cache invalidation</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Footer Information */}
+          <div className="text-center pt-6 border-t border-slate-200 dark:border-slate-700">
+            {versionLabel && (
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
+                {versionLabel}
+              </p>
+            )}
+            {footerText && (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {footerText}
+              </p>
+            )}
+            <div className="mt-4 flex items-center justify-center space-x-4 text-xs text-slate-400 dark:text-slate-500">
+              <span className="flex items-center">
+                <Cpu className="h-3 w-3 mr-1" />
+                Powered by React + TypeScript
+              </span>
+              <span className="flex items-center">
+                <Database className="h-3 w-3 mr-1" />
+                Supabase + PostgreSQL
+              </span>
+              <span className="flex items-center">
+                <Globe className="h-3 w-3 mr-1" />
+                Multi-Platform Deployment
+              </span>
+            </div>
           </div>
         </div>
       </DialogContent>
