@@ -583,12 +583,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Create announcement mutation
   const createAnnouncementMutation = useMutation({
     mutationFn: async (announcementData: any) => {
+      console.log('[DEBUG] Creating announcement:', announcementData);
       return apiRequest('POST', '/api/announcements', {
         ...announcementData,
         createdBy: currentUser?.id,
       });
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
+      console.log('[DEBUG] Announcement created successfully:', data);
       toast({
         title: "Announcement Created",
         description: "Your announcement has been created successfully.",
@@ -603,10 +605,16 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         priority: 'medium',
         isActive: true
       });
+      
+      console.log('[DEBUG] About to invalidate and refetch announcements');
       // Invalidate and refetch announcements data
       await queryClient.invalidateQueries({ queryKey: ['/api/announcements'] });
       await queryClient.refetchQueries({ queryKey: ['/api/announcements'] });
+      console.log('[DEBUG] Finished invalidating and refetching announcements');
     },
+    // Prevent duplicate requests
+    retry: false,
+    gcTime: 0,
     onError: (error: any) => {
       toast({
         title: "Error Creating Announcement",
@@ -960,6 +968,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Announcement form handlers
   const handleAnnouncementSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[DEBUG] Form submission handler called');
+    
+    // Prevent double submission
+    if (createAnnouncementMutation.isPending) {
+      console.log('[DEBUG] Mutation already pending, ignoring submit');
+      return;
+    }
     
     if (!announcementForm.title.trim() || !announcementForm.content.trim()) {
       toast({
@@ -970,6 +985,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       return;
     }
 
+    console.log('[DEBUG] About to call createAnnouncementMutation.mutate with:', announcementForm);
     createAnnouncementMutation.mutate(announcementForm);
   };
 
