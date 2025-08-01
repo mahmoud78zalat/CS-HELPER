@@ -56,7 +56,7 @@ function TemplateConfigManager({ isOpen, onClose }: TemplateConfigManagerProps) 
           
           <Tabs defaultValue="connected" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="connected">Connected Config</TabsTrigger>
+              <TabsTrigger value="connected">Categories & Genres</TabsTrigger>
               <TabsTrigger value="teams">Concerned Teams</TabsTrigger>
               <TabsTrigger value="variables">Variables</TabsTrigger>
             </TabsList>

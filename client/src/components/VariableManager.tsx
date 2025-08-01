@@ -513,7 +513,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
           {!variablesLoading && (
             <div className="text-xs text-slate-500">
               <p><strong>Total:</strong> {(variables as TemplateVariable[] || []).length} template variables</p>
-              <p><strong>Usage:</strong> Use variables in templates like {`{VARIABLE_NAME}`} or {`[VARIABLE_NAME]`}</p>
+              <p><strong>Usage:</strong> Use variables in templates like {`{VARIABLE_NAME}`}</p>
               <p><strong>Note:</strong> Changes are saved directly to the database and apply immediately</p>
             </div>
           )}
