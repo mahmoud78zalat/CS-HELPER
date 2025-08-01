@@ -369,9 +369,10 @@ export default function HorizontalGroupedTemplates({
       const updates = orderedTemplates.map((template, index) => ({
         id: template.id,
         groupOrder: groupId ? index : undefined,
-        stageOrder: !groupId ? index : template.stageOrder
+        stageOrder: !groupId ? index : (template.stageOrder || 0)
       }));
       
+      console.log('[DragDrop] Sending template reorder request:', { updates, groupId });
       return apiRequest('POST', '/api/live-reply-templates/reorder', { updates });
     },
     onSuccess: (_, variables) => {
@@ -599,7 +600,7 @@ export default function HorizontalGroupedTemplates({
                       key={template.id}
                       template={template}
                       onEdit={onEdit}
-                      onDelete={onDelete}
+                      onDelete={(templateId) => onDelete(templateId)}
                       onPreview={onPreview}
                     />
                   ) : (
@@ -704,7 +705,7 @@ export default function HorizontalGroupedTemplates({
                         key={template.id}
                         template={template}
                         onEdit={onEdit}
-                        onDelete={onDelete}
+                        onDelete={(templateId) => onDelete(templateId)}
                         onPreview={onPreview}
                       />
                     ) : (

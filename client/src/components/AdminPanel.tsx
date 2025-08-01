@@ -1417,8 +1417,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
 
 
-  const handleDeleteTemplate = async (template: any) => {
-    showDeleteConfirmation('template', template);
+  const handleDeleteTemplate = async (templateId: string) => {
+    // Find the template by ID to get the full template object
+    const template = (templates as any[]).find(t => t.id === templateId);
+    if (template) {
+      showDeleteConfirmation('template', template);
+    } else {
+      console.error('Template not found for deletion:', templateId);
+      toast({
+        title: "Error",
+        description: "Template not found",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteEmailTemplate = (template: any) => {
