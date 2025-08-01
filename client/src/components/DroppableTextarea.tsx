@@ -74,7 +74,8 @@ export default function DroppableTextarea({
       const textarea = textareaRef.current;
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      const variable = `{${variableName.toLowerCase()}}`;
+      // Use the variable name as-is, preserving case sensitivity
+      const variable = `{${variableName}}`;
       
       const newValue = value.substring(0, start) + variable + value.substring(end);
       
@@ -124,9 +125,11 @@ export default function DroppableTextarea({
       `}
     >
       {isOver && (
-        <div className="absolute inset-0 border-2 border-dashed border-blue-400 bg-blue-50/30 dark:bg-blue-950/30 rounded-md z-10 flex items-center justify-center">
-          <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+        <div className="absolute inset-0 border-2 border-dashed border-blue-400 bg-gradient-to-r from-blue-50/50 via-blue-100/50 to-indigo-50/50 dark:from-blue-950/30 dark:via-blue-900/30 dark:to-indigo-950/30 rounded-md z-10 flex items-center justify-center animate-pulse">
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-blue-300 animate-bounce">
+            <span className="mr-2">✨</span>
             Drop variable here
+            <span className="ml-2">✨</span>
           </div>
         </div>
       )}

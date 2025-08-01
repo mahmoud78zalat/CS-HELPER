@@ -1,15 +1,25 @@
 // Template utility functions for dynamic variable management
 // Variables are now fetched dynamically from Supabase via useDynamicVariables hook
 
+// Helper function to escape special regex characters
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function extractVariablesFromTemplate(content: string): string[] {
-  // Match variables in format [VARIABLENAME] or {variablename} - accept both cases
-  const variableRegex = /[\[\{]([A-Za-z][A-Za-z0-9_]*)[\]\}]/g;
-  const matches = content.match(variableRegex);
-  if (!matches) return [];
+  // Prioritize {variable} format over [VARIABLE] format
+  // Match variables in format {variable_name} (case-sensitive) or [VARIABLENAME] (legacy)
+  const curlyRegex = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
+  const squareRegex = /\[([A-Z][A-Z0-9_]*)\]/g;
   
-  return Array.from(new Set(matches.map(match => 
-    match.replace(/[\[\{\}\]]/g, '').toUpperCase()
-  )));
+  const curlyMatches = content.match(curlyRegex) || [];
+  const squareMatches = content.match(squareRegex) || [];
+  
+  const curlyVars = curlyMatches.map(match => match.slice(1, -1)); // Keep original case
+  const squareVars = squareMatches.map(match => match.slice(1, -1)); // Keep uppercase
+  
+  // Remove duplicates while preserving the original variable names
+  return Array.from(new Set([...curlyVars, ...squareVars]));
 }
 
 export function replaceVariables(
@@ -49,14 +59,19 @@ export function replaceVariablesInTemplate(
     ...defaultSystemData 
   };
   
-  // Replace variables in both [VARIABLE] and {VARIABLE} formats
+  // Replace variables in both {variable} and [VARIABLE] formats
+  // Handle exact case matching for {variable} format and uppercase for [VARIABLE] format
   Object.entries(allData).forEach(([key, value]) => {
     if (key && value) {
       const patterns = [
-        new RegExp(`\\[${key.toUpperCase()}\\]`, 'g'),
-        new RegExp(`\\{${key.toUpperCase()}\\}`, 'g'),
-        new RegExp(`\\{${key.toLowerCase()}\\}`, 'gi'),
-        new RegExp(`\\{${key}\\}`, 'g')
+        // Exact case matching for {variable} format
+        new RegExp(`\\{${escapeRegExp(key)}\\}`, 'g'),
+        // Case-insensitive matching for backward compatibility
+        new RegExp(`\\{${escapeRegExp(key)}\\}`, 'gi'),
+        // Legacy uppercase format [VARIABLE]
+        new RegExp(`\\[${escapeRegExp(key.toUpperCase())}\\]`, 'g'),
+        new RegExp(`\\{${escapeRegExp(key.toUpperCase())}\\}`, 'g'),
+        new RegExp(`\\{${escapeRegExp(key.toLowerCase())}\\}`, 'g')
       ];
       patterns.forEach(pattern => {
         result = result.replace(pattern, value);

@@ -183,7 +183,8 @@ export default function TemplateFormModal({
   // Removed Quick Template Starters as requested
 
   const insertVariable = (variableName: string, targetField?: 'contentEn' | 'contentAr') => {
-    const variable = `{${variableName.toLowerCase()}}`;
+    // Use the variable name as-is, preserving case sensitivity  
+    const variable = `{${variableName}}`;
     const fieldToUse = targetField || activeField || 'contentEn';
     
     const textareaId = fieldToUse === 'contentAr' ? 'contentAr' : 'contentEn';

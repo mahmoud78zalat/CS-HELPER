@@ -48,6 +48,8 @@ Key tables include Users, Live Reply Templates, Email Templates, Usage tracking 
 - **Dynamic Content**: Site name, about content, version label, and footer are customizable via Site Content Management.
 - **Theming**: Dark/Light mode toggle with persistence and real-time color sync.
 - **Universal Variable System**: Centralized management of variables through the admin panel.
+- **Enhanced Variable Recognition**: Updated to prioritize {variable} format over [VARIABLE] format, with improved duplicate detection across subjects and content.
+- **Advanced Drag & Drop**: Smooth, flexible drag & drop system with enhanced styling for template variable management.
 - **Persistent Notification System**: Supabase-based tracking of FAQ views and announcement acknowledgments, replacing localStorage for cache-resistant state persistence.
 
 ## External Dependencies

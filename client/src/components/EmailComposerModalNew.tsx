@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, X, Search, Send, Edit3, Sparkles, Plus } from "lucide-react";
 import { EmailTemplate } from "@shared/schema";
+import { extractVariablesFromTemplate } from "@/lib/templateUtils";
 
 interface EmailComposerModalProps {
   onClose: () => void;
@@ -48,10 +49,13 @@ const TEMPLATE_VARIABLES = {
   ]
 };
 
-// Allowed variables for email subject field (strictly limited to orderid and awb only)
+// Enhanced subject variables to include mobile_number and other common variables
 const SUBJECT_VARIABLES = [
-  { key: "orderid", label: "Order ID", placeholder: "ORD123456" },
+  { key: "order_id", label: "Order ID", placeholder: "ORD123456" },
   { key: "awb", label: "AWB Number", placeholder: "AWB789012" },
+  { key: "mobile_number", label: "Mobile Number", placeholder: "+971501234567" },
+  { key: "customer_name", label: "Customer Name", placeholder: "John Doe" },
+  { key: "tracking_number", label: "Tracking Number", placeholder: "TRK345678" },
 ];
 
 export default function EmailComposerModal({ onClose }: EmailComposerModalProps) {
@@ -261,21 +265,23 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const getFinalSubject = () => replaceSubjectVariables(emailSubject);
   const getFinalBody = () => replaceVariables(emailBody);
 
-  // Extract variables from template content
-  const getTemplateVariables = (content: string) => {
-    const matches = content.match(/\{(\w+)\}/g);
-    return matches ? matches.map(match => match.slice(1, -1)) : [];
+  // Extract unique variables from both subject and content - prevents duplication
+  const getUniqueTemplateVariables = () => {
+    const subjectVars = extractVariablesFromTemplate(emailSubject);
+    const bodyVars = extractVariablesFromTemplate(emailBody);
+    
+    // Remove duplicates - if a variable appears in both subject and content, show it only once
+    return Array.from(new Set([...subjectVars, ...bodyVars]));
   };
 
   // Get custom dynamic variables from subject (not in predefined SUBJECT_VARIABLES)
   const getCustomSubjectVariables = (subject: string) => {
-    const subjectVars = getTemplateVariables(subject);
+    const subjectVars = extractVariablesFromTemplate(subject);
     const predefinedKeys = SUBJECT_VARIABLES.map(v => v.key);
     return subjectVars.filter(varName => !predefinedKeys.includes(varName));
   };
 
-  const allVariables = [...getTemplateVariables(emailSubject), ...getTemplateVariables(emailBody)];
-  const uniqueVariables = Array.from(new Set(allVariables));
+  const uniqueVariables = getUniqueTemplateVariables();
   const customSubjectVars = getCustomSubjectVariables(emailSubject);
 
   const handleCopyEmail = () => {

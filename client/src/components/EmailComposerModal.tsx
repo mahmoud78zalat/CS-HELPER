@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Copy, X, Search, Send, Edit3, Sparkles } from "lucide-react";
 import { EmailTemplate } from "@shared/schema";
 import { useDynamicVariables } from "@/hooks/useDynamicVariables";
+import { extractVariablesFromTemplate } from "@/lib/templateUtils";
 
 interface EmailComposerModalProps {
   onClose: () => void;
@@ -223,24 +224,14 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const getFinalSubject = () => replaceVariables(emailSubject);
   const getFinalBody = () => replaceVariables(emailBody);
 
-  // Extract variables from ORIGINAL template content - this keeps variables always visible
-  const getTemplateVariables = (content: string) => {
-    const curlyMatches = content.match(/\{(\w+)\}/g) || [];
-    const squareMatches = content.match(/\[(\w+)\]/g) || [];
-    
-    const curlyVars = curlyMatches.map(match => match.slice(1, -1));
-    const squareVars = squareMatches.map(match => match.slice(1, -1));
-    
-    return [...curlyVars, ...squareVars];
-  };
-
-  // Extract variables from the ORIGINAL template, not the editing fields
+  // Extract variables from ORIGINAL template content using the updated template utilities
   const getOriginalTemplateVariables = () => {
     if (!selectedTemplate) return [];
     
-    const subjectVars = getTemplateVariables(selectedTemplate.subject || '');
-    const bodyVars = getTemplateVariables(selectedTemplate.content || '');
+    const subjectVars = extractVariablesFromTemplate(selectedTemplate.subject || '');
+    const bodyVars = extractVariablesFromTemplate(selectedTemplate.content || '');
     
+    // Remove duplicates - if a variable appears in both subject and content, show it only once
     return Array.from(new Set([...subjectVars, ...bodyVars]));
   };
 
@@ -351,7 +342,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                           </Badge>
                         </div>
                         <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
-                          {template.content.substring(0, 80)}...
+                          {(template.content || '').substring(0, 80)}...
                         </p>
                       </CardContent>
                     </Card>
