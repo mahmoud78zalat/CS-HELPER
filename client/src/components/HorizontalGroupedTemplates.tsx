@@ -81,9 +81,9 @@ const SortableTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
           <div 
             {...attributes} 
             {...listeners} 
-            className="cursor-grab active:cursor-grabbing mt-0.5 p-0.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
+            className="cursor-grab active:cursor-grabbing mt-0.5 p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
           >
-            <GripHorizontal className="h-3 w-3 text-gray-400" />
+            <GripHorizontal className="h-4 w-4 text-gray-400" />
           </div>
           
           <div className="flex-1 min-w-0">
@@ -92,35 +92,35 @@ const SortableTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
                 {template.name}
               </h4>
               
-              <div className="flex gap-0.5 flex-shrink-0">
+              <div className="flex gap-1 flex-shrink-0">
                 {onPreview && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => onPreview(template)}
-                    className="h-5 w-5 p-0 hover:bg-slate-100 dark:hover:bg-slate-700"
+                    className="h-7 w-7 p-0 hover:bg-slate-100 dark:hover:bg-slate-700"
                     title="Preview Template"
                   >
-                    <Eye className="h-2.5 w-2.5" />
+                    <Eye className="h-3.5 w-3.5" />
                   </Button>
                 )}
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit(template)}
-                  className="h-5 w-5 p-0 hover:bg-slate-100 dark:hover:bg-slate-700"
+                  className="h-7 w-7 p-0 hover:bg-slate-100 dark:hover:bg-slate-700"
                   title="Edit Template"
                 >
-                  <Edit className="h-2.5 w-2.5" />
+                  <Edit className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(template.id)}
-                  className="h-5 w-5 p-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="h-7 w-7 p-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                   title="Delete Template"
                 >
-                  <Trash className="h-2.5 w-2.5" />
+                  <Trash className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
@@ -269,7 +269,7 @@ export default function HorizontalGroupedTemplates({
     updateBulkOrdering, 
     resetToAdminOrdering, 
     hasLocalOrdering 
-  } = useLocalTemplateOrdering(user?.id || 'anonymous', 'live-reply-templates');
+  } = useLocalTemplateOrdering(user?.id || 'anonymous');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -283,10 +283,20 @@ export default function HorizontalGroupedTemplates({
     const templatesMap = new Map<string, LiveTemplate[]>();
     const ungrouped: LiveTemplate[] = [];
 
-    // Apply local ordering to templates first
-    const orderedTemplates = applyLocalOrdering(templates);
+    // Convert templates to LiveTemplate format and apply local ordering
+    const convertedTemplates = templates.map(template => ({
+      ...template,
+      content: template.contentEn || template.content || '',
+      variables: template.variables || [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isActive: template.isActive ?? true,
+      groupOrder: template.groupOrder ?? 0,
+      stageOrder: template.stageOrder ?? 0,
+      usageCount: template.usageCount ?? 0
+    }));
 
-    orderedTemplates.forEach(template => {
+    convertedTemplates.forEach(template => {
       if (template.groupId) {
         if (!templatesMap.has(template.groupId)) {
           templatesMap.set(template.groupId, []);
@@ -300,8 +310,8 @@ export default function HorizontalGroupedTemplates({
     // Sort templates within each group by effective order (local or admin)
     templatesMap.forEach((templateList) => {
       templateList.sort((a, b) => {
-        const aOrder = (a as any)._effectiveOrder ?? a.groupOrder ?? 0;
-        const bOrder = (b as any)._effectiveOrder ?? b.groupOrder ?? 0;
+        const aOrder = a.groupOrder ?? 0;
+        const bOrder = b.groupOrder ?? 0;
         return aOrder - bOrder;
       });
     });
@@ -317,11 +327,11 @@ export default function HorizontalGroupedTemplates({
 
     setGroupedData(groupedData);
     setUngroupedTemplates(ungrouped.sort((a, b) => {
-      const aOrder = (a as any)._effectiveOrder ?? a.stageOrder ?? 0;
-      const bOrder = (b as any)._effectiveOrder ?? b.stageOrder ?? 0;
+      const aOrder = a.stageOrder ?? 0;
+      const bOrder = b.stageOrder ?? 0;
       return aOrder - bOrder;
     }));
-  }, [templates, groups, applyLocalOrdering]);
+  }, [templates, groups]);
 
   // Save group order mutation
   const saveGroupOrderMutation = useMutation({
