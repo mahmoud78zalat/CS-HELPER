@@ -576,6 +576,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     queryKey: ['/api/announcements'],
     retry: false,
     enabled: !!currentUser && currentUser.role === 'admin',
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache results
   });
 
   // Create announcement mutation
@@ -586,7 +588,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         createdBy: currentUser?.id,
       });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Announcement Created",
         description: "Your announcement has been created successfully.",
@@ -601,7 +603,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         priority: 'medium',
         isActive: true
       });
-      refetchAnnouncements();
+      // Invalidate and refetch announcements data
+      await queryClient.invalidateQueries({ queryKey: ['/api/announcements'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/announcements'] });
     },
     onError: (error: any) => {
       toast({
@@ -617,12 +621,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     mutationFn: async (id: string) => {
       return apiRequest('DELETE', `/api/announcements/${id}`);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Announcement Deleted",
         description: "The announcement has been deleted successfully.",
       });
-      refetchAnnouncements();
+      // Invalidate and refetch announcements data
+      await queryClient.invalidateQueries({ queryKey: ['/api/announcements'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/announcements'] });
     },
     onError: (error: any) => {
       toast({
@@ -638,12 +644,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     mutationFn: async (id: string) => {
       return apiRequest('POST', `/api/announcements/${id}/re-announce`);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Re-announcement Successful",
         description: "The announcement will now show to all users again.",
       });
-      refetchAnnouncements();
+      // Invalidate and refetch announcements data
+      await queryClient.invalidateQueries({ queryKey: ['/api/announcements'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/announcements'] });
     },
     onError: (error: any) => {
       toast({
