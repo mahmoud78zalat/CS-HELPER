@@ -694,7 +694,7 @@ export class SupabaseStorage implements IStorage {
       return undefined;
     }
 
-    return data ? this.mapSupabaseEmailTemplate(data) : undefined;
+    return data ? await this.mapSupabaseEmailTemplateWithNames(data) : undefined;
   }
 
   async createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
@@ -715,7 +715,7 @@ export class SupabaseStorage implements IStorage {
     this.templateCache.clear();
     console.log('[SupabaseStorage] Cleared email template cache after creation');
 
-    return this.mapSupabaseEmailTemplate(data);
+    return await this.mapSupabaseEmailTemplateWithNames(data);
   }
 
   async upsertEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
@@ -765,7 +765,7 @@ export class SupabaseStorage implements IStorage {
     this.templateCache.clear();
     console.log('[SupabaseStorage] Cleared email template cache after update');
     
-    const mappedResult = this.mapSupabaseEmailTemplate(data);
+    const mappedResult = await this.mapSupabaseEmailTemplateWithNames(data);
     console.log('[SupabaseStorage] 📦 Final mapped result:', mappedResult);
 
     return mappedResult;
