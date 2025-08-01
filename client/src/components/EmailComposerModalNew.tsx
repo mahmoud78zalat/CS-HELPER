@@ -464,13 +464,22 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 {/* Subject Line Section */}
                 <div className="mb-4">
                   <Label htmlFor="emailSubject" className="text-base font-semibold mb-3 block">Subject Line</Label>
-                  <Input
-                    id="emailSubject"
-                    value={emailSubject}
-                    onChange={(e) => setEmailSubject(e.target.value)}
-                    placeholder="Select a template to populate subject..."
-                    className="h-12 text-base"
-                  />
+                  <div className="space-y-2">
+                    <Input
+                      id="emailSubject"
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                      placeholder="Select a template to populate subject..."
+                      className="h-12 text-base"
+                    />
+                    {/* Live Preview for Subject */}
+                    {emailSubject && Object.keys(variableValues).length > 0 && (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                        <p className="text-xs font-medium text-green-700 mb-1">Live Preview:</p>
+                        <p className="text-sm text-green-800 font-medium">{getFinalSubject()}</p>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Copy Action Buttons */}
                   <div className="flex gap-3 mt-3">
@@ -511,14 +520,29 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               {/* Email Body Section */}
               <div className="flex-1 flex flex-col p-4">
                 <Label htmlFor="body" className="text-base font-semibold mb-3 block">Email Body</Label>
-                <DroppableTextarea
-                  id="email-body-droppable"
-                  name="body"
-                  value={emailBody}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEmailBody(e.target.value)}
-                  placeholder="Select a template to populate content..."
-                  className="font-mono text-sm resize-none flex-1 min-h-[400px]"
-                />
+                <div className="flex-1 flex gap-4">
+                  {/* Template Editor */}
+                  <div className="flex-1 flex flex-col">
+                    <DroppableTextarea
+                      id="email-body-droppable"
+                      name="body"
+                      value={emailBody}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEmailBody(e.target.value)}
+                      placeholder="Select a template to populate content..."
+                      className="font-mono text-sm resize-none flex-1 min-h-[400px]"
+                    />
+                  </div>
+                  
+                  {/* Live Preview */}
+                  {emailBody && Object.keys(variableValues).length > 0 && (
+                    <div className="flex-1 flex flex-col">
+                      <p className="text-xs font-medium text-green-700 mb-2">Live Preview:</p>
+                      <div className="flex-1 p-3 bg-green-50 border border-green-200 rounded-md overflow-y-auto">
+                        <pre className="text-sm text-green-800 whitespace-pre-wrap font-sans">{getFinalBody()}</pre>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </Panel>
