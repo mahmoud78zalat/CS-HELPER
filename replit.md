@@ -51,7 +51,8 @@ Key tables include Users, Live Reply Templates, Email Templates, Usage tracking 
 - **Theming**: Dark/Light mode toggle with persistence and real-time color sync.
 - **Universal Variable System**: Centralized management of variables through the admin panel.
 - **Exclusive {variable} Format**: Completely removed [VARIABLE] format support, system now exclusively uses {variable} format for all template variables.
-- **Advanced Drag & Drop**: Smooth, flexible drag & drop system with enhanced styling and animated drop zones for template variable management.
+- **Advanced Drag & Drop**: Smooth, flexible drag & drop system with enhanced styling and animated drop zones for template variable management and Connected Config organization.
+- **Connected Template Configuration**: Hierarchical management system with drag & drop support for categories and genres, complete with search functionality and visual organization.
 - **Duplicate Variable Prevention**: Intelligent deduplication ensures variables appearing in both subject and content are displayed only once in the variable list.
 - **Persistent Notification System**: Supabase-based tracking of FAQ views and announcement acknowledgments, replacing localStorage for cache-resistant state persistence.
 

@@ -680,6 +680,19 @@ function ConnectedConfigManager() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Search Bar */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Search categories and genres..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+          
           <div className="flex gap-2">
             <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
               <DialogTrigger asChild>
@@ -841,128 +854,272 @@ function ConnectedConfigManager() {
               No connected categories configured. Add a category to get started.
             </p>
           ) : (
-            <div className="space-y-2">
-              {(categories as ConnectedCategory[]).map((category: ConnectedCategory) => (
-                <div key={category.id} className="border rounded-lg">
-                  <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-t-lg">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleCategory(category.id)}
-                        className="h-auto p-1"
-                      >
-                        {expandedCategories.has(category.id) ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <div 
-                        className="w-4 h-4 rounded" 
-                        style={{ backgroundColor: category.color }}
-                      />
-                      <div>
-                        <h4 className="font-medium">{category.name}</h4>
-                        {category.description && (
-                          <p className="text-xs text-slate-600">{category.description}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Badge variant="outline" className="text-xs">
-                        {category.genres?.length || 0} genres
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditCategory(category)}
-                        className="h-auto p-1"
-                      >
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteCategory(category)}
-                        className="h-auto p-1 text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {expandedCategories.has(category.id) && (
-                    <div className="p-3 border-t">
-                      <div className="flex items-center justify-between mb-3">
-                        <h5 className="text-sm font-medium">Genres in this category</h5>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            resetGenreDialog();
-                            setNewGenre({ ...newGenre, categoryId: category.id });
-                            setGenreDialogOpen(true);
-                          }}
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add Genre
-                        </Button>
-                      </div>
-                      
-                      {category.genres?.length === 0 ? (
-                        <p className="text-sm text-slate-500 text-center py-4">
-                          No genres in this category yet.
-                        </p>
-                      ) : (
-                        <div className="space-y-2">
-                          {category.genres?.map((genre: ConnectedGenre) => (
-                            <div
-                              key={genre.id}
-                              className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 rounded border"
-                            >
-                              <div className="flex items-center gap-2">
-                                <div 
-                                  className="w-3 h-3 rounded" 
-                                  style={{ backgroundColor: genre.color }}
-                                />
-                                <div>
-                                  <span className="text-sm font-medium">{genre.name}</span>
-                                  {genre.description && (
-                                    <p className="text-xs text-slate-600">{genre.description}</p>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEditGenre(genre, category.id)}
-                                  className="h-auto p-1"
-                                >
-                                  <Edit2 className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteGenre(genre)}
-                                  className="h-auto p-1 text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleCategoryDragEnd}
+            >
+              <SortableContext
+                items={filteredCategories.map(cat => cat.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-2">
+                  {filteredCategories.map((category: ConnectedCategory) => (
+                    <SortableCategoryItem
+                      key={category.id}
+                      category={category}
+                      expandedCategories={expandedCategories}
+                      toggleCategory={toggleCategory}
+                      handleEditCategory={handleEditCategory}
+                      handleDeleteCategory={handleDeleteCategory}
+                      handleEditGenre={handleEditGenre}
+                      handleDeleteGenre={handleDeleteGenre}
+                      resetGenreDialog={resetGenreDialog}
+                      setNewGenre={setNewGenre}
+                      newGenre={newGenre}
+                      setGenreDialogOpen={setGenreDialogOpen}
+                      handleGenreDragEnd={handleGenreDragEnd}
+                      sensors={sensors}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// Sortable Category Item Component
+interface SortableCategoryItemProps {
+  category: ConnectedCategory;
+  expandedCategories: Set<string>;
+  toggleCategory: (id: string) => void;
+  handleEditCategory: (category: ConnectedCategory) => void;
+  handleDeleteCategory: (category: ConnectedCategory) => void;
+  handleEditGenre: (genre: ConnectedGenre, categoryId: string) => void;
+  handleDeleteGenre: (genre: ConnectedGenre) => void;
+  resetGenreDialog: () => void;
+  setNewGenre: (genre: any) => void;
+  newGenre: any;
+  setGenreDialogOpen: (open: boolean) => void;
+  handleGenreDragEnd: (event: DragEndEvent, categoryId: string) => void;
+  sensors: any;
+}
+
+function SortableCategoryItem({
+  category,
+  expandedCategories,
+  toggleCategory,
+  handleEditCategory,
+  handleDeleteCategory,
+  handleEditGenre,
+  handleDeleteGenre,
+  resetGenreDialog,
+  setNewGenre,
+  newGenre,
+  setGenreDialogOpen,
+  handleGenreDragEnd,
+  sensors
+}: SortableCategoryItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="border rounded-lg">
+      <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-t-lg">
+        <div className="flex items-center gap-2">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab hover:cursor-grabbing p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"
+          >
+            <GripVertical className="h-4 w-4 text-slate-400" />
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => toggleCategory(category.id)}
+            className="h-auto p-1"
+          >
+            {expandedCategories.has(category.id) ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+          <div 
+            className="w-4 h-4 rounded" 
+            style={{ backgroundColor: category.color }}
+          />
+          <div>
+            <h4 className="font-medium">{category.name}</h4>
+            {category.description && (
+              <p className="text-xs text-slate-600">{category.description}</p>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <Badge variant="outline" className="text-xs">
+            {category.genres?.length || 0} genres
+          </Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleEditCategory(category)}
+            className="h-auto p-1"
+          >
+            <Edit2 className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleDeleteCategory(category)}
+            className="h-auto p-1 text-red-600 hover:text-red-700"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
+      
+      {expandedCategories.has(category.id) && (
+        <div className="p-3 border-t">
+          <div className="flex items-center justify-between mb-3">
+            <h5 className="text-sm font-medium">Genres in this category</h5>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                resetGenreDialog();
+                setNewGenre({ ...newGenre, categoryId: category.id });
+                setGenreDialogOpen(true);
+              }}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Add Genre
+            </Button>
+          </div>
+          
+          {category.genres?.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-4">
+              No genres in this category yet.
+            </p>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={(event) => handleGenreDragEnd(event, category.id)}
+            >
+              <SortableContext
+                items={category.genres?.map(g => g.id) || []}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-2">
+                  {category.genres?.map((genre: ConnectedGenre) => (
+                    <SortableGenreItem
+                      key={genre.id}
+                      genre={genre}
+                      categoryId={category.id}
+                      handleEditGenre={handleEditGenre}
+                      handleDeleteGenre={handleDeleteGenre}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Sortable Genre Item Component
+interface SortableGenreItemProps {
+  genre: ConnectedGenre;
+  categoryId: string;
+  handleEditGenre: (genre: ConnectedGenre, categoryId: string) => void;
+  handleDeleteGenre: (genre: ConnectedGenre) => void;
+}
+
+function SortableGenreItem({
+  genre,
+  categoryId,
+  handleEditGenre,
+  handleDeleteGenre
+}: SortableGenreItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: genre.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 rounded border"
+    >
+      <div className="flex items-center gap-2">
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab hover:cursor-grabbing p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"
+        >
+          <GripVertical className="h-3 w-3 text-slate-400" />
+        </div>
+        <div 
+          className="w-3 h-3 rounded" 
+          style={{ backgroundColor: genre.color }}
+        />
+        <div>
+          <span className="text-sm font-medium">{genre.name}</span>
+          {genre.description && (
+            <p className="text-xs text-slate-600">{genre.description}</p>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleEditGenre(genre, categoryId)}
+          className="h-auto p-1"
+        >
+          <Edit2 className="h-3 w-3" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleDeleteGenre(genre)}
+          className="h-auto p-1 text-red-600 hover:text-red-700"
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
     </div>
   );
 }
