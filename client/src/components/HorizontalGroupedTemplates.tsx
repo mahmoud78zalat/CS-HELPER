@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash, GripHorizontal, Eye, Plus, FolderOpen, Palette } from "lucide-react";
+import { Edit, Trash, GripHorizontal, Eye, Plus, FolderOpen, Palette, ArrowUpDown } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay, useDroppable } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -10,6 +10,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useLocalTemplateOrdering } from "@/hooks/useLocalTemplateOrdering";
 
 interface LiveTemplate {
   id: string;
@@ -255,8 +257,18 @@ export default function HorizontalGroupedTemplates({
 }: HorizontalGroupedTemplatesProps) {
   const [groupedData, setGroupedData] = useState<TemplateGroup[]>([]);
   const [ungroupedTemplates, setUngroupedTemplates] = useState<LiveTemplate[]>([]);
+  const [isDragDropMode, setIsDragDropMode] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // Initialize local template ordering hook
+  const { 
+    applyLocalOrdering, 
+    updateBulkOrdering, 
+    resetToAdminOrdering, 
+    hasLocalOrdering 
+  } = useLocalTemplateOrdering(user?.id || 'anonymous', 'live-reply-templates');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -265,12 +277,15 @@ export default function HorizontalGroupedTemplates({
     })
   );
 
-  // Group templates by their groupId
+  // Group templates by their groupId and apply local ordering
   useEffect(() => {
     const templatesMap = new Map<string, LiveTemplate[]>();
     const ungrouped: LiveTemplate[] = [];
 
-    templates.forEach(template => {
+    // Apply local ordering to templates first
+    const orderedTemplates = applyLocalOrdering(templates);
+
+    orderedTemplates.forEach(template => {
       if (template.groupId) {
         if (!templatesMap.has(template.groupId)) {
           templatesMap.set(template.groupId, []);
@@ -281,9 +296,13 @@ export default function HorizontalGroupedTemplates({
       }
     });
 
-    // Sort templates within each group by groupOrder
+    // Sort templates within each group by effective order (local or admin)
     templatesMap.forEach((templateList) => {
-      templateList.sort((a, b) => (a.groupOrder || 0) - (b.groupOrder || 0));
+      templateList.sort((a, b) => {
+        const aOrder = (a as any)._effectiveOrder ?? a.groupOrder ?? 0;
+        const bOrder = (b as any)._effectiveOrder ?? b.groupOrder ?? 0;
+        return aOrder - bOrder;
+      });
     });
 
     // Create grouped data structure
@@ -296,8 +315,12 @@ export default function HorizontalGroupedTemplates({
       .sort((a, b) => a.orderIndex - b.orderIndex);
 
     setGroupedData(groupedData);
-    setUngroupedTemplates(ungrouped.sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0)));
-  }, [templates, groups]);
+    setUngroupedTemplates(ungrouped.sort((a, b) => {
+      const aOrder = (a as any)._effectiveOrder ?? a.stageOrder ?? 0;
+      const bOrder = (b as any)._effectiveOrder ?? b.stageOrder ?? 0;
+      return aOrder - bOrder;
+    }));
+  }, [templates, groups, applyLocalOrdering]);
 
   // Save group order mutation
   const saveGroupOrderMutation = useMutation({
@@ -466,12 +489,67 @@ export default function HorizontalGroupedTemplates({
 
   return (
     <div className="space-y-6">
-      {/* Removed duplicate Create Group button - now only in AdminPanel "Manage Groups" */}
+      {/* Drag & Drop Toggle Controls */}
+      <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-3">
+          <Button
+            variant={isDragDropMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setIsDragDropMode(!isDragDropMode)}
+            className="flex items-center gap-2"
+          >
+            <ArrowUpDown className="h-4 w-4" />
+            {isDragDropMode ? "Exit Reorder Mode" : "Enable Reorder Mode"}
+          </Button>
+          
+          {isDragDropMode && (
+            <span className="text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full">
+              Drag templates to reorder within their groups
+            </span>
+          )}
+        </div>
+        
+        {hasLocalOrdering && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-600 dark:text-slate-400">Custom ordering active</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetToAdminOrdering}
+              className="h-auto py-1 px-2 text-xs"
+            >
+              Reset to default
+            </Button>
+          </div>
+        )}
+      </div>
 
       <DndContext 
         sensors={sensors}
         collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
+        onDragEnd={(event) => {
+          if (isDragDropMode) {
+            handleDragEnd(event);
+            // Update local ordering when drag ends
+            const { active, over } = event;
+            if (active && over && active.id !== over.id) {
+              // Find which group this template belongs to and update local ordering
+              const findTemplateInGroups = (templateId: string) => {
+                for (const group of groupedData) {
+                  const template = group.templates.find(t => t.id === templateId);
+                  if (template) return { template, groupId: group.id, templates: group.templates };
+                }
+                return null;
+              };
+              
+              const result = findTemplateInGroups(active.id.toString());
+              if (result) {
+                const newOrder = result.templates.map(t => t.id);
+                updateBulkOrdering(newOrder);
+              }
+            }
+          }
+        }}
       >
         {/* Grouped Templates */}
         <SortableContext items={groupedData.map(group => `group-${group.id}`)} strategy={verticalListSortingStrategy}>
@@ -483,13 +561,83 @@ export default function HorizontalGroupedTemplates({
             >
               <SortableContext items={group.templates.map(t => t.id)} strategy={horizontalListSortingStrategy}>
                 {group.templates.map((template) => (
-                  <SortableTemplateItem
-                    key={template.id}
-                    template={template}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onPreview={onPreview}
-                  />
+                  isDragDropMode ? (
+                    <SortableTemplateItem
+                      key={template.id}
+                      template={template}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      onPreview={onPreview}
+                    />
+                  ) : (
+                    <div key={template.id} className="w-[280px] min-w-[280px] max-w-[280px]">
+                      <Card className="hover:shadow-md transition-shadow bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-slate-800 dark:text-white mb-2 leading-tight">
+                                {template.name}
+                              </h4>
+                              <div className="flex gap-2 mb-2">
+                                <Badge variant="secondary" className="text-xs px-2 py-1">
+                                  {template.genre}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs px-2 py-1">
+                                  {template.category}
+                                </Badge>
+                                {template.usageCount !== undefined && template.usageCount > 0 && (
+                                  <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 text-green-700">
+                                    {template.usageCount}x used
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {onPreview && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onPreview(template);
+                                  }}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEdit(template);
+                                }}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDelete(template.id);
+                                }}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                              >
+                                <Trash className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3">
+                            {template.content.substring(0, 150)}
+                            {template.content.length > 150 ? '...' : ''}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )
                 ))}
               </SortableContext>
             </DroppableGroupComponent>
@@ -515,13 +663,83 @@ export default function HorizontalGroupedTemplates({
               <div className="flex gap-4 overflow-x-auto pb-2">
                 <SortableContext items={ungroupedTemplates.map(t => t.id)} strategy={horizontalListSortingStrategy}>
                   {ungroupedTemplates.map((template) => (
-                    <SortableTemplateItem
-                      key={template.id}
-                      template={template}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onPreview={onPreview}
-                    />
+                    isDragDropMode ? (
+                      <SortableTemplateItem
+                        key={template.id}
+                        template={template}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        onPreview={onPreview}
+                      />
+                    ) : (
+                      <div key={template.id} className="w-[280px] min-w-[280px] max-w-[280px]">
+                        <Card className="hover:shadow-md transition-shadow bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-slate-800 dark:text-white mb-2 leading-tight">
+                                  {template.name}
+                                </h4>
+                                <div className="flex gap-2 mb-2">
+                                  <Badge variant="secondary" className="text-xs px-2 py-1">
+                                    {template.genre}
+                                  </Badge>
+                                  <Badge variant="outline" className="text-xs px-2 py-1">
+                                    {template.category}
+                                  </Badge>
+                                  {template.usageCount !== undefined && template.usageCount > 0 && (
+                                    <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 text-green-700">
+                                      {template.usageCount}x used
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {onPreview && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onPreview(template);
+                                    }}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEdit(template);
+                                  }}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(template.id);
+                                  }}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                >
+                                  <Trash className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3">
+                              {template.content.substring(0, 150)}
+                              {template.content.length > 150 ? '...' : ''}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )
                   ))}
                 </SortableContext>
               </div>

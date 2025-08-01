@@ -4,17 +4,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTemplates } from "@/hooks/useTemplates";
 import { useTemplateGroups } from "@/hooks/useTemplateGroups";
 import { useCustomerData } from "@/hooks/useCustomerData";
+import { useAuth } from "@/hooks/useAuth";
+import { useLocalTemplateOrdering } from "@/hooks/useLocalTemplateOrdering";
 import TemplateCard from "./TemplateCard";
-import { Search, FolderOpen } from "lucide-react";
+import DragDropTemplateList from "./DragDropTemplateList";
+import { Search, FolderOpen, ArrowUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getGenreColor } from '@/lib/templateColors';
 
 export default function TemplatesArea() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isDragDropMode, setIsDragDropMode] = useState(false);
   const { customerData } = useCustomerData();
+  const { user } = useAuth();
 
   // Fetch template groups instead of individual templates
   const { data: templateGroups, isLoading: groupsLoading } = useTemplateGroups();
+  
+  // Initialize local template ordering hook
+  const { 
+    applyLocalOrdering, 
+    updateBulkOrdering, 
+    resetToAdminOrdering, 
+    hasLocalOrdering 
+  } = useLocalTemplateOrdering(user?.id || 'anonymous');
   
   // Enhanced search functionality - now includes group names
   const searchQuery = searchTerm.toLowerCase();
@@ -50,7 +64,10 @@ export default function TemplatesArea() {
   });
 
   const isLoading = groupsLoading || templatesLoading;
-  const templates = searchFilteredTemplates(allTemplates || []);
+  
+  // Apply local ordering (user preferences + admin stageOrder)
+  const orderedTemplates = applyLocalOrdering(allTemplates || []);
+  const templates = searchFilteredTemplates(orderedTemplates);
 
   // Group templates by their group assignment
   const groupedTemplates = templates?.reduce((acc, template) => {
@@ -73,17 +90,41 @@ export default function TemplatesArea() {
       {/* Mobile-responsive Search Bar */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 lg:px-6 py-3 lg:py-4">
         <div className="max-w-2xl">
-          <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 h-4 w-4" />
-            <Input
-              type="text"
-              className="w-full pl-10 pr-4 py-2 lg:py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm lg:text-base bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-              placeholder="Search templates, groups, or descriptions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex gap-3 mb-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 h-4 w-4" />
+              <Input
+                type="text"
+                className="w-full pl-10 pr-4 py-2 lg:py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm lg:text-base bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
+                placeholder="Search templates, groups, or descriptions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Button
+              variant={isDragDropMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => setIsDragDropMode(!isDragDropMode)}
+              className="px-3 py-2 lg:py-3"
+              title="Toggle drag & drop reordering"
+            >
+              <ArrowUpDown className="h-4 w-4" />
+            </Button>
           </div>
-
+          
+          {hasLocalOrdering && (
+            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+              <span>Using custom ordering</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetToAdminOrdering}
+                className="h-auto py-1 px-2 text-xs"
+              >
+                Reset to default
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -124,12 +165,28 @@ export default function TemplatesArea() {
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center">
                       <div className={`w-2 h-2 rounded-full mr-3 ${getGenreColor(genre).background.replace('100', '500')}`}></div>
                       {genre} Templates
+                      {isDragDropMode && (
+                        <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+                          Drag to reorder
+                        </span>
+                      )}
                     </h3>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
-                      {genreTemplates.map((template) => (
-                        <TemplateCard key={template.id} template={template} />
-                      ))}
-                    </div>
+                    
+                    {isDragDropMode ? (
+                      <DragDropTemplateList 
+                        templates={genreTemplates}
+                        groupName={genre}
+                        onReorder={(newOrder) => {
+                          updateBulkOrdering(newOrder);
+                        }}
+                      />
+                    ) : (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
+                        {genreTemplates.map((template) => (
+                          <TemplateCard key={template.id} template={template} />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))
               ) : (
@@ -155,17 +212,36 @@ export default function TemplatesArea() {
                         <span className="ml-2 text-sm text-slate-500 dark:text-slate-400 font-normal">
                           ({groupTemplates.length} templates)
                         </span>
+                        {isDragDropMode && (
+                          <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+                            Drag to reorder
+                          </span>
+                        )}
                       </h3>
                       {group.description && (
                         <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 ml-9">
                           {group.description}
                         </p>
                       )}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
-                        {groupTemplates.map((template) => (
-                          <TemplateCard key={template.id} template={template} />
-                        ))}
-                      </div>
+                      
+                      {isDragDropMode ? (
+                        <DragDropTemplateList 
+                          templates={groupTemplates}
+                          groupName={group.name}
+                          onReorder={(newOrder) => {
+                            // Update local ordering for this group's templates
+                            newOrder.forEach((templateId, index) => {
+                              updateBulkOrdering(newOrder);
+                            });
+                          }}
+                        />
+                      ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
+                          {groupTemplates.map((template) => (
+                            <TemplateCard key={template.id} template={template} />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })

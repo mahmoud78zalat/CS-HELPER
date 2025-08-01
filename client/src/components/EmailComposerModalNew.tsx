@@ -11,10 +11,13 @@ import { apiRequest } from "@/lib/queryClient";
 import { useCustomerData } from "@/hooks/useCustomerData";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, X, Search, Send, Edit3, Sparkles, Plus } from "lucide-react";
+import { useLocalTemplateOrdering } from "@/hooks/useLocalTemplateOrdering";
+import { Copy, X, Search, Send, Edit3, Sparkles, Plus, ArrowUpDown, GripVertical } from "lucide-react";
 import { EmailTemplate } from "@shared/schema";
 import { extractVariablesFromTemplate } from "@/lib/templateUtils";
-import { DndContext, DragEndEvent, useDraggable } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, useDraggable, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import DraggableVariable from "./DraggableVariable";
 import DroppableTextarea from "./DroppableTextarea";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -63,12 +66,134 @@ const SUBJECT_VARIABLES = [
   { key: "tracking_number", label: "Tracking Number", placeholder: "TRK345678" },
 ];
 
+// Email Template Drag & Drop Components
+const SortableEmailTemplateItem = ({ 
+  template, 
+  onTemplateSelect, 
+  selectedTemplate 
+}: { 
+  template: EmailTemplate; 
+  onTemplateSelect: (template: EmailTemplate) => void;
+  selectedTemplate: EmailTemplate | null;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: template.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <Card
+        className={`cursor-pointer transition-all duration-200 hover:shadow-md group ${
+          selectedTemplate?.id === template.id 
+            ? 'border-blue-300 bg-blue-50 shadow-md' 
+            : 'border-slate-200 bg-white hover:border-blue-200'
+        }`}
+        onClick={() => onTemplateSelect(template)}
+      >
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div {...listeners} className="mt-1 opacity-50 hover:opacity-100 cursor-grab active:cursor-grabbing">
+              <GripVertical className="h-4 w-4 text-slate-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-slate-800 mb-2 text-sm">{template.name}</h4>
+              <div className="text-xs text-slate-600 mb-3">
+                <span className="font-medium text-slate-700">To:</span> 
+                <span className="ml-2 px-2 py-1 bg-slate-100 rounded text-xs">{template.concernedTeam}</span>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Badge variant="secondary" className="text-xs px-2 py-1 bg-blue-100 text-blue-800 border border-blue-200">
+                  {template.genre}
+                </Badge>
+                <Badge variant="outline" className="text-xs px-2 py-1 border-slate-300 text-slate-700">
+                  {template.category}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const EmailDragDropList = ({ 
+  templates, 
+  onTemplateSelect, 
+  selectedTemplate, 
+  onReorder 
+}: {
+  templates: EmailTemplate[];
+  onTemplateSelect: (template: EmailTemplate) => void;
+  selectedTemplate: EmailTemplate | null;
+  onReorder: (newOrder: EmailTemplate[]) => void;
+}) => {
+  const [items, setItems] = useState(templates);
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  useEffect(() => {
+    setItems(templates);
+  }, [templates]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = items.findIndex(item => item.id === active.id);
+      const newIndex = items.findIndex(item => item.id === over.id);
+      
+      const newOrder = arrayMove(items, oldIndex, newIndex);
+      setItems(newOrder);
+      onReorder(newOrder);
+    }
+  };
+
+  return (
+    <DndContext 
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-4">
+          {items.map((template) => (
+            <SortableEmailTemplateItem
+              key={template.id}
+              template={template}
+              onTemplateSelect={onTemplateSelect}
+              selectedTemplate={selectedTemplate}
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+};
+
 export default function EmailComposerModal({ onClose }: EmailComposerModalProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+  const [isDragDropMode, setIsDragDropMode] = useState(false);
 
   
   // Track subject and content changes for variable synchronization
@@ -105,6 +230,14 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const { customerData } = useCustomerData();
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Initialize local template ordering hook for email templates
+  const { 
+    applyLocalOrdering, 
+    updateBulkOrdering, 
+    resetToAdminOrdering, 
+    hasLocalOrdering 
+  } = useLocalTemplateOrdering(user?.id || 'anonymous', 'email-templates');
 
   // Effect to handle variable synchronization between subject and content
   useEffect(() => {
@@ -205,8 +338,9 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     });
   }, [customerData, user]);
 
-  // Filter templates based on search
-  const filteredTemplates = templates.filter((template: EmailTemplate) =>
+  // Apply local ordering first, then filter templates by search term
+  const orderedTemplates = applyLocalOrdering(templates);
+  const filteredTemplates = orderedTemplates.filter((template: EmailTemplate) =>
     template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     template.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
     template.genre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -393,48 +527,84 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             <div className="w-full h-full border-r border-slate-200 flex flex-col bg-slate-50">
             <div className="p-4 border-b border-slate-200 bg-white">
               <h3 className="font-semibold text-lg mb-3 text-slate-700">Select Template</h3>
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 z-10" />
-                <Input
-                  type="text"
-                  className="pl-12 h-10 text-sm bg-white border-slate-300 focus:border-blue-500 focus:ring-blue-200 rounded-md"
-                  placeholder="Search templates..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <div className="space-y-3">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 z-10" />
+                  <Input
+                    type="text"
+                    className="pl-12 h-10 text-sm bg-white border-slate-300 focus:border-blue-500 focus:ring-blue-200 rounded-md"
+                    placeholder="Search templates..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={isDragDropMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setIsDragDropMode(!isDragDropMode)}
+                    className="flex items-center gap-2 text-xs h-8"
+                  >
+                    <ArrowUpDown className="h-3 w-3" />
+                    {isDragDropMode ? "Exit Reorder" : "Reorder"}
+                  </Button>
+                  
+                  {hasLocalOrdering && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={resetToAdminOrdering}
+                      className="text-xs h-8"
+                    >
+                      Reset Order
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-              <div className="space-y-4">
-                {filteredTemplates.map((template: EmailTemplate) => (
-                  <Card
-                    key={template.id}
-                    className={`cursor-pointer transition-all duration-200 hover:shadow-md group ${
-                      selectedTemplate?.id === template.id 
-                        ? 'border-blue-300 bg-blue-50 shadow-md' 
-                        : 'border-slate-200 bg-white hover:border-blue-200'
-                    }`}
-                    onClick={() => handleTemplateSelect(template)}
-                  >
-                    <CardContent className="p-4">
-                      <h4 className="font-semibold text-slate-800 mb-2 text-sm">{template.name}</h4>
-                      <div className="text-xs text-slate-600 mb-3">
-                        <span className="font-medium text-slate-700">To:</span> 
-                        <span className="ml-2 px-2 py-1 bg-slate-100 rounded text-xs">{template.concernedTeam}</span>
-                      </div>
-                      <div className="flex gap-2 flex-wrap">
-                        <Badge variant="secondary" className="text-xs px-2 py-1 bg-blue-100 text-blue-800 border border-blue-200">
-                          {template.genre}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs px-2 py-1 border-slate-300 text-slate-700">
-                          {template.category}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              {isDragDropMode ? (
+                <EmailDragDropList
+                  templates={filteredTemplates}
+                  onTemplateSelect={handleTemplateSelect}
+                  selectedTemplate={selectedTemplate}
+                  onReorder={(newOrder) => {
+                    updateBulkOrdering(newOrder.map(t => t.id));
+                  }}
+                />
+              ) : (
+                <div className="space-y-4">
+                  {filteredTemplates.map((template: EmailTemplate) => (
+                    <Card
+                      key={template.id}
+                      className={`cursor-pointer transition-all duration-200 hover:shadow-md group ${
+                        selectedTemplate?.id === template.id 
+                          ? 'border-blue-300 bg-blue-50 shadow-md' 
+                          : 'border-slate-200 bg-white hover:border-blue-200'
+                      }`}
+                      onClick={() => handleTemplateSelect(template)}
+                    >
+                      <CardContent className="p-4">
+                        <h4 className="font-semibold text-slate-800 mb-2 text-sm">{template.name}</h4>
+                        <div className="text-xs text-slate-600 mb-3">
+                          <span className="font-medium text-slate-700">To:</span> 
+                          <span className="ml-2 px-2 py-1 bg-slate-100 rounded text-xs">{template.concernedTeam}</span>
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                          <Badge variant="secondary" className="text-xs px-2 py-1 bg-blue-100 text-blue-800 border border-blue-200">
+                            {template.genre}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs px-2 py-1 border-slate-300 text-slate-700">
+                            {template.category}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
               
               {filteredTemplates.length === 0 && (
                 <div className="text-center py-12 text-slate-500">

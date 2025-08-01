@@ -106,8 +106,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
     return replaceVariables(name, variables);
   };
 
-  // Disabled usage tracking to prevent ordering interference
-  // Usage is now tracked for statistics only, never affects ordering
+  // Usage tracking for statistics only - does not affect template ordering
   const usageMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) {
@@ -117,8 +116,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
       await apiRequest('POST', `/api/templates/${template.id}/use`, { userId: user.id });
     },
     onSuccess: () => {
-      // Do not update query cache or invalidate queries to prevent reordering
-      // Usage count is for statistics only
+      // Usage count tracking only - no query invalidation to prevent reordering
     },
   });
 
