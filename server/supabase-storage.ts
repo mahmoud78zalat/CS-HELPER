@@ -495,7 +495,8 @@ export class SupabaseStorage implements IStorage {
       return [];
     }
 
-    return data.map(this.mapSupabaseLiveReplyTemplate);
+    const templates = await Promise.all(data.map(async (template) => await this.mapSupabaseLiveReplyTemplateWithNames(template)));
+    return templates;
   }
 
   async getLiveReplyTemplate(id: string): Promise<LiveReplyTemplate | undefined> {
@@ -672,7 +673,7 @@ export class SupabaseStorage implements IStorage {
       return [];
     }
 
-    const templates = data.map(this.mapSupabaseEmailTemplate);
+    const templates = await Promise.all(data.map(async (template) => await this.mapSupabaseEmailTemplateWithNames(template)));
     
     // Cache the result
     this.templateCache.set(cacheKey, { templates, timestamp: Date.now() });
@@ -2161,6 +2162,65 @@ export class SupabaseStorage implements IStorage {
     };
   }
 
+  private async mapSupabaseLiveReplyTemplateWithNames(data: any): Promise<LiveReplyTemplate> {
+    // Try to resolve category and genre IDs to names
+    let categoryName = data.category;
+    let genreName = data.genre;
+
+    // If category looks like a UUID, try to resolve it
+    if (data.category && data.category.length === 36 && data.category.includes('-')) {
+      try {
+        const { data: categoryData } = await this.client
+          .from('template_categories')
+          .select('name')
+          .eq('id', data.category)
+          .single();
+        
+        if (categoryData) {
+          categoryName = categoryData.name;
+        }
+      } catch (error) {
+        console.warn('[SupabaseStorage] Could not resolve category ID:', data.category);
+      }
+    }
+
+    // If genre looks like a UUID, try to resolve it
+    if (data.genre && data.genre.length === 36 && data.genre.includes('-')) {
+      try {
+        const { data: genreData } = await this.client
+          .from('template_genres')
+          .select('name')
+          .eq('id', data.genre)
+          .single();
+        
+        if (genreData) {
+          genreName = genreData.name;
+        }
+      } catch (error) {
+        console.warn('[SupabaseStorage] Could not resolve genre ID:', data.genre);
+      }
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      contentEn: data.content_en,
+      contentAr: data.content_ar,
+      category: categoryName,
+      genre: genreName,
+      variables: data.variables,
+      groupId: data.group_id,
+      groupOrder: data.group_order || 0,
+      stageOrder: data.stage_order,
+      isActive: data.is_active,
+      usageCount: data.usage_count,
+      createdAt: data.created_at ? new Date(data.created_at) : null,
+      updatedAt: data.updated_at ? new Date(data.updated_at) : null,
+      supabaseId: data.id, // Supabase ID is the same as the record ID
+      lastSyncedAt: new Date(), // Always synced since this is from Supabase
+    };
+  }
+
   private mapToSupabaseLiveReplyTemplate(template: any): any {
     return {
       name: template.name,
@@ -2185,6 +2245,67 @@ export class SupabaseStorage implements IStorage {
       contentAr: data.content_ar || '',
       category: data.category,
       genre: data.genre,
+      concernedTeam: data.concerned_team,
+      warningNote: data.warning_note,
+      variables: data.variables,
+      stageOrder: data.stage_order,
+      isActive: data.is_active,
+      usageCount: data.usage_count,
+      createdAt: data.created_at ? new Date(data.created_at) : null,
+      updatedAt: data.updated_at ? new Date(data.updated_at) : null,
+      supabaseId: data.id, // Supabase ID is the same as the record ID
+      lastSyncedAt: new Date(), // Always synced since this is from Supabase
+    };
+  }
+
+  private async mapSupabaseEmailTemplateWithNames(data: any): Promise<EmailTemplate> {
+    // Try to resolve category and genre IDs to names
+    let categoryName = data.category;
+    let genreName = data.genre;
+
+    // If category looks like a UUID, try to resolve it
+    if (data.category && data.category.length === 36 && data.category.includes('-')) {
+      try {
+        const { data: categoryData } = await this.client
+          .from('email_categories')
+          .select('name')
+          .eq('id', data.category)
+          .single();
+        
+        if (categoryData) {
+          categoryName = categoryData.name;
+        }
+      } catch (error) {
+        console.warn('[SupabaseStorage] Could not resolve category ID:', data.category);
+      }
+    }
+
+    // If genre looks like a UUID, try to resolve it
+    if (data.genre && data.genre.length === 36 && data.genre.includes('-')) {
+      try {
+        const { data: genreData } = await this.client
+          .from('template_genres')
+          .select('name')
+          .eq('id', data.genre)
+          .single();
+        
+        if (genreData) {
+          genreName = genreData.name;
+        }
+      } catch (error) {
+        console.warn('[SupabaseStorage] Could not resolve genre ID:', data.genre);
+      }
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      subject: data.subject,
+      content: data.content,
+      contentEn: data.content_en || data.content,
+      contentAr: data.content_ar || '',
+      category: categoryName,
+      genre: genreName,
       concernedTeam: data.concerned_team,
       warningNote: data.warning_note,
       variables: data.variables,

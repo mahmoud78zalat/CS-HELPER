@@ -559,7 +559,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           {selectedTemplate && (
             <>
               <PanelResizeHandle className="w-1 bg-slate-300 hover:bg-slate-400 transition-colors cursor-col-resize" />
-              <Panel defaultSize={30} minSize={25} maxSize={50}>
+              <Panel defaultSize={40} minSize={30} maxSize={60}>
                 <div className="w-full h-full border-l border-slate-200 flex flex-col bg-slate-50 min-w-0">
               <div className="p-4 border-b border-slate-200 bg-white">
                 <h3 className="font-semibold text-lg flex items-center gap-2 text-slate-800">
