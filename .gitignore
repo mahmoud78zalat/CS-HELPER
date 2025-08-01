@@ -144,3 +144,30 @@ vite.config.ts.*
 *.zip
 *.rar
 *.7z
+
+# Replit-specific cache and state files
+.local/
+.upm/
+.config/
+.breakpoints
+.replit
+.replit.nix
+replit.nix
+.pythonlibs
+.replit_packages/
+.replit.json
+.agent_state_*.bin
+.agent_state/
+
+# Replit agent state files
+*.agent_state*.bin
+
+# Replit hidden files and cache
+generated-icon.png
+.cache
+.tmp
+.temp
+
+# Replit build and deployment files
+.build/
+.deployment/

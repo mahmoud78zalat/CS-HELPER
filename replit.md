@@ -55,6 +55,7 @@ Key tables include Users, Live Reply Templates, Email Templates, Usage tracking 
 - **Connected Template Configuration**: Hierarchical management system with drag & drop support for categories and genres, complete with search functionality and visual organization.
 - **Duplicate Variable Prevention**: Intelligent deduplication ensures variables appearing in both subject and content are displayed only once in the variable list.
 - **Persistent Notification System**: Supabase-based tracking of FAQ views and announcement acknowledgments, replacing localStorage for cache-resistant state persistence.
+- **Centralized Color Management**: Color management has been consolidated to a single dedicated section in the Colors panel, removing color selection capabilities from GroupManager and TemplateConfigurationManager components to maintain consistency and simplify the interface.
 
 ## External Dependencies
 

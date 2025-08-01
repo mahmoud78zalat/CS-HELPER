@@ -150,8 +150,7 @@ export default function GroupManager({
 }: GroupManagerProps) {
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
-    color: "#3b82f6"
+    description: ""
   });
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
@@ -177,8 +176,7 @@ export default function GroupManager({
     if (editingGroup) {
       setFormData({
         name: editingGroup.name,
-        description: editingGroup.description || "",
-        color: editingGroup.color
+        description: editingGroup.description || ""
       });
       setShowCreateForm(true);
       // Load templates belonging to this group
@@ -187,8 +185,7 @@ export default function GroupManager({
     } else {
       setFormData({
         name: "",
-        description: "",
-        color: "#3b82f6"
+        description: ""
       });
       setShowCreateForm(false);
       setSelectedTemplates([]);
@@ -240,7 +237,7 @@ export default function GroupManager({
     if (onCreateGroup) {
       onCreateGroup(groupData);
       setShowCreateForm(false);
-      setFormData({ name: "", description: "", color: "#3b82f6" });
+      setFormData({ name: "", description: "" });
     }
   };
 
@@ -254,7 +251,7 @@ export default function GroupManager({
         data: formData
       });
       setShowCreateForm(false);
-      setFormData({ name: "", description: "", color: "#3b82f6" });
+      setFormData({ name: "", description: "" });
       onEditGroup?.(null);
     }
   };
@@ -371,7 +368,7 @@ export default function GroupManager({
   const handleClose = () => {
     setShowCreateForm(false);
     onEditGroup?.(null);
-    setFormData({ name: "", description: "", color: "#3b82f6" });
+    setFormData({ name: "", description: "" });
     onClose();
   };
 
@@ -427,28 +424,7 @@ export default function GroupManager({
                   />
                 </div>
 
-                <div>
-                  <Label className="flex items-center gap-2 mb-2">
-                    <Palette className="h-4 w-4" />
-                    Color
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {colorOptions.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={`w-8 h-8 rounded-full border-2 transition-all ${
-                          formData.color === color
-                            ? 'border-gray-900 dark:border-gray-100 scale-110'
-                            : 'border-gray-300 dark:border-gray-600 hover:scale-105'
-                        }`}
-                        style={{ backgroundColor: color }}
-                        onClick={() => setFormData(prev => ({ ...prev, color }))}
-                        disabled={isLoading}
-                      />
-                    ))}
-                  </div>
-                </div>
+
 
                 {/* Template Selector */}
                 {editingGroup && (
@@ -554,7 +530,7 @@ export default function GroupManager({
                     onClick={() => {
                       setShowCreateForm(false);
                       onEditGroup?.(null);
-                      setFormData({ name: "", description: "", color: "#3b82f6" });
+                      setFormData({ name: "", description: "" });
                     }}
                     disabled={isLoading}
                   >

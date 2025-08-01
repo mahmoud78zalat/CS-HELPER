@@ -14,7 +14,6 @@ interface ConnectedCategory {
   id: string;
   name: string;
   description: string;
-  color: string;
   isActive: boolean;
   orderIndex: number;
   genres: ConnectedGenre[];
@@ -24,21 +23,11 @@ interface ConnectedGenre {
   id: string;
   name: string;
   description: string;
-  color: string;
   isActive: boolean;
   orderIndex: number;
 }
 
-const colorOptions = [
-  { value: '#3b82f6', label: 'Blue', class: 'bg-blue-500' },
-  { value: '#10b981', label: 'Green', class: 'bg-green-500' },
-  { value: '#f59e0b', label: 'Yellow', class: 'bg-yellow-500' },
-  { value: '#ef4444', label: 'Red', class: 'bg-red-500' },
-  { value: '#8b5cf6', label: 'Purple', class: 'bg-purple-500' },
-  { value: '#06b6d4', label: 'Cyan', class: 'bg-cyan-500' },
-  { value: '#84cc16', label: 'Lime', class: 'bg-lime-500' },
-  { value: '#f97316', label: 'Orange', class: 'bg-orange-500' },
-];
+
 
 export function TemplateConfigurationManager() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -48,14 +37,12 @@ export function TemplateConfigurationManager() {
   const [newCategory, setNewCategory] = useState({
     name: '',
     description: '',
-    color: '#3b82f6',
     isActive: true,
   });
   const [newGenre, setNewGenre] = useState({
     name: '',
     description: '',
     categoryId: '',
-    color: '#10b981',
     isActive: true,
   });
 
@@ -79,7 +66,7 @@ export function TemplateConfigurationManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
       setCategoryDialogOpen(false);
-      setNewCategory({ name: '', description: '', color: '#3b82f6', isActive: true });
+      setNewCategory({ name: '', description: '', isActive: true });
       toast({ title: 'Success', description: 'Category created successfully' });
     },
     onError: (error: any) => {
@@ -102,7 +89,7 @@ export function TemplateConfigurationManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
       setGenreDialogOpen(false);
-      setNewGenre({ name: '', description: '', categoryId: '', color: '#10b981', isActive: true });
+      setNewGenre({ name: '', description: '', categoryId: '', isActive: true });
       toast({ title: 'Success', description: 'Genre created successfully' });
     },
     onError: (error: any) => {
@@ -204,27 +191,7 @@ export function TemplateConfigurationManager() {
                     placeholder="Enter category description"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="category-color">Color</Label>
-                  <Select 
-                    value={newCategory.color} 
-                    onValueChange={(value) => setNewCategory(prev => ({ ...prev, color: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {colorOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          <div className="flex items-center gap-2">
-                            <div className={`w-4 h-4 rounded ${option.class}`} />
-                            {option.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setCategoryDialogOpen(false)}>
                     Cancel
@@ -261,13 +228,7 @@ export function TemplateConfigurationManager() {
                     <SelectContent>
                       {categories.map(category => (
                         <SelectItem key={category.id} value={category.id}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded" 
-                              style={{ backgroundColor: category.color }}
-                            />
-                            {category.name}
-                          </div>
+                          {category.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -291,27 +252,7 @@ export function TemplateConfigurationManager() {
                     placeholder="Enter genre description"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="genre-color">Color</Label>
-                  <Select 
-                    value={newGenre.color} 
-                    onValueChange={(value) => setNewGenre(prev => ({ ...prev, color: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {colorOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          <div className="flex items-center gap-2">
-                            <div className={`w-4 h-4 rounded ${option.class}`} />
-                            {option.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setGenreDialogOpen(false)}>
                     Cancel
@@ -348,10 +289,7 @@ export function TemplateConfigurationManager() {
                   ) : (
                     <ChevronRight className="h-4 w-4 text-gray-500" />
                   )}
-                  <div 
-                    className="w-4 h-4 rounded" 
-                    style={{ backgroundColor: category.color }}
-                  />
+
                   <div>
                     <h4 className="font-medium">{category.name}</h4>
                     {category.description && (
@@ -403,10 +341,7 @@ export function TemplateConfigurationManager() {
                           className="flex items-center justify-between p-2 rounded hover:bg-white dark:hover:bg-gray-600"
                         >
                           <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded" 
-                              style={{ backgroundColor: genre.color }}
-                            />
+
                             <div>
                               <span className="text-sm font-medium">{genre.name}</span>
                               {genre.description && (
