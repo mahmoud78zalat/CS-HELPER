@@ -1732,6 +1732,189 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
+  // New connected categories and genres methods
+  async getConnectedTemplateCategories(): Promise<Array<{
+    id: string;
+    name: string;
+    description: string;
+    color: string;
+    isActive: boolean;
+    orderIndex: number;
+    genres: Array<{
+      id: string;
+      name: string;
+      description: string;
+      color: string;
+      isActive: boolean;
+      orderIndex: number;
+    }>;
+  }>> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      // First get all categories
+      const { data: categories, error: categoriesError } = await this.client
+        .from('template_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+
+      if (categoriesError) {
+        console.error('[SupabaseStorage] Error fetching template categories:', categoriesError);
+        return [];
+      }
+
+      // Then get all genres for each category
+      const categoriesWithGenres = [];
+      
+      for (const category of categories || []) {
+        const { data: genres, error: genresError } = await this.client
+          .from('template_genres')
+          .select('*')
+          .eq('category_id', category.id)
+          .eq('is_active', true)
+          .order('order_index', { ascending: true });
+
+        if (genresError) {
+          console.error(`[SupabaseStorage] Error fetching genres for category ${category.id}:`, genresError);
+        }
+
+        categoriesWithGenres.push({
+          id: category.id,
+          name: category.name,
+          description: category.description || '',
+          color: category.color,
+          isActive: category.is_active,
+          orderIndex: category.order_index,
+          genres: (genres || []).map(genre => ({
+            id: genre.id,
+            name: genre.name,
+            description: genre.description || '',
+            color: genre.color,
+            isActive: genre.is_active,
+            orderIndex: genre.order_index,
+          }))
+        });
+      }
+
+      return categoriesWithGenres;
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getConnectedTemplateCategories:', error);
+      return [];
+    }
+  }
+
+  async createConnectedTemplateCategory(data: {
+    name: string;
+    description: string;
+    color: string;
+    isActive: boolean;
+  }): Promise<{
+    id: string;
+    name: string;
+    description: string;
+    color: string;
+    isActive: boolean;
+    orderIndex: number;
+  }> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      // Find next order index
+      const { data: maxOrderData } = await this.client
+        .from('template_categories')
+        .select('order_index')
+        .order('order_index', { ascending: false })
+        .limit(1);
+
+      const nextOrderIndex = (maxOrderData?.[0]?.order_index || 0) + 1;
+
+      const { data: result, error } = await this.client
+        .from('template_categories')
+        .insert({
+          name: data.name,
+          description: data.description,
+          color: data.color,
+          is_active: data.isActive,
+          order_index: nextOrderIndex,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        color: result.color,
+        isActive: result.is_active,
+        orderIndex: result.order_index,
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error creating connected template category:', error);
+      throw error;
+    }
+  }
+
+  async createConnectedTemplateGenre(data: {
+    name: string;
+    description: string;
+    categoryId: string;
+    color: string;
+    isActive: boolean;
+  }): Promise<{
+    id: string;
+    name: string;
+    description: string;
+    categoryId: string;
+    color: string;
+    isActive: boolean;
+    orderIndex: number;
+  }> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      // Find next order index within the category
+      const { data: maxOrderData } = await this.client
+        .from('template_genres')
+        .select('order_index')
+        .eq('category_id', data.categoryId)
+        .order('order_index', { ascending: false })
+        .limit(1);
+
+      const nextOrderIndex = (maxOrderData?.[0]?.order_index || 0) + 1;
+
+      const { data: result, error } = await this.client
+        .from('template_genres')
+        .insert({
+          name: data.name,
+          description: data.description,
+          category_id: data.categoryId,
+          color: data.color,
+          is_active: data.isActive,
+          order_index: nextOrderIndex,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        categoryId: result.category_id,
+        color: result.color,
+        isActive: result.is_active,
+        orderIndex: result.order_index,
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error creating connected template genre:', error);
+      throw error;
+    }
+  }
+
   // CRUD operations for concerned teams
   async createConcernedTeam(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
     try {

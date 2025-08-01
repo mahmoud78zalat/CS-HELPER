@@ -516,6 +516,62 @@ export const insertPersonalNoteSchema = createInsertSchema(personalNotes).omit({
 export type PersonalNote = typeof personalNotes.$inferSelect;
 export type InsertPersonalNote = z.infer<typeof insertPersonalNoteSchema>;
 
+// Template Categories (parent table)
+export const templateCategories = pgTable("template_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").unique().notNull(),
+  description: text("description"),
+  color: varchar("color").default("#3b82f6").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  orderIndex: integer("order_index").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Template Genres (child table - linked to categories)
+export const templateGenres = pgTable("template_genres", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  categoryId: uuid("category_id").references(() => templateCategories.id).notNull(),
+  color: varchar("color").default("#10b981").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  orderIndex: integer("order_index").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Template Categories Relations
+export const templateCategoriesRelations = relations(templateCategories, ({ many }) => ({
+  genres: many(templateGenres),
+}));
+
+// Template Genres Relations  
+export const templateGenresRelations = relations(templateGenres, ({ one }) => ({
+  category: one(templateCategories, {
+    fields: [templateGenres.categoryId],
+    references: [templateCategories.id],
+  }),
+}));
+
+// Insert schemas for template categories and genres
+export const insertTemplateCategorySchema = createInsertSchema(templateCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTemplateGenreSchema = createInsertSchema(templateGenres).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type TemplateCategory = typeof templateCategories.$inferSelect;
+export type InsertTemplateCategory = z.infer<typeof insertTemplateCategorySchema>;
+export type TemplateGenre = typeof templateGenres.$inferSelect;
+export type InsertTemplateGenre = z.infer<typeof insertTemplateGenreSchema>;
+
 // Template Variables Schema
 export const templateVariables = pgTable("template_variables", {
   id: uuid("id").primaryKey().defaultRandom(),

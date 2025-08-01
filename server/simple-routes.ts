@@ -1205,6 +1205,58 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // Get connected categories with their genres
+  app.get('/api/connected-template-categories', async (req: any, res) => {
+    try {
+      console.log('[API] Fetching connected template categories');
+      const categories = await storage.getConnectedTemplateCategories();
+      console.log('[API] Found connected categories:', categories.length);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching connected template categories:", error);
+      res.status(500).json({ message: "Failed to fetch connected template categories" });
+    }
+  });
+
+  // Create new category
+  app.post('/api/connected-template-categories', async (req: any, res) => {
+    try {
+      const { name, description, color, isActive } = req.body;
+      console.log('[API] Creating connected template category:', name);
+      const category = await storage.createConnectedTemplateCategory({
+        name,
+        description: description || '',
+        color: color || '#3b82f6',
+        isActive: isActive !== undefined ? isActive : true,
+      });
+      console.log('[API] Created connected category:', category.id);
+      res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating connected template category:", error);
+      res.status(500).json({ message: "Failed to create connected template category" });
+    }
+  });
+
+  // Create new genre for a category
+  app.post('/api/connected-template-genres', async (req: any, res) => {
+    try {
+      const { name, description, categoryId, color, isActive } = req.body;
+      console.log('[API] Creating connected template genre:', name, 'for category:', categoryId);
+      const genre = await storage.createConnectedTemplateGenre({
+        name,
+        description: description || '',
+        categoryId,
+        color: color || '#10b981',
+        isActive: isActive !== undefined ? isActive : true,
+      });
+      console.log('[API] Created connected genre:', genre.id);
+      res.status(201).json(genre);
+    } catch (error) {
+      console.error("Error creating connected template genre:", error);
+      res.status(500).json({ message: "Failed to create connected template genre" });
+    }
+  });
+
   // CRUD operations for concerned teams
   app.post('/api/concerned-teams', async (req, res) => {
     try {

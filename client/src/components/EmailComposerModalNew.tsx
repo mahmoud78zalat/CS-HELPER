@@ -17,6 +17,7 @@ import { extractVariablesFromTemplate } from "@/lib/templateUtils";
 import { DndContext, DragEndEvent, useDraggable } from "@dnd-kit/core";
 import DraggableVariable from "./DraggableVariable";
 import DroppableTextarea from "./DroppableTextarea";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 interface EmailComposerModalProps {
   onClose: () => void;
@@ -352,9 +353,10 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex h-[calc(100vh-80px)] gap-0">
+        <PanelGroup direction="horizontal" className="h-[calc(100vh-80px)]">
           {/* Left Panel: Template Selection */}
-          <div className="w-80 border-r border-slate-200 flex flex-col bg-slate-50">
+          <Panel defaultSize={20} minSize={15} maxSize={30}>
+            <div className="w-full h-full border-r border-slate-200 flex flex-col bg-slate-50">
             <div className="p-6 border-b border-slate-200 bg-white">
               <h3 className="font-semibold text-lg mb-4 text-slate-800">Select Template</h3>
               <div className="relative">
@@ -407,10 +409,14 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 </div>
               )}
             </div>
-          </div>
+            </div>
+          </Panel>
+
+          <PanelResizeHandle className="w-1 bg-slate-300 hover:bg-slate-400 transition-colors cursor-col-resize" />
 
           {/* Middle Panel: Email Composition */}
-          <div className="flex-1 flex flex-col bg-white min-w-0">
+          <Panel defaultSize={50} minSize={30}>
+            <div className="w-full h-full flex flex-col bg-white min-w-0">
             <div className="p-6 border-b border-slate-200 flex-1 flex flex-col">
               <div className="flex items-center gap-4 mb-6">
                 <Badge className="bg-purple-100 text-purple-700 px-3 py-1 text-sm">
@@ -546,11 +552,15 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 </Card>
               </div>
             </div>
-          </div>
+            </div>
+          </Panel>
 
           {/* Right Panel: Variable Management */}
           {selectedTemplate && (
-            <div className="w-[480px] border-l border-slate-200 flex flex-col bg-slate-50 min-w-0">
+            <>
+              <PanelResizeHandle className="w-1 bg-slate-300 hover:bg-slate-400 transition-colors cursor-col-resize" />
+              <Panel defaultSize={30} minSize={20} maxSize={45}>
+                <div className="w-full h-full border-l border-slate-200 flex flex-col bg-slate-50 min-w-0">
               <div className="p-4 border-b border-slate-200 bg-white">
                 <h3 className="font-semibold text-lg flex items-center gap-2 text-slate-800">
                   <Edit3 className="h-5 w-5 text-purple-600" />
@@ -578,13 +588,10 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                           {customSubjectVars.map((varName) => (
                             <div key={varName} className="p-3 bg-white rounded-lg border-2 border-purple-200 shadow-sm hover:border-purple-300 transition-all duration-200 hover:shadow-md">
                               <div className="flex items-center gap-2 mb-2">
-                                <DraggableVariable 
-                                  variableName={varName}
-                                  className="text-xs font-mono text-purple-600 font-medium bg-purple-50 px-2 py-1 rounded-md cursor-grab active:cursor-grabbing hover:bg-purple-100 transition-colors"
-                                >
-                                  <GripVertical className="h-3 w-3 mr-1 inline-block" />
+                                <span className="text-xs font-mono text-purple-600 font-medium bg-purple-50 px-2 py-1 rounded-md cursor-grab active:cursor-grabbing hover:bg-purple-100 transition-colors inline-flex items-center gap-1">
+                                  <GripVertical className="h-3 w-3" />
                                   {`{${varName}}`}
-                                </DraggableVariable>
+                                </span>
                               </div>
                               <Input
                                 id={varName}
@@ -619,13 +626,10 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                                   <Label htmlFor={variable.key} className="text-xs font-medium text-slate-700">
                                     {variable.label}
                                   </Label>
-                                  <DraggableVariable 
-                                    variableName={variable.key}
-                                    className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-600 cursor-grab active:cursor-grabbing hover:bg-slate-200 transition-colors"
-                                  >
-                                    <GripVertical className="h-3 w-3 mr-1 inline-block" />
+                                  <span className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-600 cursor-grab active:cursor-grabbing hover:bg-slate-200 transition-colors inline-flex items-center gap-1">
+                                    <GripVertical className="h-3 w-3" />
                                     {`{${variable.key}}`}
-                                  </DraggableVariable>
+                                  </span>
                                 </div>
                                 <Input
                                   id={variable.key}
@@ -649,9 +653,11 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   </div>
                 )}
               </div>
-            </div>
+                </div>
+              </Panel>
+            </>
           )}
-        </div>
+        </PanelGroup>
         </DialogContent>
       </Dialog>
     </DndContext>
