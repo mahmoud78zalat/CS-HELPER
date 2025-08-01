@@ -650,17 +650,24 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Re-announce mutation
   const reAnnounceMutation = useMutation({
     mutationFn: async (id: string) => {
+      console.log('[DEBUG] Re-announcing announcement:', id);
       return apiRequest('POST', `/api/announcements/${id}/re-announce`);
     },
-    onSuccess: async () => {
+    onSuccess: async (data, variables) => {
+      console.log('[DEBUG] Re-announcement successful for:', variables);
       toast({
         title: "Re-announcement Successful",
         description: "The announcement will now show to all users again.",
       });
+      console.log('[DEBUG] About to invalidate and refetch after re-announce');
       // Invalidate and refetch announcements data
       await queryClient.invalidateQueries({ queryKey: ['/api/announcements'] });
       await queryClient.refetchQueries({ queryKey: ['/api/announcements'] });
+      console.log('[DEBUG] Finished invalidating and refetching after re-announce');
     },
+    // Prevent duplicate requests
+    retry: false,
+    gcTime: 0,
     onError: (error: any) => {
       toast({
         title: "Error Re-announcing",
@@ -1001,6 +1008,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   };
 
   const handleReAnnounce = (id: string) => {
+    console.log('[DEBUG] handleReAnnounce called with id:', id);
+    
+    // Prevent double submission
+    if (reAnnounceMutation.isPending) {
+      console.log('[DEBUG] Re-announce mutation already pending, ignoring call');
+      return;
+    }
+    
     reAnnounceMutation.mutate(id);
   };
 
