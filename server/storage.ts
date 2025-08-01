@@ -215,7 +215,11 @@ export interface IStorage {
     }>;
   }>>;
   createConnectedTemplateCategory(data: {name: string, description: string, color: string, isActive: boolean}): Promise<any>;
+  updateConnectedTemplateCategory(id: string, data: Partial<{name: string, description: string, color: string, isActive: boolean, orderIndex: number}>): Promise<any>;
+  deleteConnectedTemplateCategory(id: string): Promise<void>;
   createConnectedTemplateGenre(data: {name: string, description: string, categoryId: string, color: string, isActive: boolean}): Promise<any>;
+  updateConnectedTemplateGenre(id: string, data: Partial<{name: string, description: string, color: string, isActive: boolean, orderIndex: number}>): Promise<any>;
+  deleteConnectedTemplateGenre(id: string): Promise<void>;
 
   // User ordering operations for drag-and-drop
   getUserOrdering(userId: string, contentType: string): Promise<Array<{item_id: string, display_order: number}>>;

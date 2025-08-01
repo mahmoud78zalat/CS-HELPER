@@ -8,7 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Edit2, Save, Trash2, Settings, Variable, Folder, Tag, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, X, Edit2, Save, Trash2, Settings, Variable, Folder, Tag, ChevronDown, ChevronRight, Search, GripVertical, Palette, Pencil } from "lucide-react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -371,6 +375,7 @@ function ConnectedConfigManager() {
   const [editingCategory, setEditingCategory] = useState<ConnectedCategory | null>(null);
   const [editingGenre, setEditingGenre] = useState<ConnectedGenre | null>(null);
   const [selectedCategoryForGenre, setSelectedCategoryForGenre] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [newCategory, setNewCategory] = useState({
     name: '',
     description: '',
@@ -384,6 +389,10 @@ function ConnectedConfigManager() {
     color: '#10b981',
     isActive: true,
   });
+  
+  // Drag and drop state  
+  const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
+  const [draggedGenre, setDraggedGenre] = useState<string | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -393,10 +402,10 @@ function ConnectedConfigManager() {
     queryKey: ['/api/connected-template-categories'],
   });
 
-  // Create category mutation
+  // Create category mutation (FIXED - using correct endpoint)
   const createCategoryMutation = useMutation({
     mutationFn: async (data: typeof newCategory) => {
-      return apiRequest('POST', '/api/template-categories', data);
+      return apiRequest('POST', '/api/connected-template-categories', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
@@ -409,40 +418,12 @@ function ConnectedConfigManager() {
     },
   });
 
-  // Update category mutation
-  const updateCategoryMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<ConnectedCategory> }) => {
-      return apiRequest('PUT', `/api/template-categories/${id}`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
-      setEditingCategory(null);
-      setCategoryDialogOpen(false);
-      toast({ title: 'Success', description: 'Category updated successfully' });
-    },
-    onError: (error: any) => {
-      toast({ title: 'Error', description: error.message || 'Failed to update category', variant: 'destructive' });
-    },
-  });
 
-  // Delete category mutation
-  const deleteCategoryMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest('DELETE', `/api/template-categories/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
-      toast({ title: 'Success', description: 'Category deleted successfully' });
-    },
-    onError: (error: any) => {
-      toast({ title: 'Error', description: error.message || 'Failed to delete category', variant: 'destructive' });
-    },
-  });
 
-  // Create genre mutation
+  // Create genre mutation (FIXED - using correct endpoint)
   const createGenreMutation = useMutation({
     mutationFn: async (data: typeof newGenre) => {
-      return apiRequest('POST', '/api/template-genres', data);
+      return apiRequest('POST', '/api/connected-template-genres', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
@@ -455,10 +436,10 @@ function ConnectedConfigManager() {
     },
   });
 
-  // Update genre mutation
+  // Update genre mutation (FIXED - using correct endpoint)
   const updateGenreMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<ConnectedGenre> }) => {
-      return apiRequest('PUT', `/api/template-genres/${id}`, data);
+      return apiRequest('PATCH', `/api/connected-template-genres/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
@@ -471,10 +452,10 @@ function ConnectedConfigManager() {
     },
   });
 
-  // Delete genre mutation
+  // Delete genre mutation (FIXED - using correct endpoint)
   const deleteGenreMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest('DELETE', `/api/template-genres/${id}`);
+      return apiRequest('DELETE', `/api/connected-template-genres/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
@@ -482,6 +463,72 @@ function ConnectedConfigManager() {
     },
     onError: (error: any) => {
       toast({ title: 'Error', description: error.message || 'Failed to delete genre', variant: 'destructive' });
+    },
+  });
+
+  // Update category mutation (FIXED - using correct endpoint)
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<ConnectedCategory> }) => {
+      return apiRequest('PATCH', `/api/connected-template-categories/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
+      setEditingCategory(null);
+      setCategoryDialogOpen(false);
+      toast({ title: 'Success', description: 'Category updated successfully' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to update category', variant: 'destructive' });
+    },
+  });
+
+  // Delete category mutation (FIXED - using correct endpoint)
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest('DELETE', `/api/connected-template-categories/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
+      toast({ title: 'Success', description: 'Category deleted successfully' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to delete category', variant: 'destructive' });
+    },
+  });
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Reorder categories mutation
+  const reorderCategoriesMutation = useMutation({
+    mutationFn: async (updates: Array<{ id: string; order: number }>) => {
+      return apiRequest('POST', '/api/connected-template-categories/reorder', { updates });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
+      toast({ title: 'Success', description: 'Categories reordered successfully' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to reorder categories', variant: 'destructive' });
+    },
+  });
+
+  // Reorder genres mutation  
+  const reorderGenresMutation = useMutation({
+    mutationFn: async (updates: Array<{ id: string; order: number }>) => {
+      return apiRequest('POST', '/api/connected-template-genres/reorder', { updates });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
+      toast({ title: 'Success', description: 'Genres reordered successfully' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to reorder genres', variant: 'destructive' });
     },
   });
 
@@ -508,6 +555,77 @@ function ConnectedConfigManager() {
 
   const handleEditGenre = (genre: ConnectedGenre, categoryId: string) => {
     setEditingGenre(genre);
+    setSelectedCategoryForGenre(categoryId);
+    setNewGenre({
+      name: genre.name,
+      description: genre.description,
+      categoryId: categoryId,
+      color: genre.color,
+      isActive: genre.isActive,
+    });
+    setGenreDialogOpen(true);
+  };
+
+  // Drag and drop handlers
+  const handleCategoryDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = (categories as ConnectedCategory[]).findIndex((cat) => cat.id === active.id);
+      const newIndex = (categories as ConnectedCategory[]).findIndex((cat) => cat.id === over?.id);
+
+      const reorderedCategories = arrayMove(categories as ConnectedCategory[], oldIndex, newIndex);
+      
+      // Create updates array with new order indices
+      const updates = reorderedCategories.map((cat, index) => ({
+        id: cat.id,
+        order: index
+      }));
+      
+      reorderCategoriesMutation.mutate(updates);
+    }
+  };
+
+  const handleGenreDragEnd = (event: DragEndEvent, categoryId: string) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const category = (categories as ConnectedCategory[]).find(cat => cat.id === categoryId);
+      if (!category) return;
+
+      const oldIndex = category.genres.findIndex((genre) => genre.id === active.id);
+      const newIndex = category.genres.findIndex((genre) => genre.id === over?.id);
+
+      const reorderedGenres = arrayMove(category.genres, oldIndex, newIndex);
+      
+      // Create updates array with new order indices
+      const updates = reorderedGenres.map((genre, index) => ({
+        id: genre.id,
+        order: index
+      }));
+      
+      reorderGenresMutation.mutate(updates);
+    }
+  };
+
+  // Filter categories based on search term
+  const filteredCategories = (categories as ConnectedCategory[]).filter(category =>
+    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    category.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    category.genres.some(genre => 
+      genre.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      genre.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  const resetCategoryDialog = () => {
+    setEditingCategory(null);
+    setNewCategory({ name: '', description: '', color: '#3b82f6', isActive: true });
+  };
+
+  const resetGenreDialog = () => {
+    setEditingGenre(null);
+    setNewGenre({ name: '', description: '', categoryId: '', color: '#10b981', isActive: true });
     setNewGenre({
       name: genre.name,
       description: genre.description,

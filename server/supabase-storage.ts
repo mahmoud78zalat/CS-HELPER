@@ -1915,6 +1915,144 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
+  async updateConnectedTemplateCategory(id: string, data: Partial<{
+    name: string;
+    description: string;
+    color: string;
+    isActive: boolean;
+    orderIndex: number;
+  }>): Promise<{
+    id: string;
+    name: string;
+    description: string;
+    color: string;
+    isActive: boolean;
+    orderIndex: number;
+  }> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const updateData: any = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.description !== undefined) updateData.description = data.description;
+      if (data.color !== undefined) updateData.color = data.color;
+      if (data.isActive !== undefined) updateData.is_active = data.isActive;
+      if (data.orderIndex !== undefined) updateData.order_index = data.orderIndex;
+      updateData.updated_at = new Date().toISOString();
+
+      const { data: result, error } = await this.client
+        .from('template_categories')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        color: result.color,
+        isActive: result.is_active,
+        orderIndex: result.order_index,
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error updating connected template category:', error);
+      throw error;
+    }
+  }
+
+  async deleteConnectedTemplateCategory(id: string): Promise<void> {
+    try {
+      // First delete all associated genres
+      const { error: genresError } = await this.client
+        .from('template_genres')
+        .delete()
+        .eq('category_id', id);
+
+      if (genresError) {
+        console.error('[SupabaseStorage] Error deleting connected template genres:', genresError);
+        throw genresError;
+      }
+
+      // Then delete the category
+      const { error } = await this.client
+        .from('template_categories')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('[SupabaseStorage] Error deleting connected template category:', error);
+      throw error;
+    }
+  }
+
+  async updateConnectedTemplateGenre(id: string, data: Partial<{
+    name: string;
+    description: string;
+    color: string;
+    isActive: boolean;
+    orderIndex: number;
+  }>): Promise<{
+    id: string;
+    name: string;
+    description: string;
+    categoryId: string;
+    color: string;
+    isActive: boolean;
+    orderIndex: number;
+  }> {
+    try {
+      await this.ensureDynamicTablesExist();
+      
+      const updateData: any = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.description !== undefined) updateData.description = data.description;
+      if (data.color !== undefined) updateData.color = data.color;
+      if (data.isActive !== undefined) updateData.is_active = data.isActive;
+      if (data.orderIndex !== undefined) updateData.order_index = data.orderIndex;
+      updateData.updated_at = new Date().toISOString();
+
+      const { data: result, error } = await this.client
+        .from('template_genres')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        categoryId: result.category_id,
+        color: result.color,
+        isActive: result.is_active,
+        orderIndex: result.order_index,
+      };
+    } catch (error) {
+      console.error('[SupabaseStorage] Error updating connected template genre:', error);
+      throw error;
+    }
+  }
+
+  async deleteConnectedTemplateGenre(id: string): Promise<void> {
+    try {
+      const { error } = await this.client
+        .from('template_genres')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('[SupabaseStorage] Error deleting connected template genre:', error);
+      throw error;
+    }
+  }
+
   // CRUD operations for concerned teams
   async createConcernedTeam(data: {name: string, description: string, isActive: boolean}): Promise<{id: string, name: string, description: string, isActive: boolean}> {
     try {

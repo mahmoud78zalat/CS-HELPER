@@ -1283,6 +1283,110 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // Update connected category
+  app.patch('/api/connected-template-categories/:id', async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      console.log('[API] Updating connected template category:', id, updates);
+      const category = await storage.updateConnectedTemplateCategory(id, updates);
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating connected template category:", error);
+      res.status(500).json({ message: "Failed to update connected template category" });
+    }
+  });
+
+  // Delete connected category
+  app.delete('/api/connected-template-categories/:id', async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      console.log('[API] Deleting connected template category:', id);
+      await storage.deleteConnectedTemplateCategory(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting connected template category:", error);
+      res.status(500).json({ message: "Failed to delete connected template category" });
+    }
+  });
+
+  // Update connected genre
+  app.patch('/api/connected-template-genres/:id', async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      console.log('[API] Updating connected template genre:', id, updates);
+      const genre = await storage.updateConnectedTemplateGenre(id, updates);
+      res.json(genre);
+    } catch (error) {
+      console.error("Error updating connected template genre:", error);
+      res.status(500).json({ message: "Failed to update connected template genre" });
+    }
+  });
+
+  // Delete connected genre
+  app.delete('/api/connected-template-genres/:id', async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      console.log('[API] Deleting connected template genre:', id);
+      await storage.deleteConnectedTemplateGenre(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting connected template genre:", error);
+      res.status(500).json({ message: "Failed to delete connected template genre" });
+    }
+  });
+
+  // Reorder connected categories
+  app.post('/api/connected-template-categories/reorder', async (req: any, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[API] Reordering connected template categories:', updates);
+
+      // Update each category's order
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateConnectedTemplateCategory(update.id, { orderIndex: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "Connected template categories reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering connected template categories:", error);
+      res.status(500).json({ message: "Failed to reorder connected template categories" });
+    }
+  });
+
+  // Reorder connected genres
+  app.post('/api/connected-template-genres/reorder', async (req: any, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[API] Reordering connected template genres:', updates);
+
+      // Update each genre's order
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateConnectedTemplateGenre(update.id, { orderIndex: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "Connected template genres reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering connected template genres:", error);
+      res.status(500).json({ message: "Failed to reorder connected template genres" });
+    }
+  });
+
   // CRUD operations for concerned teams
   app.post('/api/concerned-teams', async (req, res) => {
     try {
