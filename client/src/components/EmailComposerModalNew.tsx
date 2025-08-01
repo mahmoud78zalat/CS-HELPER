@@ -344,25 +344,27 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <Dialog open={true} onOpenChange={onClose}>
-        <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full m-0 p-0 overflow-hidden border-0 rounded-none">
-        <DialogHeader className="p-6 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-purple-50">
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Send className="h-6 w-6 text-blue-600" />
+        <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full m-0 p-0 overflow-hidden border-0 rounded-none bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <DialogHeader className="p-6 border-b border-slate-200/60 bg-gradient-to-r from-indigo-50/80 via-purple-50/80 to-pink-50/80 backdrop-blur-sm">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <div className="p-2 rounded-xl bg-white/50 shadow-lg border border-white/20">
+              <Send className="h-6 w-6 text-indigo-600" />
+            </div>
             Email Template Composer
           </DialogTitle>
         </DialogHeader>
 
-        <PanelGroup direction="horizontal" className="h-[calc(100vh-80px)]" autoSaveId="email-composer-layout-v2">
+        <PanelGroup direction="horizontal" className="h-[calc(100vh-88px)]" autoSaveId="email-composer-layout-v3">
           {/* Left Panel: Template Selection */}
-          <Panel defaultSize={22} minSize={18} maxSize={35} id="template-selection" order={1}>
-            <div className="w-full h-full border-r border-slate-200 flex flex-col bg-slate-50">
-            <div className="p-6 border-b border-slate-200 bg-white">
-              <h3 className="font-semibold text-lg mb-4 text-slate-800">Select Template</h3>
+          <Panel defaultSize={25} minSize={20} maxSize={40} id="template-selection" order={1}>
+            <div className="w-full h-full border-r border-slate-200/50 flex flex-col bg-gradient-to-b from-slate-50/80 to-white/90 backdrop-blur-sm">
+            <div className="p-6 border-b border-slate-200/50 bg-white/70 backdrop-blur-sm">
+              <h3 className="font-bold text-xl mb-4 bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent">Select Template</h3>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 z-10" />
                 <Input
                   type="text"
-                  className="pl-10 h-12 text-base"
+                  className="pl-12 h-12 text-base bg-white/80 border-slate-200/60 focus:border-indigo-300 focus:ring-indigo-200/50 rounded-xl shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/90"
                   placeholder="Search templates..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -370,28 +372,29 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
               <div className="space-y-4">
                 {filteredTemplates.map((template: EmailTemplate) => (
                   <Card
                     key={template.id}
-                    className={`cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md ${
+                    className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group ${
                       selectedTemplate?.id === template.id 
-                        ? 'border-blue-500 bg-blue-50 shadow-md' 
-                        : 'border-slate-200 bg-white'
+                        ? 'border-indigo-300 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg ring-2 ring-indigo-200/50' 
+                        : 'border-slate-200/60 bg-white/80 hover:border-indigo-200 hover:bg-white/90 backdrop-blur-sm'
                     }`}
                     onClick={() => handleTemplateSelect(template)}
                   >
-                    <CardContent className="p-4">
-                      <h4 className="font-semibold text-slate-800 mb-2 text-base">{template.name}</h4>
-                      <div className="text-sm text-slate-600 mb-3">
-                        <span className="font-medium">To:</span> {template.concernedTeam}
+                    <CardContent className="p-5">
+                      <h4 className="font-bold text-slate-800 mb-3 text-base group-hover:text-indigo-700 transition-colors">{template.name}</h4>
+                      <div className="text-sm text-slate-600 mb-4">
+                        <span className="font-semibold text-slate-700">To:</span> 
+                        <span className="ml-2 px-2 py-1 bg-slate-100 rounded-full text-xs font-medium">{template.concernedTeam}</span>
                       </div>
                       <div className="flex gap-2 flex-wrap">
-                        <Badge variant="secondary" className="text-xs px-2 py-1">
+                        <Badge variant="secondary" className="text-xs px-3 py-1 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border-0 font-medium">
                           {template.genre}
                         </Badge>
-                        <Badge variant="outline" className="text-xs px-2 py-1">
+                        <Badge variant="outline" className="text-xs px-3 py-1 border-indigo-200 text-indigo-700 bg-indigo-50/50 font-medium">
                           {template.category}
                         </Badge>
                       </div>
@@ -411,14 +414,16 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             </div>
           </Panel>
 
-          <PanelResizeHandle className="w-2 bg-slate-300 hover:bg-slate-400 transition-colors duration-200 cursor-col-resize active:bg-slate-500" />
+          <PanelResizeHandle className="w-3 bg-gradient-to-b from-slate-200 to-slate-300 hover:from-indigo-300 hover:to-purple-300 transition-all duration-300 cursor-col-resize active:from-indigo-400 active:to-purple-400 shadow-sm hover:shadow-md relative group">
+            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-white/50 transform -translate-x-1/2 group-hover:bg-white/80 transition-colors"></div>
+          </PanelResizeHandle>
 
           {/* Middle Panel: Email Composition */}
-          <Panel defaultSize={43} minSize={30} id="email-composer" order={2}>
-            <div className="w-full h-full flex flex-col bg-white min-w-0">
-            <div className="p-6 border-b border-slate-200 flex-1 flex flex-col">
+          <Panel defaultSize={40} minSize={25} id="email-composer" order={2}>
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-white to-slate-50/50 min-w-0">
+            <div className="p-6 border-b border-slate-200/50 flex-1 flex flex-col bg-white/70 backdrop-blur-sm">
               <div className="flex items-center gap-4 mb-6">
-                <Badge className="bg-purple-100 text-purple-700 px-3 py-1 text-sm">
+                <Badge className="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 px-4 py-2 text-sm font-semibold border border-purple-200/50 shadow-sm">
                   To: {selectedTemplate?.concernedTeam || 'Select template first'}
                 </Badge>
               </div>
@@ -554,24 +559,26 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             </div>
           </Panel>
 
-          {/* Right Panel: Variable Management */}
-          {selectedTemplate && (
-            <>
-              <PanelResizeHandle className="w-2 bg-slate-300 hover:bg-slate-400 transition-colors duration-200 cursor-col-resize active:bg-slate-500" />
-              <Panel defaultSize={35} minSize={25} maxSize={60} id="variable-editor" order={3}>
-                <div className="w-full h-full border-l border-slate-200 flex flex-col bg-slate-50 min-w-0">
-              <div className="p-4 border-b border-slate-200 bg-white">
-                <h3 className="font-semibold text-lg flex items-center gap-2 text-slate-800">
-                  <Edit3 className="h-5 w-5 text-purple-600" />
-                  Template Variables
+          {/* Right Panel: Variable Management - Always visible for proper resizing */}
+          <PanelResizeHandle className="w-3 bg-gradient-to-b from-slate-200 to-slate-300 hover:from-purple-300 hover:to-pink-300 transition-all duration-300 cursor-col-resize active:from-purple-400 active:to-pink-400 shadow-sm hover:shadow-md relative group">
+            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-white/50 transform -translate-x-1/2 group-hover:bg-white/80 transition-colors"></div>
+          </PanelResizeHandle>
+          <Panel defaultSize={35} minSize={25} maxSize={65} id="variable-editor" order={3}>
+                <div className="w-full h-full border-l border-slate-200/50 flex flex-col bg-gradient-to-br from-slate-50/80 to-purple-50/30 backdrop-blur-sm min-w-0">
+              <div className="p-5 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm">
+                <h3 className="font-bold text-xl flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <div className="p-2 rounded-xl bg-purple-100/80 shadow-lg border border-purple-200/50">
+                    <Edit3 className="h-5 w-5 text-purple-600" />
+                  </div>
+                  Live Template Variables
                 </h3>
-                <p className="text-sm text-slate-600 mt-2">
-                  Fill in values for variables used in this template
+                <p className="text-sm text-slate-600 mt-3 font-medium">
+                  {selectedTemplate ? `Variables found: ${uniqueVariables.length + customSubjectVars.length}` : 'Select a template to see variables'}
                 </p>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-4">
-                {(uniqueVariables.length > 0 || customSubjectVars.length > 0) ? (
+              <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+                {selectedTemplate && (uniqueVariables.length > 0 || customSubjectVars.length > 0) ? (
                   <div className="space-y-4">
                     {/* Custom Subject Variables Section */}
                     {customSubjectVars.length > 0 && (
@@ -644,18 +651,27 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                       );
                     })}
                   </div>
-                ) : (
+                ) : selectedTemplate ? (
                   <div className="text-center py-12 text-slate-500">
                     <Edit3 className="h-12 w-12 mx-auto mb-4 text-slate-300" />
                     <p className="text-base font-medium">No variables found</p>
-                    <p className="text-sm mt-2">Select a template with variables to see inputs</p>
+                    <p className="text-sm mt-2">This template doesn't use any variables</p>
+                  </div>
+                ) : (
+                  <div className="text-center py-16 text-slate-400">
+                    <div className="p-4 rounded-xl bg-slate-100/50 w-fit mx-auto mb-4">
+                      <Edit3 className="h-12 w-12 text-slate-300" />
+                    </div>
+                    <p className="text-lg font-semibold text-slate-600 mb-2">Template Variables</p>
+                    <p className="text-sm">Select an email template to see available variables</p>
+                    <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                      <p className="text-xs text-purple-700 font-medium">💡 Tip: Variables help personalize your emails with dynamic content</p>
+                    </div>
                   </div>
                 )}
               </div>
                 </div>
-              </Panel>
-            </>
-          )}
+          </Panel>
         </PanelGroup>
         </DialogContent>
       </Dialog>
