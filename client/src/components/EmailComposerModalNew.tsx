@@ -74,10 +74,32 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const [prevSubject, setPrevSubject] = useState('');
   const [prevBody, setPrevBody] = useState('');
   
-  // Fetch email templates
+  // Fetch email templates with debugging
   const { data: templates = [] } = useQuery<EmailTemplate[]>({
     queryKey: ['/api/email-templates'],
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache results
   });
+
+  // Debug template data and UUID resolution
+  useEffect(() => {
+    console.log('[EmailComposerNew] Templates loaded:', templates.length);
+    if (templates.length > 0) {
+      const sampleTemplate = templates[0];
+      console.log('[EmailComposerNew] Sample template data:', {
+        id: sampleTemplate.id,
+        name: sampleTemplate.name,
+        category: sampleTemplate.category,
+        genre: sampleTemplate.genre,
+        categoryType: typeof sampleTemplate.category,
+        genreType: typeof sampleTemplate.genre,
+        categoryLength: sampleTemplate.category?.length,
+        genreLength: sampleTemplate.genre?.length,
+        categoryIsUUID: sampleTemplate.category?.includes('-'),
+        genreIsUUID: sampleTemplate.genre?.includes('-'),
+      });
+    }
+  }, [templates]);
 
   const { customerData } = useCustomerData();
   const { user } = useAuth();

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import TemplatesArea from "@/components/TemplatesArea";
 import CheckOrderModal from "@/components/CheckOrderModal";
-import EmailComposerModal from "@/components/EmailComposerModal";
+import EmailComposerModal from "@/components/EmailComposerModalNew";
 import AdminPanel from "@/components/AdminPanel";
 import AboutModal from "@/components/AboutModal";
 import FAQModal from "@/components/FAQModal";
