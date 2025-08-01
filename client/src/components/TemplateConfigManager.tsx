@@ -3,13 +3,35 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Edit2, Save, Trash2, Settings, Variable } from "lucide-react";
+import { Plus, X, Edit2, Save, Trash2, Settings, Variable, Folder, Tag, ChevronDown, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import VariableManager from "./VariableManager";
+
+interface ConnectedCategory {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  isActive: boolean;
+  orderIndex: number;
+  genres: ConnectedGenre[];
+}
+
+interface ConnectedGenre {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  isActive: boolean;
+  orderIndex: number;
+}
 
 interface TemplateConfigManagerProps {
   isOpen: boolean;
@@ -29,9 +51,10 @@ function TemplateConfigManager({ isOpen, onClose }: TemplateConfigManagerProps) 
           </DialogHeader>
           
           <Tabs defaultValue="categories" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="categories">Categories</TabsTrigger>
               <TabsTrigger value="genres">Genres</TabsTrigger>
+              <TabsTrigger value="connected">Connected Config</TabsTrigger>
               <TabsTrigger value="teams">Concerned Teams</TabsTrigger>
               <TabsTrigger value="variables">Variables</TabsTrigger>
             </TabsList>
@@ -42,6 +65,10 @@ function TemplateConfigManager({ isOpen, onClose }: TemplateConfigManagerProps) 
             
             <TabsContent value="genres">
               <ConfigTypeManager type="genres" />
+            </TabsContent>
+            
+            <TabsContent value="connected">
+              <ConnectedConfigManager />
             </TabsContent>
             
             <TabsContent value="teams">
@@ -319,6 +346,518 @@ function ConfigTypeManager({ type }: { type: 'categories' | 'genres' | 'concerne
             <p><strong>Total:</strong> {items.length} {getDisplayName().toLowerCase()}</p>
             <p><strong>Note:</strong> Changes are saved automatically and will apply to new templates immediately.</p>
           </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Connected Config Manager Component
+const colorOptions = [
+  { value: '#3b82f6', label: 'Blue', class: 'bg-blue-500' },
+  { value: '#10b981', label: 'Green', class: 'bg-green-500' },
+  { value: '#f59e0b', label: 'Yellow', class: 'bg-yellow-500' },
+  { value: '#ef4444', label: 'Red', class: 'bg-red-500' },
+  { value: '#8b5cf6', label: 'Purple', class: 'bg-purple-500' },
+  { value: '#06b6d4', label: 'Cyan', class: 'bg-cyan-500' },
+  { value: '#84cc16', label: 'Lime', class: 'bg-lime-500' },
+  { value: '#f97316', label: 'Orange', class: 'bg-orange-500' },
+];
+
+function ConnectedConfigManager() {
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [genreDialogOpen, setGenreDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<ConnectedCategory | null>(null);
+  const [editingGenre, setEditingGenre] = useState<ConnectedGenre | null>(null);
+  const [selectedCategoryForGenre, setSelectedCategoryForGenre] = useState<string>('');
+  const [newCategory, setNewCategory] = useState({
+    name: '',
+    description: '',
+    color: '#3b82f6',
+    isActive: true,
+  });
+  const [newGenre, setNewGenre] = useState({
+    name: '',
+    description: '',
+    categoryId: '',
+    color: '#10b981',
+    isActive: true,
+  });
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch connected categories with genres
+  const { data: categories = [], isLoading } = useQuery<ConnectedCategory[]>({
+    queryKey: ['/api/connected-template-categories'],
+  });
+
+  // Create category mutation
+  const createCategoryMutation = useMutation({
+    mutationFn: async (data: typeof newCategory) => {
+      return apiRequest('POST', '/api/template-categories', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
+      setCategoryDialogOpen(false);
+      setNewCategory({ name: '', description: '', color: '#3b82f6', isActive: true });
+      toast({ title: 'Success', description: 'Category created successfully' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to create category', variant: 'destructive' });
+    },
+  });
+
+  // Update category mutation
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<ConnectedCategory> }) => {
+      return apiRequest('PUT', `/api/template-categories/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
+      setEditingCategory(null);
+      setCategoryDialogOpen(false);
+      toast({ title: 'Success', description: 'Category updated successfully' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to update category', variant: 'destructive' });
+    },
+  });
+
+  // Delete category mutation
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest('DELETE', `/api/template-categories/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
+      toast({ title: 'Success', description: 'Category deleted successfully' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to delete category', variant: 'destructive' });
+    },
+  });
+
+  // Create genre mutation
+  const createGenreMutation = useMutation({
+    mutationFn: async (data: typeof newGenre) => {
+      return apiRequest('POST', '/api/template-genres', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
+      setGenreDialogOpen(false);
+      setNewGenre({ name: '', description: '', categoryId: '', color: '#10b981', isActive: true });
+      toast({ title: 'Success', description: 'Genre created successfully' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to create genre', variant: 'destructive' });
+    },
+  });
+
+  // Update genre mutation
+  const updateGenreMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<ConnectedGenre> }) => {
+      return apiRequest('PUT', `/api/template-genres/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
+      setEditingGenre(null);
+      setGenreDialogOpen(false);
+      toast({ title: 'Success', description: 'Genre updated successfully' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to update genre', variant: 'destructive' });
+    },
+  });
+
+  // Delete genre mutation
+  const deleteGenreMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest('DELETE', `/api/template-genres/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/connected-template-categories'] });
+      toast({ title: 'Success', description: 'Genre deleted successfully' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to delete genre', variant: 'destructive' });
+    },
+  });
+
+  const toggleCategory = (categoryId: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(categoryId)) {
+      newExpanded.delete(categoryId);
+    } else {
+      newExpanded.add(categoryId);
+    }
+    setExpandedCategories(newExpanded);
+  };
+
+  const handleEditCategory = (category: ConnectedCategory) => {
+    setEditingCategory(category);
+    setNewCategory({
+      name: category.name,
+      description: category.description,
+      color: category.color,
+      isActive: category.isActive,
+    });
+    setCategoryDialogOpen(true);
+  };
+
+  const handleEditGenre = (genre: ConnectedGenre, categoryId: string) => {
+    setEditingGenre(genre);
+    setNewGenre({
+      name: genre.name,
+      description: genre.description,
+      categoryId,
+      color: genre.color,
+      isActive: genre.isActive,
+    });
+    setGenreDialogOpen(true);
+  };
+
+  const handleCreateCategory = () => {
+    if (editingCategory) {
+      updateCategoryMutation.mutate({
+        id: editingCategory.id,
+        data: newCategory,
+      });
+    } else {
+      createCategoryMutation.mutate(newCategory);
+    }
+  };
+
+  const handleCreateGenre = () => {
+    if (editingGenre) {
+      updateGenreMutation.mutate({
+        id: editingGenre.id,
+        data: newGenre,
+      });
+    } else {
+      createGenreMutation.mutate(newGenre);
+    }
+  };
+
+  const handleDeleteCategory = (category: ConnectedCategory) => {
+    if (confirm(`Are you sure you want to delete "${category.name}"? This will also delete all associated genres.`)) {
+      deleteCategoryMutation.mutate(category.id);
+    }
+  };
+
+  const handleDeleteGenre = (genre: ConnectedGenre) => {
+    if (confirm(`Are you sure you want to delete "${genre.name}"?`)) {
+      deleteGenreMutation.mutate(genre.id);
+    }
+  };
+
+  const resetCategoryDialog = () => {
+    setEditingCategory(null);
+    setNewCategory({ name: '', description: '', color: '#3b82f6', isActive: true });
+    setCategoryDialogOpen(false);
+  };
+
+  const resetGenreDialog = () => {
+    setEditingGenre(null);
+    setNewGenre({ name: '', description: '', categoryId: '', color: '#10b981', isActive: true });
+    setGenreDialogOpen(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Folder className="h-4 w-4" />
+            Connected Categories & Genres
+          </CardTitle>
+          <p className="text-xs text-slate-600">
+            Manage hierarchical categories with their associated genres for better template organization.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" onClick={() => resetCategoryDialog()}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Category
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingCategory ? 'Edit Category' : 'Create New Category'}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <Label htmlFor="category-name">Name</Label>
+                    <Input
+                      id="category-name"
+                      value={newCategory.name}
+                      onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                      placeholder="Category name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category-description">Description</Label>
+                    <Textarea
+                      id="category-description"
+                      value={newCategory.description}
+                      onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+                      placeholder="Category description"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category-color">Color</Label>
+                    <Select value={newCategory.color} onValueChange={(value) => setNewCategory({ ...newCategory, color: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {colorOptions.map((color) => (
+                          <SelectItem key={color.value} value={color.value}>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-4 h-4 rounded ${color.class}`} />
+                              {color.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={resetCategoryDialog}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateCategory}>
+                      {editingCategory ? 'Update' : 'Create'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={genreDialogOpen} onOpenChange={setGenreDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => {
+                    resetGenreDialog();
+                    const firstCategory = (categories as ConnectedCategory[])[0];
+                    setSelectedCategoryForGenre(firstCategory?.id || '');
+                    setNewGenre({ ...newGenre, categoryId: firstCategory?.id || '' });
+                  }}
+                  disabled={(categories as ConnectedCategory[]).length === 0}
+                >
+                  <Tag className="h-4 w-4 mr-1" />
+                  Add Genre
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingGenre ? 'Edit Genre' : 'Create New Genre'}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <Label htmlFor="genre-category">Category</Label>
+                    <Select 
+                      value={newGenre.categoryId} 
+                      onValueChange={(value) => setNewGenre({ ...newGenre, categoryId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(categories as ConnectedCategory[]).map((category: ConnectedCategory) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="genre-name">Name</Label>
+                    <Input
+                      id="genre-name"
+                      value={newGenre.name}
+                      onChange={(e) => setNewGenre({ ...newGenre, name: e.target.value })}
+                      placeholder="Genre name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="genre-description">Description</Label>
+                    <Textarea
+                      id="genre-description"
+                      value={newGenre.description}
+                      onChange={(e) => setNewGenre({ ...newGenre, description: e.target.value })}
+                      placeholder="Genre description"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="genre-color">Color</Label>
+                    <Select value={newGenre.color} onValueChange={(value) => setNewGenre({ ...newGenre, color: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {colorOptions.map((color) => (
+                          <SelectItem key={color.value} value={color.value}>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-4 h-4 rounded ${color.class}`} />
+                              {color.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={resetGenreDialog}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateGenre}>
+                      {editingGenre ? 'Update' : 'Create'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {isLoading ? (
+            <div className="text-sm text-slate-500">Loading...</div>
+          ) : (categories as ConnectedCategory[]).length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-8">
+              No connected categories configured. Add a category to get started.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {(categories as ConnectedCategory[]).map((category: ConnectedCategory) => (
+                <div key={category.id} className="border rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-t-lg">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleCategory(category.id)}
+                        className="h-auto p-1"
+                      >
+                        {expandedCategories.has(category.id) ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <div 
+                        className="w-4 h-4 rounded" 
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <div>
+                        <h4 className="font-medium">{category.name}</h4>
+                        {category.description && (
+                          <p className="text-xs text-slate-600">{category.description}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className="text-xs">
+                        {category.genres?.length || 0} genres
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditCategory(category)}
+                        className="h-auto p-1"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteCategory(category)}
+                        className="h-auto p-1 text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {expandedCategories.has(category.id) && (
+                    <div className="p-3 border-t">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="text-sm font-medium">Genres in this category</h5>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            resetGenreDialog();
+                            setNewGenre({ ...newGenre, categoryId: category.id });
+                            setGenreDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add Genre
+                        </Button>
+                      </div>
+                      
+                      {category.genres?.length === 0 ? (
+                        <p className="text-sm text-slate-500 text-center py-4">
+                          No genres in this category yet.
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {category.genres?.map((genre: ConnectedGenre) => (
+                            <div
+                              key={genre.id}
+                              className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 rounded border"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded" 
+                                  style={{ backgroundColor: genre.color }}
+                                />
+                                <div>
+                                  <span className="text-sm font-medium">{genre.name}</span>
+                                  {genre.description && (
+                                    <p className="text-xs text-slate-600">{genre.description}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditGenre(genre, category.id)}
+                                  className="h-auto p-1"
+                                >
+                                  <Edit2 className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteGenre(genre)}
+                                  className="h-auto p-1 text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

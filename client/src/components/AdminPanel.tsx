@@ -25,7 +25,7 @@ import { User, Template, EmailTemplate } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
 import TemplateConfigManager from "@/components/TemplateConfigManager";
 import { SimpleTemplateConfigManager } from "@/components/SimpleTemplateConfigManager";
-import { ConnectedTemplateConfigManager } from "@/components/ConnectedTemplateConfigManager";
+
 
 import DragDropEmailTemplates from "@/components/DragDropEmailTemplates";
 import HorizontalGroupedTemplates from "@/components/HorizontalGroupedTemplates";
@@ -1314,7 +1314,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         <div className="flex-1 overflow-hidden p-4 lg:p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
             {/* Mobile-responsive tabs */}
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-8 mb-4">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 mb-4">
               <TabsTrigger value="announcements" className="text-xs lg:text-sm p-2 lg:p-3">
                 <Megaphone className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
                 <span className="hidden lg:inline">Announcements</span>
@@ -1330,11 +1330,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <span className="hidden lg:inline">Template Management</span>
                 <span className="lg:hidden">Templates</span>
               </TabsTrigger>
-              <TabsTrigger value="connected-config" className="text-xs lg:text-sm p-2 lg:p-3">
-                <FolderOpen className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
-                <span className="hidden lg:inline">Connected Config</span>
-                <span className="lg:hidden">Config</span>
-              </TabsTrigger>
+
               <TabsTrigger value="colors" className="text-xs lg:text-sm p-2 lg:p-3">
                 <div className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2 bg-gradient-to-r from-red-400 to-blue-400 rounded-full"></div>
                 <span className="hidden lg:inline">Colors</span>
@@ -2346,10 +2342,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             </div>
           </TabsContent>
 
-          {/* Connected Config Tab */}
-          <TabsContent value="connected-config" className="flex-1 overflow-y-auto">
-            <ConnectedTemplateConfigManager />
-          </TabsContent>
+
 
           <TabsContent value="sitecontent" className="flex-1 overflow-y-auto">
             <div className="space-y-6">
