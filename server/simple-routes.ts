@@ -1836,23 +1836,7 @@ export function registerRoutes(app: Express): void {
     }
   });
 
-  // Announcement acknowledgment endpoints
-  app.post('/api/announcements/:id/acknowledge', async (req, res) => {
-    try {
-      const { id: announcementId } = req.params;
-      const { userId } = req.body;
-      
-      if (!userId) {
-        return res.status(400).json({ message: "User ID is required" });
-      }
-
-      await storage.markAnnouncementAsSeen(userId, announcementId);
-      res.status(200).json({ message: "Announcement marked as seen successfully" });
-    } catch (error) {
-      console.error("Error marking announcement as seen:", error);
-      res.status(500).json({ message: "Failed to mark announcement as seen" });
-    }
-  });
+  // Duplicate endpoint removed - using the one at line 916 instead
 
   app.get('/api/user/:userId/seen-announcements', async (req, res) => {
     try {
