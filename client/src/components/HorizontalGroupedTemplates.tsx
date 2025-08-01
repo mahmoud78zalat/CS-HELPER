@@ -260,7 +260,7 @@ export default function HorizontalGroupedTemplates({
 }: HorizontalGroupedTemplatesProps) {
   const [groupedData, setGroupedData] = useState<TemplateGroup[]>([]);
   const [ungroupedTemplates, setUngroupedTemplates] = useState<LiveTemplate[]>([]);
-  const [isDragDropMode, setIsDragDropMode] = useState(false);
+  const [isDragDropMode, setIsDragDropMode] = useState(true);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -502,25 +502,11 @@ export default function HorizontalGroupedTemplates({
 
   return (
     <div className="space-y-6">
-      {/* Drag & Drop Toggle Controls */}
-      <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-        <div className="flex items-center gap-3">
-          <Button
-            variant={isDragDropMode ? "default" : "outline"}
-            size="sm"
-            onClick={() => setIsDragDropMode(!isDragDropMode)}
-            className="flex items-center gap-2"
-          >
-            <ArrowUpDown className="h-4 w-4" />
-            {isDragDropMode ? "Exit Reorder Mode" : "Enable Reorder Mode"}
-          </Button>
-          
-          {isDragDropMode && (
-            <span className="text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full">
-              Drag templates to reorder within groups | Drag groups to reorder folders | Drop templates on group headers to move them
-            </span>
-          )}
-        </div>
+      {/* Drag & Drop Help Text and Custom Ordering Controls */}
+      <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+        <span className="text-sm text-blue-700 dark:text-blue-300">
+          💡 Drag templates to reorder within groups | Drag group headers to reorder folders | Drop templates on group headers to move them
+        </span>
         
         {hasLocalOrdering && (
           <div className="flex items-center gap-2">
@@ -592,10 +578,10 @@ export default function HorizontalGroupedTemplates({
                                 {template.name}
                               </h4>
                               <div className="flex gap-2 mb-2">
-                                <Badge variant="secondary" className="text-xs px-2 py-1">
+                                <Badge variant="secondary" className={`text-xs px-2 py-1 ${getGenreBadgeClasses(template.genre)}`}>
                                   {template.genre}
                                 </Badge>
-                                <Badge variant="outline" className="text-xs px-2 py-1">
+                                <Badge variant="outline" className={`text-xs px-2 py-1 ${getCategoryBadgeClasses(template.category)}`}>
                                   {template.category}
                                 </Badge>
                                 {template.usageCount !== undefined && template.usageCount > 0 && (
