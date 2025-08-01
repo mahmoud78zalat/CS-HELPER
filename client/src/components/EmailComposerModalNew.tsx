@@ -68,7 +68,6 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
-  const [showVariables, setShowVariables] = useState(false);
   const [showSubjectVariables, setShowSubjectVariables] = useState(false);
   
   // Track subject and content changes for variable synchronization
@@ -353,9 +352,9 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           </DialogTitle>
         </DialogHeader>
 
-        <PanelGroup direction="horizontal" className="h-[calc(100vh-80px)]">
+        <PanelGroup direction="horizontal" className="h-[calc(100vh-80px)]" autoSaveId="email-composer-layout">
           {/* Left Panel: Template Selection */}
-          <Panel defaultSize={20} minSize={15} maxSize={30}>
+          <Panel defaultSize={20} minSize={15} maxSize={35} id="template-selection" order={1}>
             <div className="w-full h-full border-r border-slate-200 flex flex-col bg-slate-50">
             <div className="p-6 border-b border-slate-200 bg-white">
               <h3 className="font-semibold text-lg mb-4 text-slate-800">Select Template</h3>
@@ -412,10 +411,10 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
             </div>
           </Panel>
 
-          <PanelResizeHandle className="w-1 bg-slate-300 hover:bg-slate-400 transition-colors cursor-col-resize" />
+          <PanelResizeHandle className="w-2 bg-slate-300 hover:bg-slate-400 transition-colors duration-200 cursor-col-resize active:bg-slate-500" />
 
           {/* Middle Panel: Email Composition */}
-          <Panel defaultSize={50} minSize={30}>
+          <Panel defaultSize={45} minSize={35} id="email-composer" order={2}>
             <div className="w-full h-full flex flex-col bg-white min-w-0">
             <div className="p-6 border-b border-slate-200 flex-1 flex flex-col">
               <div className="flex items-center gap-4 mb-6">
@@ -558,8 +557,8 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
           {/* Right Panel: Variable Management */}
           {selectedTemplate && (
             <>
-              <PanelResizeHandle className="w-1 bg-slate-300 hover:bg-slate-400 transition-colors cursor-col-resize" />
-              <Panel defaultSize={40} minSize={30} maxSize={60}>
+              <PanelResizeHandle className="w-2 bg-slate-300 hover:bg-slate-400 transition-colors duration-200 cursor-col-resize active:bg-slate-500" />
+              <Panel defaultSize={35} minSize={25} maxSize={55} id="variable-editor" order={3}>
                 <div className="w-full h-full border-l border-slate-200 flex flex-col bg-slate-50 min-w-0">
               <div className="p-4 border-b border-slate-200 bg-white">
                 <h3 className="font-semibold text-lg flex items-center gap-2 text-slate-800">
