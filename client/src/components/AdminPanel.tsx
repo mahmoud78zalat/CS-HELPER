@@ -727,6 +727,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       // Invalidate and refetch announcements data
       await queryClient.invalidateQueries({ queryKey: ['/api/announcements'] });
       await queryClient.refetchQueries({ queryKey: ['/api/announcements'] });
+      // Broadcast real-time update to all users
+      await realTimeService.broadcastAnnouncementUpdate();
     },
     onError: (error: any) => {
       toast({
@@ -753,6 +755,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       // Invalidate and refetch announcements data
       await queryClient.invalidateQueries({ queryKey: ['/api/announcements'] });
       await queryClient.refetchQueries({ queryKey: ['/api/announcements'] });
+      // Broadcast real-time update to all users
+      await realTimeService.broadcastAnnouncementUpdate();
       console.log('[DEBUG] Finished invalidating and refetching after re-announce');
     },
     // Prevent duplicate requests
@@ -914,7 +918,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       await apiRequest('DELETE', `/api/users/${userId}`);
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      // Broadcast real-time update to all users
+      await realTimeService.broadcastUserUpdate();
       toast({
         title: "User deleted",
         description: "User has been permanently removed from the system",
@@ -949,7 +955,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       await apiRequest('DELETE', `/api/templates/${templateId}`);
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
       // Broadcast template update to all connected users
       await realTimeService.broadcastTemplateUpdate();
       toast({
@@ -990,6 +997,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       // Force refetch email templates immediately
       await queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
       await queryClient.refetchQueries({ queryKey: ['/api/email-templates'] });
+      // Broadcast real-time update to all users
+      await realTimeService.broadcastEmailTemplateUpdate();
       toast({
         title: "Email template deleted",
         description: "Successfully removed from system",
@@ -1247,6 +1256,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
       await queryClient.refetchQueries({ queryKey: ['/api/live-reply-templates'] });
       refetchTemplates(); // Force immediate refresh
+      // Broadcast real-time update to all users
+      await realTimeService.broadcastTemplateUpdate();
       setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
@@ -1275,6 +1286,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
       await queryClient.refetchQueries({ queryKey: ['/api/live-reply-templates'] });
       refetchTemplates(); // Force immediate refresh
+      // Broadcast real-time update to all users
+      await realTimeService.broadcastTemplateUpdate();
       setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
@@ -1303,6 +1316,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       // Force refetch email templates immediately
       await queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
       await queryClient.refetchQueries({ queryKey: ['/api/email-templates'] });
+      // Broadcast real-time update to all users
+      await realTimeService.broadcastEmailTemplateUpdate();
       setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
@@ -1361,6 +1376,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       
       // Also invalidate template usage data if it exists
       queryClient.invalidateQueries({ queryKey: ['/api/email-template-usage'] });
+      
+      // Broadcast real-time update to all users
+      await realTimeService.broadcastEmailTemplateUpdate();
       
       // Close form and clear editing state
       setShowTemplateForm(false);
