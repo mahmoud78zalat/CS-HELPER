@@ -994,11 +994,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       return response;
     },
     onSuccess: async () => {
-      // Force refetch email templates immediately
+      // Force immediate local cache refresh
+      queryClient.removeQueries({ queryKey: ['/api/email-templates'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
       await queryClient.refetchQueries({ queryKey: ['/api/email-templates'] });
-      // Broadcast real-time update to all users
+      
+      // Broadcast real-time update to all other users
       await realTimeService.broadcastEmailTemplateUpdate();
+      
       toast({
         title: "Email template deleted",
         description: "Successfully removed from system",
@@ -1252,12 +1255,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       return await response.json();
     },
     onSuccess: async () => {
-      // Invalidate and refetch for immediate updates
+      // Force immediate local cache refresh
+      queryClient.removeQueries({ queryKey: ['/api/live-reply-templates'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
       await queryClient.refetchQueries({ queryKey: ['/api/live-reply-templates'] });
       refetchTemplates(); // Force immediate refresh
-      // Broadcast real-time update to all users
+      
+      // Broadcast real-time update to all other users
       await realTimeService.broadcastTemplateUpdate();
+      
       setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
@@ -1282,12 +1288,15 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       return await response.json();
     },
     onSuccess: async () => {
-      // Invalidate and refetch for immediate updates
+      // Force immediate local cache refresh
+      queryClient.removeQueries({ queryKey: ['/api/live-reply-templates'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
       await queryClient.refetchQueries({ queryKey: ['/api/live-reply-templates'] });
       refetchTemplates(); // Force immediate refresh
-      // Broadcast real-time update to all users
+      
+      // Broadcast real-time update to all other users
       await realTimeService.broadcastTemplateUpdate();
+      
       setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
@@ -1313,11 +1322,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       return await response.json();
     },
     onSuccess: async () => {
-      // Force refetch email templates immediately
+      // Immediate local updates for current session
+      queryClient.removeQueries({ queryKey: ['/api/email-templates'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
       await queryClient.refetchQueries({ queryKey: ['/api/email-templates'] });
-      // Broadcast real-time update to all users
+      
+      // Broadcast real-time update to all other users
       await realTimeService.broadcastEmailTemplateUpdate();
+      
       setShowTemplateForm(false);
       setEditingTemplate(null);
       toast({
@@ -1369,7 +1381,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       throw lastError;
     },
     onSuccess: async () => {
-      // Force complete cache refresh for email templates
+      // Force complete cache refresh for email templates (immediate local update)
       queryClient.removeQueries({ queryKey: ['/api/email-templates'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
       await queryClient.refetchQueries({ queryKey: ['/api/email-templates'] });
@@ -1377,7 +1389,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       // Also invalidate template usage data if it exists
       queryClient.invalidateQueries({ queryKey: ['/api/email-template-usage'] });
       
-      // Broadcast real-time update to all users
+      // Broadcast real-time update to all other users
       await realTimeService.broadcastEmailTemplateUpdate();
       
       // Close form and clear editing state
