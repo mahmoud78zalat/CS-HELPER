@@ -64,12 +64,17 @@ const SortableTemplateItem = ({ template, onEdit, onDelete, onPreview }: {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: template.id });
+  } = useSortable({ 
+    id: template.id,
+    // Ensure template remains draggable after mutations
+    disabled: false,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.7 : 1,
+    zIndex: isDragging ? 1000 : 1,
   };
 
   return (
@@ -402,9 +407,9 @@ export default function HorizontalGroupedTemplates({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 15, // Require 15px of movement before activating drag - prevents scroll conflicts
-        delay: 100, // 100ms delay to distinguish from scrolling
-        tolerance: 5, // Allow 5px of movement before canceling
+        distance: 8, // Reduced distance for better responsiveness
+        delay: 50, // Reduced delay for faster activation
+        tolerance: 8, // Increased tolerance for more reliable drag
       },
     }),
     useSensor(KeyboardSensor, {
@@ -543,72 +548,19 @@ export default function HorizontalGroupedTemplates({
       
       return await response.json();
     },
-    onMutate: async ({ templateId, groupId, templateName }) => {
-      // Cancel outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries({ queryKey: ['/api/live-reply-templates'] });
-
-      // Snapshot the previous value
-      const previousTemplates = queryClient.getQueryData(['/api/live-reply-templates']);
-
-      // Find the template to move
-      const template = findTemplateInAllGroups(templateId);
-      if (!template) return { previousTemplates };
-
-      // Optimistically update the cache
-      queryClient.setQueryData(['/api/live-reply-templates'], (old: any) => {
-        if (!Array.isArray(old)) return old;
-        
-        return old.map((t: any) => 
-          t.id === templateId 
-            ? { ...t, groupId: groupId || null }
-            : t
-        );
-      });
-
-      // Update local state immediately for smooth UX
-      const sourceGroup = groupedData.find(g => g.templates.some(t => t.id === templateId));
-      const targetGroup = groupId ? groupedData.find(g => g.id === groupId) : null;
-      
-      if (template) {
-        // Remove from current location
-        if (sourceGroup) {
-          const newSourceTemplates = sourceGroup.templates.filter(t => t.id !== templateId);
-          setGroupedData(prev => prev.map(g => 
-            g.id === sourceGroup.id ? { ...g, templates: newSourceTemplates } : g
-          ));
-        } else {
-          // Remove from ungrouped
-          setUngroupedTemplates(prev => prev.filter(t => t.id !== templateId));
-        }
-
-        // Add to target location with slight delay to ensure DOM updates
-        setTimeout(() => {
-          if (targetGroup) {
-            const updatedTemplate = { ...template, groupId };
-            setGroupedData(prev => prev.map(g => 
-              g.id === targetGroup.id ? { ...g, templates: [...g.templates, updatedTemplate] } : g
-            ));
-          } else {
-            // Add to ungrouped
-            const updatedTemplate = { ...template, groupId: undefined };
-            setUngroupedTemplates(prev => [...prev, updatedTemplate]);
-          }
-        }, 50);
-      }
-
-      return { previousTemplates };
-    },
     onSuccess: async (data, variables) => {
       console.log('[MoveTemplate] Success response:', data);
       
-      // Force refetch to ensure data consistency
+      // Simple approach: just invalidate and refetch to avoid state conflicts
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] }),
-        queryClient.refetchQueries({ queryKey: ['/api/live-reply-templates'] }),
         queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] })
       ]);
       
-      const groupName = groupedData.find(g => g.id === variables.groupId)?.name || 'Ungrouped';
+      const groupName = variables.groupId ? 
+        (groupedData.find(g => g.id === variables.groupId)?.name || 'Unknown Group') : 
+        'Ungrouped Templates';
+      
       toast({ 
         title: "Template moved successfully", 
         description: `"${variables.templateName || 'Template'}" moved to ${groupName}`,
@@ -617,11 +569,6 @@ export default function HorizontalGroupedTemplates({
     },
     onError: (error: any, variables, context) => {
       console.error('[MoveTemplate] Error:', error);
-      
-      // Rollback optimistic update
-      if (context?.previousTemplates) {
-        queryClient.setQueryData(['/api/live-reply-templates'], context.previousTemplates);
-      }
       
       // Force refetch to restore correct state
       queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
@@ -663,25 +610,45 @@ export default function HorizontalGroupedTemplates({
       return;
     }
 
-    // Handle moving template to group
-    if (over.id.toString().startsWith('group-') && !active.id.toString().startsWith('group-')) {
-      const targetGroupId = over.id.toString().replace('group-', '');
+    // Handle moving template to ungrouped section
+    if (over.id.toString() === 'group-ungrouped' && !active.id.toString().startsWith('group-')) {
       const templateId = active.id.toString();
       const template = findTemplateInAllGroups(templateId);
       
       if (template) {
-        console.log('[HorizontalGroupedTemplates] Moving template to group:', templateId, '->', targetGroupId);
+        console.log('[HorizontalGroupedTemplates] Moving template to ungrouped:', templateId);
         moveTemplateToGroupMutation.mutate({
           templateId,
-          groupId: targetGroupId === 'ungrouped' ? undefined : targetGroupId,
+          groupId: undefined, // null/undefined means ungroup
           templateName: template.name
         });
       }
       return;
     }
 
-    // Handle group reordering
-    if (active.id.toString().startsWith('group-') && over.id.toString().startsWith('group-')) {
+    // Handle moving template to specific group
+    if (over.id.toString().startsWith('group-') && !active.id.toString().startsWith('group-')) {
+      const targetGroupId = over.id.toString().replace('group-', '');
+      const templateId = active.id.toString();
+      const template = findTemplateInAllGroups(templateId);
+      
+      // Skip if trying to move to ungrouped (handled above)
+      if (targetGroupId === 'ungrouped') return;
+      
+      if (template) {
+        console.log('[HorizontalGroupedTemplates] Moving template to group:', templateId, '->', targetGroupId);
+        moveTemplateToGroupMutation.mutate({
+          templateId,
+          groupId: targetGroupId,
+          templateName: template.name
+        });
+      }
+      return;
+    }
+
+    // Handle group reordering (exclude ungrouped from group reordering)
+    if (active.id.toString().startsWith('group-') && over.id.toString().startsWith('group-') && 
+        over.id.toString() !== 'group-ungrouped' && active.id.toString() !== 'group-ungrouped') {
       const activeGroupId = active.id.toString().replace('group-', '');
       const overGroupId = over.id.toString().replace('group-', '');
       
@@ -698,19 +665,6 @@ export default function HorizontalGroupedTemplates({
         setGroupedData(newGroupOrder);
         saveGroupOrderMutation.mutate(newGroupOrder);
       }
-      return;
-    }
-
-    // Handle dropping template on group header (move to group)
-    if (!active.id.toString().startsWith('group-') && over.id.toString().startsWith('group-')) {
-      const templateId = active.id.toString();
-      const targetGroupId = over.id.toString().replace('group-', '');
-      
-      // Find template name for better toast notification
-      const templateName = findTemplateInAllGroups(templateId)?.name || 'Unknown Template';
-      
-      console.log('[DragDrop] Moving template', templateName, 'to group', targetGroupId);
-      moveTemplateToGroupMutation.mutate({ templateId, groupId: targetGroupId, templateName });
       return;
     }
 
@@ -806,7 +760,7 @@ export default function HorizontalGroupedTemplates({
 
       <DndContext 
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
         measuring={{
           droppable: {
