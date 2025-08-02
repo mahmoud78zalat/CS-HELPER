@@ -82,7 +82,7 @@ export default function AboutModal({ onClose }: AboutModalProps) {
                   </li>
                   <li className="flex items-start">
                     <Search className="h-4 w-4 mr-2 mt-1 text-purple-500 flex-shrink-0" />
-                    <div><span className="font-semibold">Order Conversion Tool:</span> Seamless Order ID ↔ AWB conversion</div>
+                    <div><span className="font-semibold">Order Conversion Tool:</span> Seamless Order ID ↔ userid</div>
                   </li>
                   <li className="flex items-start">
                     <MessageSquare className="h-4 w-4 mr-2 mt-1 text-indigo-500 flex-shrink-0" />
@@ -184,7 +184,7 @@ export default function AboutModal({ onClose }: AboutModalProps) {
                   <li>• Persistent notification system via Supabase</li>
                   <li>• Dark/Light theme switching with real-time sync</li>
                   <li>• Comprehensive toast notifications for all actions</li>
-                  <li>• Multi-deployment architecture (Vercel, Railway, Replit)</li>
+                  <li>• Live Reply Templates: Bilingual support (Arabic/English) with dynamic language switching</li>
                 </ul>
               </CardContent>
             </Card>
