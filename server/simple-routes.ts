@@ -228,6 +228,32 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  app.patch('/api/live-reply-template-groups/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log('[LiveReplyTemplateGroups] PATCH request for group ID:', id, 'with data:', req.body);
+      
+      const validatedData = insertLiveReplyTemplateGroupSchema.partial().parse(req.body);
+      console.log('[LiveReplyTemplateGroups] Validated patch data:', validatedData);
+      
+      const group = await storage.updateLiveReplyTemplateGroup(id, validatedData);
+      if (!group) {
+        console.log('[LiveReplyTemplateGroups] Group not found for ID:', id);
+        return res.status(404).json({ message: "Live reply template group not found" });
+      }
+      
+      console.log('[LiveReplyTemplateGroups] Group patched successfully:', group);
+      res.json(group);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.log('[LiveReplyTemplateGroups] Zod validation error on PATCH:', error.errors);
+        return res.status(400).json({ message: "Invalid group data", errors: error.errors });
+      }
+      console.error("[LiveReplyTemplateGroups] Error patching group:", error);
+      res.status(500).json({ message: "Failed to update live reply template group" });
+    }
+  });
+
   app.delete('/api/live-reply-template-groups/:id', async (req, res) => {
     try {
       const { id } = req.params;
