@@ -18,7 +18,7 @@ import {
 import { useDynamicVariables } from "@/hooks/useDynamicVariables";
 import { 
   Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, AlertTriangle,
-  User, Package, Settings, Clock, Check, Plus
+  User, Package, Settings, Clock, Check, Plus, Search, X
 } from "lucide-react";
 import { Template } from "@shared/schema";
 import DraggableVariable from "./DraggableVariable";
@@ -60,6 +60,7 @@ export default function TemplateFormModal({
   const [templateValidation, setTemplateValidation] = useState<{ isValid: boolean; issues: string[]; variables: string[] } | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [activeField, setActiveField] = useState<'contentEn' | 'contentAr' | null>(null);
+  const [variableSearchQuery, setVariableSearchQuery] = useState('');
   
   // Debug activeField changes
   useEffect(() => {
@@ -293,10 +294,19 @@ export default function TemplateFormModal({
     }
   };
 
-  // Use dynamic variables from Supabase instead of hardcoded ones
-  const filteredVariables = selectedCategory === 'all' 
-    ? variables 
-    : variables.filter(v => v.category === selectedCategory);
+  // Use dynamic variables from Supabase with search and category filtering
+  const filteredVariables = variables.filter(variable => {
+    // Filter by category
+    const categoryMatch = selectedCategory === 'all' || variable.category === selectedCategory;
+    
+    // Filter by search query
+    const searchMatch = variableSearchQuery === '' || 
+      variable.name.toLowerCase().includes(variableSearchQuery.toLowerCase()) ||
+      variable.description.toLowerCase().includes(variableSearchQuery.toLowerCase()) ||
+      (variable.example && variable.example.toLowerCase().includes(variableSearchQuery.toLowerCase()));
+    
+    return categoryMatch && searchMatch;
+  });
 
   const variableCategories = [
     { key: 'all', label: 'All Variables', icon: Code }
@@ -514,32 +524,88 @@ export default function TemplateFormModal({
                     </div>
                     
                     {showVariableHelper && (
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <div className="flex flex-wrap gap-1">
-                            {variableCategories.map(({ key, label, icon: Icon }) => (
-                              <Button
-                                key={key}
-                                type="button"
-                                variant={selectedCategory === key ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setSelectedCategory(key as any)}
-                                className="text-xs"
-                              >
-                                <Icon size={12} className="mr-1" />
-                                {label}
-                              </Button>
-                            ))}
+                      <Card className="w-full">
+                        <CardHeader className="pb-3">
+                          <div className="space-y-3">
+                            {/* Search Bar */}
+                            <div className="relative">
+                              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                              <Input
+                                placeholder="Search variables by name, description, or example..."
+                                value={variableSearchQuery}
+                                onChange={(e) => setVariableSearchQuery(e.target.value)}
+                                className="pl-10 pr-10"
+                              />
+                              {variableSearchQuery && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setVariableSearchQuery('')}
+                                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent"
+                                >
+                                  <X size={14} />
+                                </Button>
+                              )}
+                            </div>
+                            
+                            {/* Category Filters */}
+                            <div className="flex flex-wrap gap-1">
+                              {variableCategories.map(({ key, label, icon: Icon }) => (
+                                <Button
+                                  key={key}
+                                  type="button"
+                                  variant={selectedCategory === key ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => setSelectedCategory(key as any)}
+                                  className="text-xs"
+                                >
+                                  <Icon size={12} className="mr-1" />
+                                  {label}
+                                </Button>
+                              ))}
+                            </div>
+                            
+                            {/* Results Count */}
+                            <div className="text-sm text-muted-foreground">
+                              {filteredVariables.length} variable{filteredVariables.length !== 1 ? 's' : ''} found
+                              {variableSearchQuery && ` for "${variableSearchQuery}"`}
+                            </div>
                           </div>
                         </CardHeader>
-                        <CardContent className="space-y-2 max-h-64 overflow-y-auto">
-                          {filteredVariables.map((variable) => (
-                            <DraggableVariable
-                              key={variable.name}
-                              variable={variable}
-                              onInsert={insertVariable}
-                            />
-                          ))}
+                        <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+                          {filteredVariables.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-3">
+                              {filteredVariables.map((variable) => (
+                                <DraggableVariable
+                                  key={variable.name}
+                                  variable={variable}
+                                  onInsert={insertVariable}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-muted-foreground">
+                              <Search size={48} className="mx-auto mb-3 opacity-50" />
+                              <p className="text-sm">
+                                {variableSearchQuery 
+                                  ? `No variables found matching "${variableSearchQuery}"`
+                                  : "No variables available"
+                                }
+                              </p>
+                              {variableSearchQuery && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setVariableSearchQuery('')}
+                                  className="mt-2"
+                                >
+                                  Clear search
+                                </Button>
+                              )}
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     )}
