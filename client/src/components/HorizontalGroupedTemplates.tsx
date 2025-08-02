@@ -249,6 +249,139 @@ const DroppableGroupComponent = ({ group, onEditGroup, children }: {
   );
 };
 
+// Droppable Ungrouped Section Component
+const DroppableUngroupedSection = ({ 
+  templates, 
+  onEdit, 
+  onDelete, 
+  onPreview, 
+  isDragDropMode 
+}: {
+  templates: LiveTemplate[];
+  onEdit: (template: LiveTemplate) => void;
+  onDelete: (templateId: string) => void;
+  onPreview?: (template: LiveTemplate) => void;
+  isDragDropMode: boolean;
+}) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'group-ungrouped',
+  });
+
+  return (
+    <div ref={setNodeRef} className="mb-6">
+      <Card className={`bg-gray-50 dark:bg-slate-900/30 border-dashed transition-all duration-200 ${
+        isOver ? 'border-blue-400 dark:border-blue-500 shadow-lg ring-2 ring-blue-200 dark:ring-blue-800 bg-blue-25 dark:bg-blue-900/20' : 'border-slate-300 dark:border-slate-600'
+      }`}>
+        <CardHeader className="p-4 pb-3">
+          <div className="flex items-center gap-2">
+            <FolderOpen className="h-4 w-4 text-gray-400" />
+            <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">
+              Ungrouped Templates
+            </h3>
+            <Badge variant="outline" className="text-xs">
+              {templates.length} templates
+            </Badge>
+          </div>
+        </CardHeader>
+        
+        <CardContent className={`p-3 pt-0 transition-all duration-200 ${isOver ? 'bg-blue-25 dark:bg-blue-900/10' : ''}`}>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 dark:scrollbar-thumb-slate-600 dark:scrollbar-track-slate-800">
+            <SortableContext items={templates.map(t => t.id)} strategy={horizontalListSortingStrategy}>
+              {templates.map((template) => (
+                isDragDropMode ? (
+                  <SortableTemplateItem
+                    key={template.id}
+                    template={template}
+                    onEdit={onEdit}
+                    onDelete={(templateId) => onDelete(templateId)}
+                    onPreview={onPreview}
+                  />
+                ) : (
+                  <div key={template.id} className="w-[280px] min-w-[280px] max-w-[280px]">
+                    <Card className="hover:shadow-md transition-shadow bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-slate-800 dark:text-white mb-2 leading-tight">
+                              {template.name}
+                            </h4>
+                            <div className="flex gap-2 mb-2">
+                              <Badge variant="secondary" className="text-xs px-2 py-1">
+                                {template.genre}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs px-2 py-1">
+                                {template.category}
+                              </Badge>
+                              {template.usageCount !== undefined && template.usageCount > 0 && (
+                                <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 text-green-700">
+                                  {template.usageCount}x used
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-1 ml-auto">
+                            {onPreview && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onPreview(template);
+                                }}
+                                className="h-8 w-8 p-0 border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
+                                title="Preview Template"
+                              >
+                                <Eye className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(template);
+                              }}
+                              className="h-8 w-8 p-0 border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
+                              title="Edit Template"
+                            >
+                              <Edit className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(template.id);
+                              }}
+                              className="h-8 w-8 p-0 border-red-300 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 dark:border-red-600 dark:bg-slate-800 dark:hover:bg-red-900/20 dark:text-red-400 dark:hover:text-red-300"
+                              title="Delete Template"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3">
+                          {template.content.substring(0, 150)}
+                          {template.content.length > 150 ? '...' : ''}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )
+              ))}
+            </SortableContext>
+            {templates.length === 0 && (
+              <div className="flex items-center justify-center h-20 w-full border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 dark:text-slate-400 text-sm">
+                Drop templates here to ungroup them
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 export default function HorizontalGroupedTemplates({ 
   templates, 
   groups = [], 
@@ -269,7 +402,9 @@ export default function HorizontalGroupedTemplates({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Require 8px of movement before activating drag
+        distance: 15, // Require 15px of movement before activating drag - prevents scroll conflicts
+        delay: 100, // 100ms delay to distinguish from scrolling
+        tolerance: 5, // Allow 5px of movement before canceling
       },
     }),
     useSensor(KeyboardSensor, {
@@ -438,28 +573,27 @@ export default function HorizontalGroupedTemplates({
         // Remove from current location
         if (sourceGroup) {
           const newSourceTemplates = sourceGroup.templates.filter(t => t.id !== templateId);
-          const newGroupedData = groupedData.map(g => 
+          setGroupedData(prev => prev.map(g => 
             g.id === sourceGroup.id ? { ...g, templates: newSourceTemplates } : g
-          );
-          setGroupedData(newGroupedData);
+          ));
         } else {
           // Remove from ungrouped
           setUngroupedTemplates(prev => prev.filter(t => t.id !== templateId));
         }
 
-        // Add to target location
-        if (targetGroup) {
-          const updatedTemplate = { ...template, groupId };
-          const newTargetTemplates = [...targetGroup.templates, updatedTemplate];
-          const newGroupedData = groupedData.map(g => 
-            g.id === targetGroup.id ? { ...g, templates: newTargetTemplates } : g
-          );
-          setGroupedData(newGroupedData);
-        } else {
-          // Add to ungrouped
-          const updatedTemplate = { ...template, groupId: undefined };
-          setUngroupedTemplates(prev => [...prev, updatedTemplate]);
-        }
+        // Add to target location with slight delay to ensure DOM updates
+        setTimeout(() => {
+          if (targetGroup) {
+            const updatedTemplate = { ...template, groupId };
+            setGroupedData(prev => prev.map(g => 
+              g.id === targetGroup.id ? { ...g, templates: [...g.templates, updatedTemplate] } : g
+            ));
+          } else {
+            // Add to ungrouped
+            const updatedTemplate = { ...template, groupId: undefined };
+            setUngroupedTemplates(prev => [...prev, updatedTemplate]);
+          }
+        }, 50);
       }
 
       return { previousTemplates };
@@ -488,6 +622,9 @@ export default function HorizontalGroupedTemplates({
       if (context?.previousTemplates) {
         queryClient.setQueryData(['/api/live-reply-templates'], context.previousTemplates);
       }
+      
+      // Force refetch to restore correct state
+      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
       
       toast({ 
         title: "Failed to move template", 
@@ -523,6 +660,23 @@ export default function HorizontalGroupedTemplates({
     
     if (!over || active.id === over.id) {
       console.log('[HorizontalGroupedTemplates] handleDragEnd - No valid drop target or same position');
+      return;
+    }
+
+    // Handle moving template to group
+    if (over.id.toString().startsWith('group-') && !active.id.toString().startsWith('group-')) {
+      const targetGroupId = over.id.toString().replace('group-', '');
+      const templateId = active.id.toString();
+      const template = findTemplateInAllGroups(templateId);
+      
+      if (template) {
+        console.log('[HorizontalGroupedTemplates] Moving template to group:', templateId, '->', targetGroupId);
+        moveTemplateToGroupMutation.mutate({
+          templateId,
+          groupId: targetGroupId === 'ungrouped' ? undefined : targetGroupId,
+          templateName: template.name
+        });
+      }
       return;
     }
 
@@ -659,6 +813,7 @@ export default function HorizontalGroupedTemplates({
             strategy: MeasuringStrategy.Always,
           },
         }}
+        autoScroll={false}
       >
         {/* Grouped Templates */}
         <SortableContext items={groupedData.map(group => `group-${group.id}`)} strategy={verticalListSortingStrategy}>
@@ -756,111 +911,14 @@ export default function HorizontalGroupedTemplates({
           ))}
         </SortableContext>
 
-        {/* Ungrouped Templates */}
-        {ungroupedTemplates.length > 0 && (
-            <Card className="bg-gray-50 dark:bg-slate-900/30 border-dashed">
-              <CardHeader className="p-4 pb-3">
-                <div className="flex items-center gap-2">
-                  <FolderOpen className="h-4 w-4 text-gray-400" />
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    Ungrouped Templates
-                  </h3>
-                  <Badge variant="outline" className="text-xs">
-                    {ungroupedTemplates.length} templates
-                  </Badge>
-                </div>
-              </CardHeader>
-            
-            <CardContent className="p-4 pt-0">
-              <div className="flex gap-4 overflow-x-auto pb-2">
-                <SortableContext items={ungroupedTemplates.map(t => t.id)} strategy={horizontalListSortingStrategy}>
-                  {ungroupedTemplates.map((template) => (
-                    isDragDropMode ? (
-                      <SortableTemplateItem
-                        key={template.id}
-                        template={template}
-                        onEdit={onEdit}
-                        onDelete={(templateId) => onDelete(templateId)}
-                        onPreview={onPreview}
-                      />
-                    ) : (
-                      <div key={template.id} className="w-[280px] min-w-[280px] max-w-[280px]">
-                        <Card className="hover:shadow-md transition-shadow bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-slate-800 dark:text-white mb-2 leading-tight">
-                                  {template.name}
-                                </h4>
-                                <div className="flex gap-2 mb-2">
-                                  <Badge variant="secondary" className="text-xs px-2 py-1">
-                                    {template.genre}
-                                  </Badge>
-                                  <Badge variant="outline" className="text-xs px-2 py-1">
-                                    {template.category}
-                                  </Badge>
-                                  {template.usageCount !== undefined && template.usageCount > 0 && (
-                                    <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 text-green-700">
-                                      {template.usageCount}x used
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex gap-1 ml-auto">
-                                {onPreview && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onPreview(template);
-                                    }}
-                                    className="h-8 w-8 p-0 border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
-                                    title="Preview Template"
-                                  >
-                                    <Eye className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-                                  </Button>
-                                )}
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEdit(template);
-                                  }}
-                                  className="h-8 w-8 p-0 border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
-                                  title="Edit Template"
-                                >
-                                  <Edit className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDelete(template.id);
-                                  }}
-                                  className="h-8 w-8 p-0 border-red-300 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 dark:border-red-600 dark:bg-slate-800 dark:hover:bg-red-900/20 dark:text-red-400 dark:hover:text-red-300"
-                                  title="Delete Template"
-                                >
-                                  <Trash className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3">
-                              {template.content.substring(0, 150)}
-                              {template.content.length > 150 ? '...' : ''}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    )
-                  ))}
-                </SortableContext>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Ungrouped Templates - Always show with droppable area */}
+        <DroppableUngroupedSection 
+          templates={ungroupedTemplates}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onPreview={onPreview}
+          isDragDropMode={isDragDropMode}
+        />
       </DndContext>
     </div>
   );
