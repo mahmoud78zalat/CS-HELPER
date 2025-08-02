@@ -295,12 +295,26 @@ export function registerRoutes(app: Express): void {
       const { groupId } = req.body;
       
       console.log('[LiveReplyTemplates] Moving template', id, 'to group', groupId);
+      console.log('[LiveReplyTemplates] Request body:', req.body);
       
-      const template = await storage.updateLiveReplyTemplate(id, { groupId });
+      // Handle both null and undefined groupId (for ungrouping)
+      const targetGroupId = groupId === null || groupId === undefined ? null : groupId;
+      
+      const template = await storage.updateLiveReplyTemplate(id, { groupId: targetGroupId });
+      
+      if (!template) {
+        console.log('[LiveReplyTemplates] Template not found:', id);
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      console.log('[LiveReplyTemplates] Template moved successfully:', template);
       res.json(template);
     } catch (error) {
-      console.error("Error moving template to group:", error);
-      res.status(500).json({ message: "Failed to move template to group" });
+      console.error("[LiveReplyTemplates] Error moving template to group:", error);
+      res.status(500).json({ 
+        message: "Failed to move template to group",
+        error: (error as Error)?.message || 'Unknown error'
+      });
     }
   });
 

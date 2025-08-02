@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash, GripHorizontal, Eye, Plus, FolderOpen, Palette, ArrowUpDown } from "lucide-react";
-import { DndContext, closestCenter, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay, useDroppable } from '@dnd-kit/core';
+import { DndContext, closestCenter, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay, useDroppable, MeasuringStrategy } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -267,7 +267,11 @@ export default function HorizontalGroupedTemplates({
   const { reorderTemplates, isReordering } = useUnifiedTemplateReordering('live-reply-templates');
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px of movement before activating drag
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -391,13 +395,85 @@ export default function HorizontalGroupedTemplates({
   // Move template to group mutation
   const moveTemplateToGroupMutation = useMutation({
     mutationFn: async ({ templateId, groupId, templateName }: { templateId: string; groupId?: string; templateName?: string }) => {
-      return apiRequest('POST', `/api/live-reply-templates/${templateId}/move-to-group`, { 
-        groupId: groupId || undefined
+      console.log('[MoveTemplate] Moving template:', templateId, 'to group:', groupId);
+      const response = await apiRequest('POST', `/api/live-reply-templates/${templateId}/move-to-group`, { 
+        groupId: groupId || null
       });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('[MoveTemplate] API error:', errorData);
+        throw new Error(`Failed to move template: ${response.status} ${errorData}`);
+      }
+      
+      return await response.json();
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
+    onMutate: async ({ templateId, groupId, templateName }) => {
+      // Cancel outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['/api/live-reply-templates'] });
+
+      // Snapshot the previous value
+      const previousTemplates = queryClient.getQueryData(['/api/live-reply-templates']);
+
+      // Find the template to move
+      const template = findTemplateInAllGroups(templateId);
+      if (!template) return { previousTemplates };
+
+      // Optimistically update the cache
+      queryClient.setQueryData(['/api/live-reply-templates'], (old: any) => {
+        if (!Array.isArray(old)) return old;
+        
+        return old.map((t: any) => 
+          t.id === templateId 
+            ? { ...t, groupId: groupId || null }
+            : t
+        );
+      });
+
+      // Update local state immediately for smooth UX
+      const sourceGroup = groupedData.find(g => g.templates.some(t => t.id === templateId));
+      const targetGroup = groupId ? groupedData.find(g => g.id === groupId) : null;
+      
+      if (template) {
+        // Remove from current location
+        if (sourceGroup) {
+          const newSourceTemplates = sourceGroup.templates.filter(t => t.id !== templateId);
+          const newGroupedData = groupedData.map(g => 
+            g.id === sourceGroup.id ? { ...g, templates: newSourceTemplates } : g
+          );
+          setGroupedData(newGroupedData);
+        } else {
+          // Remove from ungrouped
+          setUngroupedTemplates(prev => prev.filter(t => t.id !== templateId));
+        }
+
+        // Add to target location
+        if (targetGroup) {
+          const updatedTemplate = { ...template, groupId };
+          const newTargetTemplates = [...targetGroup.templates, updatedTemplate];
+          const newGroupedData = groupedData.map(g => 
+            g.id === targetGroup.id ? { ...g, templates: newTargetTemplates } : g
+          );
+          setGroupedData(newGroupedData);
+        } else {
+          // Add to ungrouped
+          const updatedTemplate = { ...template, groupId: undefined };
+          setUngroupedTemplates(prev => [...prev, updatedTemplate]);
+        }
+      }
+
+      return { previousTemplates };
+    },
+    onSuccess: async (data, variables) => {
+      console.log('[MoveTemplate] Success response:', data);
+      
+      // Force refetch to ensure data consistency
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/live-reply-templates'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] })
+      ]);
+      
       const groupName = groupedData.find(g => g.id === variables.groupId)?.name || 'Ungrouped';
       toast({ 
         title: "Template moved successfully", 
@@ -405,7 +481,14 @@ export default function HorizontalGroupedTemplates({
         className: "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800"
       });
     },
-    onError: (error: any, variables) => {
+    onError: (error: any, variables, context) => {
+      console.error('[MoveTemplate] Error:', error);
+      
+      // Rollback optimistic update
+      if (context?.previousTemplates) {
+        queryClient.setQueryData(['/api/live-reply-templates'], context.previousTemplates);
+      }
+      
       toast({ 
         title: "Failed to move template", 
         description: `Could not move "${variables.templateName || 'template'}": ${error.message}`,
@@ -570,35 +653,11 @@ export default function HorizontalGroupedTemplates({
       <DndContext 
         sensors={sensors}
         collisionDetection={closestCorners}
-        onDragEnd={(event) => {
-          if (isDragDropMode) {
-            handleDragEnd(event);
-            // Update local ordering when drag ends
-            const { active, over } = event;
-            console.log('[HorizontalGroupedTemplates] DndContext onDragEnd - active:', active?.id, 'over:', over?.id);
-            
-            if (active && over && active.id !== over.id) {
-              // Find which group this template belongs to and update local ordering
-              const findTemplateInGroups = (templateId: string) => {
-                for (const group of groupedData) {
-                  const template = group.templates.find(t => t.id === templateId);
-                  if (template) return { template, groupId: group.id, templates: group.templates };
-                }
-                return null;
-              };
-              
-              const result = findTemplateInGroups(active.id.toString());
-              console.log('[HorizontalGroupedTemplates] Template found in groups:', result);
-              
-              if (result) {
-                const newOrder = result.templates.map(t => t.id);
-                console.log('[HorizontalGroupedTemplates] Calling updateBulkOrdering with:', newOrder);
-                updateBulkOrdering(newOrder);
-              } else {
-                console.log('[HorizontalGroupedTemplates] No template found in groups for ID:', active.id);
-              }
-            }
-          }
+        onDragEnd={handleDragEnd}
+        measuring={{
+          droppable: {
+            strategy: MeasuringStrategy.Always,
+          },
         }}
       >
         {/* Grouped Templates */}
