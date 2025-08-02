@@ -1432,8 +1432,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     }
   };
 
-  const handleDeleteEmailTemplate = (template: any) => {
-    showDeleteConfirmation('emailTemplate', template);
+  const handleDeleteEmailTemplate = (templateId: string) => {
+    // Find the full template object from the filtered email templates
+    const template = filteredEmailTemplates.find(t => t.id === templateId);
+    if (template) {
+      showDeleteConfirmation('emailTemplate', template);
+    } else {
+      console.error('Email template not found for deletion:', templateId);
+      toast({
+        title: "Error",
+        description: "Email template not found",
+        variant: "destructive",
+      });
+    }
   };
 
 
