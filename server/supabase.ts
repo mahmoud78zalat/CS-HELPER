@@ -47,7 +47,6 @@ class SupabaseSync {
           stage_order: template.stageOrder,
           is_active: template.isActive,
           usage_count: template.usageCount,
-          created_by: template.createdBy,
           updated_at: new Date().toISOString(),
         })
         .select('id')
@@ -81,7 +80,6 @@ class SupabaseSync {
           stage_order: template.stageOrder,
           is_active: template.isActive,
           usage_count: template.usageCount,
-          created_by: template.createdBy,
           updated_at: new Date().toISOString(),
         })
         .select('id')
@@ -106,7 +104,6 @@ class SupabaseSync {
           id: content.supabaseId || undefined,
           key: content.key,
           content: content.content,
-          updated_by: content.updatedBy,
           updated_at: new Date().toISOString(),
         })
         .select('id')
@@ -160,19 +157,30 @@ class SupabaseSync {
 
   // Delete template from Supabase
   async deleteTemplate(tableName: string, supabaseId: string): Promise<boolean> {
-    if (!this.isReady()) return false;
+    if (!this.isReady()) {
+      console.warn(`[Supabase] Cannot delete from ${tableName}: Supabase not ready`);
+      return false;
+    }
 
     try {
+      console.log(`[Supabase] Attempting to delete from ${tableName} with ID:`, supabaseId);
+      
       const { error } = await this.client!
         .from(tableName)
         .delete()
         .eq('id', supabaseId);
 
-      if (error) throw error;
+      if (error) {
+        console.error(`[Supabase] Deletion error for ${tableName}:`, error);
+        throw new Error(`Failed to delete from ${tableName}: ${error.message}`);
+      }
+      
+      console.log(`[Supabase] Successfully deleted from ${tableName} with ID:`, supabaseId);
       return true;
     } catch (error) {
       console.error(`[Supabase] Failed to delete from ${tableName}:`, error);
-      return false;
+      // Re-throw the error so the calling function knows the deletion failed
+      throw error;
     }
   }
 }

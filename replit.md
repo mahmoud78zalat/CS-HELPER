@@ -73,4 +73,23 @@ Key tables include Users, Live Reply Templates, Email Templates, Usage tracking 
 - **Railway**: Deployment platform, with specific configurations for Docker and environment variables.
 - **Caddy**: Used for static file serving in certain Railway deployment configurations.
 - **'serve' package**: Utilized for production static file serving in specific deployment scenarios.
+
+## Recent Changes
+
+### Bug Fix: Email Template Deletion Error (August 2, 2025)
+Fixed the "unable to remove email template please try again" error that occurred when deleting email templates. The issue was caused by:
+
+**Root Cause**: Silent failures in Supabase deletion operations. When the Supabase `deleteTemplate` method failed, it returned `false` instead of throwing an error, causing:
+- Local database deletion to proceed successfully
+- Supabase records to remain intact
+- Database inconsistency between local and remote data
+- Generic error messages displayed to users
+
+**Solution Implemented**:
+1. **Enhanced Error Handling in Supabase Layer**: Modified `server/supabase.ts` to throw detailed errors when deletion fails instead of silently returning false
+2. **Fail-Fast Deletion Strategy**: Updated `server/storage.ts` to delete from Supabase first, ensuring consistency
+3. **Comprehensive Logging**: Added detailed logging throughout the deletion process for better debugging
+4. **Schema Cleanup**: Removed references to non-existent fields (`createdBy`, `updatedBy`) that were causing LSP errors
+
+The deletion process now follows a fail-fast approach: if Supabase deletion fails, the entire operation fails, maintaining data consistency between local and remote databases.
 ```

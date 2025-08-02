@@ -553,12 +553,28 @@ export class DatabaseStorage implements IStorage {
     // Get template to delete from Supabase
     const template = await this.getEmailTemplate(id);
     
-    await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
-    
-    // Delete from Supabase if available
-    if (supabaseSync.isReady() && template?.supabaseId) {
-      await supabaseSync.deleteTemplate('email_templates', template.supabaseId);
+    if (!template) {
+      throw new Error(`Email template with ID ${id} not found`);
     }
+    
+    console.log('[Storage] Attempting to delete email template:', { id, supabaseId: template.supabaseId });
+    
+    // Delete from Supabase first if available (fail fast if Supabase fails)
+    if (supabaseSync.isReady() && template.supabaseId) {
+      console.log('[Storage] Deleting from Supabase first...');
+      try {
+        await supabaseSync.deleteTemplate('email_templates', template.supabaseId);
+        console.log('[Storage] Successfully deleted from Supabase');
+      } catch (error) {
+        console.error('[Storage] Failed to delete from Supabase:', error);
+        throw new Error(`Failed to delete email template from Supabase: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+    
+    // Only delete from local database if Supabase deletion succeeded (or Supabase not available)
+    console.log('[Storage] Deleting from local database...');
+    await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
+    console.log('[Storage] Successfully deleted email template from local database');
   }
 
   async incrementEmailTemplateUsage(templateId: string, userId: string): Promise<void> {
