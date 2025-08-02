@@ -271,20 +271,60 @@ export default function GroupManager({
   // Template assignment mutation
   const assignTemplatesToGroupMutation = useMutation({
     mutationFn: async ({ templateIds, groupId }: { templateIds: string[], groupId: string }) => {
-      const promises = templateIds.map(templateId => 
-        apiRequest('PATCH', `/api/live-reply-templates/${templateId}`, { groupId })
-      );
+      console.log('[GroupManager] Assigning templates to group:', { templateIds, groupId });
+      
+      const promises = templateIds.map(async (templateId) => {
+        console.log(`[GroupManager] Updating template ${templateId} with groupId: ${groupId}`);
+        const response = await apiRequest('PUT', `/api/live-reply-templates/${templateId}`, { groupId });
+        return response.json();
+      });
       return Promise.all(promises);
     },
-    onSuccess: () => {
+    onMutate: async ({ templateIds, groupId }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['/api/live-reply-templates'] });
+
+      // Snapshot the previous value
+      const previousTemplates = queryClient.getQueryData(['/api/live-reply-templates']);
+
+      // Optimistically update the templates
+      queryClient.setQueryData(['/api/live-reply-templates'], (old: any[]) => {
+        if (!old) return old;
+        return old.map((template: any) => 
+          templateIds.includes(template.id) 
+            ? { ...template, groupId } 
+            : template
+        );
+      });
+
+      return { previousTemplates };
+    },
+    onSuccess: (data, variables) => {
+      // Clear selection after successful assignment
+      setSelectedTemplates([]);
+      
+      // Invalidate for fresh data
       queryClient.invalidateQueries({ queryKey: ['/api/live-reply-templates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/live-reply-template-groups'] });
-      toast({ title: "Templates assigned to group successfully" });
+      
+      const groupName = editingGroup?.name || 'group';
+      toast({ 
+        title: "Templates assigned successfully",
+        description: `${variables.templateIds.length} template${variables.templateIds.length !== 1 ? 's' : ''} moved to ${groupName}`,
+        className: "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800"
+      });
     },
-    onError: (error: any) => {
+    onError: (error: any, variables, context) => {
+      console.error('[GroupManager] Assignment error:', error);
+      
+      // Rollback optimistic update
+      if (context?.previousTemplates) {
+        queryClient.setQueryData(['/api/live-reply-templates'], context.previousTemplates);
+      }
+      
       toast({ 
         title: "Failed to assign templates", 
-        description: error.message,
+        description: error.message || 'An error occurred while assigning templates',
         variant: "destructive" 
       });
     },
