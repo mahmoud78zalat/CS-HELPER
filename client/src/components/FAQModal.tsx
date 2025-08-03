@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { Search, ChevronDown, ChevronUp, HelpCircle, MessageCircle, ShoppingBag, RotateCcw } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, HelpCircle, MessageCircle, ShoppingBag, RotateCcw, Settings, CreditCard, User, Phone, Mail, Globe, DollarSign, Truck, FileText, Users, CheckCircle, AlertTriangle, Info, Star, Heart, MoreHorizontal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Faq } from "@shared/schema";
 
@@ -25,6 +25,35 @@ const categoryColors = {
   orders: "bg-green-100 text-green-800 hover:bg-green-200", 
   returns: "bg-orange-100 text-orange-800 hover:bg-orange-200",
   support: "bg-purple-100 text-purple-800 hover:bg-purple-200",
+};
+
+// Icon mapping for FAQs
+const iconMapping = {
+  HelpCircle,
+  Settings,
+  ShoppingBag,
+  CreditCard,
+  User,
+  Phone,
+  Mail,
+  Globe,
+  DollarSign,
+  Truck,
+  FileText,
+  Users,
+  CheckCircle,
+  AlertTriangle,
+  Info,
+  Star,
+  Heart,
+  MoreHorizontal,
+  MessageCircle,
+  RotateCcw
+};
+
+// Function to get icon component from string
+const getIconComponent = (iconName: string) => {
+  return iconMapping[iconName as keyof typeof iconMapping] || HelpCircle;
 };
 
 export default function FAQModal({ open, onClose }: FAQModalProps) {
@@ -150,7 +179,9 @@ export default function FAQModal({ open, onClose }: FAQModalProps) {
               <AnimatePresence>
                 {filteredFaqs.map((faq, index) => {
                   const isExpanded = expandedItems.has(faq.id);
-                  const Icon = categoryIcons[faq.category as keyof typeof categoryIcons] || HelpCircle;
+                  const Icon = faq.icon ? 
+                    getIconComponent(faq.icon) : 
+                    categoryIcons[faq.category as keyof typeof categoryIcons] || HelpCircle;
                   
                   return (
                     <motion.div

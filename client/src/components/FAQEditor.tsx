@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit2, Trash2, Save, X, HelpCircle, GripHorizontal, Settings, Users, CreditCard, Wrench, Info, MessageCircle, ChevronDown, ChevronUp, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Save, X, HelpCircle, GripHorizontal, Settings, Users, CreditCard, Wrench, Info, MessageCircle, ChevronDown, ChevronUp, AlertTriangle, Loader2, ShoppingBag, RotateCcw } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useFaqDragAndDrop } from "@/hooks/useFaqDragAndDrop";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -29,6 +29,40 @@ interface FAQ {
   createdAt: string;
   updatedAt: string;
 }
+
+// Icon mapping for FAQ categories and general icons
+const iconMapping = {
+  HelpCircle: { component: HelpCircle, label: "Help Circle" },
+  Settings: { component: Settings, label: "Settings" },
+  Users: { component: Users, label: "Users" },
+  CreditCard: { component: CreditCard, label: "Billing" },
+  Wrench: { component: Wrench, label: "Technical" },
+  Info: { component: Info, label: "Information" },
+  MessageCircle: { component: MessageCircle, label: "Support" },
+  ShoppingBag: { component: ShoppingBag, label: "Orders" },
+  RotateCcw: { component: RotateCcw, label: "Returns" },
+};
+
+// Component to render icon with text
+const IconSelectItem = ({ iconKey, selected = false }: { iconKey: string; selected?: boolean }) => {
+  const iconData = iconMapping[iconKey as keyof typeof iconMapping];
+  if (!iconData) return null;
+  
+  const IconComponent = iconData.component;
+  return (
+    <div className={`flex items-center gap-2 py-1 ${selected ? 'font-medium' : ''}`}>
+      <IconComponent className="h-4 w-4" />
+      <span>{iconData.label}</span>
+    </div>
+  );
+};
+
+// Function to get icon component from icon name
+const getIconComponent = (iconName?: string) => {
+  if (!iconName) return HelpCircle;
+  const iconData = iconMapping[iconName as keyof typeof iconMapping];
+  return iconData ? iconData.component : HelpCircle;
+};
 
 // Sortable FAQ Item Component
 const SortableFAQItem = ({ faq, isEditing, onEdit, onSave, onCancel, onDelete, getCategoryColor, availableCategories, isExpanded, onToggleExpansion }: any) => {
@@ -124,16 +158,16 @@ const SortableFAQItem = ({ faq, isEditing, onEdit, onSave, onCancel, onDelete, g
                       onValueChange={(value) => onEdit({ ...faq, icon: value })}
                     >
                       <SelectTrigger className="mt-1 w-40">
-                        <SelectValue placeholder="Select icon" />
+                        <SelectValue placeholder="Select icon">
+                          {faq.icon && <IconSelectItem iconKey={faq.icon} />}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="HelpCircle">Help Circle</SelectItem>
-                        <SelectItem value="Settings">Settings</SelectItem>
-                        <SelectItem value="Users">Users</SelectItem>
-                        <SelectItem value="CreditCard">Billing</SelectItem>
-                        <SelectItem value="Wrench">Technical</SelectItem>
-                        <SelectItem value="Info">Information</SelectItem>
-                        <SelectItem value="MessageCircle">Support</SelectItem>
+                        {Object.keys(iconMapping).map((iconKey) => (
+                          <SelectItem key={iconKey} value={iconKey}>
+                            <IconSelectItem iconKey={iconKey} />
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -559,16 +593,16 @@ export default function FAQEditor() {
                     onValueChange={(value) => setNewFaq({ ...newFaq, icon: value })}
                   >
                     <SelectTrigger className="mt-1 w-40">
-                      <SelectValue placeholder="Select icon" />
+                      <SelectValue placeholder="Select icon">
+                        {newFaq.icon && <IconSelectItem iconKey={newFaq.icon} />}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="HelpCircle">Help Circle</SelectItem>
-                      <SelectItem value="Settings">Settings</SelectItem>
-                      <SelectItem value="Users">Users</SelectItem>
-                      <SelectItem value="CreditCard">Billing</SelectItem>
-                      <SelectItem value="Wrench">Technical</SelectItem>
-                      <SelectItem value="Info">Information</SelectItem>
-                      <SelectItem value="MessageCircle">Support</SelectItem>
+                      {Object.keys(iconMapping).map((iconKey) => (
+                        <SelectItem key={iconKey} value={iconKey}>
+                          <IconSelectItem iconKey={iconKey} />
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -688,3 +722,4 @@ export default function FAQEditor() {
     </div>
   );
 }
+

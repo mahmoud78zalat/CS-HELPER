@@ -2833,20 +2833,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
                 {/* Content Management - Consolidated FAQ and Configuration */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* FAQ Management */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <HelpCircle className="h-5 w-5" />
-                        FAQ Management
-                      </CardTitle>
-                      <p className="text-sm text-slate-600">Manage frequently asked questions</p>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <FAQEditor />
-                    </CardContent>
-                  </Card>
-
                   {/* Template Configuration */}
                   <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowConfigManager(true)}>
                     <CardHeader>
@@ -2878,6 +2864,20 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         <Edit className="h-4 w-4 mr-2" />
                         Configure
                       </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* FAQ Management */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <HelpCircle className="h-5 w-5" />
+                        FAQ Management
+                      </CardTitle>
+                      <p className="text-sm text-slate-600">Manage frequently asked questions</p>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <FAQEditor />
                     </CardContent>
                   </Card>
                 </div>
