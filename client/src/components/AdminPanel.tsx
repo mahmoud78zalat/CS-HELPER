@@ -105,6 +105,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
   const [tempColor, setTempColor] = useState<string>('#3b82f6');
   const [editingColorType, setEditingColorType] = useState<'genre' | 'category' | 'group'>('genre');
+  const [showEmailTemplates, setShowEmailTemplates] = useState(false);
   
   // Announcement form state
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
@@ -1998,14 +1999,39 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
           <TabsContent value="templates" className="flex-1 overflow-y-auto">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Template Management</h3>
+                <div className="flex items-center gap-4">
+                  <h3 className="text-lg font-semibold">Template Management</h3>
+                  {/* Template Type Toggle */}
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                    <button
+                      onClick={() => setShowEmailTemplates(false)}
+                      className={`px-3 py-1 text-sm rounded-md transition-all ${
+                        !showEmailTemplates 
+                          ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' 
+                          : 'text-slate-600 hover:text-slate-800'
+                      }`}
+                    >
+                      Live Chat
+                    </button>
+                    <button
+                      onClick={() => setShowEmailTemplates(true)}
+                      className={`px-3 py-1 text-sm rounded-md transition-all ${
+                        showEmailTemplates 
+                          ? 'bg-white dark:bg-slate-700 text-green-600 shadow-sm' 
+                          : 'text-slate-600 hover:text-slate-800'
+                      }`}
+                    >
+                      Email
+                    </button>
+                  </div>
+                </div>
                 <div className="flex items-center gap-3">
                   <div className="relative w-64">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
                     <Input
                       type="text"
                       className="pl-10"
-                      placeholder="Search templates by name, category..."
+                      placeholder={showEmailTemplates ? "Search email templates..." : "Search live chat templates..."}
                       value={templateSearchTerm}
                       onChange={(e) => setTemplateSearchTerm(e.target.value)}
                     />
@@ -2013,77 +2039,127 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   <Button 
                     onClick={() => {
                       setEditingTemplate(null);
-                      setIsEmailTemplate(false);
+                      setIsEmailTemplate(showEmailTemplates);
                       setShowTemplateForm(true);
                     }}
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                    className={showEmailTemplates 
+                      ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white"
+                      : "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                    }
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Live Chat Template
+                    Create {showEmailTemplates ? 'Email' : 'Live Chat'} Template
                   </Button>
                 </div>
               </div>
               
-              {templatesLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="text-slate-600">Loading templates...</div>
-                </div>
-              ) : templates.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                  <FileText className="h-12 w-12 mb-4" />
-                  <h4 className="text-lg font-medium mb-2">No Templates Found</h4>
-                  <p className="text-sm text-center max-w-md">
-                    Get started by creating your first template. Templates help customer service agents provide consistent and professional responses.
-                  </p>
-                  <Button 
-                    onClick={() => {
-                      setEditingTemplate(null);
-                      setShowTemplateForm(true);
-                    }}
-                    className="mt-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create First Template
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-sm font-medium text-slate-700">
-                      Live Chat Templates - Drag & Drop Management
-                    </h4>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        onClick={() => setShowGroupManager(true)}
-                        variant="outline"
-                        size="sm"
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        <FolderOpen className="h-4 w-4 mr-2" />
-                        Manage Groups
-                      </Button>
-                    </div>
+{showEmailTemplates ? (
+                // Email Templates View
+                emailTemplatesLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-slate-600">Loading email templates...</div>
                   </div>
-                  <HorizontalGroupedTemplates
-                    templates={filteredTemplates.map((t: any) => ({
-                      ...t,
-                      content: t.contentEn || t.content || '',
-                      concernedTeam: t.concernedTeam || 'General'
-                    }))}
-                    groups={templateGroups}
-                    onEdit={(template) => {
-                      setEditingTemplate(template);
-                      setIsEmailTemplate(false);
-                      setShowTemplateForm(true);
-                    }}
-                    onDelete={handleDeleteTemplate}
-                    onCreateGroup={() => setShowGroupManager(true)}
-                    onEditGroup={(group) => {
-                      setEditingGroup(group);
-                      setShowGroupManager(true);
-                    }}
-                  />
-                </div>
+                ) : filteredEmailTemplates.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                    <FileText className="h-12 w-12 mb-4" />
+                    <h4 className="text-lg font-medium mb-2">No Email Templates Found</h4>
+                    <p className="text-sm text-center max-w-md">
+                      Create email templates for consistent customer communication via email.
+                    </p>
+                    <Button 
+                      onClick={() => {
+                        setEditingTemplate(null);
+                        setIsEmailTemplate(true);
+                        setShowTemplateForm(true);
+                      }}
+                      className="mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Email Template
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-sm font-medium text-slate-700">
+                        Email Templates - Professional Communication
+                      </h4>
+                    </div>
+                    <DragDropEmailTemplates
+                      templates={filteredEmailTemplates}
+                      onEdit={(template) => {
+                        setEditingTemplate(template);
+                        setIsEmailTemplate(true);
+                        setShowTemplateForm(true);
+                      }}
+                      onDelete={handleDeleteEmailTemplate}
+                    />
+                  </div>
+                )
+              ) : (
+                // Live Chat Templates View
+                templatesLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-slate-600">Loading templates...</div>
+                  </div>
+                ) : templates.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                    <FileText className="h-12 w-12 mb-4" />
+                    <h4 className="text-lg font-medium mb-2">No Live Chat Templates Found</h4>
+                    <p className="text-sm text-center max-w-md">
+                      Get started by creating your first template. Templates help customer service agents provide consistent and professional responses.
+                    </p>
+                    <Button 
+                      onClick={() => {
+                        setEditingTemplate(null);
+                        setIsEmailTemplate(false);
+                        setShowTemplateForm(true);
+                      }}
+                      className="mt-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Live Chat Template
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-sm font-medium text-slate-700">
+                        Live Chat Templates - Drag & Drop Management
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={() => setShowGroupManager(true)}
+                          variant="outline"
+                          size="sm"
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                        >
+                          <FolderOpen className="h-4 w-4 mr-2" />
+                          Manage Groups
+                        </Button>
+                      </div>
+                    </div>
+                    <HorizontalGroupedTemplates
+                      templates={filteredTemplates.map((t: any) => ({
+                        ...t,
+                        content: t.contentEn || t.content || '',
+                        concernedTeam: t.concernedTeam || 'General'
+                      }))}
+                      groups={templateGroups}
+                      onEdit={(template) => {
+                        setEditingTemplate(template);
+                        setIsEmailTemplate(false);
+                        setShowTemplateForm(true);
+                      }}
+                      onDelete={handleDeleteTemplate}
+                      onCreateGroup={() => setShowGroupManager(true)}
+                      onEditGroup={(group) => {
+                        setEditingGroup(group);
+                        setShowGroupManager(true);
+                      }}
+                    />
+                  </div>
+                )
               )}
             </div>
           </TabsContent>
