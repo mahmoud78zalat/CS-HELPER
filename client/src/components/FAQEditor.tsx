@@ -124,7 +124,7 @@ const SortableFAQItem = ({ faq, isEditing, onEdit, onSave, onCancel, onDelete, g
                       onValueChange={(value) => onEdit({ ...faq, icon: value })}
                     >
                       <SelectTrigger className="mt-1 w-40">
-                        <SelectValue />
+                        <SelectValue placeholder="Select icon" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="HelpCircle">Help Circle</SelectItem>
@@ -531,7 +531,7 @@ export default function FAQEditor() {
                     onValueChange={(value) => setNewFaq({ ...newFaq, category: value })}
                   >
                     <SelectTrigger className="mt-1 w-40">
-                      <SelectValue />
+                      <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
                       {availableCategories.length > 0 ? (
@@ -559,7 +559,7 @@ export default function FAQEditor() {
                     onValueChange={(value) => setNewFaq({ ...newFaq, icon: value })}
                   >
                     <SelectTrigger className="mt-1 w-40">
-                      <SelectValue />
+                      <SelectValue placeholder="Select icon" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="HelpCircle">Help Circle</SelectItem>

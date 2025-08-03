@@ -374,6 +374,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         toast({
           title: "Color Updated",
           description: `${genre} color has been saved and synchronized successfully.`,
+          duration: 3000,
         });
       } else {
         throw new Error('Failed to save color settings');
@@ -384,6 +385,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         title: "Error",
         description: `Failed to save ${genre} color. Changes not persisted.`,
         variant: "destructive",
+        duration: 5000,
       });
       // Still update local state for immediate visual feedback
       const tailwindColors = hexToTailwindColor(color);
@@ -429,6 +431,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         toast({
           title: "Color Updated", 
           description: `${category} color has been saved and synchronized successfully.`,
+          duration: 3000,
         });
       } else {
         throw new Error('Failed to save color settings');
@@ -439,6 +442,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         title: "Error",
         description: `Failed to save ${category} color. Changes not persisted.`,
         variant: "destructive",
+        duration: 5000,
       });
       // Still update local state for immediate visual feedback
       const tailwindColors = hexToTailwindColor(color);
@@ -1458,6 +1462,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         title: "Error",
         description: "Template not found",
         variant: "destructive",
+        duration: 5000,
       });
     }
   };
@@ -1473,6 +1478,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         title: "Error",
         description: "Email template not found",
         variant: "destructive",
+        duration: 5000,
       });
     }
   };
@@ -1545,7 +1551,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         <div className="flex-1 overflow-hidden p-4 lg:p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
             {/* Mobile-responsive tabs */}
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 mb-4">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-4">
               <TabsTrigger value="announcements" className="text-xs lg:text-sm p-2 lg:p-3">
                 <Megaphone className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
                 <span className="hidden lg:inline">Announcements</span>
@@ -1571,11 +1577,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <Crown className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
                 <span className="hidden lg:inline">Analytics</span>
                 <span className="lg:hidden">Analytics</span>
-              </TabsTrigger>
-              <TabsTrigger value="emailtemplates" className="text-xs lg:text-sm p-2 lg:p-3">
-                <Wand2 className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
-                <span className="hidden lg:inline">Email Templates</span>
-                <span className="lg:hidden">Email</span>
               </TabsTrigger>
               <TabsTrigger value="sitecontent" className="text-xs lg:text-sm p-2 lg:p-3">
                 <Settings className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
@@ -2406,20 +2407,20 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Online Users</CardTitle>
+                    <CardTitle className="text-sm">Agent Users</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{users?.filter(u => u.isOnline).length || 0}</div>
-                    <p className="text-xs text-slate-500">Currently active</p>
+                    <div className="text-2xl font-bold text-orange-600">{users?.filter(u => u.role === 'agent').length || 0}</div>
+                    <p className="text-xs text-slate-500">Customer service agents</p>
                     <div className="mt-2">
-                      {users?.filter(u => u.isOnline).slice(0, 2).map(user => (
+                      {users?.filter(u => u.role === 'agent').slice(0, 2).map(user => (
                         <div key={user.id} className="text-xs text-slate-600 flex items-center gap-1">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <div className={`w-2 h-2 ${user.isOnline ? 'bg-green-500' : 'bg-slate-400'} rounded-full`}></div>
                           {user.firstName} {user.lastName}
                         </div>
                       ))}
-                      {users?.filter(u => u.isOnline).length > 2 && (
-                        <div className="text-xs text-slate-500">+{users?.filter(u => u.isOnline).length - 2} more</div>
+                      {users?.filter(u => u.role === 'agent').length > 2 && (
+                        <div className="text-xs text-slate-500">+{users?.filter(u => u.role === 'agent').length - 2} more</div>
                       )}
                     </div>
                   </CardContent>
@@ -2452,6 +2453,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         <span className="text-sm">Admin Users:</span>
                         <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">
                           {users?.filter(u => u.role === 'admin').length || 0}
+                        </Badge>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Agent Users:</span>
+                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">
+                          {users?.filter(u => u.role === 'agent').length || 0}
                         </Badge>
                       </div>
 
@@ -2747,95 +2755,59 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </CardContent>
                 </Card>
 
-                {/* FAQ Management Section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <HelpCircle className="h-5 w-5" />
-                      FAQ Management
-                    </CardTitle>
-                    <p className="text-sm text-slate-600">Manage frequently asked questions with drag-and-drop ordering</p>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <FAQEditor />
-                  </CardContent>
-                </Card>
+                {/* Content Management - Consolidated FAQ and Configuration */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* FAQ Management */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <HelpCircle className="h-5 w-5" />
+                        FAQ Management
+                      </CardTitle>
+                      <p className="text-sm text-slate-600">Manage frequently asked questions</p>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <FAQEditor />
+                    </CardContent>
+                  </Card>
 
-                {/* Template Configuration Section */}
-                <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowConfigManager(true)}>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Settings className="h-5 w-5" />
-                      Template Configuration
-                    </CardTitle>
-                    <p className="text-sm text-slate-600">Manage categories, genres, and concerned teams</p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Categories:</span>
-                        <span className="font-medium">{(dynamicTemplateCategories as any[]).length + (dynamicEmailCategories as any[]).length}</span>
+                  {/* Template Configuration */}
+                  <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowConfigManager(true)}>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Settings className="h-5 w-5" />
+                        Template Configuration
+                      </CardTitle>
+                      <p className="text-sm text-slate-600">Manage categories, genres, and teams</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="flex justify-between">
+                          <span>Categories:</span>
+                          <span className="font-medium">{(dynamicTemplateCategories as any[]).length + (dynamicEmailCategories as any[]).length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Genres:</span>
+                          <span className="font-medium">{(dynamicGenres as any[]).length}</span>
+                        </div>
+                        <div className="flex justify-between col-span-2">
+                          <span>Teams:</span>
+                          <span className="font-medium">{concernedTeamsData?.length || 0}</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Genres:</span>
-                        <span className="font-medium">{(dynamicGenres as any[]).length}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Concerned Teams:</span>
-                        <span className="font-medium">{concernedTeamsData?.length || 0}</span>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" className="w-full mt-4" onClick={(e) => {
-                      e.stopPropagation();
-                      setShowConfigManager(true);
-                    }}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Configuration
-                    </Button>
-                  </CardContent>
-                </Card>
+                      <Button variant="outline" size="sm" className="w-full mt-4" onClick={(e) => {
+                        e.stopPropagation();
+                        setShowConfigManager(true);
+                      }}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Configure
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
 
 
 
-                {/* Quick Stats Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Eye className="h-5 w-5" />
-                      System Overview
-                    </CardTitle>
-                    <p className="text-sm text-slate-600">Current system configuration</p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Live Templates:</span>
-                        <span className="font-medium">{templates?.length || 0}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Email Templates:</span>
-                        <span className="font-medium">{(emailTemplates as any[])?.length || 0}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Active Users:</span>
-                        <span className="font-medium">{users?.filter(u => u.status === 'active').length || 0}</span>
-                      </div>
-                    </div>
-                    <Badge variant="secondary" className="w-full mt-4 justify-center">
-                      Development Mode
-                    </Badge>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Configuration Notes</h4>
-                <ul className="text-sm text-slate-600 space-y-1">
-                  <li>• Changes to categories and genres apply immediately to new templates</li>
-                  <li>• Concerned teams are only used for email templates (internal communication)</li>
-                  <li>• Custom variables can be used in both email and live chat templates</li>
-                  <li>• All configurations are stored locally and persist across sessions</li>
-                </ul>
               </div>
             </div>
           </TabsContent>
