@@ -358,21 +358,15 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
 
   };
 
-  // Handle template selection - preserve user input
+  // Handle template selection - always update template content but preserve variable values
   const handleTemplateSelect = (template: EmailTemplate) => {
     setSelectedTemplate(template);
     
-    // Only set template content if user hasn't entered their own content
-    // This preserves manual user input when switching templates
-    if (!emailSubject.trim()) {
-      setEmailSubject(template.subject || template.name || '');
-    }
+    // Always set the template content (this allows switching between templates)
+    setEmailSubject(template.subject || template.name || '');
+    setEmailBody(template.content || '');
     
-    if (!emailBody.trim()) {
-      setEmailBody(template.content || '');
-    }
-    
-    // Update concerned team in variables (this is safe to update always)
+    // Update concerned team in variables (preserve all other variable values)
     setVariableValues(prev => ({
       ...prev,
       concerned_team: template.concernedTeam
