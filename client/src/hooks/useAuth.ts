@@ -269,7 +269,7 @@ export function useAuth() {
         // Only send heartbeat if status changed (performance optimization)
         const currentStatus = user.isOnline;
         if (currentStatus !== isUserActive) {
-          await fetch('/api/user/heartbeat', {
+          await fetch('/api/heartbeat', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -325,7 +325,7 @@ export function useAuth() {
     
     // Update status to offline when stopping heartbeat
     if (user) {
-      fetch('/api/user/heartbeat', {
+      fetch('/api/heartbeat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

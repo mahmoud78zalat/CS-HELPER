@@ -624,6 +624,40 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // Supabase-compatible heartbeat endpoint for online status tracking
+  app.post('/api/heartbeat', async (req, res) => {
+    try {
+      console.log('[SupabaseHeartbeat] Processing heartbeat request:', req.body);
+      
+      const { userId, isOnline, lastActivity, token } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      // Verify the user exists and update their online status
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        console.log('[SupabaseHeartbeat] User not found:', userId);
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log(`[SupabaseHeartbeat] Updating status for ${user.email}: ${isOnline ? 'online' : 'offline'}`);
+      
+      await storage.updateUserOnlineStatus(userId, isOnline);
+      
+      res.json({ 
+        message: "Heartbeat updated successfully",
+        userId,
+        isOnline,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('[SupabaseHeartbeat] Error updating heartbeat:', error);
+      res.status(500).json({ message: "Failed to update heartbeat" });
+    }
+  });
+
   // Create new user (for auto-creation on first login)
   app.post('/api/create-user', async (req, res) => {
     try {
