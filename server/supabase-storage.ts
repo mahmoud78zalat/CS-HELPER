@@ -391,19 +391,26 @@ export class SupabaseStorage implements IStorage {
     console.log('[SupabaseStorage] Deleting user with ID:', id);
     
     try {
-      // First, delete from Supabase Auth
-      console.log('[SupabaseStorage] Deleting user from Supabase Auth...');
-      const { error: authError } = await this.serviceClient.auth.admin.deleteUser(id);
+      // Only try to delete from Supabase Auth if the ID is a valid UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       
-      if (authError) {
-        console.error('[SupabaseStorage] Error deleting user from Auth:', authError);
-        // Continue with database deletion even if auth deletion fails
-        // This handles cases where user might not exist in auth but exists in database
+      if (uuidRegex.test(id)) {
+        // First, delete from Supabase Auth
+        console.log('[SupabaseStorage] Deleting user from Supabase Auth...');
+        const { error: authError } = await this.serviceClient.auth.admin.deleteUser(id);
+        
+        if (authError) {
+          console.error('[SupabaseStorage] Error deleting user from Auth:', authError);
+          // Continue with database deletion even if auth deletion fails
+          // This handles cases where user might not exist in auth but exists in database
+        } else {
+          console.log('[SupabaseStorage] Successfully deleted user from Supabase Auth:', id);
+        }
       } else {
-        console.log('[SupabaseStorage] Successfully deleted user from Supabase Auth:', id);
+        console.log('[SupabaseStorage] ID is not a valid UUID, skipping Supabase Auth deletion:', id);
       }
 
-      // Then, delete from the users table
+      // Delete from the users table (this works regardless of UUID format)
       console.log('[SupabaseStorage] Deleting user from database table...');
       const { error: dbError } = await this.serviceClient
         .from('users')
@@ -415,7 +422,7 @@ export class SupabaseStorage implements IStorage {
         throw dbError;
       }
 
-      console.log('[SupabaseStorage] Successfully deleted user from both Auth and database:', id);
+      console.log('[SupabaseStorage] Successfully deleted user from database:', id);
       
       // Clear user from cache
       this.userCache.delete(id);

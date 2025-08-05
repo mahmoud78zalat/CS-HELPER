@@ -269,10 +269,12 @@ export function useAuth() {
         // Only send heartbeat if status changed (performance optimization)
         const currentStatus = user.isOnline;
         if (currentStatus !== isUserActive) {
-          await fetch('/api/heartbeat', {
+          await fetch('/api/user/heartbeat', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'x-user-id': user.id,
+              'x-user-email': user.email || ''
             },
             credentials: 'include',
             body: JSON.stringify({

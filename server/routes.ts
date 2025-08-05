@@ -3,13 +3,32 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { createHmac } from "crypto";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertLiveReplyTemplateSchema, insertEmailTemplateSchema, insertSiteContentSchema } from "@shared/schema";
 import { z } from "zod";
 
+// Simple Supabase-based auth middleware
+async function isAuthenticated(req: any, res: any, next: any) {
+  try {
+    const userId = req.headers['x-user-id'] as string;
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required - User ID missing' });
+    }
+
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return res.status(401).json({ message: 'Authentication required - User not found' });
+    }
+
+    // Attach user info for route handlers
+    req.user = { claims: { sub: userId }, userDetails: user };
+    next();
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    return res.status(500).json({ message: 'Authentication error' });
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -48,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Note: /api/create-user endpoint is handled in simple-routes.ts to avoid conflicts
 
-  // Heartbeat endpoint for advanced online status detection
+  // Heartbeat endpoint for online status detection - Now works for all users
   app.post('/api/user/heartbeat', isAuthenticated, async (req: any, res) => {
     try {
       const { userId, isOnline, lastActivity } = req.body;
