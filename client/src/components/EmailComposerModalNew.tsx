@@ -195,6 +195,13 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [isDragDropMode, setIsDragDropMode] = useState(false);
 
+  // Add editing mode state to control when to show template vs processed content
+  const [isEditingSubject, setIsEditingSubject] = useState(false);
+  const [isEditingBody, setIsEditingBody] = useState(false);
+  
+  // Track subject and content changes for variable synchronization
+  const [prevSubject, setPrevSubject] = useState('');
+  const [prevBody, setPrevBody] = useState('');
 
   
   // Fetch email templates with debugging
@@ -365,6 +372,10 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     // Always set the template content (this allows switching between templates)
     setEmailSubject(template.subject || template.name || '');
     setEmailBody(template.content || '');
+    
+    // Reset editing states when template changes
+    setIsEditingSubject(false);
+    setIsEditingBody(false);
     
     // Update concerned team in variables (preserve all other variable values)
     setVariableValues(prev => ({
@@ -590,13 +601,40 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 
                 {/* Subject Line Section */}
                 <div className="mb-4">
-                  <Label htmlFor="emailSubject" className="text-base font-semibold mb-3 block">Subject Line</Label>
+                  <div className="flex items-center justify-between mb-3">
+                    <Label htmlFor="emailSubject" className="text-base font-semibold">Subject Line</Label>
+                    {isEditingSubject && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                          Editing Mode - Raw Template
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsEditingSubject(false)}
+                          className="text-xs h-6 px-2"
+                        >
+                          Exit Edit
+                        </Button>
+                      </div>
+                    )}
+                    {!isEditingSubject && selectedTemplate && (
+                      <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        Preview Mode - Variables Replaced
+                      </span>
+                    )}
+                  </div>
                   <Input
                     id="emailSubject"
-                    value={getFinalSubject()}
+                    value={isEditingSubject ? emailSubject : getFinalSubject()}
                     onChange={(e) => setEmailSubject(e.target.value)}
+                    onFocus={() => setIsEditingSubject(true)}
                     placeholder="Select a template to populate subject..."
-                    className="h-12 text-base"
+                    className={`h-12 text-base transition-colors ${
+                      isEditingSubject 
+                        ? 'border-blue-300 bg-blue-50/50' 
+                        : 'border-slate-300 bg-white'
+                    }`}
                   />
 
                   {/* Copy Action Buttons */}
@@ -637,14 +675,41 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
               
               {/* Email Body Section */}
               <div className="flex-1 flex flex-col p-4">
-                <Label htmlFor="body" className="text-base font-semibold mb-3 block">Email Body</Label>
+                <div className="flex items-center justify-between mb-3">
+                  <Label htmlFor="body" className="text-base font-semibold">Email Body</Label>
+                  {isEditingBody && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                        Editing Mode - Raw Template
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditingBody(false)}
+                        className="text-xs h-6 px-2"
+                      >
+                        Exit Edit
+                      </Button>
+                    </div>
+                  )}
+                  {!isEditingBody && selectedTemplate && (
+                    <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                      Preview Mode - Variables Replaced
+                    </span>
+                  )}
+                </div>
                 <DroppableTextarea
                   id="email-body-droppable"
                   name="body"
-                  value={getFinalBody()}
+                  value={isEditingBody ? emailBody : getFinalBody()}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEmailBody(e.target.value)}
+                  onFieldFocus={() => setIsEditingBody(true)}
                   placeholder="Select a template to populate content..."
-                  className="font-mono text-sm resize-none flex-1 min-h-[400px]"
+                  className={`font-mono text-sm resize-none flex-1 min-h-[400px] transition-colors ${
+                    isEditingBody 
+                      ? 'border-blue-300 bg-blue-50/50' 
+                      : 'border-slate-300 bg-white'
+                  }`}
                 />
               </div>
             </div>
