@@ -203,15 +203,31 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const [prevSubject, setPrevSubject] = useState('');
   const [prevBody, setPrevBody] = useState('');
 
-  // Auto-reset editing mode after inactivity (fallback for DroppableTextarea)
+  // Track user activity for proper editing mode management
+  const [lastActivityTime, setLastActivityTime] = useState<Record<string, number>>({});
+  
+  // Reset editing mode only when user truly stops interacting
   useEffect(() => {
-    if (isEditingBody) {
-      const timer = setTimeout(() => {
-        setIsEditingBody(false);
-      }, 3000); // Reset to preview mode after 3 seconds of inactivity
-      return () => clearTimeout(timer);
-    }
-  }, [isEditingBody, emailBody]);
+    const checkInactivity = () => {
+      const now = Date.now();
+      const INACTIVITY_THRESHOLD = 10000; // 10 seconds of no activity
+      
+      if (isEditingBody && lastActivityTime.body) {
+        if (now - lastActivityTime.body > INACTIVITY_THRESHOLD) {
+          setIsEditingBody(false);
+        }
+      }
+      
+      if (isEditingSubject && lastActivityTime.subject) {
+        if (now - lastActivityTime.subject > INACTIVITY_THRESHOLD) {
+          setIsEditingSubject(false);
+        }
+      }
+    };
+    
+    const interval = setInterval(checkInactivity, 2000); // Check every 2 seconds
+    return () => clearInterval(interval);
+  }, [isEditingBody, isEditingSubject, lastActivityTime]);
   
   // Fetch email templates with debugging
   const { data: templates = [] } = useQuery<EmailTemplate[]>({
@@ -653,9 +669,19 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   <div className="flex items-center justify-between mb-3">
                     <Label htmlFor="emailSubject" className="text-base font-semibold">Subject Line</Label>
                     {isEditingSubject && (
-                      <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                        Editing Mode - Raw Template
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                          Editing Mode - Raw Template
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsEditingSubject(false)}
+                          className="text-xs h-6 px-2"
+                        >
+                          Exit Edit
+                        </Button>
+                      </div>
                     )}
                     {!isEditingSubject && selectedTemplate && (
                       <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
@@ -666,9 +692,20 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   <Input
                     id="emailSubject"
                     value={isEditingSubject ? emailSubject : getFinalSubject()}
-                    onChange={(e) => setEmailSubject(e.target.value)}
-                    onFocus={() => setIsEditingSubject(true)}
-                    onBlur={() => setIsEditingSubject(false)}
+                    onChange={(e) => {
+                      setEmailSubject(e.target.value);
+                      setLastActivityTime(prev => ({ ...prev, subject: Date.now() }));
+                    }}
+                    onFocus={() => {
+                      setIsEditingSubject(true);
+                      setLastActivityTime(prev => ({ ...prev, subject: Date.now() }));
+                    }}
+                    onBlur={() => {
+                      // Don't immediately reset - let the inactivity timer handle it
+                      setTimeout(() => {
+                        setLastActivityTime(prev => ({ ...prev, subject: Date.now() }));
+                      }, 100);
+                    }}
                     placeholder="Select a template to populate subject..."
                     className={`h-12 text-base transition-colors ${
                       isEditingSubject 
@@ -718,9 +755,19 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                 <div className="flex items-center justify-between mb-3">
                   <Label htmlFor="body" className="text-base font-semibold">Email Body</Label>
                   {isEditingBody && (
-                    <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                      Editing Mode - Raw Template
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                        Editing Mode - Raw Template
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditingBody(false)}
+                        className="text-xs h-6 px-2"
+                      >
+                        Exit Edit
+                      </Button>
+                    </div>
                   )}
                   {!isEditingBody && selectedTemplate && (
                     <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
@@ -732,8 +779,14 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   id="email-body-droppable"
                   name="body"
                   value={isEditingBody ? emailBody : getFinalBody()}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEmailBody(e.target.value)}
-                  onFieldFocus={() => setIsEditingBody(true)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                    setEmailBody(e.target.value);
+                    setLastActivityTime(prev => ({ ...prev, body: Date.now() }));
+                  }}
+                  onFieldFocus={() => {
+                    setIsEditingBody(true);
+                    setLastActivityTime(prev => ({ ...prev, body: Date.now() }));
+                  }}
                   placeholder="Select a template to populate content..."
                   className={`font-mono text-sm resize-none flex-1 min-h-[400px] transition-colors ${
                     isEditingBody 
