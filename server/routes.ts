@@ -5,6 +5,7 @@ import { createHmac } from "crypto";
 import { storage } from "./storage";
 import { insertLiveReplyTemplateSchema, insertEmailTemplateSchema, insertSiteContentSchema } from "@shared/schema";
 import { z } from "zod";
+import { presenceApiRouter } from './routes/presence-api';
 
 // Simple Supabase-based auth middleware
 async function isAuthenticated(req: any, res: any, next: any) {
@@ -68,28 +69,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Note: /api/create-user endpoint is handled in simple-routes.ts to avoid conflicts
 
   // Heartbeat endpoint for online status detection - Now works for all users
-  app.post('/api/user/heartbeat', isAuthenticated, async (req: any, res) => {
+  app.post('/api/user/heartbeat', requireSupabaseAuth, async (req: any, res) => {
     try {
-      const { userId, isOnline, lastActivity } = req.body;
-      const currentUserId = req.user.claims.sub;
+      const { 
+        userId, 
+        isOnline, 
+        lastActivity, 
+        timestamp,
+        pageHidden,
+        pageVisible, 
+        pageUnload,
+        heartbeatStopped 
+      } = req.body;
+      
+      const currentUserId = req.headers['x-user-id'] as string;
       
       // Security: Users can only update their own heartbeat
       if (userId !== currentUserId) {
         return res.status(403).json({ message: "Can only update own status" });
       }
       
-      console.log(`[Heartbeat] User ${userId} status: ${isOnline ? 'online' : 'offline'}, activity: ${lastActivity}`);
+      console.log(`[Enhanced Heartbeat] User ${userId} status: ${isOnline ? 'ONLINE' : 'OFFLINE'}`, {
+        lastActivity,
+        pageHidden,
+        pageVisible,
+        pageUnload,
+        heartbeatStopped
+      });
       
-      await storage.updateUserOnlineStatus(userId, isOnline);
+      // Use enhanced presence tracking
+      await storage.updateUserPresence(userId, isOnline, lastActivity ? new Date(lastActivity) : undefined, {
+        pageHidden,
+        pageVisible,
+        pageUnload,
+        heartbeatStopped
+      });
       
       res.json({ 
-        message: "Heartbeat updated",
+        message: "Enhanced heartbeat updated",
         userId,
         isOnline,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        realTimeEnabled: true
       });
     } catch (error) {
-      console.error("Error updating heartbeat:", error);
+      console.error("Error updating enhanced heartbeat:", error);
       res.status(500).json({ message: "Failed to update heartbeat" });
     }
   });
@@ -743,6 +767,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete template variable category" });
     }
   });
+
+  // Enhanced presence API endpoints
+  app.use('/api/presence', presenceApiRouter);
 
   // Create HTTP server
   const httpServer = createServer(app);

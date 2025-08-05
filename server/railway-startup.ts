@@ -6,6 +6,7 @@
 import express from 'express';
 import { createServer } from 'http';
 import { logger, createLoggingMiddleware, createErrorLoggingMiddleware } from './railway-logging';
+import { presenceMonitor } from './presence-monitor';
 
 export function createRailwayServer() {
   const app = express();
@@ -139,6 +140,11 @@ export function startRailwayServer(app: express.Express) {
   // CRITICAL: Must bind to 0.0.0.0 for Railway
   const server = createServer(app);
   
+  // Initialize presence monitor for real-time user status tracking
+  logger.info('🔄 Starting real-time presence monitoring system...', context);
+  presenceMonitor.start();
+  logger.info('✅ Presence monitor initialized', context);
+
   // Enhanced server error handling
   server.on('error', (error: any) => {
     logger.error('Server error event triggered', error, context);
@@ -191,6 +197,10 @@ export function startRailwayServer(app: express.Express) {
       const shutdownContext = { component: 'shutdown' };
       logger.info(`🛑 ${signal} received, initiating graceful shutdown...`, shutdownContext);
       logger.info(`Uptime: ${process.uptime()} seconds`, shutdownContext);
+      
+      // Stop presence monitor
+      logger.info('⏹️ Stopping presence monitor...', shutdownContext);
+      presenceMonitor.stop();
       
       server.close((error) => {
         if (error) {

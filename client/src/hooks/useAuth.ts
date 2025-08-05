@@ -248,11 +248,11 @@ export function useAuth() {
     }
   };
 
-  // Advanced online status management with heartbeat
+  // Advanced online status management with real-time heartbeat
   const startHeartbeat = () => {
     if (heartbeatInterval.current) return;
     
-    console.log('[Auth] Starting heartbeat for user presence');
+    console.log('[Auth] Starting enhanced real-time heartbeat for user presence');
     
     heartbeatInterval.current = setInterval(async () => {
       if (!user) return;
@@ -261,61 +261,144 @@ export function useAuth() {
         const now = Date.now();
         const timeSinceActivity = now - lastActivityTime.current;
         
-        // Consider user offline if no activity for 2 minutes (more accurate)
-        const isUserActive = timeSinceActivity < 2 * 60 * 1000;
+        // Ultra-aggressive activity detection: 2 minutes for maximum accuracy
+        const isUserActive = timeSinceActivity < 120 * 1000;
         
-        console.log(`[Auth] Heartbeat - User active: ${isUserActive}, Time since activity: ${Math.round(timeSinceActivity / 1000)}s`);
+        console.log(`[Auth] Real-time Heartbeat - User active: ${isUserActive}, Time since activity: ${Math.round(timeSinceActivity / 1000)}s`);
         
-        // Only send heartbeat if status changed (performance optimization)
-        const currentStatus = user.isOnline;
-        if (currentStatus !== isUserActive) {
-          await fetch('/api/user/heartbeat', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-user-id': user.id,
-              'x-user-email': user.email || ''
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              userId: user.id,
-              isOnline: isUserActive,
-              lastActivity: new Date(lastActivityTime.current).toISOString()
-            }),
-          });
-          
-          // Update local user state to prevent unnecessary calls
-          setUser(prev => prev ? { ...prev, isOnline: isUserActive } : null);
-        }
+        // Enhanced heartbeat with metadata for better tracking
+        await fetch('/api/user/heartbeat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user.id,
+            'x-user-email': user.email || ''
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            userId: user.id,
+            isOnline: isUserActive,
+            lastActivity: new Date(lastActivityTime.current).toISOString(),
+            timestamp: new Date().toISOString(),
+            pageHidden: document.hidden,
+            pageVisible: !document.hidden,
+            heartbeatType: 'interval'
+          }),
+        });
+        
+        // Update local user state immediately
+        setUser(prev => prev ? { 
+          ...prev, 
+          isOnline: isUserActive,
+          lastSeen: new Date()
+        } : null);
       } catch (error) {
         console.error('[Auth] Heartbeat error:', error);
       }
-    }, 30000); // Update every 30 seconds to reduce performance impact
+    }, 10000); // Real-time updates: every 10 seconds for maximum accuracy
     
     // Track user activity
     const updateActivity = () => {
       lastActivityTime.current = Date.now();
     };
     
-    // Listen for user activity with better detection
-    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click', 'focus', 'blur'];
+    // Enhanced activity detection with more events
+    const activityEvents = [
+      'mousedown', 'mousemove', 'mouseup', 'click', 'dblclick',
+      'keypress', 'keydown', 'keyup', 'input', 'change',
+      'scroll', 'wheel', 'touchstart', 'touchmove', 'touchend',
+      'focus', 'blur', 'resize', 'contextmenu', 'drag', 'drop'
+    ];
+    
     activityEvents.forEach(event => {
       document.addEventListener(event, updateActivity, { passive: true });
     });
     
-    // Handle visibility change to mark user offline when tab is hidden
-    const handleVisibilityChange = () => {
+    // Enhanced visibility change handling with immediate heartbeat
+    const handleVisibilityChange = async () => {
       if (document.hidden) {
-        // User switched tabs or minimized window - consider them potentially inactive
         console.log('[Auth] Page hidden - user may be inactive');
+        // Send immediate heartbeat when page becomes hidden
+        if (user) {
+          try {
+            await fetch('/api/user/heartbeat', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': user.id,
+                'x-user-email': user.email || ''
+              },
+              credentials: 'include',
+              body: JSON.stringify({
+                userId: user.id,
+                isOnline: false, // Mark as offline when hidden
+                lastActivity: new Date().toISOString(),
+                pageHidden: true
+              }),
+            });
+          } catch (error) {
+            console.error('[Auth] Error sending visibility heartbeat:', error);
+          }
+        }
       } else {
-        // User came back to tab
+        console.log('[Auth] Page visible - user is active again');
         updateActivity();
-        console.log('[Auth] Page visible - user is active');
+        // Send immediate heartbeat when page becomes visible
+        if (user) {
+          try {
+            await fetch('/api/user/heartbeat', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': user.id,
+                'x-user-email': user.email || ''
+              },
+              credentials: 'include',
+              body: JSON.stringify({
+                userId: user.id,
+                isOnline: true, // Mark as online when visible
+                lastActivity: new Date().toISOString(),
+                pageVisible: true
+              }),
+            });
+          } catch (error) {
+            console.error('[Auth] Error sending visibility heartbeat:', error);
+          }
+        }
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Enhanced page unload handling for immediate offline status
+    const handleBeforeUnload = () => {
+      if (user) {
+        // Use sendBeacon for reliable delivery during page unload
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        headers.append('x-user-id', user.id);
+        headers.append('x-user-email', user.email || '');
+        
+        const data = JSON.stringify({
+          userId: user.id,
+          isOnline: false,
+          lastActivity: new Date().toISOString(),
+          timestamp: new Date().toISOString(),
+          pageUnload: true,
+          heartbeatType: 'unload'
+        });
+        
+        if (navigator.sendBeacon) {
+          // Create blob with proper content type
+          const blob = new Blob([data], { type: 'application/json' });
+          navigator.sendBeacon('/api/user/heartbeat', blob);
+        }
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleBeforeUnload);
+    window.addEventListener('pagehide', handleBeforeUnload);
   };
   
   const stopHeartbeat = () => {
@@ -327,16 +410,19 @@ export function useAuth() {
     
     // Update status to offline when stopping heartbeat
     if (user) {
-      fetch('/api/heartbeat', {
+      fetch('/api/user/heartbeat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': user.id,
+          'x-user-email': user.email || ''
         },
         credentials: 'include',
         body: JSON.stringify({
           userId: user.id,
           isOnline: false,
-          lastActivity: new Date().toISOString()
+          lastActivity: new Date().toISOString(),
+          heartbeatStopped: true
         }),
       }).catch(console.error);
     }

@@ -359,9 +359,9 @@ export class SupabaseStorage implements IStorage {
       return [];
     }
 
-    // Calculate accurate online status based on last activity
+    // Enhanced real-time online status calculation
     const now = new Date();
-    const OFFLINE_THRESHOLD = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const OFFLINE_THRESHOLD = 2 * 60 * 1000; // More aggressive: 2 minutes for accuracy
 
     return data.map(user => {
       const mappedUser = this.mapSupabaseUser(user);
@@ -371,12 +371,12 @@ export class SupabaseStorage implements IStorage {
         const lastSeenTime = new Date(mappedUser.lastSeen).getTime();
         const timeSinceLastSeen = now.getTime() - lastSeenTime;
         
-        // User is only considered online if they were active within the last 5 minutes
+        // More strict online detection for accuracy
         mappedUser.isOnline = timeSinceLastSeen < OFFLINE_THRESHOLD;
         
-        // Log status changes for debugging
+        // Enhanced logging for real-time debugging
         if (user.is_online !== mappedUser.isOnline) {
-          console.log(`[SupabaseStorage] User ${mappedUser.email} status updated: ${user.is_online} -> ${mappedUser.isOnline} (last seen: ${Math.round(timeSinceLastSeen / 1000)}s ago)`);
+          console.log(`[SupabaseStorage] Real-time status change: ${mappedUser.email} ${user.is_online} -> ${mappedUser.isOnline} (${Math.round(timeSinceLastSeen / 1000)}s ago)`);
         }
       } else {
         // No last seen time means user is offline
@@ -462,6 +462,77 @@ export class SupabaseStorage implements IStorage {
       console.error('[SupabaseStorage] Error updating user online status:', error);
       throw error;
     }
+  }
+
+  async updateUserPresence(userId: string, isOnline: boolean, lastActivity?: Date, metadata?: any): Promise<void> {
+    console.log(`[SupabaseStorage] Real-time presence update for ${userId}: ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
+
+    const now = new Date();
+    const updateData: any = {
+      is_online: isOnline,
+      last_seen: now.toISOString(),
+      updated_at: now.toISOString()
+    };
+
+    if (lastActivity) {
+      updateData.last_activity = lastActivity.toISOString();
+    }
+
+    // Add metadata for enhanced tracking
+    if (metadata?.pageHidden) {
+      console.log(`[SupabaseStorage] User ${userId} page hidden - marking offline`);
+    }
+    if (metadata?.pageVisible) {
+      console.log(`[SupabaseStorage] User ${userId} page visible - marking online`);
+    }
+    if (metadata?.pageUnload) {
+      console.log(`[SupabaseStorage] User ${userId} page unload - marking offline`);
+    }
+
+    const { error } = await this.serviceClient
+      .from('users')
+      .update(updateData)
+      .eq('id', userId);
+
+    if (error) {
+      console.error('[SupabaseStorage] Error updating user presence:', error);
+      throw error;
+    }
+
+    // Clear user cache to force fresh data on next read
+    this.userCache.delete(userId);
+    
+    console.log(`[SupabaseStorage] ✅ Real-time presence updated: ${userId} = ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
+  }
+
+  // Enhanced method to check and update stale online users
+  async markStaleUsersOffline(): Promise<number> {
+    const STALE_THRESHOLD = 3 * 60 * 1000; // 3 minutes
+    const cutoffTime = new Date(Date.now() - STALE_THRESHOLD).toISOString();
+    
+    const { data, error } = await this.serviceClient
+      .from('users')
+      .update({ 
+        is_online: false,
+        updated_at: new Date().toISOString()
+      })
+      .eq('is_online', true)
+      .lt('last_seen', cutoffTime)
+      .select('id, email');
+
+    if (error) {
+      console.error('[SupabaseStorage] Error marking stale users offline:', error);
+      return 0;
+    }
+
+    const count = data?.length || 0;
+    if (count > 0) {
+      console.log(`[SupabaseStorage] ⚡ Marked ${count} stale users offline:`, data.map(u => u.email));
+      // Clear cache for updated users
+      data.forEach(user => this.userCache.delete(user.id));
+    }
+
+    return count;
   }
 
   async updateUserRole(id: string, role: "admin" | "agent"): Promise<void> {

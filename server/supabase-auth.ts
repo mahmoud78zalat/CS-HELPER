@@ -101,18 +101,63 @@ export class SupabaseAuth {
     }
   }
 
-  async updateUserOnlineStatus(userId: string, isOnline: boolean): Promise<void> {
+  async updateUserOnlineStatus(userId: string, isOnline: boolean, metadata?: any): Promise<void> {
     try {
+      console.log(`[SupabaseAuth] Enhanced presence update for ${userId}: ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
+      
+      const updateData: any = {
+        is_online: isOnline,
+        last_seen: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Log special cases for debugging
+      if (metadata?.pageHidden && !isOnline) {
+        console.log(`[SupabaseAuth] Page tab hidden: ${userId} -> OFFLINE`);
+      }
+      if (metadata?.pageVisible && isOnline) {
+        console.log(`[SupabaseAuth] Page tab visible: ${userId} -> ONLINE`);
+      }
+      if (metadata?.pageUnload) {
+        console.log(`[SupabaseAuth] Page unload detected: ${userId} -> OFFLINE`);
+      }
+
       await this.client
         .from('users')
-        .update({
-          is_online: isOnline,
-          last_seen: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', userId);
+        
+      console.log(`[SupabaseAuth] ✅ Successfully updated presence: ${userId} = ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
     } catch (error) {
       console.error('[SupabaseAuth] Error updating user online status:', error);
+    }
+  }
+
+  // Enhanced heartbeat processing with metadata support
+  async processHeartbeat(userId: string, data: {
+    isOnline: boolean;
+    lastActivity?: string;
+    timestamp?: string;
+    pageHidden?: boolean;
+    pageVisible?: boolean;
+    pageUnload?: boolean;
+    heartbeatStopped?: boolean;
+  }): Promise<void> {
+    try {
+      console.log(`[SupabaseAuth] Processing enhanced heartbeat for ${userId}:`, {
+        online: data.isOnline,
+        special: data.pageHidden ? 'hidden' : data.pageVisible ? 'visible' : data.pageUnload ? 'unloading' : 'normal'
+      });
+      
+      await this.updateUserOnlineStatus(userId, data.isOnline, {
+        pageHidden: data.pageHidden,
+        pageVisible: data.pageVisible,
+        pageUnload: data.pageUnload,
+        heartbeatStopped: data.heartbeatStopped
+      });
+    } catch (error) {
+      console.error('[SupabaseAuth] Error processing heartbeat:', error);
+      throw error;
     }
   }
 }
