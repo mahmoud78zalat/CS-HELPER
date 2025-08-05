@@ -195,10 +195,7 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [isDragDropMode, setIsDragDropMode] = useState(false);
 
-  
-  // Track subject and content changes for variable synchronization
-  const [prevSubject, setPrevSubject] = useState('');
-  const [prevBody, setPrevBody] = useState('');
+
   
   // Fetch email templates with debugging
   const { data: templates = [] } = useQuery<EmailTemplate[]>({
@@ -237,59 +234,11 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
     updateBulkOrdering, 
     resetToAdminOrdering, 
     hasLocalOrdering 
-  } = useLocalTemplateOrdering(user?.id || 'anonymous', 'email-templates');
+  } = useLocalTemplateOrdering(user?.id || 'anonymous');
 
-  // Effect to handle variable synchronization between subject and content
-  useEffect(() => {
-    // Check if orderid or awb variables were added/changed in subject
-    const subjectOrderidMatch = emailSubject.match(/\{orderid\}/g);
-    const subjectAwbMatch = emailSubject.match(/\{awb\}/g);
-    const prevSubjectOrderidMatch = prevSubject.match(/\{orderid\}/g);
-    const prevSubjectAwbMatch = prevSubject.match(/\{awb\}/g);
-    
-    // Check if orderid or awb variables were added/changed in body
-    const bodyOrderidMatch = emailBody.match(/\{orderid\}/g);
-    const bodyAwbMatch = emailBody.match(/\{awb\}/g);
-    const prevBodyOrderidMatch = prevBody.match(/\{orderid\}/g);
-    const prevBodyAwbMatch = prevBody.match(/\{awb\}/g);
-    
-    // Sync variables if they changed in either subject or body
-    let updated = false;
-    
-    // If orderid was added to subject but not in body, sync it
-    if (subjectOrderidMatch && !bodyOrderidMatch && 
-        (!prevSubjectOrderidMatch || subjectOrderidMatch.length !== prevSubjectOrderidMatch.length)) {
-      setEmailBody(prev => prev.includes('{orderid}') ? prev : prev + ' {orderid} ');
-      updated = true;
-    }
-    
-    // If awb was added to subject but not in body, sync it
-    if (subjectAwbMatch && !bodyAwbMatch && 
-        (!prevSubjectAwbMatch || subjectAwbMatch.length !== prevSubjectAwbMatch.length)) {
-      setEmailBody(prev => prev.includes('{awb}') ? prev : prev + ' {awb} ');
-      updated = true;
-    }
-    
-    // If orderid was added to body but not in subject, sync it
-    if (bodyOrderidMatch && !subjectOrderidMatch && 
-        (!prevBodyOrderidMatch || bodyOrderidMatch.length !== prevBodyOrderidMatch.length)) {
-      setEmailSubject(prev => prev.includes('{orderid}') ? prev : prev + ' {orderid} ');
-      updated = true;
-    }
-    
-    // If awb was added to body but not in subject, sync it
-    if (bodyAwbMatch && !subjectAwbMatch && 
-        (!prevBodyAwbMatch || bodyAwbMatch.length !== prevBodyAwbMatch.length)) {
-      setEmailSubject(prev => prev.includes('{awb}') ? prev : prev + ' {awb} ');
-      updated = true;
-    }
-    
-    // Update tracking variables
-    setPrevSubject(emailSubject);
-    setPrevBody(emailBody);
-  }, [emailSubject, emailBody, prevSubject, prevBody]);
+  // Removed problematic auto-synchronization effect that was interfering with user input
 
-  // Initialize variable values with customer data and system defaults
+  // Initialize variable values with customer data and system defaults (only once)
   useEffect(() => {
     const agentName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
     const currentDate = new Date().toLocaleDateString('en-US', { 
@@ -302,39 +251,71 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
       minute: '2-digit'
     });
 
-    setVariableValues({
-      // Customer data
-      customer_name: customerData.customer_name || '',
-      customer_email: customerData.customer_email || '',
-      customer_phone: customerData.customer_phone || '',
-      customer_address: customerData.customer_address || '',
-      
-      // Order data
-      order_id: customerData.order_id || '',
-      awb_number: customerData.awb_number || '',
-      awb: customerData.awb_number || '', // Support both {awb} and {awb_number}
-      order_status: customerData.order_status || '',
-      tracking_number: customerData.tracking_number || '',
-      delivery_date: customerData.delivery_date || '',
-      waiting_time: customerData.waiting_time || '2-3 business days',
-      
-      // System data
-      agent_name: agentName,
-      company_name: 'Brands For Less',
-      support_email: 'support@brandsforless.com',
-      business_hours: '9 AM - 6 PM, Sunday - Thursday',
-      
-      // Time data
-      current_date: currentDate,
-      current_time: currentTime,
-      time_frame: '24-48 hours',
+    // Only initialize if variableValues is empty to preserve user input
+    setVariableValues(prev => {
+      // If already initialized, only update system variables that might change
+      if (Object.keys(prev).length > 0) {
+        return {
+          ...prev,
+          // Update only system-generated values, keep user input intact
+          agent_name: agentName,
+          current_date: currentDate,
+          current_time: currentTime,
+          // Update customer data only if it was empty before (preserve manual input)
+          customer_name: prev.customer_name || customerData.customer_name || '',
+          customer_email: prev.customer_email || customerData.customer_email || '',
+          customer_phone: prev.customer_phone || customerData.customer_phone || '',
+          customer_address: prev.customer_address || customerData.customer_address || '',
+          order_id: prev.order_id || customerData.order_id || '',
+          awb_number: prev.awb_number || customerData.awb_number || '',
+          awb: prev.awb || customerData.awb_number || '',
+          order_status: prev.order_status || customerData.order_status || '',
+          tracking_number: prev.tracking_number || customerData.tracking_number || '',
+          delivery_date: prev.delivery_date || customerData.delivery_date || '',
+          waiting_time: prev.waiting_time || customerData.waiting_time || '2-3 business days',
+          ordernumber: prev.ordernumber || customerData.order_id || customerData.awb_number || '',
+          orderid: prev.orderid || customerData.order_id || '',
+          order_number: prev.order_number || customerData.order_id || customerData.awb_number || '',
+          AWB: prev.AWB || customerData.awb_number || '',
+          customernumber: prev.customernumber || (customerData.customer_name?.replace(/\s+/g, '').toUpperCase() + '001') || 'CUST001',
+        };
+      }
 
-      // Subject-specific variables (limited set)
-      ordernumber: customerData.order_id || customerData.awb_number || '',
-      orderid: customerData.order_id || '', // Add orderid variable
-      order_number: customerData.order_id || customerData.awb_number || '',
-      AWB: customerData.awb_number || '',
-      customernumber: customerData.customer_name?.replace(/\s+/g, '').toUpperCase() + '001' || 'CUST001',
+      // First initialization
+      return {
+        // Customer data
+        customer_name: customerData.customer_name || '',
+        customer_email: customerData.customer_email || '',
+        customer_phone: customerData.customer_phone || '',
+        customer_address: customerData.customer_address || '',
+        
+        // Order data
+        order_id: customerData.order_id || '',
+        awb_number: customerData.awb_number || '',
+        awb: customerData.awb_number || '', // Support both {awb} and {awb_number}
+        order_status: customerData.order_status || '',
+        tracking_number: customerData.tracking_number || '',
+        delivery_date: customerData.delivery_date || '',
+        waiting_time: customerData.waiting_time || '2-3 business days',
+        
+        // System data
+        agent_name: agentName,
+        company_name: 'Brands For Less',
+        support_email: 'support@brandsforless.com',
+        business_hours: '9 AM - 6 PM, Sunday - Thursday',
+        
+        // Time data
+        current_date: currentDate,
+        current_time: currentTime,
+        time_frame: '24-48 hours',
+
+        // Subject-specific variables (limited set)
+        ordernumber: customerData.order_id || customerData.awb_number || '',
+        orderid: customerData.order_id || '', // Add orderid variable
+        order_number: customerData.order_id || customerData.awb_number || '',
+        AWB: customerData.awb_number || '',
+        customernumber: customerData.customer_name?.replace(/\s+/g, '').toUpperCase() + '001' || 'CUST001',
+      };
     });
   }, [customerData, user]);
 
@@ -377,51 +358,33 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
 
   };
 
-  // Handle template selection
+  // Handle template selection - preserve user input
   const handleTemplateSelect = (template: EmailTemplate) => {
     setSelectedTemplate(template);
-    // Use template subject if available, otherwise fallback to template name
-    setEmailSubject(template.subject || template.name || '');
-    setEmailBody(template.content || '');
     
-    // Update concerned team in variables
+    // Only set template content if user hasn't entered their own content
+    // This preserves manual user input when switching templates
+    if (!emailSubject.trim()) {
+      setEmailSubject(template.subject || template.name || '');
+    }
+    
+    if (!emailBody.trim()) {
+      setEmailBody(template.content || '');
+    }
+    
+    // Update concerned team in variables (this is safe to update always)
     setVariableValues(prev => ({
       ...prev,
       concerned_team: template.concernedTeam
     }));
   };
 
-  // Handle variable value change with synchronization between subject and content
+  // Handle variable value change - simple and clean approach
   const handleVariableChange = (key: string, value: string) => {
-    setVariableValues(prev => {
-      const newValues = {
-        ...prev,
-        [key]: value
-      };
-      
-      // If this is an orderid or awb variable, update both subject and content synchronously
-      if (key === 'orderid' || key === 'awb') {
-        // Update the subject with new variable value
-        if (emailSubject.includes(`{${key}}`)) {
-          const updatedSubject = emailSubject.replace(
-            new RegExp(`\\{${key}\\}`, 'g'),
-            ` {${key}} `
-          );
-          setEmailSubject(updatedSubject);
-        }
-        
-        // Update the content with new variable value
-        if (emailBody.includes(`{${key}}`)) {
-          const updatedBody = emailBody.replace(
-            new RegExp(`\\{${key}\\}`, 'g'),
-            ` {${key}} `
-          );
-          setEmailBody(updatedBody);
-        }
-      }
-      
-      return newValues;
-    });
+    setVariableValues(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
 
   // Get final email content with variables replaced
