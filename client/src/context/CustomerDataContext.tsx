@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CustomerData {
   customer_name?: string;
@@ -20,11 +21,15 @@ interface CustomerData {
   waiting_time?: string;
   ref_number?: string;
   language?: 'en' | 'ar'; // Add language preference for live chat templates
-  // Agent data
+  // Agent data - Auto-populated from current user profile
   agent_name?: string;
   agentname?: string;
   agentfirstname?: string;
   agentlastname?: string;
+  agentarabicfirstname?: string;
+  agentarabiclastname?: string;
+  agentfullname?: string;
+  agentarabicfullname?: string;
   agent_email?: string;
 }
 
@@ -43,27 +48,51 @@ interface CustomerDataProviderProps {
 }
 
 export function CustomerDataProvider({ children }: CustomerDataProviderProps) {
+  const { user } = useAuth();
   const [customerData, setCustomerData] = useState<CustomerData>({
     language: 'en' // Default to English
   });
   const [version, setVersion] = useState(0);
 
-  // Load data from localStorage on mount
+  // Load data from localStorage on mount and populate agent data from user
   useEffect(() => {
     const savedData = localStorage.getItem('bfl-customer-data');
+    let initialData = { language: 'en' as const };
+    
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
-        // Ensure language defaults to 'en' if not set
-        setCustomerData({
-          language: 'en',
+        initialData = {
+          language: 'en' as const,
           ...parsedData
-        });
+        };
       } catch (error) {
         console.error('Failed to parse saved customer data:', error);
       }
     }
-  }, []);
+    
+    // Auto-populate agent data from current user if available
+    if (user) {
+      const agentData = {
+        agentfirstname: user.firstName || '',
+        agentlastname: user.lastName || '',
+        agentarabicfirstname: user.arabicFirstName || '',
+        agentarabiclastname: user.arabicLastName || '',
+        agentfullname: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : '',
+        agentarabicfullname: user.arabicFirstName && user.arabicLastName ? `${user.arabicFirstName} ${user.arabicLastName}` : '',
+        agent_name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : '',
+        agentname: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : '',
+        agent_email: user.email || ''
+      };
+      
+      setCustomerData(prev => ({
+        ...initialData,
+        ...agentData
+      }));
+    } else {
+      setCustomerData(initialData);
+    }
+  }, [user]);
 
   // Save data to localStorage whenever it changes
   useEffect(() => {

@@ -233,6 +233,37 @@ export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
           <div className="flex h-full overflow-hidden">
             {/* Left Panel - Notes List */}
             <div className="w-1/2 pr-4 flex flex-col">
+              {/* Add New Note Section - Moved above search */}
+              <div className="mb-4 p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Quick Add Note
+                </h4>
+                <form onSubmit={handleCreateNote} className="space-y-3">
+                  <Input
+                    type="text"
+                    placeholder="Note subject..."
+                    value={newSubject}
+                    onChange={(e) => setNewSubject(e.target.value)}
+                    className="text-sm"
+                  />
+                  <Textarea
+                    placeholder="Note content..."
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                    className="text-sm min-h-[60px] resize-none"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={!newSubject.trim() || !newNote.trim() || createNoteMutation.isPending}
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-sm py-2"
+                  >
+                    <Plus className="h-3 w-3 mr-2" />
+                    {createNoteMutation.isPending ? 'Creating...' : 'Add Note'}
+                  </Button>
+                </form>
+              </div>
+              
               {/* Search Bar */}
               <div className="relative mb-4">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -315,24 +346,24 @@ export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
               </div>
             </div>
 
-            {/* Right Panel - Create/Edit Form */}
+            {/* Right Panel - Edit Form (only when editing) */}
             <div className="w-1/2 pl-4 border-l">
-              <div className="h-full flex flex-col">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  {editingId ? 'Edit Note' : 'Create New Note'}
-                </h3>
+              {editingId ? (
+                <div className="h-full flex flex-col">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Edit3 className="h-5 w-5" />
+                    Edit Note
+                  </h3>
 
-                <form onSubmit={handleCreateNote} className="flex-1 flex flex-col">
                   <div className="space-y-4 flex-1 flex flex-col">
                     {/* Subject Input */}
                     <div>
-                      <label className="block text-sm font-medium mb-2">Subject (Optional)</label>
+                      <label className="block text-sm font-medium mb-2">Subject</label>
                       <Input
                         type="text"
                         placeholder="Enter note subject..."
-                        value={editingId ? editSubject : newSubject}
-                        onChange={(e) => editingId ? setEditSubject(e.target.value) : setNewSubject(e.target.value)}
+                        value={editSubject}
+                        onChange={(e) => setEditSubject(e.target.value)}
                       />
                     </div>
 
@@ -341,47 +372,43 @@ export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
                       <label className="block text-sm font-medium mb-2">Note Content</label>
                       <Textarea
                         placeholder="Write your note content..."
-                        value={editingId ? editContent : newNote}
-                        onChange={(e) => editingId ? setEditContent(e.target.value) : setNewNote(e.target.value)}
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
                         className="flex-1 resize-none min-h-[300px]"
                       />
                     </div>
                   </div>
 
                   <div className="flex gap-2 mt-4">
-                    {editingId ? (
-                      <>
-                        <Button
-                          type="button"
-                          onClick={() => handleUpdateNote(editingId)}
-                          disabled={!editSubject.trim() || !editContent.trim() || updateNoteMutation.isPending}
-                          className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
-                        >
-                          <Edit3 className="h-4 w-4 mr-2" />
-                          {updateNoteMutation.isPending ? 'Updating...' : 'Update Note'}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={cancelEditing}
-                        >
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        type="button"
-                        onClick={() => handleCreateNote()}
-                        disabled={!newSubject.trim() || !newNote.trim() || createNoteMutation.isPending}
-                        className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        {createNoteMutation.isPending ? 'Saving...' : 'Create Note'}
-                      </Button>
-                    )}
+                    <Button
+                      type="button"
+                      onClick={() => handleUpdateNote(editingId)}
+                      disabled={!editSubject.trim() || !editContent.trim() || updateNoteMutation.isPending}
+                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+                    >
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      {updateNoteMutation.isPending ? 'Updating...' : 'Update Note'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={cancelEditing}
+                      className="px-6"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Cancel
+                    </Button>
                   </div>
-                </form>
-              </div>
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-500">
+                  <div className="text-center">
+                    <StickyNote className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                    <p className="text-lg font-medium">Select a note to edit</p>
+                    <p className="text-sm">Click the edit button on any note to modify it</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>

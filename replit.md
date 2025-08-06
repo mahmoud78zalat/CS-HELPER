@@ -11,6 +11,8 @@ Extensive template genres including greeting, CSAT, warning abusive language, ap
 Development mode: Authentication streamlined with auto-admin access for development purposes.
 Variable Format: ONLY use {variable} format - completely remove [VARIABLE] format support.
 Project Size Optimization: Enhanced gitignore configuration to prevent large download sizes.
+Agent Setup: First-join GUI for profile setup with English and Arabic names, automatic agent variables in templates.
+PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 
 ## System Architecture
 
@@ -46,7 +48,8 @@ Key tables include Users, Live Reply Templates, Email Templates, Usage tracking 
 - **Advanced Order Conversion Tool**: Seamless Order ID ↔ AWB conversion with intelligent validation, error handling, and integration with customer management system.
 - **Comprehensive Admin Panel**: Five management tabs providing complete control over users, templates, analytics, FAQ system, and site customization with real-time insights.
 - **Real-time Collaboration Platform**: WebSocket-powered user presence tracking, live status updates, and seamless team coordination capabilities.
-- **Personal Notes Management**: User-specific workspace with full CRUD operations, Supabase storage, and advanced search functionality.
+- **Enhanced Personal Notes Management**: User-specific workspace with improved layout design - quick add note section above search bar, simplified right panel for editing only, toast notifications for copy actions, and advanced search functionality with Supabase storage.
+- **Agent Profile Management System**: First-time user onboarding with AgentSetupModal for English and Arabic name setup, automatic agent variable population (agentfirstname, agent_name, agentarabicfirstname, etc.) in templates, and real-time synchronization with user profiles.
 - **White-Label Content Management**: Complete site customization including branding, about content, version labels, and footer with dynamic content loading.
 - **Advanced Theme System**: Dark/Light mode with persistence, real-time color synchronization, and centralized color management across all components.
 - **Universal Variable Management**: Centralized control system for all template variables with intelligent suggestions, duplicate prevention, and usage tracking.
@@ -156,3 +159,36 @@ Completed comprehensive improvements to user presence tracking and Notes section
 - Streamlined Notes interface with easy content access
 - Eliminated interface duplication and confusion
 - Enhanced productivity through improved quick access features
+
+### Agent Profile Setup & PersonalNotes Layout Improvements (August 6, 2025)
+Enhanced agent onboarding workflow and optimized PersonalNotes interface for better user experience.
+
+**Agent Profile Management**:
+1. **First-Time User Setup**: AgentSetupModal provides guided onboarding for new agents to set English and Arabic names (firstName, lastName, arabicFirstName, arabicLastName)
+2. **Automatic Variable Population**: Agent variables (agentfirstname, agent_name, agentarabicfirstname, etc.) are automatically populated from user profiles in all templates
+3. **Real-Time Synchronization**: Agent data updates instantly across all template systems when profile is modified
+4. **Database Integration**: Complete user profile management with setup-profile API endpoint and proper validation
+
+**PersonalNotes Interface Redesign**:
+1. **Quick Add Above Search**: Moved note creation form above search bar for better workflow - users can quickly add notes without scrolling
+2. **Simplified Right Panel**: Edit mode now only appears when actively editing a note, otherwise shows placeholder with clear instructions
+3. **Enhanced Toast Notifications**: Copy actions now show confirmation with note title for better user feedback
+4. **Streamlined Layout**: Two-column design with left panel for browsing/adding, right panel dedicated to editing
+
+**Technical Implementation**:
+- Enhanced `client/src/context/CustomerDataContext.tsx` with automatic agent variable population from useAuth
+- Updated `client/src/components/PersonalNotes.tsx` with improved two-panel layout and quick-add form
+- Added `setup_agent_variables.sql` script for database initialization with agent variable categories
+- Backend `/api/users/setup-profile` endpoint handles complete name setup for English and Arabic
+
+**Database Changes**:
+- Agent Info variable category with comprehensive agent variables: agentfirstname, agent_name, agentarabicfirstname, agentfullname, etc.
+- Automatic user profile completion tracking via isFirstTimeUser flag
+- Performance indexes for user lookups and status management
+
+**User Experience Benefits**:
+- New agents guided through complete profile setup on first login
+- Templates automatically personalized with agent names in both languages
+- Faster note creation workflow with prominent add form
+- Cleaner editing interface focused on single-note editing
+- Consistent agent branding across all customer communications
