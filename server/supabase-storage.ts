@@ -560,6 +560,51 @@ export class SupabaseStorage implements IStorage {
     }
 
     console.log('[SupabaseStorage] Successfully updated user role:', data[0]);
+    
+    // Clear cache to force refresh
+    this.userCache.delete(id);
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User> {
+    console.log(`[SupabaseStorage] Updating user profile: ${id}`, updates);
+    
+    // Map camelCase to snake_case for Supabase
+    const dbUpdates: any = {
+      updated_at: new Date().toISOString()
+    };
+    
+    if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName;
+    if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName;
+    if (updates.arabicFirstName !== undefined) dbUpdates.arabic_first_name = updates.arabicFirstName;
+    if (updates.arabicLastName !== undefined) dbUpdates.arabic_last_name = updates.arabicLastName;
+    if (updates.isFirstTimeUser !== undefined) dbUpdates.is_first_time_user = updates.isFirstTimeUser;
+    if (updates.role !== undefined) dbUpdates.role = updates.role;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+
+    const { data, error } = await this.serviceClient
+      .from('users')
+      .update(dbUpdates)
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] Error updating user:', error);
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+
+    // Clear cache to force refresh
+    this.userCache.delete(id);
+    
+    // Map back to camelCase and return
+    const updatedUser = this.mapUser(data);
+    console.log(`[SupabaseStorage] Successfully updated user profile: ${updatedUser.email}`);
+    
+    return updatedUser;
   }
 
   // Live reply template operations

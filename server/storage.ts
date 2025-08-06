@@ -63,6 +63,7 @@ export interface IStorage {
   updateUserStatus(id: string, status: "active" | "blocked" | "banned"): Promise<void>;
   updateUserOnlineStatus(id: string, isOnline: boolean): Promise<void>;
   updateUserRole(id: string, role: "admin" | "agent"): Promise<void>;
+  updateUser(id: string, updates: Partial<User>): Promise<User>;
   deleteUser(id: string): Promise<void>;
   markStaleUsersOffline(): Promise<number>;
 

@@ -12,15 +12,21 @@ import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 import AdminPanel from "@/components/AdminPanel";
+import AgentSetupModal from "@/components/AgentSetupModal";
 import { loadColorsFromDatabase } from "@/lib/templateColors";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
+  const [showAgentSetup, setShowAgentSetup] = React.useState(false);
 
   // Expose current user to window object for Chatbase integration
   React.useEffect(() => {
     if (user) {
       (window as any).getCurrentUser = () => user;
+      // Check if user is first time and needs setup
+      if (user.isFirstTimeUser && user.role !== 'admin') {
+        setShowAgentSetup(true);
+      }
     } else {
       (window as any).getCurrentUser = () => null;
     }
@@ -49,8 +55,18 @@ function Router() {
 
   // Authenticated users only
   return (
-    <Switch>
-      <Route path="/" component={Home} />
+    <>
+      <AgentSetupModal 
+        open={showAgentSetup}
+        onOpenChange={setShowAgentSetup}
+        onComplete={() => {
+          setShowAgentSetup(false);
+          // Refresh user data to update isFirstTimeUser status
+          window.location.reload();
+        }}
+      />
+      <Switch>
+        <Route path="/" component={Home} />
       <Route path="/admin" component={() => {
         if (!user || user.role !== 'admin') {
           return (
@@ -79,6 +95,7 @@ function Router() {
       <Route path="/login" component={() => { window.location.href = "/"; return null; }} />
       <Route component={NotFound} />
     </Switch>
+    </>
   );
 }
 

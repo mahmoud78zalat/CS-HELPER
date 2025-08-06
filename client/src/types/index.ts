@@ -8,6 +8,7 @@ export interface CustomerData {
   item_name?: string;
   delivery_date?: string;
   waiting_time?: string;
+  ref_number?: string;
 }
 
 export interface OrderTrackingResult {

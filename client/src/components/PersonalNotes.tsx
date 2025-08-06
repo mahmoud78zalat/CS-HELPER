@@ -188,8 +188,8 @@ export default function PersonalNotes() {
   const handleCopyNote = (note: PersonalNote) => {
     navigator.clipboard.writeText(note.content);
     toast({
-      title: "Copied!",
-      description: "Note content copied to clipboard.",
+      title: "Note Copied!",
+      description: `"${note.subject || 'Note'}" has been copied to clipboard.`,
     });
   };
 
@@ -213,18 +213,32 @@ export default function PersonalNotes() {
 
   return (
     <div className="space-y-4">
-      {/* Notes Dropdown Toggle */}
-      <div className="flex items-center justify-between">
+      {/* Notes Section Header */}
+      <div className="flex items-center justify-between gap-2">
         <Button
           onClick={() => setIsOpen(!isOpen)}
           variant="outline"
-          className="flex items-center gap-2 w-full"
+          className="flex items-center gap-2 flex-1"
         >
           <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
             <StickyNote className="h-4 w-4 text-white" />
           </div>
           <span className="flex-1 text-left">Personal Notes ({notes.length})</span>
           <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </Button>
+        
+        <Button
+          onClick={() => {
+            setIsOpen(true);
+            setEditingId(null);
+            setNewNote('');
+            setNewSubject('');
+          }}
+          size="sm"
+          className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white px-4"
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          Add/Edit Notes
         </Button>
       </div>
 
@@ -316,7 +330,7 @@ export default function PersonalNotes() {
             <div className="w-1/2 pl-4 border-l">
               <div className="h-full flex flex-col">
                 <h3 className="text-lg font-semibold mb-4">
-                  {editingId ? 'Edit Note' : 'Add New Note'}
+                  {editingId ? 'Edit Note' : 'Add/Edit Notes'}
                 </h3>
 
                 <form onSubmit={handleCreateNote} className="flex-1 flex flex-col">
@@ -369,7 +383,7 @@ export default function PersonalNotes() {
                         className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
                       >
                         <Plus className="h-4 w-4 mr-2" />
-                        {createNoteMutation.isPending ? 'Saving...' : 'Add Note'}
+                        {createNoteMutation.isPending ? 'Saving...' : 'Add/Edit Notes'}
                       </Button>
                     )}
                   </div>

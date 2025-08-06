@@ -14,8 +14,8 @@ export default function AdditionalInfoPanel() {
             type="text"
             className="w-full text-sm"
             placeholder="Product name"
-            value={customerData.itemname || ''}
-            onChange={(e) => updateCustomerData('itemname', e.target.value)}
+            value={customerData.item_name || ''}
+            onChange={(e) => updateCustomerData('item_name', e.target.value)}
           />
         </div>
         
@@ -24,8 +24,8 @@ export default function AdditionalInfoPanel() {
           <Input
             type="date"
             className="w-full text-sm"
-            value={customerData.deliverydate || ''}
-            onChange={(e) => updateCustomerData('deliverydate', e.target.value)}
+            value={customerData.delivery_date || ''}
+            onChange={(e) => updateCustomerData('delivery_date', e.target.value)}
           />
         </div>
         
@@ -35,8 +35,19 @@ export default function AdditionalInfoPanel() {
             type="text"
             className="w-full text-sm"
             placeholder="2 business days"
-            value={customerData.waitingtime || ''}
-            onChange={(e) => updateCustomerData('waitingtime', e.target.value)}
+            value={customerData.waiting_time || ''}
+            onChange={(e) => updateCustomerData('waiting_time', e.target.value)}
+          />
+        </div>
+
+        <div>
+          <Label className="text-xs font-medium text-slate-600 mb-1">Reference Number</Label>
+          <Input
+            type="text"
+            className="w-full text-sm"
+            placeholder="REF-12345"
+            value={customerData.ref_number || ''}
+            onChange={(e) => updateCustomerData('ref_number', e.target.value)}
           />
         </div>
       </div>

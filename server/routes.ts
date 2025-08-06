@@ -583,6 +583,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User profile setup route
+  app.post('/api/users/setup-profile', async (req: any, res) => {
+    try {
+      const { userId, firstName, lastName, arabicFirstName, arabicLastName } = req.body;
+      
+      if (!userId || !firstName || !lastName || !arabicFirstName || !arabicLastName) {
+        return res.status(400).json({ message: "All name fields are required" });
+      }
+
+      const updatedUser = await storage.updateUser(userId, {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        arabicFirstName: arabicFirstName.trim(),
+        arabicLastName: arabicLastName.trim(),
+        isFirstTimeUser: false
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update user profile" });
+    }
+  });
+
   // Color Settings API Routes
   app.get('/api/color-settings', async (req: any, res) => {
     try {

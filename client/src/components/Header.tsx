@@ -209,27 +209,12 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
                 {siteName}
               </h1>
               <div className="flex items-center gap-2">
-                <p className="text-xs lg:text-sm text-slate-600 dark:text-gray-300">Agent:</p>
-                {isEditingName ? (
-                  <div className="flex items-center gap-1">
-                    <Input
-                      value={agentName}
-                      onChange={(e) => setAgentName(e.target.value)}
-                      className="h-6 text-xs w-32"
-                      onBlur={handleNameSave}
-                      onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
-                      autoFocus
-                    />
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setIsEditingName(true)}
-                    className="text-xs lg:text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                  >
-                    {agentName}
-                    <Edit3 className="w-3 h-3" />
-                  </button>
-                )}
+                <p className="text-xs lg:text-sm text-slate-600 dark:text-gray-300">
+                  {isAdmin ? 'Admin:' : 'Agent:'}
+                </p>
+                <span className="text-xs lg:text-sm text-blue-600 font-medium">
+                  {agentName}
+                </span>
               </div>
             </div>
             <div className="sm:hidden">
