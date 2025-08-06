@@ -24,6 +24,7 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Added phone number mapping in template variables (customer_phone → phone_number)
 - Fixed personal notes editing functionality by correcting HTTP method from PUT to PATCH
 - Enhanced delivery date formatting in templates (ISO date → readable format like "29th of August 2025")
+- Order/User ID converter logic refinement in progress for correct pattern extraction
 
 ## System Architecture
 

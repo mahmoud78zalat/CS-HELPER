@@ -52,9 +52,13 @@ export default function OrderConverterPanel() {
           processed = processed.substring(0, 12);
         }
         
-        // Remove last 5 digits and first digit from what remains
-        if (processed.length >= 6) {
-          processed = processed.substring(1, processed.length - 5);
+        // Extract characters at positions 0, 2, 4, 6, 8, 10 (every other character)
+        if (processed.length >= 12) {
+          let result = '';
+          for (let i = 0; i < processed.length && result.length < 7; i += 2) {
+            result += processed[i];
+          }
+          processed = result;
         }
         
         setConvertedOrder(`U${processed}`);
