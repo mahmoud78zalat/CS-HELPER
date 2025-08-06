@@ -146,6 +146,13 @@ export function useAuth() {
             setIsLoading(false);
             if (authTimeout) clearTimeout(authTimeout);
             
+            // Check if this is a first-time user and trigger setup modal
+            if (userData.isFirstTimeUser) {
+              console.log('[Auth] First-time user detected, should trigger setup modal');
+              // The setup modal logic will be handled in the main app component
+              // which listens to this user state change
+            }
+            
             // Ensure heartbeat starts for all user roles
             startHeartbeat();
             return;
@@ -211,6 +218,12 @@ export function useAuth() {
             setIsLoading(false);
             if (authTimeout) clearTimeout(authTimeout);
             
+            // Check if this is a first-time user and trigger setup modal
+            if (newUserData.isFirstTimeUser) {
+              console.log('[Auth] New first-time user created, should trigger setup modal');
+              // The setup modal logic will be handled in the main app component
+            }
+            
             // Ensure heartbeat starts for all user roles
             startHeartbeat();
             return;
@@ -254,6 +267,11 @@ export function useAuth() {
       setUser(fallbackUserData);
       setIsLoading(false);
       if (authTimeout) clearTimeout(authTimeout);
+      
+      // Check if this is a first-time user and trigger setup modal
+      if (fallbackUserData.isFirstTimeUser) {
+        console.log('[Auth] Fallback first-time user, should trigger setup modal');
+      }
       
       // Ensure heartbeat starts for all user roles
       startHeartbeat();

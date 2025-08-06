@@ -24,8 +24,10 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Added phone number mapping in template variables (customer_phone → phone_number)
 - Fixed personal notes editing functionality by correcting HTTP method from PUT to PATCH
 - Enhanced delivery date formatting in templates (ISO date → readable format like "29th of August 2025")
-- Fixed Order/User ID converter to return only numbers (remove first character + last 5 characters, no A/U prefix)
+- Removed User ID format conversion logic (only Order ID → User ID conversion remains)
+- Order converter now returns pure numbers (no A/U prefix): A121212121221 → 1212121
 - Updated delivery date format to display "25th of August 2025" instead of "August 25, 2025"
+- Added is_first_time_user check in authentication to trigger agent setup modal for new users
 
 ## System Architecture
 

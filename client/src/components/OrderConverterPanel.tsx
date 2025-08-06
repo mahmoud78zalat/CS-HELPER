@@ -58,25 +58,7 @@ export default function OrderConverterPanel() {
         }
         
         setConvertedOrder(processed);
-      } else if (value.startsWith('U') && value.length >= 13) {
-        setOrderType('User ID Format');
-        
-        // Remove first 'U' letter
-        let processed = value.substring(1);
-        
-        // Handle dash removal logic - if there's a dash after 13 characters, remove it and numbers after it
-        const dashIndex = processed.indexOf('-');
-        if (dashIndex >= 0 && (dashIndex + 1 + 1) >= 13) { // +1 for 'U' already removed, +1 for dash position
-          processed = processed.substring(0, dashIndex);
-        }
-        
-        // Remove last 5 characters from what remains
-        if (processed.length > 5) {
-          processed = processed.substring(0, processed.length - 5);
-        }
-        
-        // For reverse conversion: add 'A' prefix and append '12345'
-        setConvertedOrder(`A${processed}12345`);
+
       } else {
         setOrderType('Invalid Format');
         setConvertedOrder('Must start with A and be at least 13 characters');
