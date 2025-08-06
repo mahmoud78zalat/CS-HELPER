@@ -111,6 +111,14 @@ const SortableEmailTemplateItem = ({
               <div className="text-xs text-slate-600 mb-3">
                 <span className="font-medium text-slate-700">To:</span> 
                 <span className="ml-2 px-2 py-1 bg-slate-100 rounded text-xs">{template.concernedTeam}</span>
+                {template.warningNote && (
+                  <div className="mt-2 flex items-center gap-1 text-red-600">
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <span className="text-xs font-medium">Warning Note</span>
+                  </div>
+                )}
               </div>
               <div className="flex gap-2 flex-wrap">
                 <Badge variant="secondary" className="text-xs px-2 py-1 bg-blue-100 text-blue-800 border border-blue-200">
@@ -559,6 +567,14 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                         <div className="text-xs text-slate-600 mb-3">
                           <span className="font-medium text-slate-700">To:</span> 
                           <span className="ml-2 px-2 py-1 bg-slate-100 rounded text-xs">{template.concernedTeam}</span>
+                          {template.warningNote && (
+                            <div className="mt-2 flex items-center gap-1 text-red-600">
+                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                              </svg>
+                              <span className="text-xs font-medium">Warning Note</span>
+                            </div>
+                          )}
                         </div>
                         <div className="flex gap-2 flex-wrap">
                           <Badge variant="secondary" className="text-xs px-2 py-1 bg-blue-100 text-blue-800 border border-blue-200">
@@ -597,6 +613,15 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                   <Badge className="bg-blue-50 text-blue-700 px-3 py-1 text-sm border border-blue-200">
                     To: {selectedTemplate?.concernedTeam || 'Select template first'}
                   </Badge>
+                  {selectedTemplate?.warningNote && (
+                    <div className="flex items-center gap-2 px-3 py-1 bg-red-50 border border-red-200 rounded-md">
+                      <svg className="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <span className="text-red-700 text-sm font-medium">Warning:</span>
+                      <span className="text-red-600 text-sm">{selectedTemplate.warningNote}</span>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Subject Line Section */}

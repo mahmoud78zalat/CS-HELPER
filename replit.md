@@ -35,6 +35,8 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Added Railway-specific connection string fixes and environment variable handling
 - Enhanced client-side IPv4 preference headers for better Railway compatibility
 - Created comprehensive connectivity testing during deployment startup
+- **UI FIX**: Fixed warning note display in email composer - now shows red-styled warnings next to "TO" field
+- Added warning note indicators in email template selection list for better visibility
 
 ## System Architecture
 
