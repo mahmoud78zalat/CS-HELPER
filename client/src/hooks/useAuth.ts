@@ -221,10 +221,13 @@ export function useAuth() {
         email: supabaseUser.email,
         firstName: supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
         lastName: supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+        arabicFirstName: null,
+        arabicLastName: null,
         profileImageUrl: supabaseUser.user_metadata?.avatar_url || '',
         role: 'agent' as const,
         status: 'active' as const,
         isOnline: false,
+        isFirstTimeUser: true,
         lastSeen: new Date(),
         createdAt: new Date(),
         updatedAt: new Date()

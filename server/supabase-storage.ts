@@ -601,7 +601,7 @@ export class SupabaseStorage implements IStorage {
     this.userCache.delete(id);
     
     // Map back to camelCase and return
-    const updatedUser = this.mapUser(data);
+    const updatedUser = this.mapSupabaseUser(data);
     console.log(`[SupabaseStorage] Successfully updated user profile: ${updatedUser.email}`);
     
     return updatedUser;
@@ -2288,10 +2288,13 @@ export class SupabaseStorage implements IStorage {
       email: data.email,
       firstName: data.first_name,
       lastName: data.last_name,
+      arabicFirstName: data.arabic_first_name,
+      arabicLastName: data.arabic_last_name,
       profileImageUrl: data.profile_image_url,
       role: data.role,
       status: data.status,
       isOnline: data.is_online,
+      isFirstTimeUser: data.is_first_time_user ?? true,
       lastSeen: data.last_seen ? new Date(data.last_seen) : null,
       createdAt: data.created_at ? new Date(data.created_at) : null,
       updatedAt: data.updated_at ? new Date(data.updated_at) : null,
