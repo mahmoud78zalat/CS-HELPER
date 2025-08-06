@@ -66,16 +66,26 @@ export function replaceVariablesInTemplate(
     processedCustomerData.phone_number = customerData.customer_phone;
   }
   
-  // Handle delivery date formatting - convert ISO date to readable format
+  // Handle delivery date formatting - convert to "25th of August 2025" format
   if (customerData.delivery_date) {
     try {
       const date = new Date(customerData.delivery_date);
-      const options: Intl.DateTimeFormatOptions = { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
+      const day = date.getDate();
+      const month = date.toLocaleDateString('en-US', { month: 'long' });
+      const year = date.getFullYear();
+      
+      // Add ordinal suffix (1st, 2nd, 3rd, 4th, etc.)
+      const getOrdinalSuffix = (day: number) => {
+        if (day >= 11 && day <= 13) return 'th';
+        switch (day % 10) {
+          case 1: return 'st';
+          case 2: return 'nd';
+          case 3: return 'rd';
+          default: return 'th';
+        }
       };
-      processedCustomerData.delivery_date = date.toLocaleDateString('en-US', options);
+      
+      processedCustomerData.delivery_date = `${day}${getOrdinalSuffix(day)} of ${month} ${year}`;
     } catch (error) {
       // If date parsing fails, keep original value
       processedCustomerData.delivery_date = customerData.delivery_date;

@@ -57,7 +57,7 @@ export default function OrderConverterPanel() {
           processed = processed.substring(0, processed.length - 5);
         }
         
-        setConvertedOrder(`U${processed}`);
+        setConvertedOrder(processed);
       } else if (value.startsWith('U') && value.length >= 13) {
         setOrderType('User ID Format');
         
