@@ -24,14 +24,65 @@ function Router() {
   React.useEffect(() => {
     if (user) {
       (window as any).getCurrentUser = () => user;
-      // Check if user is first time and needs setup
-      if (user.isFirstTimeUser && user.role !== 'admin') {
+      
+      // Check if user is first time and needs setup - INCLUDE ADMINS
+      console.log('[App] User check - isFirstTimeUser:', user.isFirstTimeUser, 'role:', user.role);
+      if (user.isFirstTimeUser) {
+        console.log('[App] 🚨 First-time user detected, forcing setup modal to open');
         setShowAgentSetup(true);
+      } else {
+        console.log('[App] User has completed setup, setup modal will not show');
       }
     } else {
       (window as any).getCurrentUser = () => null;
     }
   }, [user]);
+  
+  // Additional check for already authenticated users with is_first_time_user = true
+  React.useEffect(() => {
+    if (isAuthenticated && user && user.isFirstTimeUser) {
+      console.log('[App] 🔄 Force checking first-time user status for already authenticated user');
+      console.log('[App] Current user data:', {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        isFirstTimeUser: user.isFirstTimeUser,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        arabicFirstName: user.arabicFirstName,
+        arabicLastName: user.arabicLastName
+      });
+      
+      setTimeout(() => {
+        console.log('[App] 🚨 Forcing setup modal for authenticated first-time user');
+        setShowAgentSetup(true);
+      }, 1000); // Small delay to ensure UI is ready
+    }
+  }, [isAuthenticated, user]);
+  
+  // Debug function for manual modal trigger (temporary)
+  React.useEffect(() => {
+    (window as any).forceSetupModal = () => {
+      console.log('[App] 🔧 DEBUG: Manually forcing setup modal');
+      setShowAgentSetup(true);
+    };
+    
+    (window as any).checkUserStatus = () => {
+      console.log('[App] 🔍 DEBUG: Current user status:', {
+        isAuthenticated,
+        isLoading,
+        user: user ? {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          isFirstTimeUser: user.isFirstTimeUser,
+          firstName: user.firstName,
+          lastName: user.lastName
+        } : null,
+        showAgentSetup
+      });
+    };
+  }, [isAuthenticated, isLoading, user, showAgentSetup]);
 
   if (isLoading) {
     return (
