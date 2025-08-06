@@ -163,38 +163,7 @@ export default function CustomerInfoPanel() {
           </Select>
         </div>
 
-        {/* Agent Information Section */}
-        <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <Label className="text-xs font-semibold text-blue-700 mb-3 block">Agent Information</Label>
-          
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs font-medium text-slate-600 mb-1">Agent Arabic First Name</Label>
-              <Input
-                type="text"
-                className="w-full text-sm"
-                placeholder="Agent Arabic first name"
-                value={customerData.agentarabicfirstname || ''}
-                onChange={(e) => updateCustomerData('agentarabicfirstname', e.target.value)}
-              />
-            </div>
-            
-            <div>
-              <Label className="text-xs font-medium text-slate-600 mb-1">Agent Arabic Last Name</Label>
-              <Input
-                type="text"
-                className="w-full text-sm"
-                placeholder="Agent Arabic last name"
-                value={customerData.agentarabiclastname || ''}
-                onChange={(e) => updateCustomerData('agentarabiclastname', e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <p className="text-xs text-blue-600 mt-2">
-            These fields populate {'{agentarabicfirstname}'}, {'{agentarabiclastname}'}, and {'{agentarabicname}'} variables in templates
-          </p>
-        </div>
+
         
         <Button 
           onClick={clearCustomerData}

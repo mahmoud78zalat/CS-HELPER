@@ -6,6 +6,7 @@ import EmailComposerModal from "@/components/EmailComposerModalNew";
 import AdminPanel from "@/components/AdminPanel";
 import AboutModal from "@/components/AboutModal";
 import FAQModal from "@/components/FAQModal";
+import PersonalNotes from "@/components/PersonalNotes";
 
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +18,7 @@ export default function Home() {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
+  const [showPersonalNotes, setShowPersonalNotes] = useState(false);
 
   // Enable real-time updates for all users
   useRealTimeUpdates();
@@ -36,6 +38,7 @@ export default function Home() {
       onAdminPanel={() => setShowAdminPanel(true)}
       onAbout={() => setShowAbout(true)}
       onFAQ={() => setShowFAQ(true)}
+      onOpenPersonalNotes={() => setShowPersonalNotes(true)}
     >
       <TemplatesArea />
       
@@ -63,6 +66,11 @@ export default function Home() {
           onClose={() => setShowFAQ(false)} 
         />
       )}
+      
+      <PersonalNotes 
+        open={showPersonalNotes} 
+        onClose={() => setShowPersonalNotes(false)} 
+      />
     </Layout>
   );
 }

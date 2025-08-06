@@ -28,13 +28,15 @@ interface SidebarProps {
   onEmailComposer: () => void;
   onAdminPanel: () => void;
   onAbout: () => void;
+  onOpenPersonalNotes?: () => void;
 }
 
 export default function Sidebar({ 
   onCheckOrder, 
   onEmailComposer,
   onAdminPanel,
-  onAbout 
+  onAbout,
+  onOpenPersonalNotes
 }: SidebarProps) {
   const { user, signOut } = useAuth();
   const [expandedPanel, setExpandedPanel] = useState<string | null>(null);
@@ -274,24 +276,14 @@ export default function Sidebar({
                   )}
                 </div>
 
-                {/* Add New Note Button */}
+                {/* Add/Edit Notes Button */}
                 <div className="border-t pt-2">
                   <Button
-                    onClick={() => {
-                      // Open the PersonalNotes modal
-                      const personalNotesModal = document.querySelector('[data-testid="personal-notes-dialog"]');
-                      if (personalNotesModal) {
-                        personalNotesModal.click();
-                      } else {
-                        // Fallback: trigger PersonalNotes component
-                        const event = new CustomEvent('openPersonalNotes');
-                        window.dispatchEvent(event);
-                      }
-                    }}
+                    onClick={onOpenPersonalNotes}
                     className="w-full text-xs py-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
                   >
                     <Plus className="h-3 w-3 mr-1" />
-                    Add New Note
+                    Add/Edit Notes
                   </Button>
                 </div>
               </div>

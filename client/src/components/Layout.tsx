@@ -10,6 +10,7 @@ interface LayoutProps {
   onAdminPanel: () => void;
   onAbout: () => void;
   onFAQ: () => void;
+  onOpenPersonalNotes?: () => void;
 }
 
 export default function Layout({ 
@@ -18,7 +19,8 @@ export default function Layout({
   onEmailComposer, 
   onAdminPanel, 
   onAbout,
-  onFAQ 
+  onFAQ,
+  onOpenPersonalNotes
 }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -39,6 +41,7 @@ export default function Layout({
             onEmailComposer={onEmailComposer}
             onAdminPanel={onAdminPanel}
             onAbout={onAbout}
+            onOpenPersonalNotes={onOpenPersonalNotes}
           />
         </div>
         

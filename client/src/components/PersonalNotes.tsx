@@ -12,14 +12,18 @@ import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
 import { PersonalNote } from '@shared/schema';
 
-export default function PersonalNotes() {
+interface PersonalNotesProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
   const [newNote, setNewNote] = useState('');
   const [newSubject, setNewSubject] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [editSubject, setEditSubject] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const { toast } = useToast();
@@ -74,98 +78,101 @@ export default function PersonalNotes() {
         credentials: 'include',
         body: JSON.stringify({ subject, content }),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to create note');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to create note');
       }
-      
-      return await response.json();
+
+      return response.json();
     },
-    onSuccess: (data) => {
-      console.log('Note created successfully:', data);
-      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
+    onSuccess: () => {
       setNewNote('');
       setNewSubject('');
       toast({
-        title: "Note Created",
-        description: "Your personal note has been saved successfully.",
+        title: "Success!",
+        description: "Note created successfully.",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes'] });
     },
     onError: (error) => {
-      console.error('Create note error:', error);
       toast({
         title: "Error",
-        description: "Failed to create note. Please try again.",
+        description: error.message || "Failed to create note.",
         variant: "destructive",
       });
     },
   });
 
-  // Update note mutation using direct fetch
+  // Update note mutation
   const updateNoteMutation = useMutation({
     mutationFn: async ({ id, subject, content }: { id: string; subject: string; content: string }) => {
       const response = await fetch(`/api/personal-notes/${id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': user?.id || '',
         },
         credentials: 'include',
         body: JSON.stringify({ subject, content }),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to update note');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update note');
       }
-      
-      return await response.json();
+
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       setEditingId(null);
       setEditContent('');
       setEditSubject('');
       toast({
-        title: "Note Updated",
-        description: "Your note has been updated successfully.",
+        title: "Success!",
+        description: "Note updated successfully.",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes'] });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update note. Please try again.",
+        description: error.message || "Failed to update note.",
         variant: "destructive",
       });
     },
   });
 
-  // Delete note mutation using direct fetch
+  // Delete note mutation
   const deleteNoteMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id }: { id: string }) => {
       const response = await fetch(`/api/personal-notes/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': user?.id || '',
         },
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to delete note');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to delete note');
       }
-      
-      return response.status === 204 ? null : await response.json();
+
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
       toast({
-        title: "Note Deleted",
-        description: "Your note has been deleted successfully.",
+        title: "Success!",
+        description: "Note deleted successfully.",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes'] });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to delete note. Please try again.",
+        description: error.message || "Failed to delete note.",
         variant: "destructive",
       });
     },
@@ -212,38 +219,7 @@ export default function PersonalNotes() {
   );
 
   return (
-    <div className="space-y-4">
-      {/* Notes Section Header */}
-      <div className="flex items-center justify-between gap-2">
-        <Button
-          onClick={() => setIsOpen(!isOpen)}
-          variant="outline"
-          className="flex items-center gap-2 flex-1"
-        >
-          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
-            <StickyNote className="h-4 w-4 text-white" />
-          </div>
-          <span className="flex-1 text-left">Personal Notes ({notes.length})</span>
-          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </Button>
-        
-        <Button
-          onClick={() => {
-            setIsOpen(true);
-            setEditingId(null);
-            setNewNote('');
-            setNewSubject('');
-          }}
-          size="sm"
-          className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white px-4"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Add/Edit Notes
-        </Button>
-      </div>
-
-      {/* Fullscreen Notes Dialog */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-6xl h-[90vh] overflow-hidden">
           <DialogHeader className="border-b pb-4">
             <DialogTitle className="flex items-center gap-2">
@@ -288,37 +264,50 @@ export default function PersonalNotes() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleCopyNote(note)}
-                              className="h-6 w-6 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyNote(note);
+                              }}
+                              className="h-6 w-6 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20"
+                              title="Copy note content"
                             >
-                              <Copy className="h-3 w-3" />
+                              <Copy className="h-3 w-3 text-blue-600" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => startEditing(note)}
-                              className="h-6 w-6 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startEditing(note);
+                              }}
+                              className="h-6 w-6 p-0 hover:bg-yellow-100 dark:hover:bg-yellow-900/20"
+                              title="Edit note"
                             >
-                              <Edit3 className="h-3 w-3" />
+                              <Edit3 className="h-3 w-3 text-yellow-600" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => deleteNoteMutation.mutate(note.id)}
-                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNoteMutation.mutate({ id: note.id });
+                              }}
+                              disabled={deleteNoteMutation.isPending}
+                              className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
+                              title="Delete note"
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash2 className="h-3 w-3 text-red-600" />
                             </Button>
                           </div>
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <p className="text-sm text-gray-600 line-clamp-2">{note.content.substring(0, 120)}{note.content.length > 120 ? '...' : ''}</p>
-                        <div className="flex justify-between items-center mt-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'No date'}
-                          </Badge>
+                        <div className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
+                          {note.content}
                         </div>
+                        <Badge variant="secondary" className="text-xs mt-2">
+                          {note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'Unknown date'}
+                        </Badge>
                       </CardContent>
                     </Card>
                   ))
@@ -326,26 +315,30 @@ export default function PersonalNotes() {
               </div>
             </div>
 
-            {/* Right Panel - Add/Edit Note */}
+            {/* Right Panel - Create/Edit Form */}
             <div className="w-1/2 pl-4 border-l">
               <div className="h-full flex flex-col">
-                <h3 className="text-lg font-semibold mb-4">
-                  {editingId ? 'Edit Note' : 'Add/Edit Notes'}
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  {editingId ? 'Edit Note' : 'Create New Note'}
                 </h3>
 
                 <form onSubmit={handleCreateNote} className="flex-1 flex flex-col">
-                  <div className="space-y-4 flex-1">
+                  <div className="space-y-4 flex-1 flex flex-col">
+                    {/* Subject Input */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Subject (Note Title)</label>
+                      <label className="block text-sm font-medium mb-2">Subject (Optional)</label>
                       <Input
-                        placeholder="Enter note subject/title..."
+                        type="text"
+                        placeholder="Enter note subject..."
                         value={editingId ? editSubject : newSubject}
                         onChange={(e) => editingId ? setEditSubject(e.target.value) : setNewSubject(e.target.value)}
-                        className="w-full"
                       />
                     </div>
+
+                    {/* Content Textarea */}
                     <div className="flex-1 flex flex-col">
-                      <label className="text-sm font-medium mb-2 block">Note Content</label>
+                      <label className="block text-sm font-medium mb-2">Note Content</label>
                       <Textarea
                         placeholder="Write your note content..."
                         value={editingId ? editContent : newNote}
@@ -383,7 +376,7 @@ export default function PersonalNotes() {
                         className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
                       >
                         <Plus className="h-4 w-4 mr-2" />
-                        {createNoteMutation.isPending ? 'Saving...' : 'Add/Edit Notes'}
+                        {createNoteMutation.isPending ? 'Saving...' : 'Create Note'}
                       </Button>
                     )}
                   </div>
@@ -393,130 +386,5 @@ export default function PersonalNotes() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Existing Notes */}
-      <div className="space-y-3">
-        {notes.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            <StickyNote className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p>No notes yet. Create your first note above!</p>
-          </div>
-        ) : (
-          notes.map((note) => (
-            <Card key={note.id} className="group hover:shadow-md transition-shadow">
-              <CardContent className="pt-4">
-                {editingId === note.id ? (
-                  // Edit Mode
-                  <div className="space-y-3">
-                    <Textarea
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      className="min-h-[80px] resize-none"
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleUpdateNote(note.id)}
-                        disabled={!editContent.trim() || updateNoteMutation.isPending}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        {updateNoteMutation.isPending ? 'Saving...' : 'Save'}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={cancelEditing}
-                        disabled={updateNoteMutation.isPending}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  // Enhanced View Mode with Collapsible Content
-                  <div className="space-y-3">
-                    {/* Header with always-visible copy button and note title */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        {note.subject && (
-                          <h4 className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate mb-1">
-                            {note.subject}
-                          </h4>
-                        )}
-                        <Badge variant="secondary" className="text-xs">
-                          {note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'Unknown date'}
-                        </Badge>
-                      </div>
-                      <div className="flex gap-1 flex-shrink-0">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleCopyNote(note)}
-                          className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
-                          title="Copy note content"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => toggleNoteExpansion(note.id)}
-                          className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-700"
-                          title={expandedNotes.has(note.id) ? "Collapse note" : "Expand note"}
-                        >
-                          {expandedNotes.has(note.id) ? 
-                            <ChevronUp className="h-4 w-4" /> : 
-                            <ChevronDown className="h-4 w-4" />
-                          }
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => startEditing(note)}
-                          className="h-8 w-8 p-0 hover:bg-yellow-100 dark:hover:bg-yellow-900 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteNoteMutation.mutate(note.id)}
-                          disabled={deleteNoteMutation.isPending}
-                          className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900 text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Content with smart preview/expansion */}
-                    <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                      {expandedNotes.has(note.id) ? (
-                        // Full content when expanded
-                        note.content
-                      ) : (
-                        // Preview with smart truncation when collapsed
-                        <div>
-                          {note.content.length > 120 ? (
-                            <>
-                              {note.content.substring(0, 120).split('\n').slice(0, 3).join('\n')}
-                              {note.content.length > 120 && (
-                                <span className="text-slate-500 dark:text-slate-400"> ... </span>
-                              )}
-                            </>
-                          ) : (
-                            note.content
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
+    );
+  }
