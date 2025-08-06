@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback, useReducer } from "react";
+import { flushSync } from "react-dom";
 import { User } from "@shared/schema";
 import { supabase } from "@/lib/supabase";
 
@@ -8,6 +9,8 @@ export function useAuth() {
   const [authTimeout, setAuthTimeout] = useState<NodeJS.Timeout | null>(null);
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
   const lastActivityTime = useRef<number>(Date.now());
+  // Force re-render reducer to handle React state batching issues
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
 
   useEffect(() => {
     // Disabled timeout as it was clearing authenticated users
@@ -468,8 +471,8 @@ export function useAuth() {
     window.location.replace('/login');
   };
 
-  // Refresh user data function
-  const refreshUser = async () => {
+  // Enhanced refresh user data function with force update mechanism
+  const refreshUser = useCallback(async () => {
     if (!user?.id) {
       console.log('[Auth] Cannot refresh user data - no user ID available');
       return;
@@ -485,7 +488,12 @@ export function useAuth() {
         isFirstTimeUser: user.isFirstTimeUser
       });
       
-      const response = await fetch(`/api/user/${user.id}`);
+      const response = await fetch(`/api/user/${user.id}`, {
+        cache: 'no-cache', // Prevent caching issues
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
       
       if (response.ok) {
         const updatedUser = await response.json();
@@ -497,14 +505,25 @@ export function useAuth() {
           isFirstTimeUser: updatedUser.isFirstTimeUser
         });
         
-        // Update the user state with fresh data
-        setUser(updatedUser);
-        console.log('[Auth] User state updated successfully');
+        // Use flushSync for immediate synchronous state updates
+        flushSync(() => {
+          setUser(prevUser => {
+            console.log('[Auth] Setting new user state with flushSync:', updatedUser);
+            console.log('[Auth] Previous user was:', prevUser);
+            return updatedUser;
+          });
+        });
+        
+        // Force a re-render to bypass React batching issues
+        console.log('[Auth] Forcing component re-render after flushSync');
+        forceUpdate();
         
         // Update localStorage with fresh data
         localStorage.setItem('current_user_id', updatedUser.id);
         localStorage.setItem('current_user_email', updatedUser.email);
         localStorage.setItem('current_user_role', updatedUser.role);
+        
+        console.log('[Auth] User state update completed with force refresh');
       } else {
         const errorText = await response.text();
         console.error('[Auth] Failed to refresh user data:', response.status, errorText);
@@ -512,7 +531,7 @@ export function useAuth() {
     } catch (error) {
       console.error('[Auth] Error refreshing user data:', error);
     }
-  };
+  }, [user?.id, forceUpdate]);
 
   return {
     user,

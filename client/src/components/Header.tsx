@@ -121,13 +121,40 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
     checkForNewFAQs();
   }, [faqs, user?.id]);
 
-  // Initialize agent name from user data
+  // Initialize agent name from user data with enhanced tracking
   useEffect(() => {
-    const name = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 
-                 user?.email || 
-                 'User';
-    setAgentName(name);
-  }, [user]);
+    console.log('[Header] User data changed - updating agent name:', {
+      user: user,
+      firstName: user?.firstName,
+      lastName: user?.lastName,
+      arabicFirstName: user?.arabicFirstName,
+      arabicLastName: user?.arabicLastName,
+      isFirstTimeUser: user?.isFirstTimeUser,
+      currentAgentName: agentName
+    });
+    
+    if (user) {
+      // Enhanced name selection logic with Arabic support
+      let displayName = '';
+      
+      if (user.firstName || user.arabicFirstName) {
+        // Prioritize showing both names if available
+        if (user.firstName && user.arabicFirstName) {
+          displayName = `${user.firstName} - ${user.arabicFirstName}`;
+        } else {
+          displayName = user.firstName || user.arabicFirstName || '';
+        }
+      } else if (user.email) {
+        // Fallback to email prefix
+        displayName = user.email.split('@')[0];
+      } else {
+        displayName = 'User';
+      }
+      
+      console.log('[Header] Setting new agent name:', displayName);
+      setAgentName(displayName);
+    }
+  }, [user, user?.firstName, user?.arabicFirstName, user?.isFirstTimeUser]);
 
   // Save agent name to localStorage for use in templates
   useEffect(() => {

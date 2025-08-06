@@ -18,6 +18,7 @@ import { loadColorsFromDatabase } from "@/lib/templateColors";
 function Router() {
   const { isAuthenticated, isLoading, user, refreshUser } = useAuth();
   const [showAgentSetup, setShowAgentSetup] = React.useState(false);
+  const [appKey, setAppKey] = React.useState(0); // Key for forcing full app re-render
 
   // Expose current user to window object for Chatbase integration
   React.useEffect(() => {
@@ -60,32 +61,37 @@ function Router() {
         open={showAgentSetup}
         onOpenChange={setShowAgentSetup}
         onComplete={async () => {
-          console.log('[App] Profile setup completed, refreshing user data...');
+          console.log('[App] Profile setup completed, implementing comprehensive UI refresh...');
           try {
-            // Refresh user data to get updated profile information
+            // Step 1: Refresh user data
             await refreshUser();
             console.log('[App] ✅ User data refreshed successfully');
             
-            // Add a small delay to ensure UI has time to process the updated state
-            await new Promise(resolve => setTimeout(resolve, 200));
+            // Step 2: Force complete app re-render with key change
+            setAppKey(prev => prev + 1);
+            console.log('[App] 🔄 Forced complete app re-render with key change');
             
-            // Close the modal after successful refresh and UI update
+            // Step 3: Close modal after state updates
+            await new Promise(resolve => setTimeout(resolve, 100));
             setShowAgentSetup(false);
-            console.log('[App] Modal closed, user should see updated data');
+            console.log('[App] Modal closed');
             
-            // Force a re-render by triggering another refresh after modal closes
-            setTimeout(() => {
-              refreshUser();
-              console.log('[App] Final UI refresh completed');
-            }, 100);
+            // Step 4: Final refresh to ensure all components have latest data
+            setTimeout(async () => {
+              await refreshUser();
+              setAppKey(prev => prev + 1); // Another key change to ensure re-render
+              console.log('[App] 🎉 Complete UI refresh cycle completed');
+            }, 200);
+            
           } catch (error) {
-            console.error('[App] Error refreshing user data:', error);
-            // Still close the modal even if refresh fails
+            console.error('[App] Error during profile setup completion:', error);
+            // Force close modal and re-render even if refresh fails
             setShowAgentSetup(false);
+            setAppKey(prev => prev + 1);
           }
         }}
       />
-      <Switch>
+      <Switch key={appKey}>
         <Route path="/" component={Home} />
       <Route path="/admin" component={() => {
         if (!user || user.role !== 'admin') {
