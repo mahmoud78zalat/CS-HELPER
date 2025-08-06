@@ -76,8 +76,8 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog open={open} onOpenChange={() => {}} modal>
+      <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader className="text-center pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <UserCircle className="h-8 w-8 text-white" />
@@ -95,7 +95,7 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-blue-700">
                   <User className="h-4 w-4" />
-                  English Names
+                  English Name
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -127,7 +127,7 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-green-700">
                   <User className="h-4 w-4" />
-                  Arabic Names (العربية)
+                  Arabic Name
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -136,7 +136,7 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
                   <Input
                     value={arabicFirstName}
                     onChange={(e) => setArabicFirstName(e.target.value)}
-                    placeholder="أدخل اسمك الأول"
+                    placeholder=""
                     className="mt-1"
                     dir="rtl"
                     required
@@ -147,7 +147,7 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
                   <Input
                     value={arabicLastName}
                     onChange={(e) => setArabicLastName(e.target.value)}
-                    placeholder="أدخل اسم العائلة"
+                    placeholder=""
                     className="mt-1"
                     dir="rtl"
                     required
