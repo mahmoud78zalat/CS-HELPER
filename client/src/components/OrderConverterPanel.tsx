@@ -52,13 +52,9 @@ export default function OrderConverterPanel() {
           processed = processed.substring(0, 12);
         }
         
-        // Extract characters at positions 0, 2, 4, 6, 8, 10 (every other character)
-        if (processed.length >= 12) {
-          let result = '';
-          for (let i = 0; i < processed.length && result.length < 7; i += 2) {
-            result += processed[i];
-          }
-          processed = result;
+        // Remove last 5 characters from what remains
+        if (processed.length > 5) {
+          processed = processed.substring(0, processed.length - 5);
         }
         
         setConvertedOrder(`U${processed}`);
@@ -74,14 +70,13 @@ export default function OrderConverterPanel() {
           processed = processed.substring(0, dashIndex);
         }
         
-        // If length > 12 (13-1 for removed U), remove extra characters from the end
-        if (processed.length > 12) {
-          processed = processed.substring(0, 12);
+        // Remove last 5 characters from what remains
+        if (processed.length > 5) {
+          processed = processed.substring(0, processed.length - 5);
         }
         
-        // For reverse conversion, add back the removed parts
-        // This is an approximation since we can't perfectly reverse
-        setConvertedOrder(`A1${processed}12345`);
+        // For reverse conversion: add 'A' prefix and append '12345'
+        setConvertedOrder(`A${processed}12345`);
       } else {
         setOrderType('Invalid Format');
         setConvertedOrder('Must start with A and be at least 13 characters');
