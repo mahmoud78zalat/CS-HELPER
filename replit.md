@@ -22,6 +22,8 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Updated validation text from "A or U and at least 13 characters" to "A and at least 13 characters"
 - Ensured heartbeat initialization works properly for all user authentication flows
 - Added phone number mapping in template variables (customer_phone → phone_number)
+- Fixed personal notes editing functionality by correcting HTTP method from PUT to PATCH
+- Enhanced delivery date formatting in templates (ISO date → readable format like "29th of August 2025")
 
 ## System Architecture
 

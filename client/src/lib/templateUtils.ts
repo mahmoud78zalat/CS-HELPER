@@ -66,6 +66,22 @@ export function replaceVariablesInTemplate(
     processedCustomerData.phone_number = customerData.customer_phone;
   }
   
+  // Handle delivery date formatting - convert ISO date to readable format
+  if (customerData.delivery_date) {
+    try {
+      const date = new Date(customerData.delivery_date);
+      const options: Intl.DateTimeFormatOptions = { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      };
+      processedCustomerData.delivery_date = date.toLocaleDateString('en-US', options);
+    } catch (error) {
+      // If date parsing fails, keep original value
+      processedCustomerData.delivery_date = customerData.delivery_date;
+    }
+  }
+  
   const allData = { 
     ...processedCustomerData, 
     ...additionalData, 

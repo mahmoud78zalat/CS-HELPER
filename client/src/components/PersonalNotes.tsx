@@ -108,7 +108,7 @@ export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
   const updateNoteMutation = useMutation({
     mutationFn: async ({ id, subject, content }: { id: string; subject: string; content: string }) => {
       const response = await fetch(`/api/personal-notes/${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'x-user-id': user?.id || '',
