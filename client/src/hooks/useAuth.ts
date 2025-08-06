@@ -145,6 +145,9 @@ export function useAuth() {
             setUser(userData);
             setIsLoading(false);
             if (authTimeout) clearTimeout(authTimeout);
+            
+            // Ensure heartbeat starts for all user roles
+            startHeartbeat();
             return;
           } catch (parseError) {
             console.error('[Auth] JSON parse error:', parseError);
@@ -201,10 +204,15 @@ export function useAuth() {
             
             // Store user ID in localStorage for apiRequest function
             localStorage.setItem('current_user_id', newUserData.id);
+            localStorage.setItem('current_user_email', newUserData.email);
+            localStorage.setItem('current_user_role', newUserData.role);
             
             setUser(newUserData);
             setIsLoading(false);
             if (authTimeout) clearTimeout(authTimeout);
+            
+            // Ensure heartbeat starts for all user roles
+            startHeartbeat();
             return;
           } catch (parseError) {
             console.error('[Auth] Error parsing create response:', parseError);
@@ -240,10 +248,15 @@ export function useAuth() {
       
       // Store user ID in localStorage for apiRequest function
       localStorage.setItem('current_user_id', fallbackUserData.id);
+      localStorage.setItem('current_user_email', fallbackUserData.email || '');
+      localStorage.setItem('current_user_role', fallbackUserData.role);
       
       setUser(fallbackUserData);
       setIsLoading(false);
       if (authTimeout) clearTimeout(authTimeout);
+      
+      // Ensure heartbeat starts for all user roles
+      startHeartbeat();
       return;
       
     } catch (error) {

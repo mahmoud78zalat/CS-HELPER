@@ -15,6 +15,14 @@ Agent Setup: Complete first-join GUI with bilingual profile setup (English and A
 Modal Configuration: Fully mandatory onboarding modal (no X button, no escape, no outside clicks), enhanced API integration with proper database updates, and immediate UI refresh after completion.
 PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 
+## Recent Changes (January 2025)
+- Enhanced template variable system with proper gender field replacement (Male → "Sir", Female → "Ma'am")
+- Fixed online/offline user tracking to work equally for admin and agent roles  
+- Improved order/userid converter validation logic with proper dash handling
+- Updated validation text from "A or U and at least 13 characters" to "A and at least 13 characters"
+- Ensured heartbeat initialization works properly for all user authentication flows
+- Added phone number mapping in template variables (customer_phone → phone_number)
+
 ## System Architecture
 
 ### Frontend Architecture

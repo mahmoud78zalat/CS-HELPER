@@ -41,10 +41,15 @@ export default function OrderConverterPanel() {
         // Remove first 'A' letter
         let processed = value.substring(1);
         
-        // If length > 13, remove extra characters from the beginning (after removing A)
-        if (value.length > 13) {
-          const extraChars = value.length - 13;
-          processed = processed.substring(extraChars);
+        // Handle dash removal logic - if there's a dash after 13 characters, remove it and numbers after it
+        const dashIndex = processed.indexOf('-');
+        if (dashIndex >= 0 && (dashIndex + 1 + 1) >= 13) { // +1 for 'A' already removed, +1 for dash position
+          processed = processed.substring(0, dashIndex);
+        }
+        
+        // If length > 12 (13-1 for removed A), remove extra characters from the end
+        if (processed.length > 12) {
+          processed = processed.substring(0, 12);
         }
         
         // Remove last 5 digits and first digit from what remains
@@ -59,10 +64,15 @@ export default function OrderConverterPanel() {
         // Remove first 'U' letter
         let processed = value.substring(1);
         
-        // If length > 13, remove extra characters from the beginning (after removing U)  
-        if (value.length > 13) {
-          const extraChars = value.length - 13;
-          processed = processed.substring(extraChars);
+        // Handle dash removal logic - if there's a dash after 13 characters, remove it and numbers after it
+        const dashIndex = processed.indexOf('-');
+        if (dashIndex >= 0 && (dashIndex + 1 + 1) >= 13) { // +1 for 'U' already removed, +1 for dash position
+          processed = processed.substring(0, dashIndex);
+        }
+        
+        // If length > 12 (13-1 for removed U), remove extra characters from the end
+        if (processed.length > 12) {
+          processed = processed.substring(0, 12);
         }
         
         // For reverse conversion, add back the removed parts
@@ -70,7 +80,7 @@ export default function OrderConverterPanel() {
         setConvertedOrder(`A1${processed}12345`);
       } else {
         setOrderType('Invalid Format');
-        setConvertedOrder('Must start with A or U and be at least 13 characters');
+        setConvertedOrder('Must start with A and be at least 13 characters');
       }
     } else {
       setOrderType('');
@@ -95,7 +105,7 @@ export default function OrderConverterPanel() {
 
 
   const handleCopyText = (text: string, description: string) => {
-    if (text && text !== 'Unable to convert' && text !== 'Must start with A or U and be at least 13 characters') {
+    if (text && text !== 'Unable to convert' && text !== 'Must start with A and be at least 13 characters') {
       navigator.clipboard.writeText(text);
       toast({
         title: "Success",
@@ -130,7 +140,7 @@ export default function OrderConverterPanel() {
             </div>
             <div className="space-y-2">
               <div><strong>Result:</strong> {convertedOrder}</div>
-              {convertedOrder && convertedOrder !== 'Unable to convert' && convertedOrder !== 'Must start with A or U and be at least 13 characters' && (
+              {convertedOrder && convertedOrder !== 'Unable to convert' && convertedOrder !== 'Must start with A and be at least 13 characters' && (
                 <Button 
                   onClick={() => handleCopyText(convertedOrder, 'Converted ID')}
                   size="sm"

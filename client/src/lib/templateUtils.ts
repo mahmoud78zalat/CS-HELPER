@@ -49,8 +49,25 @@ export function replaceVariablesInTemplate(
     ...systemData
   };
   
+  // Process customer data and handle special mappings
+  const processedCustomerData = { ...customerData };
+  
+  // Handle gender field transformation
+  if (customerData.gender) {
+    if (customerData.gender.toLowerCase() === 'male') {
+      processedCustomerData.gender = 'Sir';
+    } else if (customerData.gender.toLowerCase() === 'female') {
+      processedCustomerData.gender = 'Ma\'am';
+    }
+  }
+  
+  // Add phone number mapping for template variables
+  if (customerData.customer_phone) {
+    processedCustomerData.phone_number = customerData.customer_phone;
+  }
+  
   const allData = { 
-    ...customerData, 
+    ...processedCustomerData, 
     ...additionalData, 
     ...defaultSystemData 
   };
