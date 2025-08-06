@@ -21,7 +21,7 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
   const [arabicLastName, setArabicLastName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +85,12 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
         description: "Your profile has been set up successfully.",
       });
 
-      // Give a small delay to ensure the toast shows before completing
+      // Refresh user data to get the updated profile information
+      console.log('[AgentSetup] Refreshing user data...');
+      await refreshUser();
+      console.log('[AgentSetup] User data refreshed successfully');
+
+      // Give a small delay to ensure the toast shows and data is refreshed before completing
       setTimeout(() => {
         onComplete();
       }, 1500);
