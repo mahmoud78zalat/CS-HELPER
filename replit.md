@@ -121,4 +121,38 @@ Fixed the "unable to remove email template please try again" error that occurred
 4. **Schema Cleanup**: Removed references to non-existent fields (`createdBy`, `updatedBy`) that were causing LSP errors
 
 The deletion process now follows a fail-fast approach: if Supabase deletion fails, the entire operation fails, maintaining data consistency between local and remote databases.
-```
+
+### Enhanced Online/Offline Detection & Notes UI Improvements (August 6, 2025)
+Completed comprehensive improvements to user presence tracking and Notes section user interface.
+
+**Online/Offline Detection Enhancements**:
+1. **Optimized Heartbeat System**: Implemented balanced intervals for accurate real-time status:
+   - Client heartbeat: 8 seconds for responsive updates
+   - Server monitoring: 30 seconds for efficient processing
+   - Offline threshold: 90 seconds for reliable detection
+2. **Enhanced Presence Tracking**: Improved page visibility change detection and connection reliability
+3. **Robust Authentication**: Fixed server-side middleware and presence monitoring issues
+4. **Activity Detection**: Better handling of page refresh and reconnection scenarios
+
+**Notes UI Improvements**:
+1. **Collapsible Content System**: Added smart expand/collapse functionality for both main PersonalNotes and Sidebar quick notes
+2. **Always-Visible Copy Buttons**: Copy functionality accessible without scrolling or hovering
+3. **Smart Content Preview**: Intelligent truncation showing first 120 characters with expand option
+4. **Duplicate Notes Fix**: Removed redundant PersonalNotes embedding in Sidebar, keeping only quick preview with expand functionality
+5. **Enhanced Sidebar Notes**: Individual expand/collapse controls for each note with proper state management
+6. **Improved User Experience**: Better visual feedback, tooltips, and responsive design for both desktop and mobile
+
+**Technical Implementation**:
+- Enhanced `client/src/hooks/useAuth.ts` with optimized heartbeat timing
+- Updated `server/presence-monitor.ts` with improved monitoring intervals
+- Fixed authentication middleware in `server/routes.ts`
+- Redesigned `client/src/components/PersonalNotes.tsx` with collapsible interface
+- Enhanced `client/src/components/Sidebar.tsx` with individual note expand/collapse functionality
+- Implemented proper state management for expanded notes using Set data structure
+
+**User Experience Impact**:
+- Real-time user status updates without delay
+- Accurate last seen timestamps after page refresh
+- Streamlined Notes interface with easy content access
+- Eliminated interface duplication and confusion
+- Enhanced productivity through improved quick access features

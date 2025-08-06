@@ -17,7 +17,10 @@ import {
   LogOut,
   ChevronRight,
   StickyNote,
-  Copy
+  Copy,
+  Plus,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 
 interface SidebarProps {
@@ -36,9 +39,20 @@ export default function Sidebar({
   const { user, signOut } = useAuth();
   const [expandedPanel, setExpandedPanel] = useState<string | null>(null);
   const [notesSearchTerm, setNotesSearchTerm] = useState('');
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
 
   const togglePanel = (panelId: string) => {
     setExpandedPanel(expandedPanel === panelId ? null : panelId);
+  };
+
+  const toggleNoteExpansion = (noteId: string) => {
+    const newExpanded = new Set(expandedNotes);
+    if (newExpanded.has(noteId)) {
+      newExpanded.delete(noteId);
+    } else {
+      newExpanded.add(noteId);
+    }
+    setExpandedNotes(newExpanded);
   };
 
   const handleSignOut = async () => {
@@ -202,36 +216,83 @@ export default function Sidebar({
                         key={note.id}
                         className="bg-slate-50 dark:bg-slate-700 rounded p-2 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
                       >
+                        {/* Header with title and controls */}
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">
                               {note.subject || 'Untitled'}
                             </div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                              {note.content.substring(0, 60)}...
-                            </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopyNote(note);
-                            }}
-                            className="h-6 w-6 p-0 flex-shrink-0 hover:bg-slate-200 dark:hover:bg-slate-600"
-                            title="Copy note content"
-                          >
-                            <Copy className="h-3 w-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
-                          </Button>
+                          <div className="flex gap-1 flex-shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyNote(note);
+                              }}
+                              className="h-5 w-5 p-0 hover:bg-slate-200 dark:hover:bg-slate-600"
+                              title="Copy note content"
+                            >
+                              <Copy className="h-3 w-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleNoteExpansion(note.id);
+                              }}
+                              className="h-5 w-5 p-0 hover:bg-slate-200 dark:hover:bg-slate-600"
+                              title={expandedNotes.has(note.id) ? "Collapse note" : "Expand note"}
+                            >
+                              {expandedNotes.has(note.id) ? 
+                                <ChevronUp className="h-3 w-3 text-slate-400" /> : 
+                                <ChevronDown className="h-3 w-3 text-slate-400" />
+                              }
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Content with smart preview/expansion */}
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 whitespace-pre-wrap">
+                          {expandedNotes.has(note.id) ? (
+                            // Full content when expanded
+                            note.content
+                          ) : (
+                            // Preview with smart truncation when collapsed
+                            <div className="line-clamp-2">
+                              {note.content.length > 60 ? 
+                                `${note.content.substring(0, 60)}...` : 
+                                note.content
+                              }
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))
                   )}
                 </div>
 
-                {/* Full Notes Panel */}
+                {/* Add New Note Button */}
                 <div className="border-t pt-2">
-                  <PersonalNotes />
+                  <Button
+                    onClick={() => {
+                      // Open the PersonalNotes modal
+                      const personalNotesModal = document.querySelector('[data-testid="personal-notes-dialog"]');
+                      if (personalNotesModal) {
+                        personalNotesModal.click();
+                      } else {
+                        // Fallback: trigger PersonalNotes component
+                        const event = new CustomEvent('openPersonalNotes');
+                        window.dispatchEvent(event);
+                      }
+                    }}
+                    className="w-full text-xs py-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add New Note
+                  </Button>
                 </div>
               </div>
             )}
