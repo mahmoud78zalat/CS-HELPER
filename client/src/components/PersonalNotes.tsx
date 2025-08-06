@@ -67,7 +67,6 @@ export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
   // Create new note mutation using direct fetch to bypass Vite interception
   const createNoteMutation = useMutation({
     mutationFn: async ({ subject, content }: { subject: string; content: string }) => {
-      console.log('Creating note with subject:', subject, 'content:', content, 'userId:', user?.id);
       
       const response = await fetch('/api/personal-notes', {
         method: 'POST',
@@ -156,11 +155,26 @@ export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to delete note');
+        const errorText = await response.text();
+        let errorMessage = 'Failed to delete note';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If response is not JSON, use the text as error message
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      // Handle successful deletion - check if response has content
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return response.json();
+      } else {
+        // No JSON response expected for DELETE - return success indicator
+        return { success: true };
+      }
     },
     onSuccess: () => {
       toast({
@@ -181,7 +195,6 @@ export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
   const handleCreateNote = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (newSubject.trim() && newNote.trim() && !createNoteMutation.isPending) {
-      console.log('Creating note:', newSubject.trim(), newNote.trim());
       createNoteMutation.mutate({ subject: newSubject.trim(), content: newNote.trim() });
     }
   };

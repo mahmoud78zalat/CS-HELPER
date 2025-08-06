@@ -26,8 +26,10 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Enhanced delivery date formatting in templates (ISO date → readable format like "29th of August 2025")
 - Removed User ID format conversion logic (only Order ID → User ID conversion remains)
 - Order converter now returns pure numbers (no A/U prefix): A121212121221 → 1212121
-- Updated delivery date format to display "25th of August 2025" instead of "August 25, 2025"
+- Updated delivery date format to display "25th of August 2025" instead of "August 25, 2025"  
 - Added is_first_time_user check in authentication to trigger agent setup modal for new users
+- Fixed personal notes deletion JSON parsing error by properly handling 204 no-content response
+- Removed debugging console logs for cleaner production code
 
 ## System Architecture
 
