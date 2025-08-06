@@ -697,6 +697,53 @@ export function registerRoutes(app: Express): void {
     }
   });
 
+  // User profile setup route - for completing initial profile setup
+  app.post('/api/users/setup-profile', async (req, res) => {
+    try {
+      console.log('[API] Profile setup request received');
+      console.log('[API] Request body:', req.body);
+      console.log('[API] Request headers x-user-id:', req.headers['x-user-id']);
+      
+      const { userId, firstName, lastName, arabicFirstName, arabicLastName } = req.body;
+      
+      if (!userId || !firstName || !lastName || !arabicFirstName || !arabicLastName) {
+        console.log('[API] Missing required fields:', { userId: !!userId, firstName: !!firstName, lastName: !!lastName, arabicFirstName: !!arabicFirstName, arabicLastName: !!arabicLastName });
+        return res.status(400).json({ message: "All name fields are required" });
+      }
+
+      // Verify user exists before updating
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        console.log('[API] User not found:', userId);
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log('[API] Updating user profile for:', userId);
+      const updatedUser = await storage.updateUser(userId, {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        arabicFirstName: arabicFirstName.trim(),
+        arabicLastName: arabicLastName.trim(),
+        isFirstTimeUser: false
+      });
+
+      console.log('[API] ✅ Profile updated successfully');
+      console.log('[API] Updated user data:', {
+        id: updatedUser.id,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        arabicFirstName: updatedUser.arabicFirstName,
+        arabicLastName: updatedUser.arabicLastName,
+        isFirstTimeUser: updatedUser.isFirstTimeUser
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("[API] Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update user profile", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   app.patch('/api/users/:id/role', async (req, res) => {
     console.log('[DirectRoleUpdate] === DIRECT ROLE UPDATE REQUEST START ===');
     console.log('[DirectRoleUpdate] Raw request body:', req.body);
