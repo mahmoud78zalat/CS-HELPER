@@ -6,8 +6,8 @@ import { storage } from './storage';
  */
 class PresenceMonitor {
   private intervalId: NodeJS.Timeout | null = null;
-  private readonly CHECK_INTERVAL = 60 * 1000; // Check every minute
-  private readonly STALE_THRESHOLD = 3 * 60 * 1000; // 3 minutes stale = offline
+  private readonly CHECK_INTERVAL = 30 * 1000; // Check every 30 seconds for real-time accuracy
+  private readonly STALE_THRESHOLD = 90 * 1000; // 90 seconds stale = offline (more responsive)
 
   constructor() {
     console.log('[PresenceMonitor] Initializing real-time presence monitoring system');

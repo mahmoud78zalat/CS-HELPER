@@ -64,6 +64,7 @@ export interface IStorage {
   updateUserOnlineStatus(id: string, isOnline: boolean): Promise<void>;
   updateUserRole(id: string, role: "admin" | "agent"): Promise<void>;
   deleteUser(id: string): Promise<void>;
+  markStaleUsersOffline(): Promise<number>;
 
   // Live reply template group operations
   getLiveReplyTemplateGroups(): Promise<LiveReplyTemplateGroup[]>;

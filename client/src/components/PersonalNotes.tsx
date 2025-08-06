@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Trash2, Edit3, Copy, Plus, StickyNote, Search, X, ChevronDown } from 'lucide-react';
+import { Trash2, Edit3, Copy, Plus, StickyNote, Search, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,8 +20,19 @@ export default function PersonalNotes() {
   const [editSubject, setEditSubject] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const toggleNoteExpansion = (noteId: string) => {
+    const newExpanded = new Set(expandedNotes);
+    if (newExpanded.has(noteId)) {
+      newExpanded.delete(noteId);
+    } else {
+      newExpanded.add(noteId);
+    }
+    setExpandedNotes(newExpanded);
+  };
 
   // Fetch user's personal notes with auto-refresh and smooth updates
   const { data: notes = [], isLoading } = useQuery<PersonalNote[]>({
@@ -408,29 +419,47 @@ export default function PersonalNotes() {
                     </div>
                   </div>
                 ) : (
-                  // View Mode
+                  // Enhanced View Mode with Collapsible Content
                   <div className="space-y-3">
-                    <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                      {note.content}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="text-xs">
-                        {note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'Unknown date'}
-                      </Badge>
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Header with always-visible copy button and note title */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        {note.subject && (
+                          <h4 className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate mb-1">
+                            {note.subject}
+                          </h4>
+                        )}
+                        <Badge variant="secondary" className="text-xs">
+                          {note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'Unknown date'}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => handleCopyNote(note)}
-                          className="h-8 w-8 p-0 hover:bg-blue-100"
+                          className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
+                          title="Copy note content"
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
+                          onClick={() => toggleNoteExpansion(note.id)}
+                          className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-700"
+                          title={expandedNotes.has(note.id) ? "Collapse note" : "Expand note"}
+                        >
+                          {expandedNotes.has(note.id) ? 
+                            <ChevronUp className="h-4 w-4" /> : 
+                            <ChevronDown className="h-4 w-4" />
+                          }
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           onClick={() => startEditing(note)}
-                          className="h-8 w-8 p-0 hover:bg-yellow-100"
+                          className="h-8 w-8 p-0 hover:bg-yellow-100 dark:hover:bg-yellow-900 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <Edit3 className="h-4 w-4" />
                         </Button>
@@ -439,11 +468,33 @@ export default function PersonalNotes() {
                           variant="ghost"
                           onClick={() => deleteNoteMutation.mutate(note.id)}
                           disabled={deleteNoteMutation.isPending}
-                          className="h-8 w-8 p-0 hover:bg-red-100 text-red-600"
+                          className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900 text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
+                    </div>
+
+                    {/* Content with smart preview/expansion */}
+                    <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                      {expandedNotes.has(note.id) ? (
+                        // Full content when expanded
+                        note.content
+                      ) : (
+                        // Preview with smart truncation when collapsed
+                        <div>
+                          {note.content.length > 120 ? (
+                            <>
+                              {note.content.substring(0, 120).split('\n').slice(0, 3).join('\n')}
+                              {note.content.length > 120 && (
+                                <span className="text-slate-500 dark:text-slate-400"> ... </span>
+                              )}
+                            </>
+                          ) : (
+                            note.content
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

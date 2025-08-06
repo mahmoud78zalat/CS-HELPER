@@ -261,8 +261,8 @@ export function useAuth() {
         const now = Date.now();
         const timeSinceActivity = now - lastActivityTime.current;
         
-        // Ultra-aggressive activity detection: 2 minutes for maximum accuracy
-        const isUserActive = timeSinceActivity < 120 * 1000;
+        // Enhanced activity detection: 60 seconds for real-time accuracy
+        const isUserActive = timeSinceActivity < 60 * 1000;
         
         console.log(`[Auth] Real-time Heartbeat - User active: ${isUserActive}, Time since activity: ${Math.round(timeSinceActivity / 1000)}s`);
         
@@ -295,7 +295,7 @@ export function useAuth() {
       } catch (error) {
         console.error('[Auth] Heartbeat error:', error);
       }
-    }, 10000); // Real-time updates: every 10 seconds for maximum accuracy
+    }, 8000); // Real-time updates: every 8 seconds for maximum responsiveness
     
     // Track user activity
     const updateActivity = () => {

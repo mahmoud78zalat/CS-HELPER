@@ -507,7 +507,7 @@ export class SupabaseStorage implements IStorage {
 
   // Enhanced method to check and update stale online users
   async markStaleUsersOffline(): Promise<number> {
-    const STALE_THRESHOLD = 3 * 60 * 1000; // 3 minutes
+    const STALE_THRESHOLD = 90 * 1000; // 90 seconds for real-time accuracy
     const cutoffTime = new Date(Date.now() - STALE_THRESHOLD).toISOString();
     
     const { data, error } = await this.serviceClient

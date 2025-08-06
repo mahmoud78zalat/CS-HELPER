@@ -69,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Note: /api/create-user endpoint is handled in simple-routes.ts to avoid conflicts
 
   // Heartbeat endpoint for online status detection - Now works for all users
-  app.post('/api/user/heartbeat', requireSupabaseAuth, async (req: any, res) => {
+  app.post('/api/user/heartbeat', isAuthenticated, async (req: any, res) => {
     try {
       const { 
         userId, 
@@ -98,12 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Use enhanced presence tracking
-      await storage.updateUserPresence(userId, isOnline, lastActivity ? new Date(lastActivity) : undefined, {
-        pageHidden,
-        pageVisible,
-        pageUnload,
-        heartbeatStopped
-      });
+      await storage.updateUserOnlineStatus(userId, isOnline);
       
       res.json({ 
         message: "Enhanced heartbeat updated",

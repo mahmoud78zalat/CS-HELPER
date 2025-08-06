@@ -200,10 +200,9 @@ export default function Sidebar({
                     filteredPersonalNotes.map((note) => (
                       <div
                         key={note.id}
-                        className="bg-slate-50 dark:bg-slate-700 rounded p-2 hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer group transition-colors"
-                        onClick={() => handleCopyNote(note)}
+                        className="bg-slate-50 dark:bg-slate-700 rounded p-2 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
                       >
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">
                               {note.subject || 'Untitled'}
@@ -212,7 +211,18 @@ export default function Sidebar({
                               {note.content.substring(0, 60)}...
                             </div>
                           </div>
-                          <Copy className="h-3 w-3 text-slate-400 group-hover:text-slate-600 ml-2 flex-shrink-0" />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyNote(note);
+                            }}
+                            className="h-6 w-6 p-0 flex-shrink-0 hover:bg-slate-200 dark:hover:bg-slate-600"
+                            title="Copy note content"
+                          >
+                            <Copy className="h-3 w-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+                          </Button>
                         </div>
                       </div>
                     ))
