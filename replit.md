@@ -11,8 +11,8 @@ Extensive template genres including greeting, CSAT, warning abusive language, ap
 Development mode: Authentication streamlined with auto-admin access for development purposes.
 Variable Format: ONLY use {variable} format - completely remove [VARIABLE] format support.
 Project Size Optimization: Enhanced gitignore configuration to prevent large download sizes.
-Agent Setup: First-join GUI for profile setup with English and Arabic names, automatic agent variables in templates.
-Modal Configuration: Modal is non-closable until setup completion, labels updated to "Arabic Name" and "English Name", Arabic placeholders removed.
+Agent Setup: Complete first-join GUI with bilingual profile setup (English and Arabic names), automatic agent variables in templates, and seamless user data refresh.
+Modal Configuration: Fully mandatory onboarding modal (no X button, no escape, no outside clicks), enhanced API integration with proper database updates, and immediate UI refresh after completion.
 PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 
 ## System Architecture

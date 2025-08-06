@@ -60,10 +60,29 @@ function Router() {
         open={showAgentSetup}
         onOpenChange={setShowAgentSetup}
         onComplete={async () => {
-          console.log('[App] Profile setup completed, refreshing user data');
-          setShowAgentSetup(false);
-          // Refresh user data to update isFirstTimeUser status
-          await refreshUser();
+          console.log('[App] Profile setup completed, refreshing user data...');
+          try {
+            // Refresh user data to get updated profile information
+            await refreshUser();
+            console.log('[App] ✅ User data refreshed successfully');
+            
+            // Add a small delay to ensure UI has time to process the updated state
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // Close the modal after successful refresh and UI update
+            setShowAgentSetup(false);
+            console.log('[App] Modal closed, user should see updated data');
+            
+            // Force a re-render by triggering another refresh after modal closes
+            setTimeout(() => {
+              refreshUser();
+              console.log('[App] Final UI refresh completed');
+            }, 100);
+          } catch (error) {
+            console.error('[App] Error refreshing user data:', error);
+            // Still close the modal even if refresh fails
+            setShowAgentSetup(false);
+          }
         }}
       />
       <Switch>

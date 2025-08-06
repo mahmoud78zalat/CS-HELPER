@@ -80,20 +80,18 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
       }
 
       console.log('[AgentSetup] ✅ Profile setup successful');
+      console.log('[AgentSetup] Updated user data from API:', responseData);
+      
       toast({
         title: "Welcome to the team!",
         description: "Your profile has been set up successfully.",
       });
 
-      // Refresh user data to get the updated profile information
-      console.log('[AgentSetup] Refreshing user data...');
-      await refreshUser();
-      console.log('[AgentSetup] User data refreshed successfully');
-
-      // Give a small delay to ensure the toast shows and data is refreshed before completing
+      // Immediately call onComplete to trigger refresh in App.tsx
+      // The App.tsx will handle the refresh and modal closing
       setTimeout(() => {
         onComplete();
-      }, 1500);
+      }, 1000);
     } catch (error) {
       console.error('[AgentSetup] Error setting up profile:', error);
       toast({

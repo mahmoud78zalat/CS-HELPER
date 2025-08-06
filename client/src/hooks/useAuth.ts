@@ -470,23 +470,44 @@ export function useAuth() {
 
   // Refresh user data function
   const refreshUser = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('[Auth] Cannot refresh user data - no user ID available');
+      return;
+    }
     
     try {
       console.log('[Auth] Refreshing user data for:', user.id);
+      console.log('[Auth] Current user state before refresh:', {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        arabicFirstName: user.arabicFirstName,
+        arabicLastName: user.arabicLastName,
+        isFirstTimeUser: user.isFirstTimeUser
+      });
+      
       const response = await fetch(`/api/user/${user.id}`);
       
       if (response.ok) {
         const updatedUser = await response.json();
-        console.log('[Auth] ✅ User data refreshed successfully');
+        console.log('[Auth] ✅ Fresh user data from API:', {
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          arabicFirstName: updatedUser.arabicFirstName,
+          arabicLastName: updatedUser.arabicLastName,
+          isFirstTimeUser: updatedUser.isFirstTimeUser
+        });
+        
+        // Update the user state with fresh data
         setUser(updatedUser);
+        console.log('[Auth] User state updated successfully');
         
         // Update localStorage with fresh data
         localStorage.setItem('current_user_id', updatedUser.id);
         localStorage.setItem('current_user_email', updatedUser.email);
         localStorage.setItem('current_user_role', updatedUser.role);
       } else {
-        console.error('[Auth] Failed to refresh user data:', response.status);
+        const errorText = await response.text();
+        console.error('[Auth] Failed to refresh user data:', response.status, errorText);
       }
     } catch (error) {
       console.error('[Auth] Error refreshing user data:', error);
