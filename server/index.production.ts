@@ -53,9 +53,20 @@ app.use((req, res, next) => {
   try {
     console.log('[Railway] 🚂 Starting Railway production deployment...');
     
+    // Apply Railway environment fixes (including IPv6/IPv4 compatibility)
+    await import('./railway-env-fix');
+    
     // Configure for Railway deployment
     const config = validateRailwayEnvironment();
     optimizeForRailway();
+    
+    // Test database connectivity for Railway IPv6/IPv4 issues
+    try {
+      const { runRailwayConnectivityTests } = await import('./railway-db-test');
+      await runRailwayConnectivityTests();
+    } catch (error) {
+      console.error('[Railway] Database connectivity test failed:', error);
+    }
     
     // CRITICAL: Add JSON and URL encoding middleware FIRST
     app.use(express.json({ limit: '50mb' }));

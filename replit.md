@@ -30,6 +30,11 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Added is_first_time_user check in authentication to trigger agent setup modal for new users
 - Fixed personal notes deletion JSON parsing error by properly handling 204 no-content response
 - Removed debugging console logs for cleaner production code
+- **CRITICAL FIX**: Resolved Railway IPv6/IPv4 connectivity issues affecting data fetching
+- Implemented automatic DATABASE_URL conversion to use Supabase pooler for IPv4 compatibility
+- Added Railway-specific connection string fixes and environment variable handling
+- Enhanced client-side IPv4 preference headers for better Railway compatibility
+- Created comprehensive connectivity testing during deployment startup
 
 ## System Architecture
 

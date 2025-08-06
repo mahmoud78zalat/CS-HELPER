@@ -21,7 +21,8 @@ const hasValidKey = supabaseAnonKey && supabaseAnonKey.trim() !== '' && supabase
 const isProduction = import.meta.env.PROD;
 const railwayEnvironment = import.meta.env.VITE_RAILWAY_ENVIRONMENT || 
                            window.location.hostname.includes('railway.app') ||
-                           window.location.hostname.includes('.railway.app');
+                           window.location.hostname.includes('.railway.app') ||
+                           import.meta.env.VITE_RAILWAY_PROJECT_ID;
 
 const clientOptions = {
   auth: {
@@ -41,8 +42,10 @@ const clientOptions = {
       'Content-Type': 'application/json',
       ...(railwayEnvironment && {
         'X-Railway-Client': 'true',
-        'X-IPv4-Preferred': 'true', // Hint for IPv4 preference on Railway
-        'Connection': 'keep-alive'
+        'X-IPv4-Preferred': 'true', // Force IPv4 preference on Railway
+        'Connection': 'keep-alive',
+        'Cache-Control': 'no-cache', // Prevent IPv6 DNS caching
+        'X-Force-IPv4': 'true' // Additional IPv4 hint
       })
     }
   },

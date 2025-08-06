@@ -16,6 +16,19 @@ export function validateRailwayEnvironment() {
   // Set Railway defaults
   process.env.NODE_ENV = process.env.NODE_ENV || 'production';
   process.env.PORT = process.env.PORT || '8080';
+  
+  // Fix IPv6 connection issues for Railway deployment
+  if (process.env.DATABASE_URL && !process.env.DATABASE_URL_FIXED) {
+    try {
+      const { railwayPostgresFix } = require('./railway-postgres-fix');
+      const fixedUrl = railwayPostgresFix.fixConnectionString(process.env.DATABASE_URL);
+      process.env.DATABASE_URL = fixedUrl;
+      process.env.DATABASE_URL_FIXED = 'true';
+      console.log('[Railway] ✅ Applied IPv4 database connection fix');
+    } catch (error: any) {
+      console.error('[Railway] ⚠️ Could not apply database connection fix:', error.message);
+    }
+  }
 
   if (missingVars.length > 0) {
     console.warn(`⚠️ WARNING: Missing environment variables: ${missingVars.join(', ')}`);

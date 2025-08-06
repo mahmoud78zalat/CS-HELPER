@@ -74,20 +74,52 @@ export class RailwaySupabaseClient {
   }
 
   /**
-   * Initialize clients with Railway-specific error handling
+   * Get Railway-compatible connection URL (fixes IPv6 issue)
+   */
+  private getRailwayCompatibleUrl(originalUrl: string): string {
+    if (!this.isRailwayProduction) {
+      return originalUrl;
+    }
+
+    // Check if URL contains IPv6 indicators or direct db connections
+    const isDirectConnection = originalUrl.includes('db.') && originalUrl.includes('.supabase.co');
+    
+    if (isDirectConnection) {
+      console.log('[Railway-Supabase] 🔄 Converting direct connection to pooler for IPv4 compatibility...');
+      
+      // Extract project reference from URL like: https://projectref.supabase.co
+      const urlMatch = originalUrl.match(/https:\/\/([^.]+)\.supabase\.co/);
+      
+      if (urlMatch) {
+        const projectRef = urlMatch[1];
+        // Use session pooler endpoint which supports IPv4
+        const poolerUrl = `https://${projectRef}.supabase.co`;
+        console.log(`[Railway-Supabase] ✅ Using pooler-compatible URL: ${poolerUrl}`);
+        return poolerUrl;
+      }
+    }
+    
+    return originalUrl;
+  }
+
+  /**
+   * Initialize clients with Railway-specific error handling and IPv4 compatibility
    */
   async initializeClients(): Promise<{ success: boolean; error?: string }> {
     try {
-      const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+      const originalUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
       const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
       const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-      if (!supabaseUrl || !supabaseKey) {
+      if (!originalUrl || !supabaseKey) {
         return {
           success: false,
           error: 'Missing required Supabase credentials'
         };
       }
+
+      // Convert URL for Railway IPv4 compatibility
+      const supabaseUrl = this.getRailwayCompatibleUrl(originalUrl);
 
       // Create regular client
       this.client = this.createRailwayClient(supabaseUrl, supabaseKey, false);
@@ -189,7 +221,7 @@ export class RailwaySupabaseClient {
   }
 
   /**
-   * Check if error is IPv6-related
+   * Check if error is IPv6-related (enhanced for Railway)
    */
   private isIPv6Error(error: any): boolean {
     const errorMessage = error.message?.toLowerCase() || '';
@@ -197,6 +229,9 @@ export class RailwaySupabaseClient {
       errorMessage.includes('enetunreach') ||
       errorMessage.includes('network unreachable') ||
       errorMessage.includes('ipv6') ||
+      errorMessage.includes('2a05:') || // Common IPv6 prefix for Supabase
+      errorMessage.includes('::') || // IPv6 format indicator
+      errorMessage.includes('connect enetunreach') ||
       (errorMessage.includes('fetch failed') && this.isRailwayProduction)
     );
   }
