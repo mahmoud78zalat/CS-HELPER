@@ -16,7 +16,7 @@ import AgentSetupModal from "@/components/AgentSetupModal";
 import { loadColorsFromDatabase } from "@/lib/templateColors";
 
 function Router() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, refreshUser } = useAuth();
   const [showAgentSetup, setShowAgentSetup] = React.useState(false);
 
   // Expose current user to window object for Chatbase integration
@@ -59,10 +59,11 @@ function Router() {
       <AgentSetupModal 
         open={showAgentSetup}
         onOpenChange={setShowAgentSetup}
-        onComplete={() => {
+        onComplete={async () => {
+          console.log('[App] Profile setup completed, refreshing user data');
           setShowAgentSetup(false);
           // Refresh user data to update isFirstTimeUser status
-          window.location.reload();
+          await refreshUser();
         }}
       />
       <Switch>

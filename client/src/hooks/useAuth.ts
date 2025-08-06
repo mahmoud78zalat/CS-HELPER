@@ -468,10 +468,36 @@ export function useAuth() {
     window.location.replace('/login');
   };
 
+  // Refresh user data function
+  const refreshUser = async () => {
+    if (!user?.id) return;
+    
+    try {
+      console.log('[Auth] Refreshing user data for:', user.id);
+      const response = await fetch(`/api/user/${user.id}`);
+      
+      if (response.ok) {
+        const updatedUser = await response.json();
+        console.log('[Auth] ✅ User data refreshed successfully');
+        setUser(updatedUser);
+        
+        // Update localStorage with fresh data
+        localStorage.setItem('current_user_id', updatedUser.id);
+        localStorage.setItem('current_user_email', updatedUser.email);
+        localStorage.setItem('current_user_role', updatedUser.role);
+      } else {
+        console.error('[Auth] Failed to refresh user data:', response.status);
+      }
+    } catch (error) {
+      console.error('[Auth] Error refreshing user data:', error);
+    }
+  };
+
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
     signOut,
+    refreshUser,
   };
 }

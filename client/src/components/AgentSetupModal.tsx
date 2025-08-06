@@ -35,9 +35,27 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: "Authentication Error",
+        description: "User authentication is required. Please refresh and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
+      console.log('[AgentSetup] Starting profile setup for user:', user.id);
+      console.log('[AgentSetup] Setup data:', {
+        userId: user.id,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        arabicFirstName: arabicFirstName.trim(),
+        arabicLastName: arabicLastName.trim(),
+      });
+
       const response = await fetch('/api/users/setup-profile', {
         method: 'POST',
         headers: {
@@ -45,7 +63,7 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
         },
         credentials: 'include',
         body: JSON.stringify({
-          userId: user?.id,
+          userId: user.id,
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           arabicFirstName: arabicFirstName.trim(),
@@ -53,21 +71,29 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
         }),
       });
 
+      const responseData = await response.json();
+      console.log('[AgentSetup] API response status:', response.status);
+      console.log('[AgentSetup] API response data:', responseData);
+
       if (!response.ok) {
-        throw new Error('Failed to save profile');
+        throw new Error(responseData?.message || 'Failed to save profile');
       }
 
+      console.log('[AgentSetup] ✅ Profile setup successful');
       toast({
         title: "Welcome to the team!",
         description: "Your profile has been set up successfully.",
       });
 
-      onComplete();
+      // Give a small delay to ensure the toast shows before completing
+      setTimeout(() => {
+        onComplete();
+      }, 1500);
     } catch (error) {
-      console.error('Error setting up profile:', error);
+      console.error('[AgentSetup] Error setting up profile:', error);
       toast({
         title: "Setup Error",
-        description: "Failed to save your profile. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save your profile. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -136,7 +162,7 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
                   <Input
                     value={arabicFirstName}
                     onChange={(e) => setArabicFirstName(e.target.value)}
-                    placeholder=""
+                    placeholder="أدخل اسمك الأول بالعربية"
                     className="mt-1"
                     dir="rtl"
                     required
@@ -147,7 +173,7 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
                   <Input
                     value={arabicLastName}
                     onChange={(e) => setArabicLastName(e.target.value)}
-                    placeholder=""
+                    placeholder="أدخل اسم عائلتك بالعربية"
                     className="mt-1"
                     dir="rtl"
                     required
