@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isEmailFocused, setIsEmailFocused] = useState(false);
   const [mascotState, setMascotState] = useState<'idle' | 'success' | 'error'>('idle');
+  const [showingAnimation, setShowingAnimation] = useState(false);
   
   // SVG element refs
   const yetiRef = useRef<SVGSVGElement>(null);
@@ -33,6 +34,13 @@ export default function LoginPage() {
   
   const { toast } = useToast();
   const { data: siteName, isLoading: isSiteNameLoading } = useSiteName();
+
+  // Cleanup global flag on component unmount
+  useEffect(() => {
+    return () => {
+      (window as any).showingLoginAnimation = false;
+    };
+  }, []);
 
   // Initialize GSAP timeline for complex animations
   useEffect(() => {
@@ -317,6 +325,9 @@ export default function LoginPage() {
         setMascotState('error');
         playErrorAnimation();
         
+        // Clear the animation flag on error
+        (window as any).showingLoginAnimation = false;
+        
         // Reset animations after 3 seconds for better visibility
         setTimeout(() => {
           setMascotState('idle');
@@ -335,6 +346,11 @@ export default function LoginPage() {
 
       if (data.user) {
         console.log('[Login] User signed in:', data.user.email);
+        setShowingAnimation(true);
+        
+        // Set global flag to prevent App.tsx from redirecting immediately
+        (window as any).showingLoginAnimation = true;
+        
         setMascotState('success');
         playSuccessAnimation();
         
@@ -344,7 +360,12 @@ export default function LoginPage() {
         });
         
         // Navigate after success animation (3 seconds to fully see the happy yeti animation)
-        setTimeout(() => setLocation('/'), 3000);
+        setTimeout(() => {
+          setShowingAnimation(false);
+          // Clear the global flag so normal routing resumes
+          (window as any).showingLoginAnimation = false;
+          setLocation('/');
+        }, 3000);
       }
     } catch (err) {
       console.error('[Login] Unexpected error:', err);

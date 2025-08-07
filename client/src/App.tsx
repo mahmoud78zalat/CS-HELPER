@@ -56,7 +56,8 @@ function Router() {
   }
 
   // Force authentication - redirect all unauthenticated users to login
-  if (!isAuthenticated) {
+  // BUT allow authenticated users to stay on login page during animation
+  if (!isAuthenticated || (isAuthenticated && (window as any).showingLoginAnimation)) {
     return (
       <Switch>
         <Route path="/login" component={Login} />
