@@ -94,14 +94,20 @@ export default function TemplatesArea() {
   // Fetch template groups instead of individual templates
   const { data: templateGroups, isLoading: groupsLoading } = useTemplateGroups();
   
-  // Initialize local template ordering hook
+  // Initialize local template ordering hook (for non-admin users only)
   const { 
     applyLocalOrdering, 
+    applyLocalGroupOrdering,
     updateBulkOrdering, 
+    updateBulkGroupOrdering,
     resetToAdminOrdering, 
     clearLocalOrderingForAdmin,
     hasLocalOrdering 
   } = useLocalTemplateOrdering(user?.id || 'anonymous');
+
+  // Check if user is admin - admin users should never use local ordering
+  const isAdmin = user?.role === 'admin';
+  const shouldUseLocalOrdering = !isAdmin;
 
   // Clear local ordering when templates are refetched (indicating admin changes)
   const { data: allTemplates, isLoading: templatesLoading, dataUpdatedAt } = useTemplates({
@@ -143,7 +149,7 @@ export default function TemplatesArea() {
     })
   );
 
-  // Handle group drag end
+  // Handle group drag end - behavior depends on user role
   const handleGroupDragEnd = (event: any) => {
     const { active, over } = event;
 
@@ -152,8 +158,17 @@ export default function TemplatesArea() {
       const newIndex = activeGroups.findIndex((group: any) => group.id === over.id);
       
       if (oldIndex !== -1 && newIndex !== -1) {
-        const newGroupOrder = arrayMove(activeGroups, oldIndex, newIndex);
-        reorderGroupsMutation.mutate(newGroupOrder);
+        if (isAdmin) {
+          // Admin users: Update the actual database order
+          const newGroupOrder = arrayMove(activeGroups, oldIndex, newIndex);
+          reorderGroupsMutation.mutate(newGroupOrder);
+        } else {
+          // Non-admin users: Update local personal ordering only
+          const newGroupOrder = arrayMove(activeGroups, oldIndex, newIndex);
+          const orderedGroupIds = newGroupOrder.map((group: any) => group.id);
+          updateBulkGroupOrdering(orderedGroupIds);
+          toast({ title: "Personal group order updated" });
+        }
       }
     }
   };
@@ -190,8 +205,10 @@ export default function TemplatesArea() {
 
   const isLoading = groupsLoading || templatesLoading;
   
-  // Apply local ordering (user preferences + admin stageOrder)
-  const orderedTemplates = applyLocalOrdering(allTemplates || []);
+  // Apply local ordering only for non-admin users (admin always sees admin ordering)
+  const orderedTemplates = shouldUseLocalOrdering 
+    ? applyLocalOrdering(allTemplates || []) 
+    : (allTemplates || []).sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0));
   const templates = searchFilteredTemplates(orderedTemplates);
 
   // Group templates by their group assignment
@@ -205,10 +222,14 @@ export default function TemplatesArea() {
     return acc;
   }, {} as Record<string, typeof templates>) || {};
 
-  // Filter active groups and sort by orderIndex
-  const activeGroups = (templateGroups || [])
+  // Filter active groups and apply local ordering only for non-admin users
+  const baseActiveGroups = (templateGroups || [])
     .filter((group: any) => group.isActive)
     .sort((a: any, b: any) => a.orderIndex - b.orderIndex);
+  
+  const activeGroups = shouldUseLocalOrdering 
+    ? applyLocalGroupOrdering(baseActiveGroups)
+    : baseActiveGroups;
 
   return (
     <>
@@ -231,13 +252,14 @@ export default function TemplatesArea() {
               size="sm"
               onClick={() => setIsDragDropMode(!isDragDropMode)}
               className="px-3 py-2 lg:py-3"
-              title="Toggle drag & drop reordering"
+              title={isAdmin ? "Admin: Drag & drop to change global order" : "Drag & drop for personal reordering"}
             >
               <ArrowUpDown className="h-4 w-4" />
             </Button>
           </div>
           
-          {hasLocalOrdering && (
+          {/* Only show reset button for non-admin users who have local ordering */}
+          {!isAdmin && hasLocalOrdering && (
             <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
               <span>Using custom ordering</span>
               <Button
@@ -245,8 +267,9 @@ export default function TemplatesArea() {
                 size="sm"
                 onClick={resetToAdminOrdering}
                 className="h-auto py-1 px-2 text-xs"
+                title="Reset both template and group positions to admin-defined defaults"
               >
-                Reset to default
+                Reset Reordering
               </Button>
             </div>
           )}

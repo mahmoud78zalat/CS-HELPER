@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnifiedTemplateReordering } from "@/hooks/useUnifiedTemplateReordering";
+import { useLocalTemplateOrdering } from "@/hooks/useLocalTemplateOrdering";
 import { getGenreColor, getCategoryColor, getGenreBadgeClasses, getCategoryBadgeClasses } from "@/lib/templateColors";
 
 interface LiveTemplate {
@@ -403,6 +404,14 @@ export default function HorizontalGroupedTemplates({
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { reorderTemplates, isReordering } = useUnifiedTemplateReordering('live-reply-templates');
+  
+  // Import local ordering system for non-admin users
+  const { 
+    updateBulkOrdering: updateLocalBulkOrdering 
+  } = useLocalTemplateOrdering(user?.id || 'anonymous');
+  
+  // Check if user is admin - admin users should modify global order
+  const isAdmin = user?.role === 'admin';
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -703,21 +712,30 @@ export default function HorizontalGroupedTemplates({
         return;
       }
 
-      // Same group reordering
+      // Same group reordering - behavior depends on user role
       if (activeContext && overContext && activeContext.type === overContext.type && activeContext.groupId === overContext.groupId) {
         if (activeContext.type === 'ungrouped') {
           const newUngrouped = arrayMove(ungroupedTemplates, activeContext.index, overContext.index);
           setUngroupedTemplates(newUngrouped);
-          // Use unified reordering system with only stageOrder
-          const updates = newUngrouped.map((template, index) => ({
-            id: template.id,
-            stageOrder: index
-          }));
           
-          console.log('[HorizontalGroupedTemplates] Sending unified ungrouped reorder request:', updates);
-          
-          // Use unified reordering system
-          reorderTemplates(updates);
+          if (isAdmin) {
+            // Admin users: Update the actual database order
+            const updates = newUngrouped.map((template, index) => ({
+              id: template.id,
+              stageOrder: index
+            }));
+            
+            console.log('[HorizontalGroupedTemplates] Admin reordering ungrouped templates:', updates);
+            reorderTemplates(updates);
+          } else {
+            // Non-admin users: Update local personal ordering only
+            const orderedTemplateIds = newUngrouped.map(template => template.id);
+            updateLocalBulkOrdering(orderedTemplateIds);
+            toast({ 
+              title: "Personal template order updated",
+              description: "Templates reordered for your personal view only" 
+            });
+          }
         } else {
           // Grouped templates reordering
           const group = groupedData.find(g => g.id === activeContext.groupId);
@@ -727,16 +745,25 @@ export default function HorizontalGroupedTemplates({
               g.id === activeContext.groupId ? { ...g, templates: newTemplates } : g
             );
             setGroupedData(newGroupedData);
-            // Use unified reordering system with only stageOrder
-            const updates = newTemplates.map((template, index) => ({
-              id: template.id,
-              stageOrder: index
-            }));
             
-            console.log('[HorizontalGroupedTemplates] Sending unified reorder request:', updates);
-            
-            // Use unified reordering system
-            reorderTemplates(updates);
+            if (isAdmin) {
+              // Admin users: Update the actual database order
+              const updates = newTemplates.map((template, index) => ({
+                id: template.id,
+                stageOrder: index
+              }));
+              
+              console.log('[HorizontalGroupedTemplates] Admin reordering grouped templates:', updates);
+              reorderTemplates(updates);
+            } else {
+              // Non-admin users: Update local personal ordering only
+              const orderedTemplateIds = newTemplates.map(template => template.id);
+              updateLocalBulkOrdering(orderedTemplateIds);
+              toast({ 
+                title: "Personal template order updated",
+                description: `Templates reordered in ${group.name} for your personal view only` 
+              });
+            }
           }
         }
       }
@@ -748,7 +775,7 @@ export default function HorizontalGroupedTemplates({
       {/* Drag & Drop Help Text and Custom Ordering Controls */}
       <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
         <span className="text-sm text-blue-700 dark:text-blue-300">
-          💡 Drag templates to reorder within groups | Drag group headers to reorder folders | Drop templates on group headers to move them
+          💡 {isAdmin ? 'Admin: Drag to change global order' : 'Drag for personal reordering'} | Drag group headers to reorder folders | Drop templates on group headers to move them
         </span>
         
         {isReordering && (

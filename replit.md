@@ -37,6 +37,12 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Created comprehensive connectivity testing during deployment startup
 - **UI FIX**: Fixed warning note display in email composer - now shows red-styled warnings next to "TO" field
 - Added warning note indicators in email template selection list for better visibility
+- **MAJOR ENHANCEMENT**: Fully decoupled local user reordering from admin template management system
+- Implemented complete role-based template ordering system where admin actions modify global database order while non-admin users have independent personal view customization
+- Enhanced "Reset Reordering" functionality to clear both individual template positions AND group folder positions
+- Updated drag-and-drop behavior to distinguish between admin users (database modifications) and regular users (local ordering only)
+- Resolved recurring blank page issues caused by React useEffect dependency loops in template ordering logic
+- Updated reference number placeholder from "REF-12345" to "71547****" in Additional Info panel
 
 ## System Architecture
 
