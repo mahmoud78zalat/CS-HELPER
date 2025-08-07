@@ -258,8 +258,8 @@ export default function TemplatesArea() {
             </Button>
           </div>
           
-          {/* Show reset button for non-admin users (both when they have local ordering and when drag-drop mode is enabled) */}
-          {!isAdmin && (hasLocalOrdering || isDragDropMode) && (
+          {/* Show reset button for ALL users when they have local ordering or are in drag-drop mode */}
+          {(hasLocalOrdering || isDragDropMode) && (
             <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
               {hasLocalOrdering && <span>Using custom ordering</span>}
               <Button
@@ -332,10 +332,8 @@ export default function TemplatesArea() {
                         templates={genreTemplates as any[]}
                         groupName={genre}
                         onReorder={(newOrder) => {
-                          // Only update local ordering for non-admin users
-                          if (!isAdmin) {
-                            updateBulkOrdering(newOrder);
-                          }
+                          // Homepage drag-drop is ALWAYS local personalization for ALL users
+                          updateBulkOrdering(newOrder);
                         }}
                       />
                     ) : (
@@ -379,10 +377,8 @@ export default function TemplatesArea() {
                               templates={groupTemplates}
                               groupName={group.name}
                               onReorder={(newOrder) => {
-                                // Only update local ordering for non-admin users
-                                if (!isAdmin) {
-                                  updateBulkOrdering(newOrder);
-                                }
+                                // Homepage drag-drop is ALWAYS local personalization for ALL users
+                                updateBulkOrdering(newOrder);
                               }}
                             />
                           ) : (

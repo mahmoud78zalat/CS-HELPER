@@ -43,6 +43,10 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Updated drag-and-drop behavior to distinguish between admin users (database modifications) and regular users (local ordering only)
 - Resolved recurring blank page issues caused by React useEffect dependency loops in template ordering logic
 - Updated reference number placeholder from "REF-12345" to "71547****" in Additional Info panel
+- **CRITICAL ORDERING FIX**: Homepage drag-and-drop now works as local personalization for ALL users (including admins)
+- Admin Panel remains the ONLY authoritative place to modify global template and group ordering
+- Reset button now appears for all users during drag-drop mode and when custom ordering is active
+- Completely eliminated backend API calls from homepage reordering to ensure strict local-only behavior
 
 ## System Architecture
 
