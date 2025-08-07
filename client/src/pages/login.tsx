@@ -465,13 +465,43 @@ export default function LoginPage() {
             {/* Face */}
             <ellipse cx="87.5" cy="90" rx="40" ry="45" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
 
-            {/* Hair/Fur Details - Fixed */}
+            {/* Enhanced Hair and Fur */}
             <g className="hair">
-              <circle cx="65" cy="50" r="8" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.8"/>
-              <circle cx="85" cy="45" r="6" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.9"/>
-              <circle cx="105" cy="48" r="7" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.8"/>
-              <circle cx="75" cy="35" r="5" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.7"/>
-              <circle cx="95" cy="38" r="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.8"/>
+              {/* Main hair tufts on top of head */}
+              <circle cx="65" cy="50" r="10" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.9"/>
+              <circle cx="85" cy="45" r="12" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.95"/>
+              <circle cx="105" cy="48" r="9" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.9"/>
+              <circle cx="75" cy="35" r="8" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.8"/>
+              <circle cx="95" cy="38" r="7" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.85"/>
+              
+              {/* Additional hair layers for more volume */}
+              <circle cx="55" cy="55" r="6" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" opacity="0.7"/>
+              <circle cx="115" cy="53" r="7" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" opacity="0.75"/>
+              <circle cx="87" cy="30" r="6" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" opacity="0.8"/>
+              
+              {/* Side hair wisps */}
+              <ellipse cx="50" cy="65" rx="4" ry="8" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" opacity="0.6"/>
+              <ellipse cx="125" cy="65" rx="4" ry="8" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" opacity="0.6"/>
+            </g>
+            
+            {/* Body Fur Details */}
+            <g className="fur">
+              {/* Chest fur tufts */}
+              <circle cx="70" cy="130" r="3" fill="#ffffff" stroke="#e2e8f0" strokeWidth="0.5" opacity="0.7"/>
+              <circle cx="105" cy="135" r="2.5" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="0.5" opacity="0.6"/>
+              <circle cx="87" cy="125" r="2" fill="#ffffff" stroke="#e2e8f0" strokeWidth="0.5" opacity="0.8"/>
+              
+              {/* Arm fur details */}
+              <circle cx="60" cy="145" r="2" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="0.5" opacity="0.5"/>
+              <circle cx="115" cy="145" r="2" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="0.5" opacity="0.5"/>
+              
+              {/* Belly fur */}
+              <circle cx="80" cy="180" r="2.5" fill="#ffffff" stroke="#e2e8f0" strokeWidth="0.5" opacity="0.6"/>
+              <circle cx="95" cy="175" r="2" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="0.5" opacity="0.7"/>
+              
+              {/* Face cheek fur */}
+              <circle cx="60" cy="95" r="2" fill="#ffffff" stroke="#cbd5e1" strokeWidth="0.5" opacity="0.5"/>
+              <circle cx="115" cy="95" r="2" fill="#ffffff" stroke="#cbd5e1" strokeWidth="0.5" opacity="0.5"/>
             </g>
 
             {/* Eyebrows - Simplified */}
