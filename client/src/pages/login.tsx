@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [isEmailFocused, setIsEmailFocused] = useState(false);
   const [mascotState, setMascotState] = useState<'idle' | 'success' | 'error'>('idle');
   
   // SVG element refs
@@ -61,7 +62,7 @@ export default function LoginPage() {
   // Advanced mouse tracking for realistic eye movement
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!leftEyeRef.current || !rightEyeRef.current || !containerRef.current || isPasswordFocused) return;
+      if (!leftEyeRef.current || !rightEyeRef.current || !containerRef.current || isPasswordFocused || isEmailFocused) return;
       
       const rect = containerRef.current.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
@@ -89,37 +90,32 @@ export default function LoginPage() {
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [isPasswordFocused]);
+  }, [isPasswordFocused, isEmailFocused]);
 
-  // Email field focus tracking
+  // Email field character tracking
   useEffect(() => {
     const handleEmailFocus = () => {
-      if (!leftEyeRef.current || !rightEyeRef.current || !emailFieldRef.current) return;
+      setIsEmailFocused(true);
+      if (!leftEyeRef.current || !rightEyeRef.current) return;
       
-      const emailRect = emailFieldRef.current.getBoundingClientRect();
-      const containerRect = containerRef.current?.getBoundingClientRect();
+      // Look at email field
+      gsap.to([leftEyeRef.current, rightEyeRef.current], {
+        x: 2,
+        y: 8,
+        duration: 0.6,
+        ease: "back.out(1.7)"
+      });
       
-      if (containerRect) {
-        const targetX = (emailRect.left + emailRect.width / 2 - containerRect.left - containerRect.width / 2) / 30;
-        const targetY = (emailRect.top + emailRect.height / 2 - containerRect.top - containerRect.height / 2 + 100) / 30;
-        
-        gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          x: targetX,
-          y: targetY,
-          duration: 0.6,
-          ease: "back.out(1.7)"
-        });
-        
-        // Happy expression when typing email
-        gsap.to(eyebrowRef.current, {
-          y: -2,
-          duration: 0.3,
-          ease: "power2.out"
-        });
-      }
+      // Happy expression when focusing email
+      gsap.to(eyebrowRef.current, {
+        y: -2,
+        duration: 0.3,
+        ease: "power2.out"
+      });
     };
 
     const handleEmailBlur = () => {
+      setIsEmailFocused(false);
       gsap.to(eyebrowRef.current, {
         y: 1,
         duration: 0.5,
@@ -127,29 +123,57 @@ export default function LoginPage() {
       });
     };
 
+    const handleEmailInput = () => {
+      if (!isEmailFocused || !leftEyeRef.current || !rightEyeRef.current) return;
+      
+      // Create character tracking animation
+      const emailLength = email.length;
+      const maxMovement = 6;
+      const eyeX = Math.min((emailLength * 0.5), maxMovement);
+      
+      gsap.to([leftEyeRef.current, rightEyeRef.current], {
+        x: 2 + eyeX,
+        y: 8,
+        duration: 0.2,
+        ease: "power2.out"
+      });
+    };
+
     emailFieldRef.current?.addEventListener('focus', handleEmailFocus);
     emailFieldRef.current?.addEventListener('blur', handleEmailBlur);
+    emailFieldRef.current?.addEventListener('input', handleEmailInput);
     
     return () => {
       emailFieldRef.current?.removeEventListener('focus', handleEmailFocus);
       emailFieldRef.current?.removeEventListener('blur', handleEmailBlur);
+      emailFieldRef.current?.removeEventListener('input', handleEmailInput);
     };
-  }, []);
+  }, [email, isEmailFocused]);
 
   // Password field cover eyes animation
   useEffect(() => {
     if (!leftArmRef.current || !rightArmRef.current || !leftEyeRef.current || !rightEyeRef.current) return;
 
     if (isPasswordFocused) {
-      // Cover eyes with arms
+      // Cover eyes with arms - properly positioned
       const tl = gsap.timeline();
       
-      tl.to([leftArmRef.current, rightArmRef.current], {
-        rotation: -25,
-        y: -15,
+      // Position left arm to cover left eye at cx="70"
+      tl.to(leftArmRef.current, {
+        x: 20,
+        y: -45,
+        rotation: -45,
         duration: 0.6,
         ease: "back.out(1.7)"
       })
+      // Position right arm to cover right eye at cx="105" 
+      .to(rightArmRef.current, {
+        x: -25,
+        y: -45,
+        rotation: 45,
+        duration: 0.6,
+        ease: "back.out(1.7)"
+      }, "<")
       .to([leftEyeRef.current, rightEyeRef.current], {
         scaleY: 0.1,
         duration: 0.3,
@@ -166,8 +190,9 @@ export default function LoginPage() {
       const tl = gsap.timeline();
       
       tl.to([leftArmRef.current, rightArmRef.current], {
-        rotation: 0,
+        x: 0,
         y: 0,
+        rotation: 0,
         duration: 0.8,
         ease: "elastic.out(1, 0.5)"
       })
@@ -347,16 +372,16 @@ export default function LoginPage() {
       </div>
 
       {/* Main Container */}
-      <div className="relative z-10 flex flex-col items-center justify-center max-w-lg w-full">
+      <div className="relative z-10 flex flex-col items-center justify-center max-w-2xl w-full">
         
         {/* Professional Yeti Mascot */}
-        <div className="relative mb-6">
+        <div className="relative mb-8 flex justify-center">
           <svg
             ref={yetiRef}
-            width="300"
-            height="350"
+            width="280"
+            height="300"
             viewBox="0 0 200 220"
-            className="drop-shadow-2xl"
+            className="drop-shadow-2xl mx-auto"
           >
             {/* Body */}
             <g className="body">
@@ -405,18 +430,18 @@ export default function LoginPage() {
               />
             </g>
 
-            {/* Left Eye */}
+            {/* Left Eye - Properly positioned for covering animation */}
             <g ref={leftEyeRef} className="eyeL">
-              <circle cx="70" cy="80" r="7" fill="white" stroke="#cbd5e1" strokeWidth="1"/>
-              <circle cx="70" cy="80" r="4" fill="#1e293b"/>
-              <circle cx="71" cy="78" r="1.5" fill="white" opacity="0.9"/>
+              <circle cx="75" cy="82" r="6" fill="white" stroke="#cbd5e1" strokeWidth="1"/>
+              <circle cx="75" cy="82" r="3.5" fill="#1e293b"/>
+              <circle cx="76" cy="80" r="1" fill="white" opacity="0.9"/>
             </g>
 
-            {/* Right Eye */}
+            {/* Right Eye - Properly positioned for covering animation */}
             <g ref={rightEyeRef} className="eyeR">
-              <circle cx="105" cy="80" r="7" fill="white" stroke="#cbd5e1" strokeWidth="1"/>
-              <circle cx="105" cy="80" r="4" fill="#1e293b"/>
-              <circle cx="106" cy="78" r="1.5" fill="white" opacity="0.9"/>
+              <circle cx="105" cy="82" r="6" fill="white" stroke="#cbd5e1" strokeWidth="1"/>
+              <circle cx="105" cy="82" r="3.5" fill="#1e293b"/>
+              <circle cx="106" cy="80" r="1" fill="white" opacity="0.9"/>
             </g>
 
             {/* Nose */}
@@ -433,34 +458,34 @@ export default function LoginPage() {
               />
             </g>
 
-            {/* Left Arm */}
-            <g ref={leftArmRef} className="armL" style={{transformOrigin: "45px 130px"}}>
+            {/* Left Arm - Positioned to properly cover left eye */}
+            <g ref={leftArmRef} className="armL" style={{transformOrigin: "50px 125px"}}>
               <ellipse 
-                cx="45" 
-                cy="130" 
-                rx="18" 
-                ry="35" 
+                cx="50" 
+                cy="125" 
+                rx="16" 
+                ry="32" 
                 fill="#f1f5f9" 
                 stroke="#cbd5e1" 
                 strokeWidth="2"
-                transform="rotate(-15 45 130)"
+                transform="rotate(-15 50 125)"
               />
-              <circle cx="35" cy="115" r="15" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
+              <circle cx="42" cy="110" r="14" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
             </g>
 
-            {/* Right Arm */}
-            <g ref={rightArmRef} className="armR" style={{transformOrigin: "130px 130px"}}>
+            {/* Right Arm - Positioned to properly cover right eye */}
+            <g ref={rightArmRef} className="armR" style={{transformOrigin: "130px 125px"}}>
               <ellipse 
                 cx="130" 
-                cy="130" 
-                rx="18" 
-                ry="35" 
+                cy="125" 
+                rx="16" 
+                ry="32" 
                 fill="#f1f5f9" 
                 stroke="#cbd5e1" 
                 strokeWidth="2"
-                transform="rotate(15 130 130)"
+                transform="rotate(15 130 125)"
               />
-              <circle cx="140" cy="115" r="15" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
+              <circle cx="138" cy="110" r="14" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
             </g>
 
             {/* Success sparkles */}
@@ -475,9 +500,9 @@ export default function LoginPage() {
         </div>
 
         {/* Login Form as Professional Sign */}
-        <div ref={signRef} className="relative">
+        <div ref={signRef} className="relative mx-auto">
           {/* Wooden Sign Background */}
-          <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-4 border-amber-800 rounded-xl p-8 shadow-2xl relative overflow-hidden min-w-[400px]">
+          <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-4 border-amber-800 rounded-xl p-8 shadow-2xl relative overflow-hidden w-full max-w-md mx-auto">
             {/* Wood grain texture */}
             <div className="absolute inset-0 opacity-10">
               <div className="w-full h-0.5 bg-amber-700 absolute top-6"></div>
@@ -556,7 +581,7 @@ export default function LoginPage() {
                       Entering the Mountain...
                     </div>
                   ) : (
-                    '🚪 Enter the Portal'
+                    'Sign in'
                   )}
                 </Button>
               </form>
