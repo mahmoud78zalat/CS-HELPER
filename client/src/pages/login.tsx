@@ -14,89 +14,173 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [mascotState, setMascotState] = useState<'idle' | 'success' | 'error'>('idle');
   
+  // SVG element refs
   const yetiRef = useRef<SVGSVGElement>(null);
-  const leftEyeRef = useRef<SVGCircleElement>(null);
-  const rightEyeRef = useRef<SVGCircleElement>(null);
-  const leftHandRef = useRef<SVGGElement>(null);
-  const rightHandRef = useRef<SVGGElement>(null);
+  const leftEyeRef = useRef<SVGGElement>(null);
+  const rightEyeRef = useRef<SVGGElement>(null);
+  const leftArmRef = useRef<SVGGElement>(null);
+  const rightArmRef = useRef<SVGGElement>(null);
+  const mouthRef = useRef<SVGGElement>(null);
+  const eyebrowRef = useRef<SVGGElement>(null);
   const signRef = useRef<HTMLDivElement>(null);
-  const mouthRef = useRef<SVGPathElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const emailFieldRef = useRef<HTMLInputElement>(null);
+  const passwordFieldRef = useRef<HTMLInputElement>(null);
   
   const { toast } = useToast();
 
-  // Mouse tracking for eye movement
+  // Initialize GSAP timeline for complex animations
+  useEffect(() => {
+    // Set initial states
+    gsap.set([leftArmRef.current, rightArmRef.current], {
+      rotation: 0,
+      transformOrigin: "50% 100%"
+    });
+    
+    // Idle breathing animation
+    gsap.to(yetiRef.current, {
+      y: -2,
+      duration: 2,
+      repeat: -1,
+      yoyo: true,
+      ease: "power1.inOut"
+    });
+    
+    // Subtle eyebrow animation
+    gsap.to(eyebrowRef.current, {
+      y: 1,
+      duration: 3,
+      repeat: -1,
+      yoyo: true,
+      ease: "power1.inOut"
+    });
+  }, []);
+
+  // Advanced mouse tracking for realistic eye movement
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!leftEyeRef.current || !rightEyeRef.current || !containerRef.current) return;
+      if (!leftEyeRef.current || !rightEyeRef.current || !containerRef.current || isPasswordFocused) return;
       
       const rect = containerRef.current.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2 - 100;
       
-      const deltaX = (e.clientX - centerX) / 40;
-      const deltaY = (e.clientY - centerY) / 40;
+      // Calculate distance and angle
+      const deltaX = e.clientX - centerX;
+      const deltaY = e.clientY - centerY;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const maxDistance = 150; // Maximum tracking distance
       
-      const constrainedX = Math.max(-4, Math.min(4, deltaX));
-      const constrainedY = Math.max(-3, Math.min(3, deltaY));
+      // Constrain eye movement based on distance
+      const constraintFactor = Math.min(distance / maxDistance, 1);
+      const eyeX = (deltaX / maxDistance) * 4 * constraintFactor;
+      const eyeY = (deltaY / maxDistance) * 3 * constraintFactor;
       
-      if (!isPasswordFocused) {
-        gsap.to([leftEyeRef.current, rightEyeRef.current], {
-          x: constrainedX,
-          y: constrainedY,
-          duration: 0.3,
-          ease: "power2.out"
-        });
-      }
+      // Animate eyes with realistic easing
+      gsap.to([leftEyeRef.current, rightEyeRef.current], {
+        x: eyeX,
+        y: eyeY,
+        duration: 0.3,
+        ease: "power2.out"
+      });
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isPasswordFocused]);
 
-  // Password focus animation
+  // Email field focus tracking
   useEffect(() => {
-    if (!leftHandRef.current || !rightHandRef.current || !leftEyeRef.current || !rightEyeRef.current) return;
+    const handleEmailFocus = () => {
+      if (!leftEyeRef.current || !rightEyeRef.current || !emailFieldRef.current) return;
+      
+      const emailRect = emailFieldRef.current.getBoundingClientRect();
+      const containerRect = containerRef.current?.getBoundingClientRect();
+      
+      if (containerRect) {
+        const targetX = (emailRect.left + emailRect.width / 2 - containerRect.left - containerRect.width / 2) / 30;
+        const targetY = (emailRect.top + emailRect.height / 2 - containerRect.top - containerRect.height / 2 + 100) / 30;
+        
+        gsap.to([leftEyeRef.current, rightEyeRef.current], {
+          x: targetX,
+          y: targetY,
+          duration: 0.6,
+          ease: "back.out(1.7)"
+        });
+        
+        // Happy expression when typing email
+        gsap.to(eyebrowRef.current, {
+          y: -2,
+          duration: 0.3,
+          ease: "power2.out"
+        });
+      }
+    };
+
+    const handleEmailBlur = () => {
+      gsap.to(eyebrowRef.current, {
+        y: 1,
+        duration: 0.5,
+        ease: "power2.out"
+      });
+    };
+
+    emailFieldRef.current?.addEventListener('focus', handleEmailFocus);
+    emailFieldRef.current?.addEventListener('blur', handleEmailBlur);
+    
+    return () => {
+      emailFieldRef.current?.removeEventListener('focus', handleEmailFocus);
+      emailFieldRef.current?.removeEventListener('blur', handleEmailBlur);
+    };
+  }, []);
+
+  // Password field cover eyes animation
+  useEffect(() => {
+    if (!leftArmRef.current || !rightArmRef.current || !leftEyeRef.current || !rightEyeRef.current) return;
 
     if (isPasswordFocused) {
-      // Cover eyes animation
-      gsap.to(leftHandRef.current, {
-        x: 25,
-        y: -15,
-        rotation: 15,
-        duration: 0.6,
-        ease: "back.out(1.7)"
-      });
-      gsap.to(rightHandRef.current, {
-        x: -25,
-        y: -15,
-        rotation: -15,
-        duration: 0.6,
-        ease: "back.out(1.7)"
-      });
+      // Cover eyes with arms
+      const tl = gsap.timeline();
       
-      // Hide eyes
-      gsap.to([leftEyeRef.current, rightEyeRef.current], {
-        opacity: 0,
-        duration: 0.3
-      });
+      tl.to([leftArmRef.current, rightArmRef.current], {
+        rotation: -25,
+        y: -15,
+        duration: 0.6,
+        ease: "back.out(1.7)"
+      })
+      .to([leftEyeRef.current, rightEyeRef.current], {
+        scaleY: 0.1,
+        duration: 0.3,
+        ease: "power2.out"
+      }, "-=0.2")
+      .to(eyebrowRef.current, {
+        y: 3,
+        duration: 0.3,
+        ease: "power2.out"
+      }, "-=0.4");
+      
     } else {
-      // Uncover eyes animation
-      gsap.to([leftHandRef.current, rightHandRef.current], {
-        x: 0,
-        y: 0,
+      // Uncover eyes
+      const tl = gsap.timeline();
+      
+      tl.to([leftArmRef.current, rightArmRef.current], {
         rotation: 0,
+        y: 0,
         duration: 0.8,
         ease: "elastic.out(1, 0.5)"
-      });
-      
-      // Show eyes
-      gsap.to([leftEyeRef.current, rightEyeRef.current], {
-        opacity: 1,
-        duration: 0.3,
-        delay: 0.2
-      });
+      })
+      .to([leftEyeRef.current, rightEyeRef.current], {
+        scaleY: 1,
+        duration: 0.4,
+        ease: "back.out(1.7)"
+      }, "-=0.4")
+      .to(eyebrowRef.current, {
+        y: 1,
+        duration: 0.5,
+        ease: "power2.out"
+      }, "-=0.6");
     }
   }, [isPasswordFocused]);
 
@@ -104,73 +188,77 @@ export default function LoginPage() {
   const playSuccessAnimation = () => {
     if (!yetiRef.current || !signRef.current || !mouthRef.current) return;
     
-    // Happy bounce
-    gsap.to(yetiRef.current, {
-      y: -20,
-      duration: 0.3,
-      yoyo: true,
-      repeat: 1,
-      ease: "power2.out"
-    });
+    const tl = gsap.timeline();
     
-    // Sign wiggle
-    gsap.to(signRef.current, {
-      rotation: 3,
+    // Happy bounce with sign
+    tl.to(yetiRef.current, {
+      y: -30,
+      duration: 0.4,
+      ease: "power2.out"
+    })
+    .to(yetiRef.current, {
+      y: -2,
+      duration: 0.6,
+      ease: "bounce.out"
+    })
+    .to(signRef.current, {
+      rotation: 5,
       duration: 0.2,
       yoyo: true,
       repeat: 3,
       ease: "power2.inOut"
-    });
-    
-    // Smile
-    if (mouthRef.current) {
-      mouthRef.current.setAttribute('d', 'M 85 95 Q 100 105 115 95');
-      mouthRef.current.setAttribute('stroke', '#22c55e');
-    }
+    }, "-=0.8")
+    .to(eyebrowRef.current, {
+      y: -3,
+      duration: 0.3,
+      ease: "power2.out"
+    }, "-=1")
+    .to(mouthRef.current, {
+      scaleY: 1.3,
+      duration: 0.3,
+      ease: "power2.out"
+    }, "-=0.8");
   };
 
   // Error animation
   const playErrorAnimation = () => {
     if (!yetiRef.current || !signRef.current || !mouthRef.current) return;
     
-    // Head shake
-    gsap.to(yetiRef.current, {
-      x: -10,
+    const tl = gsap.timeline();
+    
+    // Sad head shake
+    tl.to(yetiRef.current, {
+      x: -8,
       duration: 0.1,
       yoyo: true,
       repeat: 5,
       ease: "power2.inOut"
-    });
-    
-    // Sign drop slightly
-    gsap.to(signRef.current, {
-      y: 10,
-      duration: 0.3,
+    })
+    .to(signRef.current, {
+      y: 8,
+      duration: 0.4,
       yoyo: true,
       repeat: 1,
       ease: "power2.out"
-    });
-    
-    // Frown
-    if (mouthRef.current) {
-      mouthRef.current.setAttribute('d', 'M 85 100 Q 100 90 115 100');
-      mouthRef.current.setAttribute('stroke', '#ef4444');
-    }
+    }, "-=0.4")
+    .to(eyebrowRef.current, {
+      y: 4,
+      rotation: 2,
+      duration: 0.4,
+      ease: "power2.out"
+    }, "-=0.6")
+    .to(mouthRef.current, {
+      scaleY: 0.7,
+      duration: 0.4,
+      ease: "power2.out"
+    }, "-=0.5");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
-    // Reset mouth to neutral
-    if (mouthRef.current) {
-      mouthRef.current.setAttribute('d', 'M 95 95 L 105 95');
-      mouthRef.current.setAttribute('stroke', '#64748b');
-    }
-
-    // Simulate login delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    setMascotState('idle');
 
     try {
       console.log('[Login] Attempting to sign in:', email);
@@ -179,20 +267,27 @@ export default function LoginPage() {
       if (error) {
         console.error('[Login] Sign in error:', error);
         setError(error.message);
+        setMascotState('error');
         playErrorAnimation();
         
-        // Reset to neutral after error animation
+        // Reset animations after 2 seconds
         setTimeout(() => {
-          if (mouthRef.current) {
-            mouthRef.current.setAttribute('d', 'M 95 95 L 105 95');
-            mouthRef.current.setAttribute('stroke', '#64748b');
-          }
+          setMascotState('idle');
+          gsap.to([yetiRef.current, signRef.current, eyebrowRef.current, mouthRef.current], {
+            x: 0,
+            y: yetiRef.current ? -2 : 0,
+            rotation: 0,
+            scaleY: 1,
+            duration: 0.8,
+            ease: "power2.out"
+          });
         }, 2000);
         return;
       }
 
       if (data.user) {
         console.log('[Login] User signed in:', data.user.email);
+        setMascotState('success');
         playSuccessAnimation();
         
         toast({
@@ -201,20 +296,25 @@ export default function LoginPage() {
         });
         
         // Navigate after success animation
-        setTimeout(() => setLocation('/'), 2000);
+        setTimeout(() => setLocation('/'), 2500);
       }
     } catch (err) {
       console.error('[Login] Unexpected error:', err);
       const errorMessage = 'An unexpected error occurred. Please try again.';
       setError(errorMessage);
+      setMascotState('error');
       playErrorAnimation();
       
-      // Reset to neutral after error animation
       setTimeout(() => {
-        if (mouthRef.current) {
-          mouthRef.current.setAttribute('d', 'M 95 95 L 105 95');
-          mouthRef.current.setAttribute('stroke', '#64748b');
-        }
+        setMascotState('idle');
+        gsap.to([yetiRef.current, signRef.current, eyebrowRef.current, mouthRef.current], {
+          x: 0,
+          y: yetiRef.current ? -2 : 0,
+          rotation: 0,
+          scaleY: 1,
+          duration: 0.8,
+          ease: "power2.out"
+        });
       }, 2000);
     } finally {
       setIsLoading(false);
@@ -224,207 +324,196 @@ export default function LoginPage() {
   return (
     <div 
       ref={containerRef}
-      className="min-h-screen bg-gradient-to-br from-sky-200 via-blue-100 to-indigo-200 flex items-center justify-center p-4 overflow-hidden relative"
+      className="min-h-screen bg-gradient-to-br from-sky-100 via-blue-50 to-indigo-100 flex items-center justify-center p-4 overflow-hidden relative"
     >
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Floating snow particles */}
-        {[...Array(20)].map((_, i) => (
+        {[...Array(15)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-2 h-2 bg-white rounded-full opacity-60"
+            className="absolute w-1 h-1 bg-white rounded-full opacity-70 animate-pulse"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`
+              animation: `float ${4 + Math.random() * 4}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 3}s`
             }}
           />
         ))}
         
         {/* Mountain silhouettes */}
-        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-slate-300/30 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-slate-200/20 to-transparent"></div>
       </div>
 
       {/* Main Container */}
       <div className="relative z-10 flex flex-col items-center justify-center max-w-lg w-full">
         
-        {/* Yeti Mascot */}
+        {/* Professional Yeti Mascot */}
         <div className="relative mb-6">
           <svg
             ref={yetiRef}
-            width="280"
-            height="320"
-            viewBox="0 0 280 320"
+            width="300"
+            height="350"
+            viewBox="0 0 200 220"
             className="drop-shadow-2xl"
           >
-            {/* Yeti Body */}
-            <ellipse
-              cx="140"
-              cy="220"
-              rx="75"
-              ry="95"
-              fill="url(#bodyGradient)"
-              stroke="#cbd5e1"
-              strokeWidth="2"
-            />
-            
-            {/* Yeti Head */}
-            <ellipse
-              cx="140"
-              cy="100"
-              rx="60"
-              ry="55"
-              fill="url(#headGradient)"
-              stroke="#cbd5e1"
-              strokeWidth="2"
-            />
-            
-            {/* Fur texture details */}
-            <circle cx="110" cy="80" r="8" fill="#e2e8f0" opacity="0.7" />
-            <circle cx="170" cy="75" r="6" fill="#e2e8f0" opacity="0.7" />
-            <circle cx="140" cy="60" r="10" fill="#e2e8f0" opacity="0.7" />
-            <circle cx="100" cy="110" r="5" fill="#e2e8f0" opacity="0.7" />
-            <circle cx="180" cy="105" r="7" fill="#e2e8f0" opacity="0.7" />
-            <circle cx="120" cy="200" r="12" fill="#e2e8f0" opacity="0.6" />
-            <circle cx="160" cy="190" r="10" fill="#e2e8f0" opacity="0.6" />
-            <circle cx="140" cy="240" r="8" fill="#e2e8f0" opacity="0.6" />
-            
-            {/* Left Arm/Hand */}
-            <g ref={leftHandRef}>
-              <ellipse
-                cx="75"
-                cy="180"
-                rx="25"
-                ry="45"
-                fill="url(#armGradient)"
-                stroke="#cbd5e1"
-                strokeWidth="2"
-                transform="rotate(-25 75 180)"
+            {/* Body */}
+            <g className="body">
+              <path 
+                fill="#f8fafc" 
+                stroke="#cbd5e1" 
+                strokeWidth="2.5" 
+                d="M160,120c-5-8-15-14-26-14H125V65c0-28-22-50-50-50S25,37,25,65v41H15c-10,0-20,5-26,13v65h171V120z"
               />
-              <circle cx="60" cy="155" r="18" fill="url(#handGradient)" stroke="#cbd5e1" strokeWidth="2" />
-              <circle cx="55" cy="150" r="4" fill="#e2e8f0" opacity="0.8" />
-              <circle cx="65" cy="160" r="3" fill="#e2e8f0" opacity="0.8" />
-            </g>
-            
-            {/* Right Arm/Hand */}
-            <g ref={rightHandRef}>
-              <ellipse
-                cx="205"
-                cy="180"
-                rx="25"
-                ry="45"
-                fill="url(#armGradient)"
-                stroke="#cbd5e1"
-                strokeWidth="2"
-                transform="rotate(25 205 180)"
+              <path 
+                fill="#e2e8f0" 
+                d="M75,140c-23,0-43,11-54,28c16,10,34,16,54,16s39-6,54-16C118,151,98,140,75,140z"
               />
-              <circle cx="220" cy="155" r="18" fill="url(#handGradient)" stroke="#cbd5e1" strokeWidth="2" />
-              <circle cx="225" cy="150" r="4" fill="#e2e8f0" opacity="0.8" />
-              <circle cx="215" cy="160" r="3" fill="#e2e8f0" opacity="0.8" />
             </g>
-            
-            {/* Eyes */}
-            <circle cx="120" cy="85" r="12" fill="white" stroke="#cbd5e1" strokeWidth="1" />
-            <circle cx="160" cy="85" r="12" fill="white" stroke="#cbd5e1" strokeWidth="1" />
-            <circle
-              ref={leftEyeRef}
-              cx="120"
-              cy="85"
-              r="6"
-              fill="#1e293b"
+
+            {/* Left Ear */}
+            <g className="earL">
+              <circle cx="40" cy="75" r="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2.5"/>
+              <path d="M39 70c-2 0-4 2-4 4s2 4 4 4" stroke="#cbd5e1" strokeWidth="1.5" fill="none"/>
+            </g>
+
+            {/* Right Ear */}
+            <g className="earR">
+              <circle cx="135" cy="75" r="12" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2.5"/>
+              <path d="M136 70c2 0 4 2 4 4s-2 4-4 4" stroke="#cbd5e1" strokeWidth="1.5" fill="none"/>
+            </g>
+
+            {/* Face */}
+            <ellipse cx="87.5" cy="90" rx="40" ry="45" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
+
+            {/* Hair/Fur Details */}
+            <path 
+              fill="#ffffff" 
+              stroke="#cbd5e1" 
+              strokeWidth="2"
+              d="M55,45c2-4,6-8,11-12c1,3,2,5,3,8c3-4,9-8,16-11c-1,3-2,7-3,10c5-2,11-4,18-4c-2,3-5,6-8,9"
             />
-            <circle
-              ref={rightEyeRef}
-              cx="160"
-              cy="85"
-              r="6"
-              fill="#1e293b"
-            />
-            <circle cx="122" cy="83" r="2" fill="white" opacity="0.8" />
-            <circle cx="162" cy="83" r="2" fill="white" opacity="0.8" />
-            
+
+            {/* Eyebrows */}
+            <g ref={eyebrowRef} className="eyebrow">
+              <path 
+                fill="#ffffff" 
+                stroke="#cbd5e1" 
+                strokeWidth="2"
+                d="M55,65c6,5,13,10,21,15c2-3,4-6,6-8c5,4,10,7,15,10c1-3,2-6,3-9c4,2,8,4,13,5c1-3,1-7,1-10c5-1,10-1,15-3"
+              />
+            </g>
+
+            {/* Left Eye */}
+            <g ref={leftEyeRef} className="eyeL">
+              <circle cx="70" cy="80" r="7" fill="white" stroke="#cbd5e1" strokeWidth="1"/>
+              <circle cx="70" cy="80" r="4" fill="#1e293b"/>
+              <circle cx="71" cy="78" r="1.5" fill="white" opacity="0.9"/>
+            </g>
+
+            {/* Right Eye */}
+            <g ref={rightEyeRef} className="eyeR">
+              <circle cx="105" cy="80" r="7" fill="white" stroke="#cbd5e1" strokeWidth="1"/>
+              <circle cx="105" cy="80" r="4" fill="#1e293b"/>
+              <circle cx="106" cy="78" r="1.5" fill="white" opacity="0.9"/>
+            </g>
+
             {/* Nose */}
-            <ellipse cx="140" cy="95" rx="4" ry="6" fill="#f59e0b" />
-            <ellipse cx="140" cy="93" rx="1" ry="2" fill="#fbbf24" />
-            
+            <ellipse cx="87.5" cy="90" rx="3" ry="5" fill="#f59e0b"/>
+
             {/* Mouth */}
-            <path
-              ref={mouthRef}
-              d="M 95 95 L 105 95"
-              stroke="#64748b"
-              strokeWidth="3"
-              fill="none"
-              strokeLinecap="round"
-            />
-            
-            {/* Gradients */}
-            <defs>
-              <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{stopColor:'#f8fafc'}} />
-                <stop offset="50%" style={{stopColor:'#e1f5fe'}} />
-                <stop offset="100%" style={{stopColor:'#e3f2fd'}} />
-              </linearGradient>
-              <linearGradient id="headGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{stopColor:'#ffffff'}} />
-                <stop offset="50%" style={{stopColor:'#f0f9ff'}} />
-                <stop offset="100%" style={{stopColor:'#e0f2fe'}} />
-              </linearGradient>
-              <linearGradient id="armGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{stopColor:'#f1f5f9'}} />
-                <stop offset="100%" style={{stopColor:'#e2e8f0'}} />
-              </linearGradient>
-              <linearGradient id="handGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{stopColor:'#f8fafc'}} />
-                <stop offset="100%" style={{stopColor:'#f1f5f9'}} />
-              </linearGradient>
-            </defs>
+            <g ref={mouthRef} className="mouth">
+              <path 
+                d="M 80 100 Q 87.5 105 95 100" 
+                stroke="#64748b" 
+                strokeWidth="2.5" 
+                fill="none" 
+                strokeLinecap="round"
+              />
+            </g>
+
+            {/* Left Arm */}
+            <g ref={leftArmRef} className="armL" style={{transformOrigin: "45px 130px"}}>
+              <ellipse 
+                cx="45" 
+                cy="130" 
+                rx="18" 
+                ry="35" 
+                fill="#f1f5f9" 
+                stroke="#cbd5e1" 
+                strokeWidth="2"
+                transform="rotate(-15 45 130)"
+              />
+              <circle cx="35" cy="115" r="15" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
+            </g>
+
+            {/* Right Arm */}
+            <g ref={rightArmRef} className="armR" style={{transformOrigin: "130px 130px"}}>
+              <ellipse 
+                cx="130" 
+                cy="130" 
+                rx="18" 
+                ry="35" 
+                fill="#f1f5f9" 
+                stroke="#cbd5e1" 
+                strokeWidth="2"
+                transform="rotate(15 130 130)"
+              />
+              <circle cx="140" cy="115" r="15" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
+            </g>
+
+            {/* Success sparkles */}
+            {mascotState === 'success' && (
+              <>
+                <circle cx="50" cy="50" r="2" fill="#fbbf24" className="animate-ping"/>
+                <circle cx="125" cy="45" r="1.5" fill="#fbbf24" className="animate-ping" style={{animationDelay: '0.2s'}}/>
+                <circle cx="45" cy="60" r="1" fill="#fbbf24" className="animate-ping" style={{animationDelay: '0.4s'}}/>
+              </>
+            )}
           </svg>
         </div>
 
-        {/* Login Form as Wooden Sign */}
+        {/* Login Form as Professional Sign */}
         <div ref={signRef} className="relative">
           {/* Wooden Sign Background */}
-          <div className="bg-gradient-to-br from-amber-100 to-amber-200 border-4 border-amber-800 rounded-xl p-8 shadow-2xl relative overflow-hidden">
+          <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-4 border-amber-800 rounded-xl p-8 shadow-2xl relative overflow-hidden min-w-[400px]">
             {/* Wood grain texture */}
-            <div className="absolute inset-0 opacity-20">
-              <div className="w-full h-1 bg-amber-700 absolute top-4"></div>
-              <div className="w-full h-1 bg-amber-700 absolute top-8"></div>
-              <div className="w-full h-1 bg-amber-700 absolute bottom-8"></div>
-              <div className="w-full h-1 bg-amber-700 absolute bottom-4"></div>
+            <div className="absolute inset-0 opacity-10">
+              <div className="w-full h-0.5 bg-amber-700 absolute top-6"></div>
+              <div className="w-full h-0.5 bg-amber-700 absolute top-12"></div>
+              <div className="w-full h-0.5 bg-amber-700 absolute bottom-12"></div>
+              <div className="w-full h-0.5 bg-amber-700 absolute bottom-6"></div>
             </div>
             
-            {/* Sign posts/supports */}
-            <div className="absolute -top-6 left-6 w-3 h-12 bg-amber-900 rounded-sm shadow-lg"></div>
-            <div className="absolute -top-6 right-6 w-3 h-12 bg-amber-900 rounded-sm shadow-lg"></div>
-            
-            {/* Rope/chain details */}
-            <div className="absolute -top-3 left-8 w-8 h-2 bg-amber-800 rounded-full"></div>
-            <div className="absolute -top-3 right-8 w-8 h-2 bg-amber-800 rounded-full"></div>
+            {/* Sign posts */}
+            <div className="absolute -top-8 left-8 w-4 h-16 bg-amber-900 rounded-sm shadow-lg"></div>
+            <div className="absolute -top-8 right-8 w-4 h-16 bg-amber-900 rounded-sm shadow-lg"></div>
             
             {/* Metal corner reinforcements */}
-            <div className="absolute top-2 left-2 w-3 h-3 bg-gray-600 rounded-sm"></div>
-            <div className="absolute top-2 right-2 w-3 h-3 bg-gray-600 rounded-sm"></div>
-            <div className="absolute bottom-2 left-2 w-3 h-3 bg-gray-600 rounded-sm"></div>
-            <div className="absolute bottom-2 right-2 w-3 h-3 bg-gray-600 rounded-sm"></div>
+            <div className="absolute top-3 left-3 w-4 h-4 bg-gray-600 rounded-sm transform rotate-45"></div>
+            <div className="absolute top-3 right-3 w-4 h-4 bg-gray-600 rounded-sm transform rotate-45"></div>
+            <div className="absolute bottom-3 left-3 w-4 h-4 bg-gray-600 rounded-sm transform rotate-45"></div>
+            <div className="absolute bottom-3 right-3 w-4 h-4 bg-gray-600 rounded-sm transform rotate-45"></div>
             
             <div className="relative z-10">
               <h1 className="text-3xl font-bold text-amber-900 text-center mb-6 font-serif drop-shadow-sm">
                 🏔️ Welcome Back! 🏔️
               </h1>
               
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-amber-800 font-bold text-lg">
                     Email
                   </Label>
                   <Input
+                    ref={emailFieldRef}
                     id="email"
                     type="email"
                     placeholder="your.email@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="bg-white/95 border-2 border-amber-400 focus:border-amber-600 focus:ring-amber-500 text-lg p-3 rounded-lg shadow-inner"
+                    className="bg-white/95 border-2 border-amber-400 focus:border-amber-600 focus:ring-amber-500 text-lg p-4 rounded-lg shadow-inner transition-all duration-300"
                     data-testid="input-email"
                     required
                   />
@@ -435,21 +524,22 @@ export default function LoginPage() {
                     Password
                   </Label>
                   <Input
+                    ref={passwordFieldRef}
                     id="password"
                     type="password"
-                    placeholder="••••"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onFocus={() => setIsPasswordFocused(true)}
                     onBlur={() => setIsPasswordFocused(false)}
-                    className="bg-white/95 border-2 border-amber-400 focus:border-amber-600 focus:ring-amber-500 text-lg p-3 rounded-lg shadow-inner"
+                    className="bg-white/95 border-2 border-amber-400 focus:border-amber-600 focus:ring-amber-500 text-lg p-4 rounded-lg shadow-inner transition-all duration-300"
                     data-testid="input-password"
                     required
                   />
                 </div>
 
                 {error && (
-                  <div className="bg-red-100/90 border-2 border-red-400 text-red-800 px-4 py-3 rounded-lg text-sm font-medium shadow-inner">
+                  <div className="bg-red-100/90 border-2 border-red-400 text-red-800 px-4 py-3 rounded-lg text-sm font-medium shadow-inner animate-in fade-in duration-300">
                     ❌ {error}
                   </div>
                 )}
@@ -463,10 +553,10 @@ export default function LoginPage() {
                   {isLoading ? (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                      Entering the Cave...
+                      Entering the Mountain...
                     </div>
                   ) : (
-                    '🚪 Enter the Mountain Portal'
+                    '🚪 Enter the Portal'
                   )}
                 </Button>
               </form>
@@ -478,8 +568,21 @@ export default function LoginPage() {
           </div>
           
           {/* Sign shadow */}
-          <div className="absolute inset-0 bg-amber-900/40 rounded-xl transform translate-x-2 translate-y-2 -z-10"></div>
+          <div className="absolute inset-0 bg-amber-900/30 rounded-xl transform translate-x-2 translate-y-2 -z-10"></div>
         </div>
+
+        {/* Status Messages */}
+        {mascotState === 'success' && (
+          <div className="mt-6 text-green-600 font-bold text-lg text-center animate-in fade-in duration-500">
+            🎉 Welcome back, friend!
+          </div>
+        )}
+        
+        {mascotState === 'error' && (
+          <div className="mt-6 text-red-600 font-bold text-lg text-center animate-in fade-in duration-500">
+            😞 Oops! Please try again
+          </div>
+        )}
       </div>
 
       {/* Custom CSS for floating animation */}
