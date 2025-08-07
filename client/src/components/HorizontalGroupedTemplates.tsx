@@ -676,14 +676,17 @@ export default function HorizontalGroupedTemplates({
         console.log('[DragDrop] New group order:', newGroupOrder.map(g => g.name));
         setGroupedData(newGroupOrder);
         
-        // CRITICAL: ONLY save to backend if we're in Admin Panel context, NEVER from homepage
-        // Homepage drag-drop should be LOCAL ONLY for ALL users
-        if (location?.pathname?.includes('/admin') || location?.pathname?.includes('admin-panel')) {
-          console.log('[DragDrop] Admin Panel context - saving group order to backend');
+        // CRITICAL: ENFORCE STRICT HOMEPAGE vs ADMIN PANEL SEPARATION
+        // Homepage = LOCAL ONLY (regardless of user role)
+        // Admin Panel = Global backend saves
+        const isAdminPanelContext = location?.pathname?.includes('/admin') || location?.pathname?.includes('admin-panel');
+        
+        if (isAdminPanelContext) {
+          console.log('[DragDrop] ✅ Admin Panel context - saving group order to backend');
           saveGroupOrderMutation.mutate(newGroupOrder);
         } else {
-          console.log('[DragDrop] Homepage context - LOCAL ONLY, NOT saving to backend');
-          // For homepage, use local group ordering instead
+          console.log('[DragDrop] 🏠 Homepage context - LOCAL STORAGE ONLY (user role:', user?.role, ')');
+          // ALWAYS use local storage on homepage - never backend calls
           const groupIds = newGroupOrder.map(group => group.id);
           updateBulkGroupOrdering(groupIds);
         }
