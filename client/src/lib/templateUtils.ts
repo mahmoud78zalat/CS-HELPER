@@ -21,16 +21,18 @@ export function extractVariablesFromTemplate(content: string): string[] {
 export function replaceVariables(
   template: string, 
   customerData: Record<string, string> = {},
-  systemData: Record<string, string> = {}
+  systemData: Record<string, string> = {},
+  isArabic: boolean = false
 ): string {
-  return replaceVariablesInTemplate(template, customerData, {}, systemData);
+  return replaceVariablesInTemplate(template, customerData, {}, systemData, isArabic);
 }
 
 export function replaceVariablesInTemplate(
   template: string, 
   customerData: Record<string, string> = {},
   additionalData: Record<string, string> = {},
-  systemData: Record<string, string> = {}
+  systemData: Record<string, string> = {},
+  isArabic: boolean = false
 ): string {
   if (!template) return '';
   
@@ -71,21 +73,46 @@ export function replaceVariablesInTemplate(
     try {
       const date = new Date(customerData.delivery_date);
       const day = date.getDate();
-      const month = date.toLocaleDateString('en-US', { month: 'long' });
       const year = date.getFullYear();
       
-      // Add ordinal suffix (1st, 2nd, 3rd, 4th, etc.)
-      const getOrdinalSuffix = (day: number) => {
-        if (day >= 11 && day <= 13) return 'th';
-        switch (day % 10) {
-          case 1: return 'st';
-          case 2: return 'nd';
-          case 3: return 'rd';
-          default: return 'th';
-        }
-      };
+      // Use the isArabic parameter or detect from template content
+      const isArabicTemplate = isArabic || template.includes('عربي') || template.includes('السلام') || template.includes('شكرا') || template.includes('أهلا') || template.includes('مرحبا') || /[\u0600-\u06FF]/.test(template);
       
-      processedCustomerData.delivery_date = `${day}${getOrdinalSuffix(day)} of ${month} ${year}`;
+      if (isArabicTemplate) {
+        // Arabic date formatting
+        const arabicMonths = [
+          'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+          'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+        ];
+        
+        // Convert numbers to Arabic-Indic numerals
+        const toArabicNumerals = (num: number): string => {
+          const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+          return num.toString().split('').map(digit => arabicNumerals[parseInt(digit)]).join('');
+        };
+        
+        const arabicDay = toArabicNumerals(day);
+        const arabicMonth = arabicMonths[date.getMonth()];
+        const arabicYear = toArabicNumerals(year);
+        
+        processedCustomerData.delivery_date = `${arabicDay} ${arabicMonth} ${arabicYear}`;
+      } else {
+        // English date formatting
+        const month = date.toLocaleDateString('en-US', { month: 'long' });
+        
+        // Add ordinal suffix (1st, 2nd, 3rd, 4th, etc.)
+        const getOrdinalSuffix = (day: number) => {
+          if (day >= 11 && day <= 13) return 'th';
+          switch (day % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+          }
+        };
+        
+        processedCustomerData.delivery_date = `${day}${getOrdinalSuffix(day)} of ${month} ${year}`;
+      }
     } catch (error) {
       // If date parsing fails, keep original value
       processedCustomerData.delivery_date = customerData.delivery_date;

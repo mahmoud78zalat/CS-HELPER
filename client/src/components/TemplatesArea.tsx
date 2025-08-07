@@ -99,8 +99,23 @@ export default function TemplatesArea() {
     applyLocalOrdering, 
     updateBulkOrdering, 
     resetToAdminOrdering, 
+    clearLocalOrderingForAdmin,
     hasLocalOrdering 
   } = useLocalTemplateOrdering(user?.id || 'anonymous');
+
+  // Clear local ordering when templates are refetched (indicating admin changes)
+  const { data: allTemplates, isLoading: templatesLoading, dataUpdatedAt } = useTemplates({
+    isActive: true,
+  });
+
+  // Clear local ordering when admin makes changes (detected by query refresh)
+  React.useEffect(() => {
+    if (dataUpdatedAt && hasLocalOrdering) {
+      console.log('[TemplatesArea] Templates data updated, checking if admin made changes');
+      // Clear local ordering to respect admin changes
+      clearLocalOrderingForAdmin();
+    }
+  }, [dataUpdatedAt, hasLocalOrdering, clearLocalOrderingForAdmin]);
 
   // Group reordering mutation (matches HorizontalGroupedTemplates format)
   const reorderGroupsMutation = useMutation({
@@ -177,10 +192,7 @@ export default function TemplatesArea() {
     });
   };
   
-  // Still fetch all templates for search functionality
-  const { data: allTemplates, isLoading: templatesLoading } = useTemplates({
-    isActive: true,
-  });
+  // Template data is already fetched above with dataUpdatedAt tracking
 
   const isLoading = groupsLoading || templatesLoading;
   

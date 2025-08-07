@@ -47,12 +47,20 @@ export function useLocalTemplateOrdering(userId: string) {
   const applyLocalOrdering = (templates: Template[]): Template[] => {
     if (!templates?.length) return templates;
 
-    return templates.map(template => {
+    console.log('[useLocalTemplateOrdering] Applying ordering to templates:', {
+      templatesCount: templates.length,
+      localOrderingCount: localOrdering.length,
+      sampleTemplateOrders: templates.slice(0, 3).map(t => ({ id: t.id, name: t.name, stageOrder: t.stageOrder }))
+    });
+
+    const result = templates.map(template => {
       const localOrder = localOrdering.find(lo => lo.templateId === template.id);
+      const effectiveOrder = localOrder?.localOrder ?? template.stageOrder ?? 0;
+      
       return {
         ...template,
         // If user has custom ordering, use it; otherwise use admin stageOrder
-        _effectiveOrder: localOrder?.localOrder ?? template.stageOrder ?? 0,
+        _effectiveOrder: effectiveOrder,
         _hasLocalOrder: !!localOrder,
       };
     }).sort((a, b) => {
@@ -63,6 +71,18 @@ export function useLocalTemplateOrdering(userId: string) {
       // If order is the same, maintain stable sort by creation date
       return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     });
+
+    console.log('[useLocalTemplateOrdering] Applied ordering result:', {
+      sampleOrders: result.slice(0, 5).map(t => ({ 
+        id: t.id, 
+        name: t.name, 
+        stageOrder: t.stageOrder, 
+        effectiveOrder: t._effectiveOrder,
+        hasLocalOrder: t._hasLocalOrder 
+      }))
+    });
+
+    return result;
   };
 
   // Update local ordering for a specific template (for drag & drop only)
@@ -119,6 +139,14 @@ export function useLocalTemplateOrdering(userId: string) {
 
   // Reset local ordering (use admin ordering only)
   const resetToAdminOrdering = () => {
+    console.log('[useLocalTemplateOrdering] Resetting to admin ordering');
+    localStorage.removeItem(storageKey);
+    setLocalOrdering([]);
+  };
+
+  // Clear local ordering when admin updates stageOrder
+  const clearLocalOrderingForAdmin = () => {
+    console.log('[useLocalTemplateOrdering] Admin made changes - clearing local ordering');
     localStorage.removeItem(storageKey);
     setLocalOrdering([]);
   };
@@ -128,6 +156,7 @@ export function useLocalTemplateOrdering(userId: string) {
     updateLocalOrder,
     updateBulkOrdering,
     resetToAdminOrdering,
+    clearLocalOrderingForAdmin,
     localOrdering,
     hasLocalOrdering: localOrdering.length > 0
   };

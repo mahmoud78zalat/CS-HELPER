@@ -91,7 +91,8 @@ export default function TemplateCard({ template }: TemplateCardProps) {
       : template.contentEn;
 
     // Replace variables with error handling
-    return replaceVariables(rawContent || '', variables);
+    const isArabic = currentLanguage === 'ar';
+    return replaceVariables(rawContent || '', variables, {}, isArabic);
   }, [customerData, user, template]);
 
   // Function to replace variables in template name
