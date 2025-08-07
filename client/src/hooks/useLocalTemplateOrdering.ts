@@ -125,12 +125,13 @@ export function useLocalTemplateOrdering(userId: string) {
     return result;
   };
 
-  // Update local ordering for a specific template (for drag & drop only)
+  // Update local ordering for a specific template (for drag & drop only) - NEVER calls backend API
   const updateLocalOrder = (templateId: string, newOrder: number) => {
-    console.log('[useLocalTemplateOrdering] updateLocalOrder called:', {
+    console.log('[useLocalTemplateOrdering] updateLocalOrder called (LOCAL ONLY):', {
       templateId,
       newOrder,
-      existingLocalOrdering: localOrdering
+      existingLocalOrdering: localOrdering,
+      userId
     });
     
     const existing = localOrdering.find(lo => lo.templateId === templateId);
@@ -138,18 +139,18 @@ export function useLocalTemplateOrdering(userId: string) {
       ? { ...existing, localOrder: newOrder, lastReordered: new Date() }
       : { templateId, localOrder: newOrder, lastReordered: new Date() };
 
-    console.log('[useLocalTemplateOrdering] Updated template order:', updated);
+    console.log('[useLocalTemplateOrdering] Updated template order (LOCAL ONLY):', updated);
 
     const newOrdering = localOrdering.filter(lo => lo.templateId !== templateId);
     newOrdering.push(updated);
     
-    console.log('[useLocalTemplateOrdering] Final new ordering:', newOrdering);
+    console.log('[useLocalTemplateOrdering] Final new ordering (STORED LOCALLY):', newOrdering);
     saveOrdering(newOrdering);
   };
 
   // Bulk update ordering (for drag & drop reorder within a group)
   const updateBulkOrdering = (orderedTemplateIds: string[]) => {
-    console.log('[useLocalTemplateOrdering] updateBulkOrdering called:', {
+    console.log('[useLocalTemplateOrdering] updateBulkOrdering called (LOCAL STORAGE ONLY - NO API CALLS):', {
       orderedTemplateIds,
       existingLocalOrdering: localOrdering,
       userId
@@ -162,7 +163,7 @@ export function useLocalTemplateOrdering(userId: string) {
       lastReordered: new Date()
     }));
 
-    console.log('[useLocalTemplateOrdering] New order mappings:', newOrderMappings);
+    console.log('[useLocalTemplateOrdering] New order mappings (STORED LOCALLY ONLY):', newOrderMappings);
 
     // Update existing ordering by removing old entries for these templates and adding new ones
     const filteredOrdering = localOrdering.filter(
@@ -172,7 +173,7 @@ export function useLocalTemplateOrdering(userId: string) {
     console.log('[useLocalTemplateOrdering] Filtered ordering (removed existing):', filteredOrdering);
     
     const updatedOrdering = [...filteredOrdering, ...newOrderMappings];
-    console.log('[useLocalTemplateOrdering] Final updated ordering:', updatedOrdering);
+    console.log('[useLocalTemplateOrdering] Final updated ordering (LOCAL STORAGE ONLY):', updatedOrdering);
     
     saveOrdering(updatedOrdering);
   };

@@ -258,18 +258,25 @@ export default function TemplatesArea() {
             </Button>
           </div>
           
-          {/* Only show reset button for non-admin users who have local ordering */}
-          {!isAdmin && hasLocalOrdering && (
+          {/* Show reset button for non-admin users (both when they have local ordering and when drag-drop mode is enabled) */}
+          {!isAdmin && (hasLocalOrdering || isDragDropMode) && (
             <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-              <span>Using custom ordering</span>
+              {hasLocalOrdering && <span>Using custom ordering</span>}
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={resetToAdminOrdering}
-                className="h-auto py-1 px-2 text-xs"
+                onClick={() => {
+                  resetToAdminOrdering();
+                  toast({ 
+                    title: "Order Reset", 
+                    description: "Template and group order restored to admin defaults" 
+                  });
+                }}
+                className="h-auto py-1 px-2 text-xs hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-blue-700 dark:hover:text-blue-300"
                 title="Reset both template and group positions to admin-defined defaults"
+                data-testid="button-reset-ordering"
               >
-                Reset Reordering
+                Reset to Default Order
               </Button>
             </div>
           )}
@@ -325,7 +332,10 @@ export default function TemplatesArea() {
                         templates={genreTemplates as any[]}
                         groupName={genre}
                         onReorder={(newOrder) => {
-                          updateBulkOrdering(newOrder);
+                          // Only update local ordering for non-admin users
+                          if (!isAdmin) {
+                            updateBulkOrdering(newOrder);
+                          }
                         }}
                       />
                     ) : (
@@ -369,10 +379,10 @@ export default function TemplatesArea() {
                               templates={groupTemplates}
                               groupName={group.name}
                               onReorder={(newOrder) => {
-                                // Update local ordering for this group's templates
-                                newOrder.forEach((templateId, index) => {
+                                // Only update local ordering for non-admin users
+                                if (!isAdmin) {
                                   updateBulkOrdering(newOrder);
-                                });
+                                }
                               }}
                             />
                           ) : (
