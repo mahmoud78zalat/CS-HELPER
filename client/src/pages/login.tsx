@@ -74,10 +74,10 @@ export default function LoginPage() {
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       const maxDistance = 150; // Maximum tracking distance
       
-      // Constrain eye movement based on distance with increased downward movement
+      // Constrain eye movement based on distance with much more downward movement
       const constraintFactor = Math.min(distance / maxDistance, 1);
       const maxEyeMovementX = 2; // Horizontal limit
-      const maxEyeMovementY = 6; // Allow much more downward movement for email input
+      const maxEyeMovementY = 8; // Allow much more downward movement to look at bottom
       const eyeX = Math.max(-maxEyeMovementX, Math.min(maxEyeMovementX, (deltaX / maxDistance) * maxEyeMovementX * constraintFactor));
       const eyeY = Math.max(-maxEyeMovementY, Math.min(maxEyeMovementY, (deltaY / maxDistance) * maxEyeMovementY * constraintFactor));
       
@@ -103,7 +103,7 @@ export default function LoginPage() {
       // Look down at email field naturally (positioned lower)
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
         x: 0,
-        y: 6, // Look further down to see email input
+        y: 8, // Look much further down to see email input at bottom
         duration: 0.8,
         ease: "power2.inOut"
       });
@@ -131,12 +131,12 @@ export default function LoginPage() {
       // Create character tracking animation - eyes follow typing naturally
       const emailLength = email.length;
       const maxEyeMovementX = 2;
-      const maxEyeMovementY = 6; // Allow more downward movement
+      const maxEyeMovementY = 8; // Allow more downward movement
       const eyeX = Math.min((emailLength * 0.2), maxEyeMovementX);
       
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
         x: Math.max(-maxEyeMovementX, Math.min(maxEyeMovementX, eyeX)),
-        y: Math.max(-maxEyeMovementY, Math.min(maxEyeMovementY, 6)), // Look down at email input
+        y: Math.max(-maxEyeMovementY, Math.min(maxEyeMovementY, 8)), // Look down at email input at bottom
         duration: 0.3,
         ease: "power2.inOut"
       });
@@ -153,7 +153,7 @@ export default function LoginPage() {
     };
   }, [email, isEmailFocused]);
 
-  // Password field cover eyes animation
+  // Password field - hide hands and close eyes animation
   useEffect(() => {
     if (!leftArmRef.current || !rightArmRef.current || !leftEyeRef.current || !rightEyeRef.current) return;
 
@@ -161,21 +161,24 @@ export default function LoginPage() {
       // Hide hands and close eyes when password is focused
       const tl = gsap.timeline();
       
-      // Move hands down and out of view
+      // Move hands down and out of view first
       tl.to([leftArmRef.current, rightArmRef.current], {
         y: 60,  // Move hands down under the login sign
         opacity: 0, // Make hands invisible
         duration: 0.6,
         ease: "power2.inOut"
       })
-      // Close eyes for privacy
+      // Close eyes for privacy - FORCE the animation
       .to([leftEyeRef.current, rightEyeRef.current], {
-        scaleY: 0.1, // Close eyes
-        duration: 0.3,
-        ease: "power2.out"
+        scaleY: 0.05, // Close eyes completely
+        transformOrigin: "center center",
+        duration: 0.4,
+        ease: "power2.out",
+        force3D: true
       }, "-=0.2")
+      // Sleepy eyebrows
       .to(eyebrowRef.current, {
-        y: 3, // Sleepy eyebrows
+        y: 4, // More sleepy eyebrows
         duration: 0.3,
         ease: "power2.out"
       }, "-=0.4");
@@ -184,21 +187,26 @@ export default function LoginPage() {
       // Bring hands back and open eyes
       const tl = gsap.timeline();
       
-      tl.to([leftArmRef.current, rightArmRef.current], {
+      // Open eyes first
+      tl.to([leftEyeRef.current, rightEyeRef.current], {
+        scaleY: 1, // Open eyes fully
+        x: 0,
+        y: 0, // Return eyes to center
+        transformOrigin: "center center",
+        duration: 0.5,
+        ease: "back.out(1.7)",
+        force3D: true
+      })
+      // Bring hands back
+      .to([leftArmRef.current, rightArmRef.current], {
         x: 0,
         y: 0,
         rotation: 0,
         opacity: 1, // Make hands visible again
         duration: 0.8,
         ease: "elastic.out(1, 0.5)"
-      })
-      .to([leftEyeRef.current, rightEyeRef.current], {
-        x: 0,
-        y: 0, // Return eyes to center
-        scaleY: 1, // Open eyes again
-        duration: 0.4,
-        ease: "back.out(1.7)"
-      }, "-=0.4")
+      }, "-=0.2")
+      // Normal eyebrows
       .to(eyebrowRef.current, {
         y: 1,
         duration: 0.5,
