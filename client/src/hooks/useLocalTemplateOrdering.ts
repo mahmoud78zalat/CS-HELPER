@@ -140,47 +140,15 @@ export function useLocalTemplateOrdering(userId: string) {
   // Reset local ordering (use admin ordering only)
   const resetToAdminOrdering = () => {
     console.log('[useLocalTemplateOrdering] Resetting to admin ordering');
-    
-    // Clear template ordering
     localStorage.removeItem(storageKey);
     setLocalOrdering([]);
-    
-    // Also clear any group ordering localStorage for this user
-    const groupOrderingKey = `group-ordering-${userId}`;
-    localStorage.removeItem(groupOrderingKey);
-    
-    // Clear any other potential ordering-related localStorage
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-      if (key.includes(`ordering-${userId}`) || key.includes(`reorder-${userId}`)) {
-        console.log('[useLocalTemplateOrdering] Clearing additional ordering key:', key);
-        localStorage.removeItem(key);
-      }
-    });
-    
-    console.log('[useLocalTemplateOrdering] Reset complete - cleared template and group positions');
   };
 
   // Clear local ordering when admin updates stageOrder
   const clearLocalOrderingForAdmin = () => {
     console.log('[useLocalTemplateOrdering] Admin made changes - clearing local ordering');
-    
-    // Clear template ordering
     localStorage.removeItem(storageKey);
     setLocalOrdering([]);
-    
-    // Also clear any group ordering localStorage for this user
-    const groupOrderingKey = `group-ordering-${userId}`;
-    localStorage.removeItem(groupOrderingKey);
-    
-    // Clear any other potential ordering-related localStorage
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-      if (key.includes(`ordering-${userId}`) || key.includes(`reorder-${userId}`)) {
-        console.log('[useLocalTemplateOrdering] Clearing additional ordering key:', key);
-        localStorage.removeItem(key);
-      }
-    });
   };
 
   return {

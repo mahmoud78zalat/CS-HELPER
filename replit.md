@@ -37,10 +37,6 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Created comprehensive connectivity testing during deployment startup
 - **UI FIX**: Fixed warning note display in email composer - now shows red-styled warnings next to "TO" field
 - Added warning note indicators in email template selection list for better visibility
-- **ORDERING FIX**: Enhanced reset re-ordering button for normal users to clear both template AND group positions
-- Updated resetToAdminOrdering function to comprehensively clear all ordering-related localStorage keys
-- Fixed clearLocalOrderingForAdmin to also remove group ordering and any user-specific ordering data
-- Added proper logging for all localStorage clearing operations to aid debugging
 
 ## System Architecture
 
