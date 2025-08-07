@@ -14,6 +14,7 @@ import { Loader2 } from "lucide-react";
 import AdminPanel from "@/components/AdminPanel";
 import AgentSetupModal from "@/components/AgentSetupModal";
 import { loadColorsFromDatabase } from "@/lib/templateColors";
+import { initializeSiteName } from "@/utils/initializeSiteName";
 
 function Router() {
   const { isAuthenticated, isLoading, user, refreshUser } = useAuth();
@@ -124,10 +125,13 @@ function Router() {
 }
 
 function App() {
-  // Load colors from database when app starts
+  // Load colors and site name from database when app starts
   React.useEffect(() => {
-    loadColorsFromDatabase().then(() => {
-      console.log('[App] Colors loaded from database on app start');
+    Promise.all([
+      loadColorsFromDatabase(),
+      initializeSiteName()
+    ]).then(() => {
+      console.log('[App] Colors and site name loaded from database on app start');
     });
   }, []);
 

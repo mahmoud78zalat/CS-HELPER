@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { signInWithEmail } from '@/lib/supabase';
+import { useSiteName } from '@/hooks/useSiteName';
 import gsap from 'gsap';
 
 export default function LoginPage() {
@@ -31,6 +32,7 @@ export default function LoginPage() {
   const passwordFieldRef = useRef<HTMLInputElement>(null);
   
   const { toast } = useToast();
+  const { data: siteName, isLoading: isSiteNameLoading } = useSiteName();
 
   // Initialize GSAP timeline for complex animations
   useEffect(() => {
@@ -557,6 +559,33 @@ export default function LoginPage() {
             <div className="absolute bottom-3 right-3 w-4 h-4 bg-gray-600 rounded-sm transform rotate-45"></div>
             
               <div className="relative z-10">
+                {/* Site Name Display with Cool Styling */}
+                <div className="text-center mb-4">
+                  {isSiteNameLoading ? (
+                    <div className="animate-pulse">
+                      <div className="h-8 bg-amber-200 rounded-lg w-3/4 mx-auto mb-2"></div>
+                      <div className="h-4 bg-amber-100 rounded w-1/2 mx-auto"></div>
+                    </div>
+                  ) : (
+                    <div className="relative group">
+                      {/* Animated gradient background */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 rounded-xl opacity-20 blur-sm group-hover:opacity-30 transition-all duration-500 animate-pulse"></div>
+                      
+                      {/* Main site name */}
+                      <h2 className="relative text-2xl font-bold bg-gradient-to-r from-amber-800 via-amber-900 to-amber-800 bg-clip-text text-transparent p-4 font-serif tracking-wide drop-shadow-lg">
+                        ✨ {siteName} ✨
+                      </h2>
+                      
+                      {/* Decorative elements */}
+                      <div className="flex justify-center items-center space-x-2 mt-1">
+                        <div className="w-8 h-0.5 bg-gradient-to-r from-transparent via-amber-600 to-transparent"></div>
+                        <div className="w-2 h-2 bg-amber-600 rounded-full animate-ping"></div>
+                        <div className="w-8 h-0.5 bg-gradient-to-r from-transparent via-amber-600 to-transparent"></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <h1 className="text-3xl font-bold text-amber-900 text-center mb-6 font-serif drop-shadow-sm">
                   🏔️ Welcome Back! 🏔️
                 </h1>
