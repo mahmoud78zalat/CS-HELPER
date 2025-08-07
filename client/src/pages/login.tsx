@@ -76,7 +76,7 @@ export default function LoginPage() {
       
       // Constrain eye movement based on distance with much more downward movement
       const constraintFactor = Math.min(distance / maxDistance, 1);
-      const maxEyeMovementX = 2; // Horizontal limit
+      const maxEyeMovementX = 6; // Allow more horizontal movement
       const maxEyeMovementY = 8; // Allow much more downward movement to look at bottom
       const eyeX = Math.max(-maxEyeMovementX, Math.min(maxEyeMovementX, (deltaX / maxDistance) * maxEyeMovementX * constraintFactor));
       const eyeY = Math.max(-maxEyeMovementY, Math.min(maxEyeMovementY, (deltaY / maxDistance) * maxEyeMovementY * constraintFactor));
@@ -130,7 +130,7 @@ export default function LoginPage() {
       
       // Create character tracking animation - eyes follow typing naturally
       const emailLength = email.length;
-      const maxEyeMovementX = 2;
+      const maxEyeMovementX = 6; // Allow more horizontal movement
       const maxEyeMovementY = 8; // Allow more downward movement
       const eyeX = Math.min((emailLength * 0.2), maxEyeMovementX);
       
@@ -158,33 +158,26 @@ export default function LoginPage() {
     if (!leftArmRef.current || !rightArmRef.current || !leftEyeRef.current || !rightEyeRef.current) return;
 
     if (isPasswordFocused) {
-      // Hide hands and close eyes when password is focused
+      // Only close eyes when password is focused (keep arms visible)
       const tl = gsap.timeline();
       
-      // Move hands down and out of view first
-      tl.to([leftArmRef.current, rightArmRef.current], {
-        y: 60,  // Move hands down under the login sign
-        opacity: 0, // Make hands invisible
-        duration: 0.6,
-        ease: "power2.inOut"
-      })
       // Close eyes for privacy - FORCE the animation
-      .to([leftEyeRef.current, rightEyeRef.current], {
+      tl.to([leftEyeRef.current, rightEyeRef.current], {
         scaleY: 0.05, // Close eyes completely
         transformOrigin: "center center",
         duration: 0.4,
         ease: "power2.out",
         force3D: true
-      }, "-=0.2")
+      })
       // Sleepy eyebrows
       .to(eyebrowRef.current, {
         y: 4, // More sleepy eyebrows
         duration: 0.3,
         ease: "power2.out"
-      }, "-=0.4");
+      }, "-=0.2");
       
     } else {
-      // Bring hands back and open eyes
+      // Open eyes when password field loses focus
       const tl = gsap.timeline();
       
       // Open eyes first
@@ -197,21 +190,12 @@ export default function LoginPage() {
         ease: "back.out(1.7)",
         force3D: true
       })
-      // Bring hands back
-      .to([leftArmRef.current, rightArmRef.current], {
-        x: 0,
-        y: 0,
-        rotation: 0,
-        opacity: 1, // Make hands visible again
-        duration: 0.8,
-        ease: "elastic.out(1, 0.5)"
-      }, "-=0.2")
       // Normal eyebrows
       .to(eyebrowRef.current, {
         y: 1,
         duration: 0.5,
         ease: "power2.out"
-      }, "-=0.6");
+      }, "-=0.3");
     }
   }, [isPasswordFocused]);
 
@@ -440,22 +424,19 @@ export default function LoginPage() {
             {/* Face */}
             <ellipse cx="87.5" cy="90" rx="40" ry="45" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
 
-            {/* Hair/Fur Details */}
-            <path 
-              fill="#ffffff" 
-              stroke="#cbd5e1" 
-              strokeWidth="2"
-              d="M55,45c2-4,6-8,11-12c1,3,2,5,3,8c3-4,9-8,16-11c-1,3-2,7-3,10c5-2,11-4,18-4c-2,3-5,6-8,9"
-            />
+            {/* Hair/Fur Details - Fixed */}
+            <g className="hair">
+              <circle cx="65" cy="50" r="8" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.8"/>
+              <circle cx="85" cy="45" r="6" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.9"/>
+              <circle cx="105" cy="48" r="7" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.8"/>
+              <circle cx="75" cy="35" r="5" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.7"/>
+              <circle cx="95" cy="38" r="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.8"/>
+            </g>
 
-            {/* Eyebrows */}
+            {/* Eyebrows - Simplified */}
             <g ref={eyebrowRef} className="eyebrow">
-              <path 
-                fill="#ffffff" 
-                stroke="#cbd5e1" 
-                strokeWidth="2"
-                d="M55,65c6,5,13,10,21,15c2-3,4-6,6-8c5,4,10,7,15,10c1-3,2-6,3-9c4,2,8,4,13,5c1-3,1-7,1-10c5-1,10-1,15-3"
-              />
+              <ellipse cx="72" cy="70" rx="8" ry="3" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.9"/>
+              <ellipse cx="103" cy="70" rx="8" ry="3" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1.5" opacity="0.9"/>
             </g>
 
             {/* Left Eye - Properly positioned for covering animation */}
@@ -632,7 +613,7 @@ export default function LoginPage() {
                   {isLoading ? (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                      Entering the Mountain...
+                      Signing in...
                     </div>
                   ) : (
                     'Sign in'
