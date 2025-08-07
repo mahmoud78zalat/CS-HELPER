@@ -45,7 +45,7 @@ export default function AdditionalInfoPanel() {
           <Input
             type="text"
             className="w-full text-sm"
-            placeholder="REF-12345"
+            placeholder="71547****"
             value={customerData.ref_number || ''}
             onChange={(e) => updateCustomerData('ref_number', e.target.value)}
           />
