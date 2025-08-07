@@ -1,0 +1,29 @@
+[variables]
+NIXPACKS_NO_CACHE = '1'
+
+[phases.setup]
+nixPkgs = ["nodejs-20_x", "npm-9_x", "caddy"]
+aptPkgs = []
+
+[phases.install]
+dependsOn = ["setup"]
+cmds = ["npm ci --include=dev --verbose"]
+
+[phases.build]
+dependsOn = ["install"]
+cmds = [
+  "echo '[Railway Nixpacks] Starting build process...'",
+  "echo '[Railway Nixpacks] Environment variables:'",
+  "echo 'VITE_SUPABASE_URL:' ${VITE_SUPABASE_URL:0:30}...",
+  "echo 'VITE_SUPABASE_ANON_KEY:' ${VITE_SUPABASE_ANON_KEY:0:50}...",
+  "echo 'NODE_ENV:' $NODE_ENV",
+  "echo '[Railway Nixpacks] Running Vite build...'",
+  "NODE_ENV=production npx vite build --config vite.config.railway.ts --mode production",
+  "echo '[Railway Nixpacks] Build completed, verifying output:'",
+  "ls -la dist/public/ || echo 'dist/public not found'",
+  "test -f dist/public/index.html && echo 'index.html found' || echo 'index.html missing'",
+  "echo '[Railway Nixpacks] Build process complete'"
+]
+
+[start]
+cmd = "sh -c 'echo \"[Railway Nixpacks] Starting Caddy on port $PORT\" && caddy run --config Caddyfile --adapter caddyfile'"

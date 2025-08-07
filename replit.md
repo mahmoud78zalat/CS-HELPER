@@ -47,10 +47,6 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Admin Panel remains the ONLY authoritative place to modify global template and group ordering
 - Reset button now appears for all users during drag-drop mode and when custom ordering is active
 - Completely eliminated backend API calls from homepage reordering to ensure strict local-only behavior
-- **LOGIN ANIMATION FIX**: Implemented 3-second delay for yeti celebration animation on successful login
-- Enhanced success animation with bigger bounces, more sign wiggles, and extended duration
-- Added global flag system to prevent immediate redirect during animation playback
-- Cleaned up project by removing executed SQL scripts and deployment-specific files
 
 ## System Architecture
 

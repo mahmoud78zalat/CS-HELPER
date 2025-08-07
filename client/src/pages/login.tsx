@@ -316,8 +316,11 @@ export default function LoginPage() {
     setMascotState('idle');
 
     try {
+      console.log('[Login] Attempting to sign in:', email);
+      
       // Set the animation flag BEFORE calling signInWithEmail to prevent immediate redirect
       (window as any).showingLoginAnimation = true;
+      console.log('[Login] Set animation flag to prevent redirect');
       
       const { data, error } = await signInWithEmail(email, password);
       
@@ -347,6 +350,7 @@ export default function LoginPage() {
       }
 
       if (data.user) {
+        console.log('[Login] User signed in:', data.user.email);
         setShowingAnimation(true);
         
         // Set global flag to prevent App.tsx from redirecting immediately
