@@ -77,7 +77,7 @@ export default function LoginPage() {
       // Constrain eye movement based on distance with increased downward movement
       const constraintFactor = Math.min(distance / maxDistance, 1);
       const maxEyeMovementX = 2; // Horizontal limit
-      const maxEyeMovementY = 4; // Allow more downward movement
+      const maxEyeMovementY = 6; // Allow much more downward movement for email input
       const eyeX = Math.max(-maxEyeMovementX, Math.min(maxEyeMovementX, (deltaX / maxDistance) * maxEyeMovementX * constraintFactor));
       const eyeY = Math.max(-maxEyeMovementY, Math.min(maxEyeMovementY, (deltaY / maxDistance) * maxEyeMovementY * constraintFactor));
       
@@ -100,10 +100,10 @@ export default function LoginPage() {
       setIsEmailFocused(true);
       if (!leftEyeRef.current || !rightEyeRef.current) return;
       
-      // Look down at email field naturally
+      // Look down at email field naturally (positioned lower)
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
         x: 0,
-        y: 4,
+        y: 6, // Look further down to see email input
         duration: 0.8,
         ease: "power2.inOut"
       });
@@ -131,12 +131,12 @@ export default function LoginPage() {
       // Create character tracking animation - eyes follow typing naturally
       const emailLength = email.length;
       const maxEyeMovementX = 2;
-      const maxEyeMovementY = 4; // Allow more downward movement
+      const maxEyeMovementY = 6; // Allow more downward movement
       const eyeX = Math.min((emailLength * 0.2), maxEyeMovementX);
       
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
         x: Math.max(-maxEyeMovementX, Math.min(maxEyeMovementX, eyeX)),
-        y: Math.max(-maxEyeMovementY, Math.min(maxEyeMovementY, 4)),
+        y: Math.max(-maxEyeMovementY, Math.min(maxEyeMovementY, 6)), // Look down at email input
         duration: 0.3,
         ease: "power2.inOut"
       });
@@ -158,7 +158,7 @@ export default function LoginPage() {
     if (!leftArmRef.current || !rightArmRef.current || !leftEyeRef.current || !rightEyeRef.current) return;
 
     if (isPasswordFocused) {
-      // Hide hands by moving them down under the sign
+      // Hide hands and close eyes when password is focused
       const tl = gsap.timeline();
       
       // Move hands down and out of view
@@ -168,20 +168,20 @@ export default function LoginPage() {
         duration: 0.6,
         ease: "power2.inOut"
       })
-      // Eyes look down naturally when password is focused
+      // Close eyes for privacy
       .to([leftEyeRef.current, rightEyeRef.current], {
-        y: 4, // Look down more
-        duration: 0.4,
+        scaleY: 0.1, // Close eyes
+        duration: 0.3,
         ease: "power2.out"
-      }, "-=0.3")
+      }, "-=0.2")
       .to(eyebrowRef.current, {
-        y: 2,
+        y: 3, // Sleepy eyebrows
         duration: 0.3,
         ease: "power2.out"
       }, "-=0.4");
       
     } else {
-      // Bring hands back to normal position
+      // Bring hands back and open eyes
       const tl = gsap.timeline();
       
       tl.to([leftArmRef.current, rightArmRef.current], {
@@ -195,6 +195,7 @@ export default function LoginPage() {
       .to([leftEyeRef.current, rightEyeRef.current], {
         x: 0,
         y: 0, // Return eyes to center
+        scaleY: 1, // Open eyes again
         duration: 0.4,
         ease: "back.out(1.7)"
       }, "-=0.4")
