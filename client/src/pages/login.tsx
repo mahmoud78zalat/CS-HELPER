@@ -74,10 +74,11 @@ export default function LoginPage() {
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       const maxDistance = 150; // Maximum tracking distance
       
-      // Constrain eye movement based on distance
+      // Constrain eye movement based on distance with realistic limits
       const constraintFactor = Math.min(distance / maxDistance, 1);
-      const eyeX = (deltaX / maxDistance) * 4 * constraintFactor;
-      const eyeY = (deltaY / maxDistance) * 3 * constraintFactor;
+      const maxEyeMovement = 2; // Limit pupil movement within eye boundaries
+      const eyeX = Math.max(-maxEyeMovement, Math.min(maxEyeMovement, (deltaX / maxDistance) * maxEyeMovement * constraintFactor));
+      const eyeY = Math.max(-maxEyeMovement, Math.min(maxEyeMovement, (deltaY / maxDistance) * maxEyeMovement * constraintFactor));
       
       // Animate eyes with realistic easing
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
@@ -98,10 +99,10 @@ export default function LoginPage() {
       setIsEmailFocused(true);
       if (!leftEyeRef.current || !rightEyeRef.current) return;
       
-      // Look at email field
+      // Look at email field with constrained movement
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
-        x: 2,
-        y: 8,
+        x: 1,
+        y: 2,
         duration: 0.6,
         ease: "back.out(1.7)"
       });
@@ -126,14 +127,14 @@ export default function LoginPage() {
     const handleEmailInput = () => {
       if (!isEmailFocused || !leftEyeRef.current || !rightEyeRef.current) return;
       
-      // Create character tracking animation
+      // Create character tracking animation with realistic constraints
       const emailLength = email.length;
-      const maxMovement = 6;
-      const eyeX = Math.min((emailLength * 0.5), maxMovement);
+      const maxEyeMovement = 2; // Keep within eye boundaries
+      const eyeX = Math.min((emailLength * 0.3), maxEyeMovement);
       
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
-        x: 2 + eyeX,
-        y: 8,
+        x: Math.max(-maxEyeMovement, Math.min(maxEyeMovement, 1 + eyeX)),
+        y: Math.max(-maxEyeMovement, Math.min(maxEyeMovement, 2)),
         duration: 0.2,
         ease: "power2.out"
       });
@@ -158,19 +159,19 @@ export default function LoginPage() {
       // Cover eyes with arms - properly positioned
       const tl = gsap.timeline();
       
-      // Position left arm to cover left eye at cx="70"
+      // Position arms to properly cover eyes with correct hand placement
       tl.to(leftArmRef.current, {
-        x: 20,
-        y: -45,
-        rotation: -45,
+        x: 25,
+        y: -32,
+        rotation: -30,
         duration: 0.6,
         ease: "back.out(1.7)"
       })
-      // Position right arm to cover right eye at cx="105" 
+      // Position right arm to cover right eye
       .to(rightArmRef.current, {
         x: -25,
-        y: -45,
-        rotation: 45,
+        y: -32,
+        rotation: 30,
         duration: 0.6,
         ease: "back.out(1.7)"
       }, "<")
@@ -371,18 +372,21 @@ export default function LoginPage() {
         <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-slate-200/20 to-transparent"></div>
       </div>
 
-      {/* Main Container */}
+      {/* Main Container with Yeti behind the sign */}
       <div className="relative z-10 flex flex-col items-center justify-center max-w-2xl w-full">
         
-        {/* Professional Yeti Mascot */}
-        <div className="relative mb-8 flex justify-center">
-          <svg
-            ref={yetiRef}
-            width="280"
-            height="300"
-            viewBox="0 0 200 220"
-            className="drop-shadow-2xl mx-auto"
-          >
+        {/* Container for Yeti + Sign - Yeti positioned behind */}
+        <div className="relative flex flex-col items-center">
+          
+          {/* Professional Yeti Mascot - Positioned behind the sign */}
+          <div className="relative">
+            <svg
+              ref={yetiRef}
+              width="300"
+              height="320"
+              viewBox="0 0 200 220"
+              className="drop-shadow-lg"
+            >
             {/* Body */}
             <g className="body">
               <path 
@@ -496,13 +500,13 @@ export default function LoginPage() {
                 <circle cx="45" cy="60" r="1" fill="#fbbf24" className="animate-ping" style={{animationDelay: '0.4s'}}/>
               </>
             )}
-          </svg>
-        </div>
+            </svg>
+          </div>
 
-        {/* Login Form as Professional Sign */}
-        <div ref={signRef} className="relative mx-auto">
+          {/* Login Form as Professional Sign - Positioned in front of Yeti */}
+          <div ref={signRef} className="relative -mt-24 z-10">
           {/* Wooden Sign Background */}
-          <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-4 border-amber-800 rounded-xl p-8 shadow-2xl relative overflow-hidden w-full max-w-md mx-auto">
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-4 border-amber-800 rounded-xl p-8 shadow-2xl relative overflow-hidden w-full max-w-md mx-auto">
             {/* Wood grain texture */}
             <div className="absolute inset-0 opacity-10">
               <div className="w-full h-0.5 bg-amber-700 absolute top-6"></div>
@@ -521,10 +525,10 @@ export default function LoginPage() {
             <div className="absolute bottom-3 left-3 w-4 h-4 bg-gray-600 rounded-sm transform rotate-45"></div>
             <div className="absolute bottom-3 right-3 w-4 h-4 bg-gray-600 rounded-sm transform rotate-45"></div>
             
-            <div className="relative z-10">
-              <h1 className="text-3xl font-bold text-amber-900 text-center mb-6 font-serif drop-shadow-sm">
-                🏔️ Welcome Back! 🏔️
-              </h1>
+              <div className="relative z-10">
+                <h1 className="text-3xl font-bold text-amber-900 text-center mb-6 font-serif drop-shadow-sm">
+                  🏔️ Welcome Back! 🏔️
+                </h1>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
@@ -586,14 +590,15 @@ export default function LoginPage() {
                 </Button>
               </form>
               
-              <div className="mt-4 text-center text-amber-700 text-sm font-medium">
-                🔐 Use your registered email and password
+                <div className="mt-4 text-center text-amber-700 text-sm font-medium">
+                  🔐 Use your registered email and password
+                </div>
               </div>
             </div>
+            
+            {/* Sign shadow */}
+            <div className="absolute inset-0 bg-amber-900/30 rounded-xl transform translate-x-2 translate-y-2 -z-10"></div>
           </div>
-          
-          {/* Sign shadow */}
-          <div className="absolute inset-0 bg-amber-900/30 rounded-xl transform translate-x-2 translate-y-2 -z-10"></div>
         </div>
 
         {/* Status Messages */}
