@@ -159,19 +159,19 @@ export default function LoginPage() {
       // Cover eyes with arms - properly positioned
       const tl = gsap.timeline();
       
-      // Natural arm movement - hands come from sides in smooth arc
+      // Natural arm movement - hands move directly over the eyes
       tl.to(leftArmRef.current, {
-        x: 30,
-        y: -35,
-        rotation: -45,
+        x: 30,  // Move left hand to cover left eye at cx="75"
+        y: -18, // Raise hand to eye level
+        rotation: 30,
         duration: 0.8,
         ease: "power2.inOut"
       })
-      // Right arm moves in symmetric arc
+      // Right arm moves to cover right eye at cx="105"
       .to(rightArmRef.current, {
-        x: -30,
-        y: -35,
-        rotation: 45,
+        x: -25, // Move right hand to cover right eye at cx="105"
+        y: -18, // Raise hand to eye level  
+        rotation: -30,
         duration: 0.8,
         ease: "power2.inOut"
       }, "<")
@@ -402,21 +402,22 @@ export default function LoginPage() {
               ref={yetiRef}
               width="300"
               height="320"
-              viewBox="0 0 200 220"
+              viewBox="0 0 175 240"
               className="drop-shadow-lg"
             >
-            {/* Body */}
+            {/* Complete Body with Torso and Shoulders */}
             <g className="body">
-              <path 
-                fill="#f8fafc" 
-                stroke="#cbd5e1" 
-                strokeWidth="2.5" 
-                d="M160,120c-5-8-15-14-26-14H125V65c0-28-22-50-50-50S25,37,25,65v41H15c-10,0-20,5-26,13v65h171V120z"
-              />
-              <path 
-                fill="#e2e8f0" 
-                d="M75,140c-23,0-43,11-54,28c16,10,34,16,54,16s39-6,54-16C118,151,98,140,75,140z"
-              />
+              {/* Main torso */}
+              <ellipse cx="87.5" cy="155" rx="50" ry="60" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2.5"/>
+              
+              {/* Shoulders */}
+              <ellipse cx="87.5" cy="125" rx="60" ry="25" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="2"/>
+              
+              {/* Chest detail */}
+              <ellipse cx="87.5" cy="140" rx="35" ry="25" fill="#ffffff" stroke="#e2e8f0" strokeWidth="1.5"/>
+              
+              {/* Belly */}
+              <ellipse cx="87.5" cy="175" rx="30" ry="20" fill="#e2e8f0" strokeWidth="0"/>
             </g>
 
             {/* Left Ear */}
@@ -480,34 +481,60 @@ export default function LoginPage() {
               />
             </g>
 
-            {/* Left Arm - Positioned to properly cover left eye */}
-            <g ref={leftArmRef} className="armL" style={{transformOrigin: "50px 125px"}}>
+            {/* Left Arm - Connected to shoulder, hand covers left eye */}
+            <g ref={leftArmRef} className="armL" style={{transformOrigin: "55px 125px"}}>
+              {/* Upper arm from shoulder */}
               <ellipse 
-                cx="50" 
-                cy="125" 
-                rx="16" 
-                ry="32" 
+                cx="55" 
+                cy="135" 
+                rx="12" 
+                ry="25" 
                 fill="#f1f5f9" 
                 stroke="#cbd5e1" 
                 strokeWidth="2"
-                transform="rotate(-15 50 125)"
+                transform="rotate(-20 55 135)"
               />
-              <circle cx="42" cy="110" r="14" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Forearm */}
+              <ellipse 
+                cx="48" 
+                cy="115" 
+                rx="8" 
+                ry="18" 
+                fill="#f1f5f9" 
+                stroke="#cbd5e1" 
+                strokeWidth="2"
+                transform="rotate(-30 48 115)"
+              />
+              {/* Hand - will move to cover left eye at cx="75" cy="82" */}
+              <circle cx="45" cy="100" r="11" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
             </g>
 
-            {/* Right Arm - Positioned to properly cover right eye */}
-            <g ref={rightArmRef} className="armR" style={{transformOrigin: "130px 125px"}}>
+            {/* Right Arm - Connected to shoulder, hand covers right eye */}
+            <g ref={rightArmRef} className="armR" style={{transformOrigin: "120px 125px"}}>
+              {/* Upper arm from shoulder */}
               <ellipse 
-                cx="130" 
-                cy="125" 
-                rx="16" 
-                ry="32" 
+                cx="120" 
+                cy="135" 
+                rx="12" 
+                ry="25" 
                 fill="#f1f5f9" 
                 stroke="#cbd5e1" 
                 strokeWidth="2"
-                transform="rotate(15 130 125)"
+                transform="rotate(20 120 135)"
               />
-              <circle cx="138" cy="110" r="14" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
+              {/* Forearm */}
+              <ellipse 
+                cx="127" 
+                cy="115" 
+                rx="8" 
+                ry="18" 
+                fill="#f1f5f9" 
+                stroke="#cbd5e1" 
+                strokeWidth="2"
+                transform="rotate(30 127 115)"
+              />
+              {/* Hand - will move to cover right eye at cx="105" cy="82" */}
+              <circle cx="130" cy="100" r="11" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2"/>
             </g>
 
             {/* Success sparkles */}
