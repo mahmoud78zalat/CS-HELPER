@@ -99,12 +99,12 @@ export default function LoginPage() {
       setIsEmailFocused(true);
       if (!leftEyeRef.current || !rightEyeRef.current) return;
       
-      // Look at email field with constrained movement
+      // Look down at email field naturally
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
-        x: 1,
-        y: 2,
-        duration: 0.6,
-        ease: "back.out(1.7)"
+        x: 0,
+        y: 3,
+        duration: 0.8,
+        ease: "power2.inOut"
       });
       
       // Happy expression when focusing email
@@ -127,16 +127,16 @@ export default function LoginPage() {
     const handleEmailInput = () => {
       if (!isEmailFocused || !leftEyeRef.current || !rightEyeRef.current) return;
       
-      // Create character tracking animation with realistic constraints
+      // Create character tracking animation - eyes follow typing naturally
       const emailLength = email.length;
-      const maxEyeMovement = 2; // Keep within eye boundaries
-      const eyeX = Math.min((emailLength * 0.3), maxEyeMovement);
+      const maxEyeMovement = 2;
+      const eyeX = Math.min((emailLength * 0.2), maxEyeMovement);
       
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
-        x: Math.max(-maxEyeMovement, Math.min(maxEyeMovement, 1 + eyeX)),
-        y: Math.max(-maxEyeMovement, Math.min(maxEyeMovement, 2)),
-        duration: 0.2,
-        ease: "power2.out"
+        x: Math.max(-maxEyeMovement, Math.min(maxEyeMovement, eyeX)),
+        y: Math.max(-maxEyeMovement, Math.min(maxEyeMovement, 3)),
+        duration: 0.3,
+        ease: "power2.inOut"
       });
     };
 
@@ -159,21 +159,21 @@ export default function LoginPage() {
       // Cover eyes with arms - properly positioned
       const tl = gsap.timeline();
       
-      // Position arms to properly cover eyes with correct hand placement
+      // Natural arm movement - hands come from sides in smooth arc
       tl.to(leftArmRef.current, {
-        x: 25,
-        y: -32,
-        rotation: -30,
-        duration: 0.6,
-        ease: "back.out(1.7)"
+        x: 30,
+        y: -35,
+        rotation: -45,
+        duration: 0.8,
+        ease: "power2.inOut"
       })
-      // Position right arm to cover right eye
+      // Right arm moves in symmetric arc
       .to(rightArmRef.current, {
-        x: -25,
-        y: -32,
-        rotation: 30,
-        duration: 0.6,
-        ease: "back.out(1.7)"
+        x: -30,
+        y: -35,
+        rotation: 45,
+        duration: 0.8,
+        ease: "power2.inOut"
       }, "<")
       .to([leftEyeRef.current, rightEyeRef.current], {
         scaleY: 0.1,
@@ -246,35 +246,51 @@ export default function LoginPage() {
     }, "-=0.8");
   };
 
-  // Error animation
+  // Enhanced error animation with proper angry expression
   const playErrorAnimation = () => {
     if (!yetiRef.current || !signRef.current || !mouthRef.current) return;
     
     const tl = gsap.timeline();
     
-    // Sad head shake
+    // Fast head shake (angry gesture)
     tl.to(yetiRef.current, {
-      x: -8,
-      duration: 0.1,
+      x: -6,
+      duration: 0.08,
       yoyo: true,
       repeat: 5,
       ease: "power2.inOut"
     })
+    // Sign drops slightly showing frustration
     .to(signRef.current, {
-      y: 8,
-      duration: 0.4,
-      yoyo: true,
-      repeat: 1,
+      y: 12,
+      rotation: -2,
+      duration: 0.3,
       ease: "power2.out"
-    }, "-=0.4")
+    }, "-=0.3")
+    .to(signRef.current, {
+      y: 0,
+      rotation: 0,
+      duration: 0.5,
+      ease: "bounce.out"
+    })
+    // Angry eyebrows
     .to(eyebrowRef.current, {
-      y: 4,
-      rotation: 2,
+      y: 6,
+      rotation: -5,
+      duration: 0.4,
+      ease: "power2.out"
+    }, "-=0.8")
+    // Sad/angry mouth (frown)
+    .to(mouthRef.current, {
+      scaleY: 0.5,
+      rotation: 180,
       duration: 0.4,
       ease: "power2.out"
     }, "-=0.6")
-    .to(mouthRef.current, {
-      scaleY: 0.7,
+    // Eyes show disappointment
+    .to([leftEyeRef.current, rightEyeRef.current], {
+      scaleX: 0.8,
+      y: 2,
       duration: 0.4,
       ease: "power2.out"
     }, "-=0.5");
@@ -296,18 +312,19 @@ export default function LoginPage() {
         setMascotState('error');
         playErrorAnimation();
         
-        // Reset animations after 2 seconds
+        // Reset animations after 3 seconds for better visibility
         setTimeout(() => {
           setMascotState('idle');
-          gsap.to([yetiRef.current, signRef.current, eyebrowRef.current, mouthRef.current], {
+          gsap.to([yetiRef.current, signRef.current, eyebrowRef.current, mouthRef.current, leftEyeRef.current, rightEyeRef.current], {
             x: 0,
             y: yetiRef.current ? -2 : 0,
             rotation: 0,
             scaleY: 1,
-            duration: 0.8,
+            scaleX: 1,
+            duration: 1,
             ease: "power2.out"
           });
-        }, 2000);
+        }, 3000);
         return;
       }
 
@@ -321,8 +338,8 @@ export default function LoginPage() {
           description: `Welcome back, ${data.user.email}!`,
         });
         
-        // Navigate after success animation
-        setTimeout(() => setLocation('/'), 2500);
+        // Navigate after success animation (2 seconds for visibility)
+        setTimeout(() => setLocation('/'), 2000);
       }
     } catch (err) {
       console.error('[Login] Unexpected error:', err);
@@ -333,15 +350,16 @@ export default function LoginPage() {
       
       setTimeout(() => {
         setMascotState('idle');
-        gsap.to([yetiRef.current, signRef.current, eyebrowRef.current, mouthRef.current], {
+        gsap.to([yetiRef.current, signRef.current, eyebrowRef.current, mouthRef.current, leftEyeRef.current, rightEyeRef.current], {
           x: 0,
           y: yetiRef.current ? -2 : 0,
           rotation: 0,
           scaleY: 1,
-          duration: 0.8,
+          scaleX: 1,
+          duration: 1,
           ease: "power2.out"
         });
-      }, 2000);
+      }, 3000);
     } finally {
       setIsLoading(false);
     }
