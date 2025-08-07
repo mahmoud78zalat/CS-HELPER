@@ -47,9 +47,6 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Admin Panel remains the ONLY authoritative place to modify global template and group ordering
 - Reset button now appears for all users during drag-drop mode and when custom ordering is active
 - Completely eliminated backend API calls from homepage reordering to ensure strict local-only behavior
-- **ENFORCED STRICT SEPARATION**: Added bulletproof context checking that prevents ANY backend saves from homepage regardless of user role
-- Homepage reordering = LOCAL STORAGE ONLY (even for admin users)
-- Admin Panel reordering = GLOBAL DATABASE saves (authenticated admin context only)
 
 ## System Architecture
 
