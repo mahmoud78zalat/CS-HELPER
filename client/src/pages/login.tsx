@@ -201,40 +201,54 @@ export default function LoginPage() {
     }
   }, [isPasswordFocused]);
 
-  // Success animation
+  // Enhanced success animation with more celebration
   const playSuccessAnimation = () => {
     if (!yetiRef.current || !signRef.current || !mouthRef.current) return;
     
     const tl = gsap.timeline();
     
-    // Happy bounce with sign
+    // Initial happy bounce - bigger and more visible
     tl.to(yetiRef.current, {
-      y: -30,
-      duration: 0.4,
+      y: -50, // Higher bounce for more excitement
+      duration: 0.5,
       ease: "power2.out"
     })
     .to(yetiRef.current, {
       y: -2,
-      duration: 0.6,
+      duration: 0.8,
       ease: "bounce.out"
     })
+    // Multiple sign wiggles for celebration
     .to(signRef.current, {
-      rotation: 5,
-      duration: 0.2,
+      rotation: 8, // More rotation for excitement
+      duration: 0.15,
       yoyo: true,
-      repeat: 3,
+      repeat: 7, // More wiggles
       ease: "power2.inOut"
-    }, "-=0.8")
+    }, "-=1.2")
+    // Very happy eyebrows
     .to(eyebrowRef.current, {
-      y: -3,
-      duration: 0.3,
+      y: -5, // More movement
+      duration: 0.4,
       ease: "power2.out"
-    }, "-=1")
+    }, "-=1.3")
+    // Big smile
     .to(mouthRef.current, {
-      scaleY: 1.3,
+      scaleY: 1.5, // Bigger smile
+      duration: 0.4,
+      ease: "power2.out"
+    }, "-=1.1")
+    // Add a second celebration bounce after 1.5 seconds
+    .to(yetiRef.current, {
+      y: -25,
       duration: 0.3,
       ease: "power2.out"
-    }, "-=0.8");
+    }, "+=0.5")
+    .to(yetiRef.current, {
+      y: -2,
+      duration: 0.5,
+      ease: "bounce.out"
+    });
   };
 
   // Enhanced error animation with proper angry expression
@@ -329,8 +343,8 @@ export default function LoginPage() {
           description: `Welcome back, ${data.user.email}!`,
         });
         
-        // Navigate after success animation (2 seconds for visibility)
-        setTimeout(() => setLocation('/'), 2000);
+        // Navigate after success animation (3 seconds to fully see the happy yeti animation)
+        setTimeout(() => setLocation('/'), 3000);
       }
     } catch (err) {
       console.error('[Login] Unexpected error:', err);
