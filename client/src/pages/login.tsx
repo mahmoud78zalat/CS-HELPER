@@ -317,6 +317,11 @@ export default function LoginPage() {
 
     try {
       console.log('[Login] Attempting to sign in:', email);
+      
+      // Set the animation flag BEFORE calling signInWithEmail to prevent immediate redirect
+      (window as any).showingLoginAnimation = true;
+      console.log('[Login] Set animation flag to prevent redirect');
+      
       const { data, error } = await signInWithEmail(email, password);
       
       if (error) {
