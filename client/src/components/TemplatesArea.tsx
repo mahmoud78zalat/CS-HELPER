@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTemplates } from "@/hooks/useTemplates";
@@ -109,13 +109,7 @@ export default function TemplatesArea() {
   });
 
   // Clear local ordering when admin makes changes (detected by query refresh)
-  React.useEffect(() => {
-    if (dataUpdatedAt && hasLocalOrdering) {
-      console.log('[TemplatesArea] Templates data updated, checking if admin made changes');
-      // Clear local ordering to respect admin changes
-      clearLocalOrderingForAdmin();
-    }
-  }, [dataUpdatedAt, hasLocalOrdering, clearLocalOrderingForAdmin]);
+  // Removed the automatic clearing as it was causing render loops
 
   // Group reordering mutation (matches HorizontalGroupedTemplates format)
   const reorderGroupsMutation = useMutation({
