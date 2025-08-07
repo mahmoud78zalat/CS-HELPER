@@ -74,11 +74,12 @@ export default function LoginPage() {
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       const maxDistance = 150; // Maximum tracking distance
       
-      // Constrain eye movement based on distance with realistic limits
+      // Constrain eye movement based on distance with increased downward movement
       const constraintFactor = Math.min(distance / maxDistance, 1);
-      const maxEyeMovement = 2; // Limit pupil movement within eye boundaries
-      const eyeX = Math.max(-maxEyeMovement, Math.min(maxEyeMovement, (deltaX / maxDistance) * maxEyeMovement * constraintFactor));
-      const eyeY = Math.max(-maxEyeMovement, Math.min(maxEyeMovement, (deltaY / maxDistance) * maxEyeMovement * constraintFactor));
+      const maxEyeMovementX = 2; // Horizontal limit
+      const maxEyeMovementY = 4; // Allow more downward movement
+      const eyeX = Math.max(-maxEyeMovementX, Math.min(maxEyeMovementX, (deltaX / maxDistance) * maxEyeMovementX * constraintFactor));
+      const eyeY = Math.max(-maxEyeMovementY, Math.min(maxEyeMovementY, (deltaY / maxDistance) * maxEyeMovementY * constraintFactor));
       
       // Animate eyes with realistic easing
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
@@ -102,7 +103,7 @@ export default function LoginPage() {
       // Look down at email field naturally
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
         x: 0,
-        y: 3,
+        y: 4,
         duration: 0.8,
         ease: "power2.inOut"
       });
@@ -129,12 +130,13 @@ export default function LoginPage() {
       
       // Create character tracking animation - eyes follow typing naturally
       const emailLength = email.length;
-      const maxEyeMovement = 2;
-      const eyeX = Math.min((emailLength * 0.2), maxEyeMovement);
+      const maxEyeMovementX = 2;
+      const maxEyeMovementY = 4; // Allow more downward movement
+      const eyeX = Math.min((emailLength * 0.2), maxEyeMovementX);
       
       gsap.to([leftEyeRef.current, rightEyeRef.current], {
-        x: Math.max(-maxEyeMovement, Math.min(maxEyeMovement, eyeX)),
-        y: Math.max(-maxEyeMovement, Math.min(maxEyeMovement, 3)),
+        x: Math.max(-maxEyeMovementX, Math.min(maxEyeMovementX, eyeX)),
+        y: Math.max(-maxEyeMovementY, Math.min(maxEyeMovementY, 4)),
         duration: 0.3,
         ease: "power2.inOut"
       });
@@ -156,49 +158,43 @@ export default function LoginPage() {
     if (!leftArmRef.current || !rightArmRef.current || !leftEyeRef.current || !rightEyeRef.current) return;
 
     if (isPasswordFocused) {
-      // Cover eyes with arms - properly positioned
+      // Hide hands by moving them down under the sign
       const tl = gsap.timeline();
       
-      // Natural arm movement - hands move directly over the eyes
-      tl.to(leftArmRef.current, {
-        x: 30,  // Move left hand to cover left eye at cx="75"
-        y: -18, // Raise hand to eye level
-        rotation: 30,
-        duration: 0.8,
+      // Move hands down and out of view
+      tl.to([leftArmRef.current, rightArmRef.current], {
+        y: 60,  // Move hands down under the login sign
+        opacity: 0, // Make hands invisible
+        duration: 0.6,
         ease: "power2.inOut"
       })
-      // Right arm moves to cover right eye at cx="105"
-      .to(rightArmRef.current, {
-        x: -25, // Move right hand to cover right eye at cx="105"
-        y: -18, // Raise hand to eye level  
-        rotation: -30,
-        duration: 0.8,
-        ease: "power2.inOut"
-      }, "<")
+      // Eyes look down naturally when password is focused
       .to([leftEyeRef.current, rightEyeRef.current], {
-        scaleY: 0.1,
-        duration: 0.3,
+        y: 4, // Look down more
+        duration: 0.4,
         ease: "power2.out"
-      }, "-=0.2")
+      }, "-=0.3")
       .to(eyebrowRef.current, {
-        y: 3,
+        y: 2,
         duration: 0.3,
         ease: "power2.out"
       }, "-=0.4");
       
     } else {
-      // Uncover eyes
+      // Bring hands back to normal position
       const tl = gsap.timeline();
       
       tl.to([leftArmRef.current, rightArmRef.current], {
         x: 0,
         y: 0,
         rotation: 0,
+        opacity: 1, // Make hands visible again
         duration: 0.8,
         ease: "elastic.out(1, 0.5)"
       })
       .to([leftEyeRef.current, rightEyeRef.current], {
-        scaleY: 1,
+        x: 0,
+        y: 0, // Return eyes to center
         duration: 0.4,
         ease: "back.out(1.7)"
       }, "-=0.4")
