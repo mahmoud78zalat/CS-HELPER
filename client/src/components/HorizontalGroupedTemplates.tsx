@@ -484,9 +484,18 @@ export default function HorizontalGroupedTemplates({
     }));
   }, [templates, groups]);
 
-  // Save group order mutation
+  // Save group order mutation - ONLY enabled in Admin Panel context
+  const currentPath = location || '/';
+  const isAdminPanelContext = currentPath.includes('/admin') || currentPath.includes('admin-panel');
+  
   const saveGroupOrderMutation = useMutation({
     mutationFn: async (orderedGroups: TemplateGroup[]) => {
+      // ABSOLUTE BLOCKADE: Prevent any backend calls from homepage
+      if (!isAdminPanelContext) {
+        console.error('[CRITICAL BLOCK] Attempted backend call from homepage - DENIED!');
+        throw new Error('Backend group reordering not allowed from homepage');
+      }
+      
       const updates = orderedGroups.map((group, index) => ({
         id: group.id,
         orderIndex: index
@@ -679,16 +688,25 @@ export default function HorizontalGroupedTemplates({
         // CRITICAL: ENFORCE STRICT HOMEPAGE vs ADMIN PANEL SEPARATION
         // Homepage = LOCAL ONLY (regardless of user role)
         // Admin Panel = Global backend saves
-        const isAdminPanelContext = location?.pathname?.includes('/admin') || location?.pathname?.includes('admin-panel');
+        const currentPath = location || '/';
+        const isAdminPanelContext = currentPath.includes('/admin') || currentPath.includes('admin-panel');
         
+        console.log('[DragDrop] DEBUG - Current location:', currentPath);
+        console.log('[DragDrop] DEBUG - Is admin panel context?', isAdminPanelContext);
+        console.log('[DragDrop] DEBUG - User role:', user?.role);
+        
+        // ABSOLUTE BLOCK: Never allow backend calls from homepage regardless of user role
         if (isAdminPanelContext) {
           console.log('[DragDrop] ✅ Admin Panel context - saving group order to backend');
           saveGroupOrderMutation.mutate(newGroupOrder);
         } else {
+          console.log('[DragDrop] 🚫 HOMEPAGE CONTEXT - BLOCKING ALL BACKEND CALLS');
           console.log('[DragDrop] 🏠 Homepage context - LOCAL STORAGE ONLY (user role:', user?.role, ')');
-          // ALWAYS use local storage on homepage - never backend calls
+          // HOMEPAGE = ALWAYS LOCAL STORAGE, NEVER BACKEND
           const groupIds = newGroupOrder.map(group => group.id);
           updateBulkGroupOrdering(groupIds);
+          console.log('[DragDrop] ✅ Local group ordering updated:', groupIds);
+          return; // Explicit return to prevent any further processing
         }
       }
       return;

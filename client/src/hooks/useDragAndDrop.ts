@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { apiRequest } from '@/lib/queryClient';
+import { useLocation } from 'wouter';
 
 interface UseDragAndDropProps {
   contentType: string;
@@ -11,6 +12,7 @@ interface UseDragAndDropProps {
 
 export function useDragAndDrop({ contentType, items, onReorder }: UseDragAndDropProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [location] = useLocation();
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -33,14 +35,25 @@ export function useDragAndDrop({ contentType, items, onReorder }: UseDragAndDrop
       // Update local state immediately for smooth UX
       onReorder(reorderedItems);
       
-      // Save the new order to the database
+      // CRITICAL: ENFORCE HOMEPAGE vs ADMIN PANEL SEPARATION
+      const currentPath = location || '/';
+      const isAdminPanelContext = currentPath.includes('/admin') || currentPath.includes('admin-panel');
+      
+      // HOMEPAGE = LOCAL ONLY, never save to backend
+      if (!isAdminPanelContext) {
+        console.log('[useDragAndDrop] 🏠 Homepage context - LOCAL ONLY, skipping backend save');
+        console.log('[useDragAndDrop] Content type:', contentType, 'Path:', currentPath);
+        return; // Skip backend save completely
+      }
+
+      // Save the new order to the database (Admin Panel only)
       try {
         const orderData = reorderedItems.map((item, index) => ({
           id: item.id,
           order: index + 1
         }));
 
-        console.log('[useDragAndDrop] Saving ordering:', {
+        console.log('[useDragAndDrop] ✅ Admin Panel context - saving ordering:', {
           contentType,
           orderData,
           reorderedItems,
