@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { signInWithEmail } from '@/lib/supabase';
 import gsap from 'gsap';
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -172,21 +173,39 @@ export default function LoginPage() {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     try {
-      // Dummy validation
-      if (username === 'admin' && password === '1234') {
+      console.log('[Login] Attempting to sign in:', email);
+      const { data, error } = await signInWithEmail(email, password);
+      
+      if (error) {
+        console.error('[Login] Sign in error:', error);
+        setError(error.message);
+        playErrorAnimation();
+        
+        // Reset to neutral after error animation
+        setTimeout(() => {
+          if (mouthRef.current) {
+            mouthRef.current.setAttribute('d', 'M 95 95 L 105 95');
+            mouthRef.current.setAttribute('stroke', '#64748b');
+          }
+        }, 2000);
+        return;
+      }
+
+      if (data.user) {
+        console.log('[Login] User signed in:', data.user.email);
         playSuccessAnimation();
+        
         toast({
           title: "Login Successful! 🎉",
-          description: "Welcome back, admin!",
+          description: `Welcome back, ${data.user.email}!`,
         });
         
-        // Navigate after animation
+        // Navigate after success animation
         setTimeout(() => setLocation('/'), 2000);
-      } else {
-        throw new Error('Invalid credentials. Try username: admin, password: 1234');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
+      console.error('[Login] Unexpected error:', err);
+      const errorMessage = 'An unexpected error occurred. Please try again.';
       setError(errorMessage);
       playErrorAnimation();
       
@@ -396,17 +415,17 @@ export default function LoginPage() {
               
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="username" className="text-amber-800 font-bold text-lg">
-                    Username
+                  <Label htmlFor="email" className="text-amber-800 font-bold text-lg">
+                    Email
                   </Label>
                   <Input
-                    id="username"
-                    type="text"
-                    placeholder="admin"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="bg-white/95 border-2 border-amber-400 focus:border-amber-600 focus:ring-amber-500 text-lg p-3 rounded-lg shadow-inner"
-                    data-testid="input-username"
+                    data-testid="input-email"
                     required
                   />
                 </div>
@@ -453,7 +472,7 @@ export default function LoginPage() {
               </form>
               
               <div className="mt-4 text-center text-amber-700 text-sm font-medium">
-                💡 Hint: admin / 1234
+                🔐 Use your registered email and password
               </div>
             </div>
           </div>
@@ -464,7 +483,7 @@ export default function LoginPage() {
       </div>
 
       {/* Custom CSS for floating animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-20px) rotate(180deg); }
