@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
 import { useUnifiedTemplateReordering } from "@/hooks/useUnifiedTemplateReordering";
 import { useLocalTemplateOrdering } from "@/hooks/useLocalTemplateOrdering";
 import { getGenreColor, getCategoryColor, getGenreBadgeClasses, getCategoryBadgeClasses } from "@/lib/templateColors";
@@ -403,11 +404,13 @@ export default function HorizontalGroupedTemplates({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const [location] = useLocation();
   const { reorderTemplates, isReordering } = useUnifiedTemplateReordering('live-reply-templates');
   
   // Import local ordering system for non-admin users
   const { 
-    updateBulkOrdering: updateLocalBulkOrdering 
+    updateBulkOrdering: updateLocalBulkOrdering,
+    updateBulkGroupOrdering
   } = useLocalTemplateOrdering(user?.id || 'anonymous');
   
   // Check if user is admin - admin users should modify global order
@@ -672,7 +675,18 @@ export default function HorizontalGroupedTemplates({
         const newGroupOrder = arrayMove(groupedData, oldIndex, newIndex);
         console.log('[DragDrop] New group order:', newGroupOrder.map(g => g.name));
         setGroupedData(newGroupOrder);
-        saveGroupOrderMutation.mutate(newGroupOrder);
+        
+        // CRITICAL: ONLY save to backend if we're in Admin Panel context, NEVER from homepage
+        // Homepage drag-drop should be LOCAL ONLY for ALL users
+        if (location?.pathname?.includes('/admin') || location?.pathname?.includes('admin-panel')) {
+          console.log('[DragDrop] Admin Panel context - saving group order to backend');
+          saveGroupOrderMutation.mutate(newGroupOrder);
+        } else {
+          console.log('[DragDrop] Homepage context - LOCAL ONLY, NOT saving to backend');
+          // For homepage, use local group ordering instead
+          const groupIds = newGroupOrder.map(group => group.id);
+          updateBulkGroupOrdering(groupIds);
+        }
       }
       return;
     }
