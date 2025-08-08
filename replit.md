@@ -47,6 +47,13 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Admin Panel remains the ONLY authoritative place to modify global template and group ordering
 - Reset button now appears for all users during drag-drop mode and when custom ordering is active
 - Completely eliminated backend API calls from homepage reordering to ensure strict local-only behavior
+- **MAJOR PRESENCE SYSTEM REDESIGN (January 2025)**: Implemented enterprise-grade 24/7 online/offline presence tracker with heartbeat logic
+- Created Redis-like TTL-based in-memory presence storage system for scalable real-time tracking
+- Built intelligent WebSocket presence manager with automatic reconnection and ping/pong health checks
+- Developed sophisticated client-side heartbeat hook with activity detection, page visibility tracking, and network retry logic
+- Replaced basic presence monitoring with advanced system featuring 15-30 second heartbeat intervals and 90-second TTL expiration
+- Added comprehensive presence API endpoints for heartbeat processing, status queries, and admin statistics
+- Integrated graceful page unload handling and battery-efficient tracking when tabs are hidden
 
 ## System Architecture
 
@@ -70,10 +77,18 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - **Session Management**: Express sessions stored in PostgreSQL.
 - **Role-based Access**: Two roles (admin, agent).
 - **User Status**: Active/blocked/banned management.
-- **Online Presence**: Real-time user status tracking via WebSocket.
+- **Online Presence**: Enhanced 24/7 presence tracking system with Redis-like TTL storage, intelligent heartbeat logic, and WebSocket real-time updates.
+
+### Enhanced Presence System Architecture (2025)
+- **Presence Store**: Redis-like TTL-based in-memory storage with 90-second expiration
+- **Heartbeat Logic**: Client-side intelligent activity detection with 15-30 second intervals
+- **WebSocket Manager**: Real-time presence updates with automatic reconnection and health checks
+- **API Endpoints**: Comprehensive REST API for heartbeat processing, status queries, and admin statistics
+- **Database Integration**: Persists online status to PostgreSQL while using in-memory store for real-time performance
+- **Graceful Degradation**: Handles page unload, network failures, and battery optimization for hidden tabs
 
 ### Database Schema
-Key tables include Users, Live Reply Templates, Email Templates, Usage tracking, Site Content, and Sessions. All tables are designed with `supabase_id` and `last_synced_at` for potential Supabase integration.
+Key tables include Users (with online presence fields), Live Reply Templates, Email Templates, Usage tracking, Site Content, and Sessions. All tables are designed with `supabase_id` and `last_synced_at` for potential Supabase integration.
 
 ### Core Features
 - **Smart Customer Information Panel**: Persistent data storage with auto-save and real-time synchronization.

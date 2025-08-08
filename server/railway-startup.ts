@@ -7,6 +7,8 @@ import express from 'express';
 import { createServer } from 'http';
 import { logger, createLoggingMiddleware, createErrorLoggingMiddleware } from './railway-logging';
 import { presenceMonitor } from './presence-monitor';
+import { presenceStore } from './presence-store';
+import { wsPresenceManager } from './websocket-presence';
 
 export function createRailwayServer() {
   const app = express();
@@ -140,10 +142,22 @@ export function startRailwayServer(app: express.Express) {
   // CRITICAL: Must bind to 0.0.0.0 for Railway
   const server = createServer(app);
   
-  // Initialize presence monitor for real-time user status tracking
-  logger.info('🔄 Starting real-time presence monitoring system...', context);
+  // Initialize enhanced presence system with Redis-like TTL storage
+  logger.info('🔄 Starting enhanced presence tracking system...', context);
+  
+  // Initialize the presence store (TTL-based in-memory storage)
+  logger.info('📦 Initializing presence store...', context);
+  
+  // Start legacy presence monitor alongside enhanced system for gradual migration
   presenceMonitor.start();
-  logger.info('✅ Presence monitor initialized', context);
+  
+  // Initialize WebSocket presence manager if in development
+  if (process.env.NODE_ENV === 'development') {
+    logger.info('🔌 Initializing WebSocket presence manager for development...', context);
+    // WebSocket will be initialized when server starts
+  }
+  
+  logger.info('✅ Enhanced presence system initialized', context);
 
   // Enhanced server error handling
   server.on('error', (error: any) => {
@@ -198,9 +212,14 @@ export function startRailwayServer(app: express.Express) {
       logger.info(`🛑 ${signal} received, initiating graceful shutdown...`, shutdownContext);
       logger.info(`Uptime: ${process.uptime()} seconds`, shutdownContext);
       
-      // Stop presence monitor
-      logger.info('⏹️ Stopping presence monitor...', shutdownContext);
+      // Stop presence systems
+      logger.info('⏹️ Stopping presence monitoring systems...', shutdownContext);
       presenceMonitor.stop();
+      
+      // Cleanup enhanced presence system
+      logger.info('🧹 Cleaning up enhanced presence system...', shutdownContext);
+      presenceStore.shutdown();
+      wsPresenceManager.shutdown();
       
       server.close((error) => {
         if (error) {

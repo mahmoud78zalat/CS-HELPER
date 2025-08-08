@@ -16,9 +16,15 @@ import { SupabasePersonalNotesStorage } from './supabase-personal-notes';
 import { railwaySupabaseDebug, railwayHealthCheck } from './railway-supabase-debug';
 // Health check inline - no separate file needed
 import { z } from "zod";
+import presenceRoutes from './routes/presence-routes';
+import { presenceStore } from './presence-store';
 
 export function registerRoutes(app: Express): void {
   console.log('[Simple Routes] 📋 Starting route registration...');
+  
+  // Register enhanced presence tracking routes
+  app.use('/api/presence', presenceRoutes);
+  console.log('[Simple Routes] ✅ Enhanced presence routes registered');
   
   // Health check endpoint (handled by railway-startup.ts)
   // Live Reply Template routes (for live chat)
@@ -2169,4 +2175,38 @@ export function registerRoutes(app: Express): void {
 
   // Note: WebSocket functionality disabled for Vercel serverless deployment
   // Real-time features can be implemented using Supabase real-time subscriptions in the client
+}
+
+/**
+ * Enhanced WebSocket Server Setup for Presence Tracking
+ * Creates WebSocket server with presence management capabilities
+ */
+export function createWebSocketServer(server: Server): WebSocketServer {
+  console.log('[Simple Routes] 🚀 Creating enhanced WebSocket server with presence tracking...');
+  
+  // Import WebSocket presence manager here to avoid circular imports
+  const { wsPresenceManager } = require('./websocket-presence');
+  
+  const wss = new WebSocketServer({ 
+    server,
+    path: '/ws',
+    clientTracking: true
+  });
+
+  console.log('[Simple Routes] 📡 Enhanced WebSocket server created on /ws');
+
+  // Initialize presence manager with WebSocket server
+  wsPresenceManager.initialize(wss);
+
+  wss.on('error', (error) => {
+    console.error('[Simple Routes] ❌ WebSocket Server Error:', error);
+  });
+
+  wss.on('close', () => {
+    console.log('[Simple Routes] 📴 WebSocket server closed');
+  });
+
+  console.log('[Simple Routes] ✅ Enhanced presence WebSocket system ready');
+  
+  return wss;
 }
