@@ -2,15 +2,34 @@ import { useEffect, useState, useRef, useCallback, useReducer } from "react";
 import { flushSync } from "react-dom";
 import { User } from "@shared/schema";
 import { supabase } from "@/lib/supabase";
+import { usePresenceHeartbeat } from "@/hooks/usePresenceHeartbeat";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authTimeout, setAuthTimeout] = useState<NodeJS.Timeout | null>(null);
-  const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
-  const lastActivityTime = useRef<number>(Date.now());
   // Force re-render reducer to handle React state batching issues
   const [, forceUpdate] = useReducer(x => x + 1, 0);
+
+  // Enhanced Presence System Integration
+  const presenceHeartbeat = usePresenceHeartbeat({
+    userId: user?.id || '',
+    enabled: !!user && user.status === 'active',
+    heartbeatInterval: 25000, // 25 seconds
+    activityTimeout: 60000, // 1 minute
+    maxRetries: 3,
+    retryDelay: 2000
+  });
+
+  // Log presence system status when user changes
+  useEffect(() => {
+    if (user && user.status === 'active') {
+      console.log(`[Auth] 🚀 Enhanced presence system activated for ${user.email} (${user.role})`);
+      console.log(`[Auth] 🔧 Session: ${presenceHeartbeat.sessionId}, Active: ${presenceHeartbeat.isActive}`);
+    } else if (user) {
+      console.log(`[Auth] ⚠️ User ${user.email} has status '${user.status}' - presence system disabled`);
+    }
+  }, [user, presenceHeartbeat.sessionId, presenceHeartbeat.isActive]);
 
   useEffect(() => {
     // Disabled timeout as it was clearing authenticated users
@@ -57,7 +76,6 @@ export function useAuth() {
         console.log('[Auth] User signed out - clearing state');
         setUser(null);
         setIsLoading(false);
-        stopHeartbeat();
         localStorage.removeItem('current_user_id');
         localStorage.removeItem('current_user_email');
         localStorage.removeItem('current_user_role');
@@ -68,7 +86,6 @@ export function useAuth() {
         if (session?.user) {
           console.log('[Auth] User signed in/token refreshed - handling user');
           await handleUser(session.user);
-          startHeartbeat();
         }
         return;
       }
@@ -78,7 +95,6 @@ export function useAuth() {
         if (session?.user) {
           console.log('[Auth] Initial session found - handling user');
           await handleUser(session.user);
-          startHeartbeat();
         } else {
           console.log('[Auth] No initial session');
           setUser(null);
@@ -90,11 +106,9 @@ export function useAuth() {
       // Fallback for any other events
       if (session?.user) {
         await handleUser(session.user);
-        startHeartbeat();
       } else {
         setUser(null);
         setIsLoading(false);
-        stopHeartbeat();
       }
     });
 
@@ -103,7 +117,6 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe();
       if (authTimeout) clearTimeout(authTimeout);
-      stopHeartbeat();
     };
   }, []);
 
@@ -146,10 +159,7 @@ export function useAuth() {
             setIsLoading(false);
             if (authTimeout) clearTimeout(authTimeout);
             
-
-            
-            // Ensure heartbeat starts for all user roles
-            startHeartbeat();
+            console.log('[Auth] 🚀 Enhanced presence system will auto-start via usePresenceHeartbeat hook');
             return;
           } catch (parseError) {
             console.error('[Auth] JSON parse error:', parseError);
@@ -213,10 +223,7 @@ export function useAuth() {
             setIsLoading(false);
             if (authTimeout) clearTimeout(authTimeout);
             
-
-            
-            // Ensure heartbeat starts for all user roles
-            startHeartbeat();
+            console.log('[Auth] 🚀 Enhanced presence system will auto-start via usePresenceHeartbeat hook');
             return;
           } catch (parseError) {
             console.error('[Auth] Error parsing create response:', parseError);
@@ -259,10 +266,7 @@ export function useAuth() {
       setIsLoading(false);
       if (authTimeout) clearTimeout(authTimeout);
       
-
-      
-      // Ensure heartbeat starts for all user roles
-      startHeartbeat();
+      console.log('[Auth] 🚀 Enhanced presence system will auto-start via usePresenceHeartbeat hook');
       return;
       
     } catch (error) {
@@ -273,191 +277,11 @@ export function useAuth() {
     }
   };
 
-  // Advanced online status management with real-time heartbeat
-  const startHeartbeat = () => {
-    if (heartbeatInterval.current) return;
-    
-    console.log('[Auth] Starting enhanced real-time heartbeat for user presence');
-    
-    heartbeatInterval.current = setInterval(async () => {
-      if (!user) return;
-      
-      try {
-        const now = Date.now();
-        const timeSinceActivity = now - lastActivityTime.current;
-        
-        // Enhanced activity detection: 60 seconds for real-time accuracy
-        const isUserActive = timeSinceActivity < 60 * 1000;
-        
-        console.log(`[Auth] Real-time Heartbeat - User active: ${isUserActive}, Time since activity: ${Math.round(timeSinceActivity / 1000)}s`);
-        
-        // Enhanced heartbeat with metadata for better tracking
-        await fetch('/api/user/heartbeat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': user.id,
-            'x-user-email': user.email || ''
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            userId: user.id,
-            isOnline: isUserActive,
-            lastActivity: new Date(lastActivityTime.current).toISOString(),
-            timestamp: new Date().toISOString(),
-            pageHidden: document.hidden,
-            pageVisible: !document.hidden,
-            heartbeatType: 'interval'
-          }),
-        });
-        
-        // Update local user state immediately
-        setUser(prev => prev ? { 
-          ...prev, 
-          isOnline: isUserActive,
-          lastSeen: new Date()
-        } : null);
-      } catch (error) {
-        console.error('[Auth] Heartbeat error:', error);
-      }
-    }, 8000); // Real-time updates: every 8 seconds for maximum responsiveness
-    
-    // Track user activity
-    const updateActivity = () => {
-      lastActivityTime.current = Date.now();
-    };
-    
-    // Enhanced activity detection with more events
-    const activityEvents = [
-      'mousedown', 'mousemove', 'mouseup', 'click', 'dblclick',
-      'keypress', 'keydown', 'keyup', 'input', 'change',
-      'scroll', 'wheel', 'touchstart', 'touchmove', 'touchend',
-      'focus', 'blur', 'resize', 'contextmenu', 'drag', 'drop'
-    ];
-    
-    activityEvents.forEach(event => {
-      document.addEventListener(event, updateActivity, { passive: true });
-    });
-    
-    // Enhanced visibility change handling with immediate heartbeat
-    const handleVisibilityChange = async () => {
-      if (document.hidden) {
-        console.log('[Auth] Page hidden - user may be inactive');
-        // Send immediate heartbeat when page becomes hidden
-        if (user) {
-          try {
-            await fetch('/api/user/heartbeat', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-user-id': user.id,
-                'x-user-email': user.email || ''
-              },
-              credentials: 'include',
-              body: JSON.stringify({
-                userId: user.id,
-                isOnline: false, // Mark as offline when hidden
-                lastActivity: new Date().toISOString(),
-                pageHidden: true
-              }),
-            });
-          } catch (error) {
-            console.error('[Auth] Error sending visibility heartbeat:', error);
-          }
-        }
-      } else {
-        console.log('[Auth] Page visible - user is active again');
-        updateActivity();
-        // Send immediate heartbeat when page becomes visible
-        if (user) {
-          try {
-            await fetch('/api/user/heartbeat', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-user-id': user.id,
-                'x-user-email': user.email || ''
-              },
-              credentials: 'include',
-              body: JSON.stringify({
-                userId: user.id,
-                isOnline: true, // Mark as online when visible
-                lastActivity: new Date().toISOString(),
-                pageVisible: true
-              }),
-            });
-          } catch (error) {
-            console.error('[Auth] Error sending visibility heartbeat:', error);
-          }
-        }
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Enhanced page unload handling for immediate offline status
-    const handleBeforeUnload = () => {
-      if (user) {
-        // Use sendBeacon for reliable delivery during page unload
-        const headers = new Headers();
-        headers.append('Content-Type', 'application/json');
-        headers.append('x-user-id', user.id);
-        headers.append('x-user-email', user.email || '');
-        
-        const data = JSON.stringify({
-          userId: user.id,
-          isOnline: false,
-          lastActivity: new Date().toISOString(),
-          timestamp: new Date().toISOString(),
-          pageUnload: true,
-          heartbeatType: 'unload'
-        });
-        
-        if (navigator.sendBeacon) {
-          // Create blob with proper content type
-          const blob = new Blob([data], { type: 'application/json' });
-          navigator.sendBeacon('/api/user/heartbeat', blob);
-        }
-      }
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('unload', handleBeforeUnload);
-    window.addEventListener('pagehide', handleBeforeUnload);
-  };
-  
-  const stopHeartbeat = () => {
-    if (heartbeatInterval.current) {
-      console.log('[Auth] Stopping heartbeat');
-      clearInterval(heartbeatInterval.current);
-      heartbeatInterval.current = null;
-    }
-    
-    // Update status to offline when stopping heartbeat
-    if (user) {
-      fetch('/api/user/heartbeat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.id,
-          'x-user-email': user.email || ''
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          userId: user.id,
-          isOnline: false,
-          lastActivity: new Date().toISOString(),
-          heartbeatStopped: true
-        }),
-      }).catch(console.error);
-    }
-  };
+  // The enhanced presence system is now handled automatically by usePresenceHeartbeat hook
+  // This replaces the old heartbeat system with Redis-like TTL-based tracking
 
   const signOut = async () => {
     console.log('[Auth] Starting comprehensive sign out...');
-    
-    // Stop heartbeat first
-    stopHeartbeat();
     
     try {
       // Sign out from Supabase (all sessions)
