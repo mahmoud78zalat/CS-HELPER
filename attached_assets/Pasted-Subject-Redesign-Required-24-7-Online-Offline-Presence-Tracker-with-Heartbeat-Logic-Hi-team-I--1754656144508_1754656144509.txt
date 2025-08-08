@@ -1,0 +1,59 @@
+Subject: Redesign Required — 24/7 Online/Offline Presence Tracker with Heartbeat Logic
+
+Hi team,
+
+I need you to completely rewrite our user presence tracking system. Currently, it only detects admin activity—not agent presence—and needs improvement.
+
+Here’s what I need:
+
+A robust, real-time online/offline tracking solution that works for both agents and admins.
+
+Always-live presence detection (24/7), powered by a heartbeat mechanism.
+
+Research and apply modern industry-standard techniques:
+
+Store presence state in an efficient backend (e.g., Redis key-value store with TTL and automatic expiry), as recommended for scalable presence indicators 
+Medium
+.
+
+Have clients send heartbeat signals at regular intervals (e.g., every 15–30 seconds), marking them offline after missing 2–3 heartbeats 
+Hoverify
+Medium
+.
+
+Avoid overly frequent updates; only change status when transitioning (online → offline or vice versa) to reduce noise and backend load 
+Medium
+.
+
+Consider scalable real-time architectures—Redis for presence, and WebSockets or SSE for pushing updates; ensure heartbeats and reconnection logic for reliability 
+systemdesign.one
+Medium
+peerdh.com
+.
+
+Your tasks:
+
+Design or propose a backend presence service using Redis with TTL-based expiry for automatic offline detection.
+
+Define frontend heartbeat behavior: how often to ping, what payload to send, how to handle network drops and page unloads.
+
+Implement real-time updates to the admin panel (e.g., via WebSockets or SSE) to reflect agent/admin online/offline status changes.
+
+Optimize for scalability and efficiency—minimize unnecessary updates, support thousands of concurrent users if needed.
+
+Please craft the new presence logic, explain your architectural choices, and provide basic pseudocode or implementation outlines for both client and server.
+
+Thanks!
+
+Why This Matters
+Feature	Advantage
+Redis with TTL	Automatically marks users offline when heartbeats stop—handles abrupt disconnects cleanly 
+Medium
+.
+Heartbeat intervals of 15–30 seconds	Balanced accuracy and efficiency; missing a few triggers offline state gracefully 
+Hoverify
+.
+Transition-based updates	Limits redundant status updates only when needed—more scalable 
+Medium
+.
+Real-time push (WebSocket/SSE)	Immediately reflects presence changes in UI without polling 
