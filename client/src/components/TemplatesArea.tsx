@@ -294,7 +294,7 @@ export default function TemplatesArea() {
               </div>
             </div>
             <p className="text-sm lg:text-base text-slate-600 dark:text-slate-400">
-              Click on any template to instantly copy it to your clipboard. Switch language in Customer Info to toggle between English and Arabic templates.
+              Click on any template to instantly copy it to your clipboard. Switch language in Customer Info to see templates in {customerData.language === 'ar' ? 'English' : 'Arabic'}.
             </p>
           </div>
 
