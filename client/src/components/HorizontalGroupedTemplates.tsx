@@ -50,6 +50,7 @@ interface HorizontalGroupedTemplatesProps {
   onPreview?: (template: LiveTemplate) => void;
   onCreateGroup?: () => void;
   onEditGroup?: (group: TemplateGroup) => void;
+  isAdminMode?: boolean; // Explicitly indicate if we're in admin mode
 }
 
 // Sortable Template Item Component (Horizontal Card)
@@ -396,7 +397,8 @@ export default function HorizontalGroupedTemplates({
   onDelete, 
   onPreview,
   onCreateGroup,
-  onEditGroup 
+  onEditGroup,
+  isAdminMode = false
 }: HorizontalGroupedTemplatesProps) {
   const [groupedData, setGroupedData] = useState<TemplateGroup[]>([]);
   const [ungroupedTemplates, setUngroupedTemplates] = useState<LiveTemplate[]>([]);
@@ -676,9 +678,9 @@ export default function HorizontalGroupedTemplates({
         console.log('[DragDrop] New group order:', newGroupOrder.map(g => g.name));
         setGroupedData(newGroupOrder);
         
-        // CRITICAL: ONLY save to backend if we're in Admin Panel context, NEVER from homepage
-        // Homepage drag-drop should be LOCAL ONLY for ALL users
-        if (location?.pathname?.includes('/admin') || location?.pathname?.includes('admin-panel')) {
+        // CRITICAL: ONLY save to backend if we're in Admin Panel context
+        // Check isAdminMode prop to determine context instead of URL path
+        if (isAdminMode) {
           console.log('[DragDrop] Admin Panel context - saving group order to backend');
           saveGroupOrderMutation.mutate(newGroupOrder);
         } else {
@@ -732,17 +734,17 @@ export default function HorizontalGroupedTemplates({
           const newUngrouped = arrayMove(ungroupedTemplates, activeContext.index, overContext.index);
           setUngroupedTemplates(newUngrouped);
           
-          if (isAdmin) {
-            // Admin users: Update the actual database order
+          if (isAdminMode) {
+            // Admin Panel context: Update the actual database order
             const updates = newUngrouped.map((template, index) => ({
               id: template.id,
               stageOrder: index
             }));
             
-            console.log('[HorizontalGroupedTemplates] Admin reordering ungrouped templates:', updates);
+            console.log('[HorizontalGroupedTemplates] Admin Panel - reordering ungrouped templates:', updates);
             reorderTemplates(updates);
           } else {
-            // Non-admin users: Update local personal ordering only
+            // Homepage context: Update local personal ordering only
             const orderedTemplateIds = newUngrouped.map(template => template.id);
             updateLocalBulkOrdering(orderedTemplateIds);
             toast({ 
@@ -760,17 +762,17 @@ export default function HorizontalGroupedTemplates({
             );
             setGroupedData(newGroupedData);
             
-            if (isAdmin) {
-              // Admin users: Update the actual database order
+            if (isAdminMode) {
+              // Admin Panel context: Update the actual database order
               const updates = newTemplates.map((template, index) => ({
                 id: template.id,
                 stageOrder: index
               }));
               
-              console.log('[HorizontalGroupedTemplates] Admin reordering grouped templates:', updates);
+              console.log('[HorizontalGroupedTemplates] Admin Panel - reordering grouped templates:', updates);
               reorderTemplates(updates);
             } else {
-              // Non-admin users: Update local personal ordering only
+              // Homepage context: Update local personal ordering only
               const orderedTemplateIds = newTemplates.map(template => template.id);
               updateLocalBulkOrdering(orderedTemplateIds);
               toast({ 
@@ -789,7 +791,7 @@ export default function HorizontalGroupedTemplates({
       {/* Drag & Drop Help Text and Custom Ordering Controls */}
       <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
         <span className="text-sm text-blue-700 dark:text-blue-300">
-          💡 {isAdmin ? 'Admin: Drag to change global order' : 'Drag for personal reordering'} | Drag group headers to reorder folders | Drop templates on group headers to move them
+          💡 {isAdminMode ? 'Admin: Drag to change global order' : 'Drag for personal reordering'} | Drag group headers to reorder folders | Drop templates on group headers to move them
         </span>
         
         {isReordering && (

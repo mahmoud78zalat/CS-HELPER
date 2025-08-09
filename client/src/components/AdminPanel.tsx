@@ -2157,6 +2157,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                         setEditingGroup(group);
                         setShowGroupManager(true);
                       }}
+                      isAdminMode={true}
                     />
                   </div>
                 )

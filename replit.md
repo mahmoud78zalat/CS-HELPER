@@ -47,6 +47,11 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Admin Panel remains the ONLY authoritative place to modify global template and group ordering
 - Reset button now appears for all users during drag-drop mode and when custom ordering is active
 - Completely eliminated backend API calls from homepage reordering to ensure strict local-only behavior
+- **MAJOR ADMIN/PERSONAL ORDERING SEPARATION (January 2025)**: Fixed crossover between personal and admin ordering systems
+- Added explicit `isAdminMode` prop to `HorizontalGroupedTemplates` component to distinguish admin panel operations from homepage operations
+- Resolved issue where admin panel modal was incorrectly triggering personal ordering logic instead of admin ordering logic
+- Ensured admin operations always save to backend database while personal operations remain local-only
+- Updated ordering logic to properly detect admin panel context regardless of URL path
 - **MAJOR PRESENCE SYSTEM REDESIGN (January 2025)**: Implemented enterprise-grade 24/7 online/offline presence tracker with heartbeat logic
 - Created Redis-like TTL-based in-memory presence storage system for scalable real-time tracking
 - Built intelligent WebSocket presence manager with automatic reconnection and ping/pong health checks
