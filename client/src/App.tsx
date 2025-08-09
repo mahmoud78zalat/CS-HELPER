@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CustomerDataProvider } from "@/context/CustomerDataContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AdminModalProvider } from "@/contexts/AdminModalContext";
 import { useAuth } from "@/hooks/useAuth";
 // Enhanced presence system is now integrated in useAuth hook
 import Login from "@/pages/login";
@@ -148,12 +149,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <CustomerDataProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </CustomerDataProvider>
+        <AdminModalProvider>
+          <CustomerDataProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </CustomerDataProvider>
+        </AdminModalProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

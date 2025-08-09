@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useUnifiedTemplateReordering } from "@/hooks/useUnifiedTemplateReordering";
 import { useLocalTemplateOrdering } from "@/hooks/useLocalTemplateOrdering";
+import { useTemplateOrdering } from "@/hooks/useTemplateOrdering";
 import { getGenreColor, getCategoryColor, getGenreBadgeClasses, getCategoryBadgeClasses } from "@/lib/templateColors";
 
 interface LiveTemplate {
@@ -407,9 +408,10 @@ export default function HorizontalGroupedTemplates({
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [location] = useLocation();
-  const { reorderTemplates, isReordering } = useUnifiedTemplateReordering('live-reply-templates');
+  // Use smart template ordering hook that detects admin context automatically
+  const { reorderTemplates, isReordering } = useTemplateOrdering();
   
-  // Import local ordering system for non-admin users
+  // Import local ordering system for backward compatibility
   const { 
     updateBulkOrdering: updateLocalBulkOrdering,
     updateBulkGroupOrdering
@@ -734,24 +736,10 @@ export default function HorizontalGroupedTemplates({
           const newUngrouped = arrayMove(ungroupedTemplates, activeContext.index, overContext.index);
           setUngroupedTemplates(newUngrouped);
           
-          if (isAdminMode) {
-            // Admin Panel context: Update the actual database order
-            const updates = newUngrouped.map((template, index) => ({
-              id: template.id,
-              stageOrder: index
-            }));
-            
-            console.log('[HorizontalGroupedTemplates] Admin Panel - reordering ungrouped templates:', updates);
-            reorderTemplates(updates);
-          } else {
-            // Homepage context: Update local personal ordering only
-            const orderedTemplateIds = newUngrouped.map(template => template.id);
-            updateLocalBulkOrdering(orderedTemplateIds);
-            toast({ 
-              title: "Personal template order updated",
-              description: "Templates reordered for your personal view only" 
-            });
-          }
+          // Smart reordering: automatically detects admin context and calls appropriate API
+          const orderedTemplateIds = newUngrouped.map(template => template.id);
+          console.log('[HorizontalGroupedTemplates] Smart reordering ungrouped templates:', orderedTemplateIds);
+          reorderTemplates(orderedTemplateIds);
         } else {
           // Grouped templates reordering
           const group = groupedData.find(g => g.id === activeContext.groupId);
@@ -762,24 +750,10 @@ export default function HorizontalGroupedTemplates({
             );
             setGroupedData(newGroupedData);
             
-            if (isAdminMode) {
-              // Admin Panel context: Update the actual database order
-              const updates = newTemplates.map((template, index) => ({
-                id: template.id,
-                stageOrder: index
-              }));
-              
-              console.log('[HorizontalGroupedTemplates] Admin Panel - reordering grouped templates:', updates);
-              reorderTemplates(updates);
-            } else {
-              // Homepage context: Update local personal ordering only
-              const orderedTemplateIds = newTemplates.map(template => template.id);
-              updateLocalBulkOrdering(orderedTemplateIds);
-              toast({ 
-                title: "Personal template order updated",
-                description: `Templates reordered in ${group.name} for your personal view only` 
-              });
-            }
+            // Smart reordering: automatically detects admin context and calls appropriate API
+            const orderedTemplateIds = newTemplates.map(template => template.id);
+            console.log('[HorizontalGroupedTemplates] Smart reordering grouped templates:', orderedTemplateIds);
+            reorderTemplates(orderedTemplateIds);
           }
         }
       }
@@ -791,7 +765,7 @@ export default function HorizontalGroupedTemplates({
       {/* Drag & Drop Help Text and Custom Ordering Controls */}
       <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
         <span className="text-sm text-blue-700 dark:text-blue-300">
-          💡 {isAdminMode ? 'Admin: Drag to change global order' : 'Drag for personal reordering'} | Drag group headers to reorder folders | Drop templates on group headers to move them
+          💡 Drag to reorder (auto-detects admin vs personal context) | Drag group headers to reorder folders | Drop templates on group headers to move them
         </span>
         
         {isReordering && (

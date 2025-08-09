@@ -10,12 +10,13 @@ import PersonalNotes from "@/components/PersonalNotes";
 
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminModal } from "@/contexts/AdminModalContext";
 
 export default function Home() {
   const { user } = useAuth();
+  const { isAdminModalOpen, openAdminModal, closeAdminModal } = useAdminModal();
   const [showCheckOrder, setShowCheckOrder] = useState(false);
   const [showEmailComposer, setShowEmailComposer] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
   const [showPersonalNotes, setShowPersonalNotes] = useState(false);
@@ -26,8 +27,8 @@ export default function Home() {
   // Reset admin panel state when user changes to prevent admin panel from persisting across user sessions
   useEffect(() => {
     console.log('[Home] User changed, resetting admin panel state');
-    setShowAdminPanel(false);
-  }, [user?.id]);
+    closeAdminModal();
+  }, [user?.id, closeAdminModal]);
 
 
 
@@ -35,7 +36,7 @@ export default function Home() {
     <Layout
       onCheckOrder={() => setShowCheckOrder(true)}
       onEmailComposer={() => setShowEmailComposer(true)}
-      onAdminPanel={() => setShowAdminPanel(true)}
+      onAdminPanel={() => openAdminModal()}
       onAbout={() => setShowAbout(true)}
       onFAQ={() => setShowFAQ(true)}
       onOpenPersonalNotes={() => setShowPersonalNotes(true)}
@@ -52,8 +53,8 @@ export default function Home() {
         <EmailComposerModal onClose={() => setShowEmailComposer(false)} />
       )}
       
-      {showAdminPanel && (
-        <AdminPanel onClose={() => setShowAdminPanel(false)} />
+      {isAdminModalOpen && (
+        <AdminPanel onClose={() => closeAdminModal()} />
       )}
       
       {showAbout && (
