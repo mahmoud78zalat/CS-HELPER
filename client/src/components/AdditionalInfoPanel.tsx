@@ -9,17 +9,6 @@ export default function AdditionalInfoPanel() {
     <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
       <div className="space-y-3">
         <div>
-          <Label className="text-xs font-medium text-slate-600 mb-1">Item Name</Label>
-          <Input
-            type="text"
-            className="w-full text-sm"
-            placeholder="Product name"
-            value={customerData.item_name || ''}
-            onChange={(e) => updateCustomerData('item_name', e.target.value)}
-          />
-        </div>
-        
-        <div>
           <Label className="text-xs font-medium text-slate-600 mb-1">Delivery Date</Label>
           <Input
             type="date"
@@ -30,13 +19,13 @@ export default function AdditionalInfoPanel() {
         </div>
         
         <div>
-          <Label className="text-xs font-medium text-slate-600 mb-1">Waiting Time</Label>
+          <Label className="text-xs font-medium text-slate-600 mb-1">OTP</Label>
           <Input
             type="text"
             className="w-full text-sm"
-            placeholder="2 business days"
-            value={customerData.waiting_time || ''}
-            onChange={(e) => updateCustomerData('waiting_time', e.target.value)}
+            placeholder="OTP / Validation Code"
+            value={customerData.otp || ''}
+            onChange={(e) => updateCustomerData('otp', e.target.value)}
           />
         </div>
 
