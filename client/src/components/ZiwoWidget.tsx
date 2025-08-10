@@ -12,14 +12,14 @@ interface ZiwoWidgetProps {
 export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'https://app.ziwo.io/auth/account' }: ZiwoWidgetProps) {
   const [isMaximized, setIsMaximized] = useState(false);
 
-  if (!isOpen || !isVisible) return null;
+  if (!isOpen) return null;
 
   return (
     <div className={`fixed right-4 top-20 z-50 bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-slate-200 dark:border-gray-700 transition-all duration-300 ${
       isMaximized 
         ? 'w-[95vw] h-[85vh] left-[2.5vw]' 
         : 'w-[420px] h-[600px]'
-    }`}>
+    } ${!isVisible ? 'invisible opacity-0 pointer-events-none' : 'visible opacity-100'}`}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/30 border-b border-slate-200 dark:border-gray-700 rounded-t-lg">
         <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
