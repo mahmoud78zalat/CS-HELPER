@@ -31,27 +31,43 @@
         position: fixed !important;
       }
       
-      /* CRITICAL FIX: Ensure modal overlays don't block Chatbase widget */
-      [data-radix-portal] {
+      /* PROVEN FIX: Modal overlay pointer-events solution */
+      .fixed.inset-0 {
         pointer-events: none !important;
       }
       
-      [data-radix-portal] > * {
+      .fixed.inset-0 > * {
         pointer-events: auto !important;
       }
       
-      /* Ensure modal backdrops don't interfere with widgets */
-      [data-state="open"][data-radix-collection-item],
-      [data-state="open"] + [data-radix-portal],
-      .fixed.inset-0.z-50 {
+      /* Target all possible modal overlay patterns */
+      [data-radix-portal] .fixed.inset-0,
+      [role="dialog"] + .fixed.inset-0,
+      .modal-overlay,
+      .backdrop,
+      .overlay {
         pointer-events: none !important;
       }
       
-      /* Re-enable pointer events for modal content only */
-      [data-state="open"][data-radix-collection-item] > *,
-      [data-state="open"] + [data-radix-portal] > *,
-      .fixed.inset-0.z-50 > * {
+      /* Re-enable for modal content */
+      [data-radix-portal] .fixed.inset-0 > *,
+      [role="dialog"] + .fixed.inset-0 > *,
+      .modal-overlay > *,
+      .backdrop > *,
+      .overlay > * {
         pointer-events: auto !important;
+      }
+      
+      /* Break stacking context for Chatbase widget */
+      div[id*="chatbase"], 
+      div[class*="chatbase"] {
+        position: static !important;
+      }
+      
+      /* Force Chatbase iframe to top level */
+      iframe[src*="chatbase.co"] {
+        position: fixed !important;
+        z-index: 2147483647 !important;
       }
     </style>
   </head>
@@ -156,41 +172,49 @@
         ];
         
         const ensureWidgetZIndex = () => {
+          // PROVEN SOLUTION: Disable pointer events on modal overlays
+          const modalOverlays = document.querySelectorAll(
+            '.fixed.inset-0, [data-radix-portal] .fixed.inset-0, .modal-overlay, .backdrop, .overlay'
+          );
+          modalOverlays.forEach(overlay => {
+            overlay.style.pointerEvents = 'none';
+          });
+          
+          // Find and fix Chatbase widget positioning
           chatbaseSelectors.forEach(selector => {
             const elements = document.querySelectorAll(selector);
             elements.forEach(element => {
               if (element) {
-                element.style.zIndex = '2147483647';
+                // Break out of stacking context
                 element.style.position = 'fixed';
+                element.style.zIndex = '2147483647';
                 element.style.pointerEvents = 'auto';
                 
-                // Also check parent containers
+                // If it's an iframe, ensure it's at document level
+                if (element.tagName === 'IFRAME') {
+                  element.style.position = 'fixed';
+                  element.style.zIndex = '2147483647';
+                }
+                
+                // Break parent stacking contexts
                 let parent = element.parentElement;
                 while (parent && parent !== document.body) {
-                  if (parent.style.zIndex && parseInt(parent.style.zIndex) < 2147483647) {
-                    parent.style.zIndex = '2147483647';
+                  const computed = window.getComputedStyle(parent);
+                  // Remove positioning that creates stacking context
+                  if (computed.position !== 'static') {
+                    parent.style.position = 'static';
                   }
-                  parent.style.pointerEvents = 'auto';
                   parent = parent.parentElement;
                 }
               }
             });
           });
           
-          // Additional aggressive fix for modal overlays
-          const modalOverlays = document.querySelectorAll(
-            '[data-radix-portal], [data-state="open"], .fixed.inset-0, .backdrop, .overlay'
-          );
-          modalOverlays.forEach(overlay => {
-            if (overlay && overlay.style.zIndex && parseInt(overlay.style.zIndex) >= 2147483647) {
-              overlay.style.pointerEvents = 'none';
-            }
-          });
-          
-          // Force enable pointer events on all chatbase-related elements
+          // Force all chatbase elements to be clickable
           document.querySelectorAll('*[id*="chatbase"], *[class*="chatbase"], iframe[src*="chatbase"]').forEach(el => {
             el.style.pointerEvents = 'auto';
             el.style.zIndex = '2147483647';
+            el.style.position = 'fixed';
           });
         };
         
@@ -215,9 +239,36 @@
           subtree: true
         });
         
-        // Ultimate fix: Force click events through modal overlays
+        // Dynamic modal detection and pointer-events fix
+        const handleModalOverlays = () => {
+          // Apply pointer-events: none to all modal overlays immediately
+          const overlays = document.querySelectorAll('.fixed.inset-0, [data-radix-portal] .fixed.inset-0');
+          overlays.forEach(overlay => {
+            overlay.style.pointerEvents = 'none';
+          });
+          
+          // Ensure modal content remains clickable
+          const modalContent = document.querySelectorAll('.fixed.inset-0 > *, [data-radix-portal] .fixed.inset-0 > *');
+          modalContent.forEach(content => {
+            content.style.pointerEvents = 'auto';
+          });
+        };
+        
+        // Apply fixes on every DOM change
+        const modalObserver = new MutationObserver(() => {
+          handleModalOverlays();
+          ensureWidgetZIndex();
+        });
+        
+        modalObserver.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['class', 'style', 'data-state']
+        });
+        
+        // Force click events through overlays for Chatbase
         document.addEventListener('click', function(e) {
-          // Check if click was blocked by an overlay
           const clickedElement = e.target;
           const isChatbaseElement = chatbaseSelectors.some(selector => {
             try {
@@ -228,11 +279,23 @@
           });
           
           if (isChatbaseElement) {
-            // Ensure this click goes through
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+            // Temporarily disable all modal overlays during click
+            const overlays = document.querySelectorAll('.fixed.inset-0');
+            overlays.forEach(overlay => {
+              overlay.style.pointerEvents = 'none';
+            });
+            
+            // Re-enable after click
+            setTimeout(() => {
+              overlays.forEach(overlay => {
+                overlay.style.pointerEvents = 'none'; // Keep disabled for widgets
+              });
+            }, 10);
           }
         }, true);
+        
+        // Initial application
+        handleModalOverlays();
         
         console.log('Enhanced Chatbase modal overlay protection activated');
       }
