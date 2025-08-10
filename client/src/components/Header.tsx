@@ -2,9 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/context/ThemeContext";
-import { Headphones, Mail, Settings, Info, LogOut, Edit3, Sun, Moon, HelpCircle } from "lucide-react";
+import { Headphones, Mail, Settings, Info, LogOut, Edit3, Sun, Moon, HelpCircle, Phone } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import ZiwoWidget from "./ZiwoWidget";
 
 interface HeaderProps {
   onEmailComposer: () => void;
@@ -20,6 +21,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
   const [isEditingName, setIsEditingName] = useState(false);
   const [siteName, setSiteName] = useState('Customer Service Platform');
   const [hasNewFAQ, setHasNewFAQ] = useState(false);
+  const [isZiwoOpen, setIsZiwoOpen] = useState(false);
 
   // Fetch site content from Supabase
   const { data: siteContent } = useQuery({
@@ -218,6 +220,10 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
     onFAQ();
   };
 
+  const handleZiwoClick = () => {
+    setIsZiwoOpen(true);
+  };
+
   // Check if user is admin
   const isAdmin = user?.role === 'admin' || 
                   user?.email === 'mahmoud78zalat@gmail.com';
@@ -301,6 +307,16 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
               </Button>
 
               <Button 
+                onClick={handleZiwoClick}
+                size="sm"
+                variant="outline"
+                className="bg-emerald-100 dark:bg-emerald-700 text-emerald-700 dark:text-emerald-200 p-2 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-600 transition-colors duration-200"
+                title="Open Ziwo Support"
+              >
+                <Phone className="w-4 h-4" />
+              </Button>
+
+              <Button 
                 onClick={onAbout}
                 size="sm"
                 variant="outline"
@@ -358,6 +374,15 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
               </Button>
 
               <Button 
+                onClick={handleZiwoClick}
+                variant="outline"
+                className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-4 py-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800/40 transition-colors duration-200"
+              >
+                <Phone className="w-4 h-4 mr-2" />
+                Ziwo Support
+              </Button>
+
+              <Button 
                 onClick={onAbout}
                 variant="outline"
                 className="px-4 py-2 rounded-lg transition-colors duration-200"
@@ -401,6 +426,13 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
           </div>
         </div>
       </div>
+      
+      {/* Ziwo Widget */}
+      <ZiwoWidget 
+        isOpen={isZiwoOpen} 
+        onClose={() => setIsZiwoOpen(false)}
+        ziwoUrl="https://demo.ziwo.io/en-us/"
+      />
     </header>
   );
 }
