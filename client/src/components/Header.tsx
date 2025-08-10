@@ -22,6 +22,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
   const [siteName, setSiteName] = useState('Customer Service Platform');
   const [hasNewFAQ, setHasNewFAQ] = useState(false);
   const [isZiwoOpen, setIsZiwoOpen] = useState(false);
+  const [isZiwoVisible, setIsZiwoVisible] = useState(false);
 
   // Fetch site content from Supabase
   const { data: siteContent } = useQuery({
@@ -221,7 +222,14 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
   };
 
   const handleZiwoClick = () => {
-    setIsZiwoOpen(!isZiwoOpen);
+    if (!isZiwoOpen) {
+      // First time opening - create the session
+      setIsZiwoOpen(true);
+      setIsZiwoVisible(true);
+    } else {
+      // Already opened - just toggle visibility
+      setIsZiwoVisible(!isZiwoVisible);
+    }
   };
 
   // Check if user is admin
@@ -430,7 +438,11 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
       {/* Ziwo Widget */}
       <ZiwoWidget 
         isOpen={isZiwoOpen} 
-        onToggle={() => setIsZiwoOpen(!isZiwoOpen)}
+        isVisible={isZiwoVisible}
+        onClose={() => {
+          setIsZiwoOpen(false);
+          setIsZiwoVisible(false);
+        }}
         ziwoUrl="https://app.ziwo.io/auth/account"
       />
     </header>

@@ -4,14 +4,15 @@ import { Phone, X, Maximize2 } from "lucide-react";
 
 interface ZiwoWidgetProps {
   isOpen: boolean;
-  onToggle: () => void;
+  isVisible: boolean;
+  onClose: () => void;
   ziwoUrl?: string;
 }
 
-export default function ZiwoWidget({ isOpen, onToggle, ziwoUrl = 'https://app.ziwo.io/auth/account' }: ZiwoWidgetProps) {
+export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'https://app.ziwo.io/auth/account' }: ZiwoWidgetProps) {
   const [isMaximized, setIsMaximized] = useState(false);
 
-  if (!isOpen) return null;
+  if (!isOpen || !isVisible) return null;
 
   return (
     <div className={`fixed right-4 top-20 z-50 bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-slate-200 dark:border-gray-700 transition-all duration-300 ${
@@ -36,7 +37,7 @@ export default function ZiwoWidget({ isOpen, onToggle, ziwoUrl = 'https://app.zi
             <Maximize2 className="w-4 h-4" />
           </Button>
           <Button
-            onClick={onToggle}
+            onClick={onClose}
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
