@@ -59,6 +59,13 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Replaced basic presence monitoring with advanced system featuring 15-30 second heartbeat intervals and 90-second TTL expiration
 - Added comprehensive presence API endpoints for heartbeat processing, status queries, and admin statistics
 - Integrated graceful page unload handling and battery-efficient tracking when tabs are hidden
+- **CRITICAL WIDGET INTERACTION FIX (January 2025)**: Fully resolved draggable support widgets above modal overlays
+- Implemented dual-architecture widget support: React portal approach for Ziwo widget, CSS + JavaScript hybrid for external Chatbase script
+- Added comprehensive CSS targeting 12+ Chatbase container patterns with maximum z-index enforcement
+- Created intelligent MutationObserver system for dynamic modal detection and real-time overlay protection
+- Enhanced pointer events management with aggressive modal backdrop fixes and event propagation control
+- Added ultimate click event force-through mechanism ensuring widget interaction works regardless of modal state
+- Both Ziwo and Chatbase widgets now maintain full functionality and user interaction above any modal overlay
 
 ## System Architecture
 

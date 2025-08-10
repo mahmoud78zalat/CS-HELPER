@@ -30,6 +30,29 @@
         z-index: 2147483647 !important;
         position: fixed !important;
       }
+      
+      /* CRITICAL FIX: Ensure modal overlays don't block Chatbase widget */
+      [data-radix-portal] {
+        pointer-events: none !important;
+      }
+      
+      [data-radix-portal] > * {
+        pointer-events: auto !important;
+      }
+      
+      /* Ensure modal backdrops don't interfere with widgets */
+      [data-state="open"][data-radix-collection-item],
+      [data-state="open"] + [data-radix-portal],
+      .fixed.inset-0.z-50 {
+        pointer-events: none !important;
+      }
+      
+      /* Re-enable pointer events for modal content only */
+      [data-state="open"][data-radix-collection-item] > *,
+      [data-state="open"] + [data-radix-portal] > *,
+      .fixed.inset-0.z-50 > * {
+        pointer-events: auto !important;
+      }
     </style>
   </head>
   <body>
@@ -139,6 +162,7 @@
               if (element) {
                 element.style.zIndex = '2147483647';
                 element.style.position = 'fixed';
+                element.style.pointerEvents = 'auto';
                 
                 // Also check parent containers
                 let parent = element.parentElement;
@@ -146,10 +170,27 @@
                   if (parent.style.zIndex && parseInt(parent.style.zIndex) < 2147483647) {
                     parent.style.zIndex = '2147483647';
                   }
+                  parent.style.pointerEvents = 'auto';
                   parent = parent.parentElement;
                 }
               }
             });
+          });
+          
+          // Additional aggressive fix for modal overlays
+          const modalOverlays = document.querySelectorAll(
+            '[data-radix-portal], [data-state="open"], .fixed.inset-0, .backdrop, .overlay'
+          );
+          modalOverlays.forEach(overlay => {
+            if (overlay && overlay.style.zIndex && parseInt(overlay.style.zIndex) >= 2147483647) {
+              overlay.style.pointerEvents = 'none';
+            }
+          });
+          
+          // Force enable pointer events on all chatbase-related elements
+          document.querySelectorAll('*[id*="chatbase"], *[class*="chatbase"], iframe[src*="chatbase"]').forEach(el => {
+            el.style.pointerEvents = 'auto';
+            el.style.zIndex = '2147483647';
           });
         };
         
@@ -173,6 +214,25 @@
           childList: true,
           subtree: true
         });
+        
+        // Ultimate fix: Force click events through modal overlays
+        document.addEventListener('click', function(e) {
+          // Check if click was blocked by an overlay
+          const clickedElement = e.target;
+          const isChatbaseElement = chatbaseSelectors.some(selector => {
+            try {
+              return clickedElement.matches && clickedElement.matches(selector);
+            } catch (err) {
+              return false;
+            }
+          });
+          
+          if (isChatbaseElement) {
+            // Ensure this click goes through
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+          }
+        }, true);
         
         console.log('Enhanced Chatbase modal overlay protection activated');
       }
