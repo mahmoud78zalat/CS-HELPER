@@ -4,6 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <title>Customer Service Helper</title>
+    <style>
+      /* Ensure Chatbase widget appears above all modals and overlays */
+      .chatbase-widget,
+      #chatbase-widget,
+      [data-chatbase="widget"],
+      [data-widget="chatbase"],
+      iframe[src*="chatbase"],
+      iframe[src*="embed.min.js"],
+      .chatbase-chat-widget,
+      div[style*="chatbase"],
+      /* Target common Chatbase container patterns */
+      div > iframe[src*="chatbase.co"],
+      div[id*="chatbase"],
+      div[class*="chatbase"],
+      /* Ensure all Chatbase-related elements have maximum z-index */
+      *[id*="rG3h170PKdOsKKTC078sk"] {
+        z-index: 2147483647 !important;
+        position: fixed !important;
+      }
+      
+      /* Additional fallback for any chatbase iframe or container */
+      body > div:has(iframe[src*="chatbase.co"]),
+      body > iframe[src*="chatbase.co"] {
+        z-index: 2147483647 !important;
+        position: fixed !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
@@ -49,6 +76,9 @@
                   if (window.chatbase) {
                     window.chatbase("setUserId", currentUser.id, hash);
                     console.log('Chatbase loaded with verified user ID:', currentUser.id);
+                    
+                    // Ensure widget stays above modals with dynamic detection
+                    ensureChatbaseAboveModals();
                   }
                 }, 1000);
               } catch (error) {
@@ -84,6 +114,68 @@
       
       // Initial check
       setTimeout(loadChatbaseForAuthenticated, 1000);
+      
+      // Enhanced modal detection and widget overlay management
+      function ensureChatbaseAboveModals() {
+        const chatbaseSelectors = [
+          '.chatbase-widget',
+          '#chatbase-widget', 
+          '[data-chatbase="widget"]',
+          '[data-widget="chatbase"]',
+          'iframe[src*="chatbase"]',
+          'iframe[src*="embed.min.js"]',
+          '.chatbase-chat-widget',
+          'div[style*="chatbase"]',
+          'div > iframe[src*="chatbase.co"]',
+          'div[id*="chatbase"]',
+          'div[class*="chatbase"]',
+          '*[id*="rG3h170PKdOsKKTC078sk"]'
+        ];
+        
+        const ensureWidgetZIndex = () => {
+          chatbaseSelectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+              if (element) {
+                element.style.zIndex = '2147483647';
+                element.style.position = 'fixed';
+                
+                // Also check parent containers
+                let parent = element.parentElement;
+                while (parent && parent !== document.body) {
+                  if (parent.style.zIndex && parseInt(parent.style.zIndex) < 2147483647) {
+                    parent.style.zIndex = '2147483647';
+                  }
+                  parent = parent.parentElement;
+                }
+              }
+            });
+          });
+        };
+        
+        // Run immediately and on DOM changes
+        ensureWidgetZIndex();
+        
+        // Watch for new elements being added (including modal overlays)
+        const observer = new MutationObserver((mutations) => {
+          let shouldCheck = false;
+          mutations.forEach(mutation => {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+              shouldCheck = true;
+            }
+          });
+          if (shouldCheck) {
+            setTimeout(ensureWidgetZIndex, 100);
+          }
+        });
+        
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+        
+        console.log('Enhanced Chatbase modal overlay protection activated');
+      }
     </script>
     
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
