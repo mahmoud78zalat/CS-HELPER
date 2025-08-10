@@ -15,7 +15,7 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
   if (!isOpen) return null;
 
   return (
-    <div className={`fixed right-4 top-20 z-50 bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-slate-200 dark:border-gray-700 transition-all duration-300 ${
+    <div className={`fixed right-4 top-20 z-[9999] bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-slate-200 dark:border-gray-700 transition-all duration-300 ${
       isMaximized 
         ? 'w-[95vw] h-[85vh] left-[2.5vw]' 
         : 'w-[420px] h-[600px]'
