@@ -19,6 +19,43 @@ const AlertDialogOverlay = React.forwardRef<
       "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
+    style={{
+      pointerEvents: 'auto',
+      ...props.style
+    }}
+    onPointerDown={(e) => {
+      const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
+      const hasHighZIndex = elementsAtPoint.some(el => {
+        const style = window.getComputedStyle(el);
+        const zIndex = parseInt(style.zIndex) || 0;
+        return zIndex > 1000000;
+      });
+      
+      if (hasHighZIndex) return;
+      props.onPointerDown?.(e);
+    }}
+    onPointerMove={(e) => {
+      const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
+      const hasHighZIndex = elementsAtPoint.some(el => {
+        const style = window.getComputedStyle(el);
+        const zIndex = parseInt(style.zIndex) || 0;
+        return zIndex > 1000000;
+      });
+      
+      if (hasHighZIndex) return;
+      props.onPointerMove?.(e);
+    }}
+    onMouseDown={(e) => {
+      const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
+      const hasHighZIndex = elementsAtPoint.some(el => {
+        const style = window.getComputedStyle(el);
+        const zIndex = parseInt(style.zIndex) || 0;
+        return zIndex > 1000000;
+      });
+      
+      if (hasHighZIndex) return;
+      props.onMouseDown?.(e);
+    }}
     {...props}
     ref={ref}
   />

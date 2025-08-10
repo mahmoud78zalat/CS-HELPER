@@ -78,7 +78,36 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
         top: isMaximized ? '7.5vh' : `${position.y}px`,
         cursor: isDragging ? 'grabbing' : 'default',
         transform: isDragging ? 'scale(1.02)' : 'scale(1)', // Slight scale during drag
-        transition: isDragging ? 'none' : 'all 0.3s ease'
+        transition: isDragging ? 'none' : 'all 0.3s ease',
+        pointerEvents: 'auto' // Ensure the widget always receives pointer events
+      }}
+      // Ensure the widget and its content remain fully interactive
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        // Mark this element as having high z-index for overlay detection
+        (e.currentTarget as HTMLElement).setAttribute('data-high-zindex', 'true');
+      }}
+      onPointerMove={(e) => {
+        e.stopPropagation();
+      }}
+      onPointerUp={(e) => {
+        e.stopPropagation();
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        // For dragging functionality, we need to allow mouse events through the header
+        if (e.target !== e.currentTarget) {
+          return; // Let child elements (like the header) handle their own events
+        }
+      }}
+      onMouseMove={(e) => {
+        e.stopPropagation();
+      }}
+      onMouseUp={(e) => {
+        e.stopPropagation();
       }}
     >
       {/* Header */}

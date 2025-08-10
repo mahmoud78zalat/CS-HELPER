@@ -24,6 +24,56 @@ const DialogOverlay = React.forwardRef<
       "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
+    style={{
+      pointerEvents: 'auto',
+      ...props.style
+    }}
+    onPointerDown={(e) => {
+      // Check if the click is over a widget with high z-index (ZiwoWidget)
+      const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
+      const hasHighZIndex = elementsAtPoint.some(el => {
+        const style = window.getComputedStyle(el);
+        const zIndex = parseInt(style.zIndex) || 0;
+        return zIndex > 1000000;
+      });
+      
+      if (hasHighZIndex) {
+        // Don't handle this event, let it pass through to the high z-index element
+        return;
+      }
+      
+      props.onPointerDown?.(e);
+    }}
+    onPointerMove={(e) => {
+      // Check for high z-index elements during mouse move (for dragging)
+      const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
+      const hasHighZIndex = elementsAtPoint.some(el => {
+        const style = window.getComputedStyle(el);
+        const zIndex = parseInt(style.zIndex) || 0;
+        return zIndex > 1000000;
+      });
+      
+      if (hasHighZIndex) {
+        return;
+      }
+      
+      props.onPointerMove?.(e);
+    }}
+    onMouseDown={(e) => {
+      // Check for high z-index elements
+      const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
+      const hasHighZIndex = elementsAtPoint.some(el => {
+        const style = window.getComputedStyle(el);
+        const zIndex = parseInt(style.zIndex) || 0;
+        return zIndex > 1000000;
+      });
+      
+      if (hasHighZIndex) {
+        return;
+      }
+      
+      props.onMouseDown?.(e);
+    }}
     {...props}
   />
 ))
