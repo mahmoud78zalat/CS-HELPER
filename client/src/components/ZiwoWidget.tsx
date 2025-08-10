@@ -17,9 +17,12 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const widgetRef = useRef<HTMLDivElement>(null);
 
-  // Optimized mouse move with requestAnimationFrame for smooth dragging
-  const throttledMouseMove = useCallback((e: MouseEvent) => {
+  // Smooth mouse move with requestAnimationFrame for optimal performance
+  const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || isMaximized) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
     
     const newX = e.clientX - dragStart.x;
     const newY = e.clientY - dragStart.y;
@@ -36,30 +39,83 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
     });
   }, [isDragging, dragStart, isMaximized]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (isMaximized) return;
+  // Pointer events for better touch device support
+  const handlePointerMove = useCallback((e: PointerEvent) => {
+    if (!isDragging || isMaximized) return;
+    
     e.preventDefault();
+    e.stopPropagation();
+    
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    
+    const maxX = window.innerWidth - 420;
+    const maxY = window.innerHeight - 600;
+    
+    requestAnimationFrame(() => {
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      });
+    });
+  }, [isDragging, dragStart, isMaximized]);
+
+  const handleMouseUp = useCallback((e?: MouseEvent | PointerEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    setIsDragging(false);
+    
+    // Clean up all event listeners
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    document.removeEventListener('mouseleave', handleMouseUp);
+    document.removeEventListener('pointermove', handlePointerMove);
+    document.removeEventListener('pointerup', handlePointerUp);
+    document.removeEventListener('pointercancel', handlePointerUp);
+  }, [handleMouseMove, handlePointerMove]);
+
+  const handlePointerUp = useCallback((e: PointerEvent) => {
+    handleMouseUp(e);
+  }, [handleMouseUp]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (isMaximized) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
     setIsDragging(true);
     setDragStart({
       x: e.clientX - position.x,
       y: e.clientY - position.y
     });
-  };
+    
+    // Immediately add global listeners
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseleave', handleMouseUp);
+    
+    // Also listen for pointer events to handle touch devices and prevent conflicts
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+    document.addEventListener('pointercancel', handlePointerUp);
+  }, [position.x, position.y, isMaximized, handleMouseMove, handleMouseUp, handlePointerMove, handlePointerUp]);
 
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
+  // Clean up listeners on unmount or when dragging state changes
   useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', throttledMouseMove, { passive: true });
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', throttledMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, throttledMouseMove, handleMouseUp]);
+    return () => {
+      // Cleanup on unmount
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseleave', handleMouseUp);
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+      document.removeEventListener('pointercancel', handlePointerUp);
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -81,39 +137,20 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
         transition: isDragging ? 'none' : 'all 0.3s ease',
         pointerEvents: 'auto' // Ensure the widget always receives pointer events
       }}
-      // Ensure the widget and its content remain fully interactive
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        // Mark this element as having high z-index for overlay detection
-        (e.currentTarget as HTMLElement).setAttribute('data-high-zindex', 'true');
-      }}
-      onPointerMove={(e) => {
-        e.stopPropagation();
-      }}
-      onPointerUp={(e) => {
-        e.stopPropagation();
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-      }}
-      onMouseDown={(e) => {
-        e.stopPropagation();
-        // For dragging functionality, we need to allow mouse events through the header
-        if (e.target !== e.currentTarget) {
-          return; // Let child elements (like the header) handle their own events
-        }
-      }}
-      onMouseMove={(e) => {
-        e.stopPropagation();
-      }}
-      onMouseUp={(e) => {
-        e.stopPropagation();
-      }}
+      // Ensure the widget stops propagation to remain interactive over modals
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      onPointerMove={(e) => e.stopPropagation()}
+      onPointerUp={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div 
         className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/30 border-b border-slate-200 dark:border-gray-700 rounded-t-lg cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          handleMouseDown(e as any);
+        }}
         style={{ userSelect: 'none' }}
       >
         <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
