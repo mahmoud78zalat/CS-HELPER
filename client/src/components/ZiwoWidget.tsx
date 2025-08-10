@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from "@/components/ui/button";
 import { Phone, X, Maximize2, Move } from "lucide-react";
 
@@ -11,21 +12,13 @@ interface ZiwoWidgetProps {
 
 export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'https://app.ziwo.io/auth/account' }: ZiwoWidgetProps) {
   const [isMaximized, setIsMaximized] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: window.innerWidth - 440, y: 80 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const widgetRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (isMaximized) return;
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    });
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
+  // Optimized mouse move with requestAnimationFrame for smooth dragging
+  const throttledMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || isMaximized) return;
     
     const newX = e.clientX - dragStart.x;
@@ -35,48 +28,64 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
     const maxX = window.innerWidth - 420;
     const maxY = window.innerHeight - 600;
     
-    setPosition({
-      x: Math.max(0, Math.min(newX, maxX)),
-      y: Math.max(0, Math.min(newY, maxY))
+    requestAnimationFrame(() => {
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      });
+    });
+  }, [isDragging, dragStart, isMaximized]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isMaximized) return;
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
     });
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mousemove', throttledMouseMove, { passive: true });
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mousemove', throttledMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, dragStart]);
+  }, [isDragging, throttledMouseMove, handleMouseUp]);
 
   if (!isOpen) return null;
 
-  return (
+  // Create the widget content
+  const widgetContent = (
     <div 
       ref={widgetRef}
       className={`fixed bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-slate-200 dark:border-gray-700 transition-all duration-300 ${
         isMaximized 
-          ? 'w-[95vw] h-[85vh] left-[2.5vw] top-[7.5vh]' 
+          ? 'w-[95vw] h-[85vh]' 
           : 'w-[420px] h-[600px]'
       } ${!isVisible ? 'invisible opacity-0 pointer-events-none' : 'visible opacity-100'}`}
       style={{
-        zIndex: 999999, // Much higher than any modal
-        left: isMaximized ? '2.5vw' : `${position.x || window.innerWidth - 440}px`,
-        top: isMaximized ? '7.5vh' : `${position.y || 80}px`,
-        cursor: isDragging ? 'grabbing' : 'default'
+        zIndex: 2147483647, // Maximum z-index value to ensure it's on top
+        left: isMaximized ? '2.5vw' : `${position.x}px`,
+        top: isMaximized ? '7.5vh' : `${position.y}px`,
+        cursor: isDragging ? 'grabbing' : 'default',
+        transform: isDragging ? 'scale(1.02)' : 'scale(1)', // Slight scale during drag
+        transition: isDragging ? 'none' : 'all 0.3s ease'
       }}
     >
       {/* Header */}
       <div 
         className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/30 border-b border-slate-200 dark:border-gray-700 rounded-t-lg cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
+        style={{ userSelect: 'none' }}
       >
         <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
           <Phone className="w-5 h-5" />
@@ -104,17 +113,20 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
           </Button>
         </div>
       </div>
-      
+
       {/* Content */}
-      <div className="w-full h-[calc(100%-64px)] bg-white dark:bg-gray-800 rounded-b-lg overflow-hidden">
+      <div className="flex-1 rounded-b-lg overflow-hidden" style={{ height: 'calc(100% - 72px)' }}>
         <iframe
           src={ziwoUrl}
           className="w-full h-full border-0"
-          title="Ziwo Support Platform"
-          allow="microphone; camera; geolocation; clipboard-read; clipboard-write"
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+          title="Ziwo Support"
+          allow="microphone; camera; speaker"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
         />
       </div>
     </div>
   );
+
+  // Use createPortal to render outside normal DOM hierarchy
+  return createPortal(widgetContent, document.body);
 }
