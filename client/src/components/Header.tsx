@@ -221,7 +221,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
   };
 
   const handleZiwoClick = () => {
-    setIsZiwoOpen(true);
+    setIsZiwoOpen(!isZiwoOpen);
   };
 
   // Check if user is admin
@@ -430,8 +430,8 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
       {/* Ziwo Widget */}
       <ZiwoWidget 
         isOpen={isZiwoOpen} 
-        onClose={() => setIsZiwoOpen(false)}
-        ziwoUrl="https://demo.ziwo.io/en-us/"
+        onToggle={() => setIsZiwoOpen(!isZiwoOpen)}
+        ziwoUrl="https://app.ziwo.io/auth/account"
       />
     </header>
   );
