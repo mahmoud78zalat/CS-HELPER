@@ -17,71 +17,42 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const widgetRef = useRef<HTMLDivElement>(null);
 
-  // Smooth mouse move with requestAnimationFrame for optimal performance
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging || isMaximized) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const newX = e.clientX - dragStart.x;
-    const newY = e.clientY - dragStart.y;
-    
-    // Boundary constraints
-    const maxX = window.innerWidth - 420;
-    const maxY = window.innerHeight - 600;
-    
-    requestAnimationFrame(() => {
+  // Simple and reliable dragging system
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging || isMaximized) return;
+      
+      const newX = e.clientX - dragStart.x;
+      const newY = e.clientY - dragStart.y;
+      
+      // Boundary constraints
+      const maxX = window.innerWidth - 420;
+      const maxY = window.innerHeight - 600;
+      
       setPosition({
         x: Math.max(0, Math.min(newX, maxX)),
         y: Math.max(0, Math.min(newY, maxY))
       });
-    });
-  }, [isDragging, dragStart, isMaximized]);
+    };
 
-  // Pointer events for better touch device support
-  const handlePointerMove = useCallback((e: PointerEvent) => {
-    if (!isDragging || isMaximized) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const newX = e.clientX - dragStart.x;
-    const newY = e.clientY - dragStart.y;
-    
-    const maxX = window.innerWidth - 420;
-    const maxY = window.innerHeight - 600;
-    
-    requestAnimationFrame(() => {
-      setPosition({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY))
-      });
-    });
-  }, [isDragging, dragStart, isMaximized]);
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
 
-  const handleMouseUp = useCallback((e?: MouseEvent | PointerEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('mouseleave', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('mouseleave', handleMouseUp);
+      };
     }
-    
-    setIsDragging(false);
-    
-    // Clean up all event listeners
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-    document.removeEventListener('mouseleave', handleMouseUp);
-    document.removeEventListener('pointermove', handlePointerMove);
-    document.removeEventListener('pointerup', handlePointerUp);
-    document.removeEventListener('pointercancel', handlePointerUp);
-  }, [handleMouseMove, handlePointerMove]);
+  }, [isDragging, dragStart, isMaximized]);
 
-  const handlePointerUp = useCallback((e: PointerEvent) => {
-    handleMouseUp(e);
-  }, [handleMouseUp]);
-
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.MouseEvent) => {
     if (isMaximized) return;
     
     e.preventDefault();
@@ -92,30 +63,7 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
       x: e.clientX - position.x,
       y: e.clientY - position.y
     });
-    
-    // Immediately add global listeners
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('mouseleave', handleMouseUp);
-    
-    // Also listen for pointer events to handle touch devices and prevent conflicts
-    document.addEventListener('pointermove', handlePointerMove);
-    document.addEventListener('pointerup', handlePointerUp);
-    document.addEventListener('pointercancel', handlePointerUp);
-  }, [position.x, position.y, isMaximized, handleMouseMove, handleMouseUp, handlePointerMove, handlePointerUp]);
-
-  // Clean up listeners on unmount or when dragging state changes
-  useEffect(() => {
-    return () => {
-      // Cleanup on unmount
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('mouseleave', handleMouseUp);
-      document.removeEventListener('pointermove', handlePointerMove);
-      document.removeEventListener('pointerup', handlePointerUp);
-      document.removeEventListener('pointercancel', handlePointerUp);
-    };
-  }, []);
+  };
 
   if (!isOpen) return null;
 
@@ -147,10 +95,6 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
       <div 
         className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/30 border-b border-slate-200 dark:border-gray-700 rounded-t-lg cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
-        onPointerDown={(e) => {
-          e.stopPropagation();
-          handleMouseDown(e as any);
-        }}
         style={{ userSelect: 'none' }}
       >
         <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
