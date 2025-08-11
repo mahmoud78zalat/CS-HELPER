@@ -46,11 +46,10 @@ export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
     refetchOnWindowFocus: true,
     staleTime: 10000, // Consider data fresh for 10 seconds
     queryFn: async () => {
-      const response = await fetch('/api/personal-notes', {
+      const response = await fetch(`/api/personal-notes/${user?.id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || '',
         },
         credentials: 'include',
       });
@@ -92,7 +91,7 @@ export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
         title: "Success!",
         description: "Note created successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
     },
     onError: (error) => {
       toast({
@@ -131,7 +130,7 @@ export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
         title: "Success!",
         description: "Note updated successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
     },
     onError: (error) => {
       toast({
@@ -181,7 +180,7 @@ export default function PersonalNotes({ open, onClose }: PersonalNotesProps) {
         title: "Success!",
         description: "Note deleted successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/personal-notes', user?.id] });
     },
     onError: (error) => {
       toast({
