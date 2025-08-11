@@ -3864,7 +3864,7 @@ export class SupabaseStorage implements IStorage {
         query = query.eq('is_active', filters.isActive);
       }
 
-      const { data, error } = await query.order('created_at', { ascending: true });
+      const { data, error } = await query.order('order_index', { ascending: true });
 
       if (error) {
         console.error('[SupabaseStorage] Error fetching store emails:', error);
@@ -3881,6 +3881,7 @@ export class SupabaseStorage implements IStorage {
         storeName: email.store_name,
         storeEmail: email.store_email,
         storePhone: email.store_phone,
+        orderIndex: email.order_index,
         isActive: email.is_active,
         createdBy: email.created_by,
         createdAt: new Date(email.created_at),
@@ -3939,6 +3940,7 @@ export class SupabaseStorage implements IStorage {
       storeName: data.store_name,
       storeEmail: data.store_email,
       storePhone: data.store_phone,
+      orderIndex: data.order_index,
       isActive: data.is_active,
       createdBy: data.created_by,
       createdAt: new Date(data.created_at),
@@ -3955,10 +3957,18 @@ export class SupabaseStorage implements IStorage {
       store_name: updates.storeName,
       store_email: updates.storeEmail,
       store_phone: updates.storePhone,
+      order_index: updates.orderIndex !== undefined ? updates.orderIndex : undefined,
       is_active: updates.isActive !== undefined ? updates.isActive : true,
       updated_at: new Date().toISOString(),
       last_synced_at: new Date().toISOString(),
     };
+
+    // Remove undefined values
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
 
     const { data, error } = await this.serviceClient
       .from('store_emails')
@@ -3984,6 +3994,7 @@ export class SupabaseStorage implements IStorage {
       storeName: data.store_name,
       storeEmail: data.store_email,
       storePhone: data.store_phone,
+      orderIndex: data.order_index,
       isActive: data.is_active,
       createdBy: data.created_by,
       createdAt: new Date(data.created_at),
