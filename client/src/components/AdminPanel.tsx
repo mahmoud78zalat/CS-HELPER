@@ -1554,7 +1554,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         <div className="flex-1 overflow-hidden p-4 lg:p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
             {/* Mobile-responsive tabs */}
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-4">
+            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 mb-4">
               <TabsTrigger value="announcements" className="text-xs lg:text-sm p-2 lg:p-3">
                 <Megaphone className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
                 <span className="hidden lg:inline">Announcements</span>
@@ -1570,7 +1570,11 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <span className="hidden lg:inline">Template Management</span>
                 <span className="lg:hidden">Templates</span>
               </TabsTrigger>
-
+              <TabsTrigger value="scripts" className="text-xs lg:text-sm p-2 lg:p-3">
+                <Phone className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+                <span className="hidden lg:inline">Call Scripts & Store Emails</span>
+                <span className="lg:hidden">Scripts</span>
+              </TabsTrigger>
               <TabsTrigger value="colors" className="text-xs lg:text-sm p-2 lg:p-3">
                 <div className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2 bg-gradient-to-r from-red-400 to-blue-400 rounded-full"></div>
                 <span className="hidden lg:inline">Colors</span>
@@ -2164,6 +2168,45 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                   </div>
                 )
               )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="scripts" className="flex-1 overflow-y-auto">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Call Scripts & Store Emails Management</h3>
+                <p className="text-sm text-slate-600">Manage call scripts and store contact information</p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Call Scripts Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      Call Scripts
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Manage standardized call scripts for agents</p>
+                  </CardHeader>
+                  <CardContent>
+                    <CallScriptsManager />
+                  </CardContent>
+                </Card>
+
+                {/* Store Emails Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Database className="h-4 w-4" />
+                      Store Contact Information
+                    </CardTitle>
+                    <p className="text-sm text-slate-600">Manage store email addresses and contact details</p>
+                  </CardHeader>
+                  <CardContent>
+                    <StoreEmailsManager />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
