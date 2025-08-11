@@ -286,6 +286,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/live-reply-template-groups', async (req, res) => {
+    try {
+      const groups = await storage.getLiveReplyTemplateGroups();
+      res.json(groups);
+    } catch (error) {
+      console.error("Error fetching live reply template groups:", error);
+      res.status(500).json({ message: "Failed to fetch live reply template groups" });
+    }
+  });
+
+  app.get('/api/template-categories', async (req: any, res) => {
+    try {
+      console.log('[API] Fetching template categories (no auth required)');
+      const categories = await storage.getTemplateCategories();
+      console.log('[API] Found template categories:', categories.length);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching template categories:", error);
+      res.status(500).json({ message: "Failed to fetch template categories" });
+    }
+  });
+
+  app.get('/api/connected-template-categories', async (req: any, res) => {
+    try {
+      console.log('[API] Fetching connected template categories');
+      const categories = await storage.getConnectedTemplateCategories();
+      console.log('[API] Found connected categories:', categories.length);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching connected template categories:", error);
+      res.status(500).json({ message: "Failed to fetch connected template categories" });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
