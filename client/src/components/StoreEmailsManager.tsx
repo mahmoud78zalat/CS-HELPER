@@ -142,7 +142,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     }
   }, [storeEmails]);
 
-  // Reorder mutation for admin users
+  // Reorder mutation (not used in user modal - kept for potential future use)
   const reorderMutation = useMutation({
     mutationFn: async (reorderedStores: StoreEmail[]) => {
       const updates = reorderedStores.map((store, index) => ({
@@ -229,8 +229,18 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
       
       setLocalStores(reorderedStores);
       
-      // Persist order to backend (global admin reordering)
-      reorderMutation.mutate(reorderedStores);
+      // For regular users: Save local order to localStorage (NOT to backend)
+      const orderMap: Record<string, number> = {};
+      reorderedStores.forEach((store, index) => {
+        orderMap[store.id] = index;
+      });
+      localStorage.setItem('storeEmails_local_order', JSON.stringify(orderMap));
+      console.log('[StoreEmailsManager] User reorder - saved to localStorage:', orderMap);
+      
+      toast({
+        title: "Contacts reordered",
+        description: "Your personal store contacts order has been updated",
+      });
     } else {
       console.log('[StoreEmailsManager] No reorder needed - same position');
     }
@@ -243,7 +253,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     setIsDragMode(false);
     toast({
       title: "Order reset",
-      description: "Store contacts order has been reset to default",
+      description: "Your personal store contacts order has been reset to default",
     });
   };
 
