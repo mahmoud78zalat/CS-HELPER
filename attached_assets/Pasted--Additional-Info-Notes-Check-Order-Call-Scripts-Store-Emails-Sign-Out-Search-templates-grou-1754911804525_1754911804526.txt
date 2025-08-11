@@ -1,0 +1,720 @@
+
+
+Additional Info
+
+Notes ✦
+
+Check Order
+
+Call Scripts
+
+Store Emails
+
+Sign Out
+Search templates, groups, or descriptions...
+
+Reply Templates
+🇬🇧 English
+Click on any template to instantly copy it to your clipboard. Switch language in Customer Info to see templates in Arabic.
+
+WELCOME GREETINGS 👋
+(4 templates)
+GENERAL 👋
+General Greeting
+General
+🌐 Bilingual
+Variables:
+
+{customerfirstname}
+{agentfirstname}
+{agentarabicfirstname}
+Live Preview:
+Hello {customerfirstname}! Welcome to Brands for Less customer service. I'm Mahmoud and I'm here to help you today. How can I assist you?
+MORNING ☀️
+General Greeting
+General
+🌐 Bilingual
+Variables:
+
+{customerfirstname}
+{agentfirstname}
+{agentarabicfirstname}
+Live Preview:
+Good morning {customerfirstname}! I hope you're having a wonderful day. I'm Mahmoud from Brands for Less customer service. How may I help you today?
+Afternoon 🌞
+General Greeting
+General
+🌐 Bilingual
+Variables:
+
+{customerfirstname}
+{agentfirstname}
+{agentarabicfirstname}
+Live Preview:
+Good afternoon {customerfirstname}! Thank you for contacting Brands for Less. I'm Mahmoud and I'm ready to assist you. What can I do for you?
+Evening 🌠
+General Greeting
+General
+🌐 Bilingual
+Variables:
+
+{customerfirstname}
+{agentfirstname}
+{agentarabicfirstname}
+Live Preview:
+Good evening {customerfirstname}! Thank you for contacting Brands for Less. I'm Mahmoud and I'm ready to assist you. What can I do for you?
+FREQUENTLY ASKED ❓
+(12 templates)
+INVOICE REQUEST FROM STORE 🧾🏬
+INVOICE
+Return follow ups
+🌐 Bilingual
+Live Preview:
+We can proceed with a request to our specialized department to get the invoice number, We kindly request you to cooperate and provide us with the below information:
+
+- Your mobile number: 
+- Store Name:
+- Date And Time Of Purchase:
+- Item Code:
+- Item Price:
+- Total Amount Of The Invoice:
+- Last four digits of CC:
+- Your active email address:
+HOME DELIVERY ESTIMATED DATE 🏠📦
+ESTIMATED DATE
+Order Issues
+🌐 Bilingual
+Variables:
+
+{delivery_date}
+Live Preview:
+Upon checking, your order is scheduled for delivery to your address on {delivery_date}. Our logistics team is working to ensure it reaches you within the promised timeframe. You’ll receive a notification with tracking details once it's out for delivery. Thank you for your patience and trust!
+STORE PICK-UP ESTIMATED DATE 🏬📲
+ESTIMATED DATE
+Order Issues
+🌐 Bilingual
+Variables:
+
+{delivery_date}
+Live Preview:
+Upon checking, your order is estimated to be delivered to the store on {delivery_date}. Once it arrives, you'll receive an OTP (validation code) to collect your parcel. We appreciate your patience as we work towards delivering your order.
+Collection Point OTP 📦🔑
+OTP
+Order Issues
+🌐 Bilingual
+Variables:
+
+{otp}
+Live Preview:
+Your Collection Point OTP is {otp}, and you can now head to the collection point to pick up your items using this code. Simply provide it to the staff there, and they will hand over your order to you without any issues.
+🚫📦 DELIVERY METHOD CHANGE UNAVAILABLE
+Change Delivery
+Deliver Problems
+🌐 Bilingual
+Live Preview:
+I completely understand your request and would love to assist you. However, once an order is placed and confirmed in our system, we are unable to modify the delivery method due to system limitations. The order is already being processed based on the initially selected delivery option, and any change at this stage may cause logistical complications.
+
+The available option is to cancel the current order and place a new one with the preferred delivery method. However, please be aware that item availability is not guaranteed at the time of reordering. Kindly let me know how you’d like to proceed, and I’ll be more than happy to assist you! 😊
+PICK-UP DELIVERY EXPEDITE REQUEST 🚛⏳
+EXPEDITE SHIMPENT
+Order Issues
+🌐 Bilingual
+Live Preview:
+I completely understand your eagerness to receive your order! 😊 Since this is a Pick-up Order (Store or Collection Point), the parcel has already been handed over to the shipping company, and delivery will be completed following the standard logistics process.
+
+While we are unable to expedite the shipment at this stage, please rest assured that your order is on its way and will reach the designated pick-up location as soon as possible. We truly appreciate your patience and understanding! 🙏
+STORE TRANSACTION REFERRAL 🏬
+STORE ISSUE
+General
+🌐 Bilingual
+Live Preview:
+Please be advised to reach out to the store in charge for assistance, as the online team does not have the authority to approve store-related transactions. Such matters fall under the jurisdiction of the respective store in charge.
+ORDER CANCELLATION REQUEST SUBMITTED 📩
+Cancel item/order
+Order Issues
+🌐 Bilingual
+Variables:
+
+{ref_number}
+Live Preview:
+The cancellation request for your order has already been submitted to the concerned team, and we’re closely following up with them to ensure it's handled as soon as possible.
+Your reference number for this request is {ref_number}.
+
+Once the cancellation is officially confirmed, you will be notified through this channel. If any payment was already made, it will be refunded according to the payment method used.
+EXPLAINING WHY WE CAN’T FAST-TRACK ORDERS ℹ️📦
+EXPEDITE SHIMPENT
+Order Issues
+🌐 Bilingual
+Live Preview:
+Each order goes through fixed stages: order confirmation, picking from warehouse, quality check and packing, then handover to courier.
+Manual fast-tracking caused issues before: tracking loss, delays, or wrong items sent.
+That’s why we now follow the scheduled timeline for every order to ensure safe delivery.
+We’re monitoring your order from our side to make sure it reaches you as quickly as possible.
+AUTOMATED RETURN PICKUP MESSAGE 📦 🔄
+AUTOMATED MESSAGE
+Return follow ups
+🌐 Bilingual
+Live Preview:
+I understand your concern. That message you received is an automated update from the shipping company it sometimes gets triggered in the system even if the pickup hasn't actually been attempted yet.
+
+What usually happens is once the return request is processed, the system schedules the pickup and sends out that message automatically. If the pickup hasn’t happened yet, don’t worry; the driver will still come within the expected 3 to 5 working days from when the return was requested. I’ll keep following up to make sure it gets picked up soon!
+AUTOMATED DELIVERY MESSAGE 🚚
+AUTOMATED DELIVERY
+Order Issues
+🌐 Bilingual
+Live Preview:
+I understand your concern. That message you received is an automated update from the shipping company it sometimes gets triggered in the system even if the delivery hasn't actually been attempted yet.
+
+What usually happens is once the order is shipped, the system updates the status and sends out that message automatically. If the delivery hasn’t happened yet, don’t worry; the driver will still deliver the order as per the scheduled timeframe. I’ll keep following up to make sure it gets delivered soon!
+PRODUCT AVAILABILITY IN STORES 🏬📦
+ITEM AVAILABILITY
+General
+🌐 Bilingual
+Live Preview:
+At Brands For Less, our stock changes fast due to our “treasure hunt” concept. We can't hold or confirm item availability at any store, as products sell out quickly. We recommend visiting your nearest store—each visit brings new surprises and great deals!
+CHECKING 🔍
+(4 templates)
+ORDER ID 🔎📦
+Standard Response
+General
+🌐 Bilingual
+Live Preview:
+Could you kindly share your order ID with me, please? I’d be happy to assist you
+CHECKING ✨
+CHECKING
+General
+🌐 Bilingual
+Variables:
+
+{customerfirstname}
+Live Preview:
+I’d be more than happy to assist you! 😊 Kindly allow me a moment {customerfirstname} while I check the system for you.
+NEED A LITTLE MORE TIME TO CHECK FURTHER ⏳🔄
+NEED MORE TIME
+General
+🌐 Bilingual
+Variables:
+
+{customerfirstname}
+Live Preview:
+Thank you for your patience {customerfirstname} ! I just need a little more time to thoroughly review your case and ensure I provide you with the most accurate update. I’ll be right back with you shortly.
+OFFERING ADDITIONAL SUPPORT 🤝🔔
+Closing
+General
+🌐 Bilingual
+Live Preview:
+May I ask if there is anything else I can assist with?
+CUSTOMER CARE APOLOGY — WE LISTEN, WE CARE, WE ACT! 🙏💬
+(4 templates)
+GENERAL APOLOGY — WE VALUE YOUR SATISFACTION 🙏
+APOLOGY
+General
+🌐 Bilingual
+Live Preview:
+We sincerely apologize for any inconvenience caused. Your satisfaction means everything to us, and we are fully committed to supporting you in the best possible way. Please rest assured, we’re here to assist you with utmost care and priority. 😊
+CHECKING ON YOUR CONCERN — ALLOW US A MOMENT 🔍
+APOLOGY
+General
+🌐 Bilingual
+Variables:
+
+{customerfirstname}
+Live Preview:
+We completely understand how important this matter is to you {customerfirstname}. Kindly allow us a brief moment to check our system and ensure we provide you with the most accurate and efficient solution.
+APOLOGY FOR YOUR NEGATIVE EXPERIENCE — WE’RE LISTENING 😔
+APOLOGY
+General
+🌐 Bilingual
+Live Preview:
+We are truly sorry to hear about your experience. Your feedback is extremely valuable to us, and we take it very seriously. Please be assured that we are committed to addressing your concern promptly and ensuring a better experience moving forward.
+SETTING EXPECTATIONS WITH CARE — FAIRNESS FOR ALL 🤝
+APOLOGY
+General
+🌐 Bilingual
+Live Preview:
+We genuinely appreciate your understanding and patience. While this may not be the ideal resolution, we’ve applied our best practices to ensure fairness and transparency for all our customers. Your trust is invaluable to us, and we are here to support you.
+ITEM COMPLAINT 🚨
+(4 templates)
+HONEST MISTAKE APOLOGY 🙏
+Item Complaint
+Order Issues
+🌐 Bilingual
+Live Preview:
+We sincerely apologize for the inconvenience. Please be assured that this was an honest mistake; we would never do this to our customer on purpose. Provide me with the order ID and a picture of the item, and let me check on that, please.
+BEFORE SENDING THE REQUEST 📋
+Item Complaint
+Order Issues
+🌐 Bilingual
+Live Preview:
+I will submit your request shortly and once it's raised, you will receive a reference number. The concerned team usually responds within 24-48 hours. I will keep you informed and share any updates as soon as I receive them.
+REQUEST SUBMISSION CONFIRMATION 📩
+Item Complaint
+Order Issues
+🌐 Bilingual
+Variables:
+
+{ref_number}
+Live Preview:
+Your request has been successfully submitted with the reference number {ref_number}. The concerned team will get back to us within 24-48 hours. We will keep you informed and notify you as soon as we receive an update. Thank you for your patience and understanding.
+RETURN ASSISTANCE OFFER 🔄
+Item Complaint
+Order Issues
+🌐 Bilingual
+Live Preview:
+Please be assured that we will never leave you at a loss! We can create a return request to pick up your item, or you can return it directly to the shop.
+RETURN OPTIONS 🔄📋
+(4 templates)
+RETURN TO STORE (FAST REFUND OPTION) 🏬
+Refund Process
+Return follow ups
+🌐 Bilingual
+Live Preview:
+You can return your item to the nearest Brands For Less branch with the items in their original condition within the 14-day return period for a Fast Refund, which you can use both online and in-store.
+SELF-SERVICE RETURN VIA APP 📲
+Refund Process
+Return follow ups
+🌐 Bilingual
+Live Preview:
+You can book a return through the app by going to Account > My Orders and selecting the self-service option. The courier will reach you within 3 to 5 business days.
+🔄 EXCHANGES POLICY:
+Refund Process
+Return follow ups
+🌐 Bilingual
+Live Preview:
+We do not offer direct exchanges. To get a different size, color, or variant, please return the unwanted item and place a new order.
+INTERNATIONAL RETURN BOOKING (7-10 DAYS PICKUP) 🌍
+Refund Process
+Return follow ups
+🌐 Bilingual
+Live Preview:
+I can also book the return for you, and the courier will arrive within 7 - 10 days. Your item must reach our return facility and pass inspection before we process your refund.
+RETURN BOOKED ✅📅
+(4 templates)
+BEFORE SENDING THE REQUEST 🕒✉️
+CREATE RETURN
+Return follow ups
+🌐 Bilingual
+Live Preview:
+Could you kindly let me know which items you'd like to return and your preferred method of refund?
+RETURN PICKUP REQUEST PROCESSING 📝🔄
+CREATE RETURN
+Return follow ups
+🌐 Bilingual
+Live Preview:
+Thank you for your holding. Please stay on the line while I process your return pickup request.
+AFTER SENDING THE REQUEST ✅
+CREATE RETURN
+Return follow ups
+🌐 Bilingual
+Live Preview:
+The return pickup has been booked successfully. You should be expecting the courier within 3-5 business days. Once the courier is on his way, he is going to give you a call, I kindly advise you to keep your lines open.
+RPU OUTSIDE UAE MESSAGE 🌍📦
+CREATE RETURN
+Return follow ups
+🌐 Bilingual
+Variables:
+
+{ref_number}
+Live Preview:
+Thank you for your patience! 🙏 Your return request has been successfully and here is the reference number: {ref_number}, The courier will collect the items within 7 to 10 business days, we will update you shortly with the 📄 airway bill once it’s ready.
+DELAYED ORDER ⏳📦
+(3 templates)
+DELAY APOLOGY — ORDER TAKING LONGER 🔄
+Delay Order
+Deliver Problems
+🌐 Bilingual
+Live Preview:
+We know delays are frustrating, and we’re working to ensure your order reaches you as soon as possible. Your patience is greatly appreciated, and we apologize for any inconvenience caused.
+BEFORE SENDING THE REQUEST 🕒
+Delay Order
+Deliver Problems
+🌐 Bilingual
+Live Preview:
+I’ve checked the status of your parcel, and it is currently "Out for Delivery". I can assist you with expediting the delivery to ensure it reaches you as soon as possible. Please let me know how you'd like to proceed.
+AFTER REQUEST SUBMISSION 📩
+Delay Order
+Deliver Problems
+🌐 Bilingual
+Variables:
+
+{ref_number}
+Live Preview:
+I have sent you a request to the courier to ensure the delivery of the order as early as possible, and here is the reference number: {ref_number}
+DELAYED PICKUP 🚚⏳
+(4 templates)
+BEFORE SENDING THE REQUEST — PICKUP STILL PENDING 🕒
+Delay Return
+Return Issues
+🌐 Bilingual
+Live Preview:
+I’ve checked the status of your pickup request, and it’s still pending with the courier. I can submit a follow-up request to expedite the process. Please confirm if you’d like me to proceed.
+📩 AFTER REQUEST SUBMISSION — CONFIRMATION & REFERENCE 📩
+Delay Return
+Return Issues
+🌐 Bilingual
+Variables:
+
+{ref_number}
+Live Preview:
+I have submitted a follow-up request to the courier to prioritize your pickup. Here is the reference number: {ref_number}. We’ll keep monitoring this closely until it’s resolved.
+RETURN OPTION NOT AVAILABLE🔄📦
+STATUS UPDATE
+Return Issues
+🌐 Bilingual
+Live Preview:
+I’m sorry for the inconvenience. The reason the return button isn’t showing is that the order status has not yet been updated to "Delivered" in our system.
+
+No worries, I’ll handle this for you by submitting a request to the courier to update the status. Kindly stay with me while I take care of it.
+REQUEST SUBMISSION CONFIRMATION — STATUS UPDATE UNDERWAY 📩
+STATUS UPDATE
+Return Issues
+🌐 Bilingual
+Live Preview:
+Thank you for your patience! The request has been successfully submitted to the courier. Once the status is updated, the return button will appear automatically. This should be resolved shortly.
+DELAYED REFUND 💸⏳
+(3 templates)
+DELAYED REFUND UPDATE — FOLLOW-UP TICKET WILL BE SUBMITTED NOW 🔄
+Delay Refund
+Refund Issues
+🌐 Bilingual
+Live Preview:
+I understand that you're still waiting for your refund, and I sincerely apologize for the delay. To ensure this is resolved, I will now submit a follow-up request to the concerned team. Kindly allow me a moment while I handle it for you.
+FOLLOW-UP SUBMISSION CONFIRMATION 📩
+Delay Refund
+Refund Issues
+🌐 Bilingual
+Variables:
+
+{ref_number}
+Live Preview:
+Thank you for your patience! The follow-up request has been successfully submitted under the reference number: {ref_number}. The concerned team is now reviewing your case, and I will notify you as soon as I receive any updates. Your understanding is truly appreciated! 🙏
+REFUND PROCESS FLOW — AFTER COURIER PICKUP 💸🔄
+REFUND FOLLOW UP
+Refund Issues
+🌐 Bilingual
+Live Preview:
+I understand you're checking on your refund status, and I'd be happy to clarify the process for you! 😊 Once the courier collects the items from you, they deliver them back to our warehouse within 3 to 5 days. After the items arrive, they go through a quality check, which takes 24 to 48 hours. Once the inspection is complete, your refund will be initiated and processed based on your payment method.
+
+We are closely following up on the matter and will inform you as soon as the refund process begins. We truly appreciate your patience and understanding! 🙏
+ORDER PROCESSING ISSUES — PAYMENT & QUALITY CHECK HANDLING FLOW 🛑📋
+(4 templates)
+PAYMENT FAILURE 💳❌
+PAYMENT FAILED
+General
+🌐 Bilingual
+Live Preview:
+Your payment attempt was unsuccessful because of a gateway issue where the amount got stuck during processing. The payment didn’t reach us, and the bank will reverse it automatically to your account within 7-14 working days. We did not receive any amount from our side.
+PAYMENT PENDING 💳⏳
+PAYMENT PENDING
+General
+🌐 Bilingual
+Live Preview:
+Your order is pending because the payment was not completed. A payment link is sent via email (valid for 30 mins). If not completed in time, the order will be auto-cancelled. Kindly check your spam/junk folder. The order isn’t confirmed yet as no payment was received.
+QUALITY CHECK FAILED ✅🔍
+QUALITY CHECK
+General
+🌐 Bilingual
+Live Preview:
+During inspection, the item didn’t pass our quality standards, so the order was cancelled from our side. To ensure you receive only products that meet our quality checks, we proceed with cancelling items that fail inspection.
+
+The refund for the cancelled item(s) is automatically processed from our side to the original payment method, and it will reflect in your account based on your bank’s timeline.
+ARN REQUEST 🧾📩
+ARN
+Refund Issues
+🌐 Bilingual
+Variables:
+
+{ref_number}
+Live Preview:
+We have raised a request to the concerned team regarding your ARN. Your reference number is {ref_number}.
+Our team will get back to you as soon as possible once the update is available.
+CALL ATTEMPT RESPONSE 📞
+(4 templates)
+OFFERING A CALL TO RESOLVE QUICKLY 💡
+CALL ATTEMPTS
+General
+🌐 Bilingual
+Live Preview:
+Thanks for your patience, and I truly apologize for the wait. I understand how frustrating it can be, and I appreciate you sticking with us. I want to resolve this for you as quickly as possible, and instead of having you type everything out, I’ll give you a call right now on the number you contacted us from. Let’s get this sorted!
+DELAY APOLOGY — PICKUP TAKING LONGER 🔄
+Delay Return
+Return Issues
+🌐 Bilingual
+Live Preview:
+We understand how important it is to have your return picked up on time. We’re coordinating with the courier to ensure the pickup happens as soon as possible. We truly appreciate your patience and apologize for the inconvenience.
+SUCCESSFUL CALL📞✅
+CALL ATTEMPTS
+General
+🌐 Bilingual
+Live Preview:
+Thank you for taking the call. I'm glad we were able to resolve your issue today. I’m now closing this chat, but if you need any assistance, please don't hesitate to reach out. Have a wonderful day!
+UNSUCCESSFUL CALL 📞❌
+CALL ATTEMPTS
+General
+🌐 Bilingual
+Live Preview:
+I tried reaching you over a call but wasn’t able to get through. I’ll close this chat for now, but no worries—if you need any assistance, you can always call us or send a message requesting a callback. We’ll be happy to help and will prioritize resolving your issue. Looking forward to assisting you!
+CLOSURE 🙏💛
+(6 templates)
+IDLE 1 – After 2 Minutes of Customer Inactivity 🕑
+IDLE 1
+General
+🌐 Bilingual
+Live Preview:
+It seems we've been idle for a couple of minutes. Just checking in to see if you're still with us — we're waiting for the details to proceed. Let us know once you're ready, and we’ll continue right away.
+PARK – After 4 Minutes of Inactivity ⏸️
+PARK ️ ⏸️
+General
+🌐 Bilingual
+Live Preview:
+Since we haven’t heard back from you and still need a few more details to move forward, I’ll go ahead and park this chat for now. Feel free to reach out anytime — we’ll be here to assist you promptly!
+INACTIVE YET COMPLETED ✅
+INACTIVE YET COMPLETED
+General
+🌐 Bilingual
+Live Preview:
+Thanks for the details! Your request has been successfully completed. If there’s anything else we can help you with, just send us a message.
+Thank you for choosing Brands For Less! We'd love your feedback—please rate your experience after this chat.
+Final Check + Warning Closure ⚠️
+General Closure
+Closure
+🌐 Bilingual
+Live Preview:
+I hope I’ve covered all your inquiries before we end this chat. If there’s anything else you need, feel free to let me know now.
+Closure Survey 🙏💛
+CSAT
+Closure
+🌐 Bilingual
+Variables:
+
+{customerfirstname}
+Live Preview:
+It was a real pleasure helping you today {customerfirstname}! 😊 If there's ever anything you need, don’t hesitate to reach out. Wishing you a wonderful day!  🌹
+Your feedback would mean a lot to us. 🙏💛 If you don’t mind, may I kindly ask you to rate my interaction with you?
+Normal Closure + Pitching Survey 🔚
+General Closure
+Closure
+🌐 Bilingual
+Live Preview:
+Thank you for chatting with us! I'm glad I could assist you today.
+A short survey will appear once this chat ends; We’d really appreciate your feedback.
+OTHERS 🗂️✨
+(2 templates)
+CV 👔
+CV
+General
+🌐 Bilingual
+Live Preview:
+Thank you for expressing your interest in our company; however, you have reached the customer service team.
+
+To join the Brands for Less family, you can send your CV to careers@bflgroup.ae. 
+
+In the meantime, we would like to take this opportunity to wish you the very best of luck.
+BUSINESS PROPOSAL 📑💼
+BUSINESS PROPOSAL
+General
+🌐 Bilingual
+Live Preview:
+We greatly appreciate that you've shown interest in our company.
+
+Your message has reached the customer service team.
+
+As we are catering inquiries on existing products, we encourage you to send your proposal to our dedicated team at executive@bflgroup.ae for faster review.
+
+In the meantime, we wish you the best of luck with your business.
+
+Admin Panel
+Beta Mode
+Admin panel for managing users, templates, and site content
+
+Announcements
+
+User Management
+
+Template Management
+
+Call Scripts & Store Emails
+
+Colors
+
+Analytics
+
+Site Content
+Site Content Management
+Manage template options, categories, genres, concerned teams, and custom variables
+
+Site Branding
+Customize site name, about content, and footer
+
+Site Name
+e.g., Customer Service Platform
+About Tool Title
+e.g., Customer Service Helper
+About Description
+Brief description of your platform...
+Version Label (optional)
+e.g., Version 1.0.0 | Built for Company X
+Footer Text (optional)
+e.g., © 2025 Your Company. All rights reserved.
+Save Changes
+Admin Management Tools
+
+Manage Call Scripts
+
+Manage Store Contacts
+Template Configuration
+Manage categories, genres, and teams
+
+Categories:
+9
+Genres:
+65
+Teams:
+7
+Configure
+FAQ Management
+Manage frequently asked questions
+
+FAQ Management
+Add New FAQ
+Courier Contact Number Requests
+Return Issues
+
+
+Return Request Shows Canceled but Pickup Not Done
+Return Issues
+
+
+Wallet Credit Disappearing After Order Cancellation
+General
+
+
+Return Requests Beyond 14-Day Window
+Refund Issues
+
+
+Price Differences Between Online & In-Store Products
+General
+
+
+Order Marked Delivered But Not Received
+Deliver Problems
+
+
+Non-Returnable Items Explanation
+General
+
+
+Repeated Payment Failures Handling
+Refund Issues
+
+
+Manual Return Request Process When App Fails
+Return Issues
+
+
+Escalating Mobile App Technical Issues
+General
+
+
+Reasons for Automatic Order Cancellations
+Deliver Problems
+
+
+Lost Package Protocol
+General
+
+
+Payment Failure Order Cancellations
+Refund Issues
+
+
+Out for Pickup Notification Without Courier Arrival
+Deliver Problems
+
+
+Order Split into Multiple Shipments
+General
+
+
+Delayed Refunds Protocol
+Refund Issues
+
+
+Loyalty Program Impact on Refunds
+General
+
+
+Pickup Process for Returns
+Return follow ups
+
+
+Checking Product Availability in Branches
+General
+
+
+First Response to Item Complaints
+General
+
+
+Handling Missing Invoice/Receipt
+General
+
+
+Ticket Creation Tool
+General
+
+
+Return Policy Details
+Return follow ups
+
+
+Damaged Products Without Tags or Box
+General
+
+
+Customer Complaints for Store Purchases
+Order Issues
+
+
+Standard Return Fee for Lebanon
+General
+
+
+Same-Day Refund Requests
+Return follow ups
+
+
+Changing Delivery Method After Placing Order
+Deliver Problems
+
+
+Redeeming Loyalty Points in the New Loyalty Program
+General
+
+
+Modifying Delivery Address After Shipping Confirmation
+Order Issues
+
+
+If the customer is traveling and requests same-day delivery, is it possible?
+Delivery Problems
+
+
+What is our company's return policy?
+Return follow ups
+
+
+Close
+Call Scripts Manager
+Manage call scripts with full admin controls
+Add New Script
+Close
+Search scripts by name or content...
+
+All Categories
+
+All Genres
+No call scripts found
+Close
+Create New Call Script

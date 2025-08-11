@@ -53,10 +53,7 @@ export function StoreContactsAdminManager({ onClose }: StoreContactsAdminManager
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/store-emails/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+      const response = await apiRequest('DELETE', `/api/store-emails/${id}`);
       if (!response.ok) throw new Error('Failed to delete store contact');
       return response.json();
     },
@@ -315,12 +312,7 @@ function StoreContactCreateModal({ onClose }: { onClose: () => void }) {
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await fetch('/api/store-emails', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ ...data, isActive: true }),
-      });
+      const response = await apiRequest('POST', '/api/store-emails', { ...data, isActive: true });
       if (!response.ok) throw new Error('Failed to create store contact');
       return response.json();
     },
@@ -430,12 +422,7 @@ function StoreContactEditModal({
 
   const updateMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await fetch(`/api/store-emails/${store.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest('PUT', `/api/store-emails/${store.id}`, data);
       if (!response.ok) throw new Error('Failed to update store contact');
       return response.json();
     },

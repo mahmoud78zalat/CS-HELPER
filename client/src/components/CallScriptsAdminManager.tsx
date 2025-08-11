@@ -75,10 +75,7 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/call-scripts/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+      const response = await apiRequest('DELETE', `/api/call-scripts/${id}`);
       if (!response.ok) throw new Error('Failed to delete call script');
       return response.json();
     },
@@ -324,12 +321,7 @@ function CallScriptCreateModal({
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await fetch('/api/call-scripts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ ...data, isActive: true }),
-      });
+      const response = await apiRequest('POST', '/api/call-scripts', { ...data, isActive: true });
       if (!response.ok) throw new Error('Failed to create call script');
       return response.json();
     },
@@ -466,12 +458,7 @@ function CallScriptEditModal({
 
   const updateMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await fetch(`/api/call-scripts/${script.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest('PUT', `/api/call-scripts/${script.id}`, data);
       if (!response.ok) throw new Error('Failed to update call script');
       return response.json();
     },
