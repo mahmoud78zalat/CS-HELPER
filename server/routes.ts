@@ -248,6 +248,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Template GET endpoints - moved from simple-routes.ts to prevent Vite interception
+  app.get('/api/live-reply-templates', async (req, res) => {
+    try {
+      const { category, genre, search, isActive } = req.query;
+      const filters = {
+        category: category as string,
+        genre: genre as string,
+        search: search as string,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      };
+
+      const templates = await storage.getLiveReplyTemplates(filters);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching live reply templates:", error);
+      res.status(500).json({ message: "Failed to fetch live reply templates" });
+    }
+  });
+
+  app.get('/api/email-templates', async (req, res) => {
+    try {
+      const { category, genre, concernedTeam, search, isActive } = req.query;
+      const filters = {
+        category: category as string,
+        genre: genre as string,
+        concernedTeam: concernedTeam as string,
+        search: search as string,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      };
+
+      const templates = await storage.getEmailTemplates(filters);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching email templates:", error);
+      res.status(500).json({ message: "Failed to fetch email templates" });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
