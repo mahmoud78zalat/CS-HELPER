@@ -72,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/store-emails/reorder', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/store-emails/reorder', async (req: any, res) => {
     try {
       const { updates } = req.body;
       if (!Array.isArray(updates) || updates.length === 0) {
@@ -770,6 +770,242 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching concerned teams:", error);
       res.status(500).json({ message: "Failed to fetch concerned teams" });
+    }
+  });
+
+  // Announcements API Routes (moved from simple-routes.ts)
+  app.get('/api/announcements', async (req, res) => {
+    try {
+      const announcements = await storage.getAnnouncements();
+      res.json(announcements);
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error fetching announcements:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.get('/api/announcements/active', async (req, res) => {
+    try {
+      const announcement = await storage.getActiveAnnouncement();
+      res.json(announcement || null);
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error fetching active announcement:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.get('/api/announcements/unacknowledged/:userId', async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const announcements = await storage.getUnacknowledgedAnnouncements(userId);
+      res.json(announcements);
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error fetching unacknowledged announcements:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  // FAQ API Routes (moved from simple-routes.ts)
+  app.get('/api/faqs', async (req, res) => {
+    try {
+      const { category, search, isActive } = req.query;
+      const filters = {
+        category: category as string,
+        search: search as string,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      };
+
+      const faqs = await storage.getFaqs(filters);
+      res.json(faqs);
+    } catch (error) {
+      console.error('[API] Error fetching FAQs:', error);
+      res.status(500).json({ message: 'Failed to fetch FAQs' });
+    }
+  });
+
+  // Core Template System Routes (moved from simple-routes.ts)
+  app.get('/api/live-reply-templates', async (req, res) => {
+    try {
+      const { category, genre, search, isActive } = req.query;
+      const filters = {
+        category: category as string,
+        genre: genre as string,
+        search: search as string,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      };
+
+      const templates = await storage.getLiveReplyTemplates(filters);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching live reply templates:", error);
+      res.status(500).json({ message: "Failed to fetch live reply templates" });
+    }
+  });
+
+  app.get('/api/email-templates', async (req, res) => {
+    try {
+      const { category, genre, concernedTeam, search, isActive } = req.query;
+      const filters = {
+        category: category as string,
+        genre: genre as string,
+        concernedTeam: concernedTeam as string,
+        search: search as string,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      };
+
+      const templates = await storage.getEmailTemplates(filters);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching email templates:", error);
+      res.status(500).json({ message: "Failed to fetch email templates" });
+    }
+  });
+
+  // Site Content Routes (moved from simple-routes.ts)
+  app.get('/api/site-content', async (req, res) => {
+    try {
+      const { key } = req.query;
+      const content = await storage.getSiteContent(key as string);
+      res.json(content);
+    } catch (error) {
+      console.error("Error fetching site content:", error);
+      res.status(500).json({ message: "Failed to fetch site content" });
+    }
+  });
+
+  // User Management Routes (moved from simple-routes.ts)
+  app.get('/api/users', async (req, res) => {
+    try {
+      console.log('[API] /api/users called - fetching all users');
+      const users = await storage.getAllUsers();
+      console.log('[API] Fetched', users.length, 'users from storage');
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.json(users);
+    } catch (error) {
+      console.error("[API] Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get('/api/user/:id', async (req, res) => {
+    try {
+      console.log('[API] Getting user by ID:', req.params.id);
+      const { id } = req.params;
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        console.log('[API] User not found:', id);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log('[API] User found:', user.email, user.role);
+      res.json(user);
+    } catch (error) {
+      console.error("[API] Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Call Scripts & Store Emails Routes (moved from simple-routes.ts)
+  app.get('/api/call-scripts', async (req, res) => {
+    try {
+      const { category, search, isActive } = req.query;
+      const filters = {
+        category: category as string,
+        search: search as string,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      };
+
+      const scripts = await storage.getCallScripts(filters);
+      res.json(scripts);
+    } catch (error) {
+      console.error("Error fetching call scripts:", error);
+      res.status(500).json({ message: "Failed to fetch call scripts" });
+    }
+  });
+
+  app.get('/api/store-emails', async (req, res) => {
+    try {
+      const { category, search, isActive } = req.query;
+      const filters = {
+        category: category as string,
+        search: search as string,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      };
+
+      const emails = await storage.getStoreEmails(filters);
+      res.json(emails);
+    } catch (error) {
+      console.error("Error fetching store emails:", error);
+      res.status(500).json({ message: "Failed to fetch store emails" });
+    }
+  });
+
+  // Personal Notes Routes (moved from simple-routes.ts)  
+  app.get('/api/personal-notes/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { search } = req.query;
+      
+      const personalNotesStorage = (storage as any).personalNotesStorage || storage;
+      const notes = await personalNotesStorage.getPersonalNotes(userId, search as string);
+      res.json(notes);
+    } catch (error) {
+      console.error('Error fetching personal notes:', error);
+      res.status(500).json({ message: 'Failed to fetch notes' });
+    }
+  });
+
+  app.post('/api/personal-notes', async (req, res) => {
+    console.log('[API] POST /api/personal-notes called with body:', req.body);
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      const { subject, content } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+      
+      const { insertPersonalNoteSchema } = await import("@shared/schema");
+      const noteData = insertPersonalNoteSchema.parse({
+        userId,
+        subject,
+        content
+      });
+
+      const personalNotesStorage = (storage as any).personalNotesStorage || storage;
+      const note = await personalNotesStorage.createPersonalNote(noteData);
+      res.status(201).json(note);
+    } catch (error) {
+      console.error('Error creating personal note:', error);
+      res.status(500).json({ message: 'Failed to create note' });
+    }
+  });
+
+  app.patch('/api/personal-notes/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { subject, content } = req.body;
+      
+      const personalNotesStorage = (storage as any).personalNotesStorage || storage;
+      const note = await personalNotesStorage.updatePersonalNote(id, { subject, content });
+      res.json(note);
+    } catch (error) {
+      console.error('Error updating personal note:', error);
+      res.status(500).json({ message: 'Failed to update note' });
+    }
+  });
+
+  app.delete('/api/personal-notes/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const personalNotesStorage = (storage as any).personalNotesStorage || storage;
+      await personalNotesStorage.deletePersonalNote(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting personal note:', error);
+      res.status(500).json({ message: 'Failed to delete note' });
     }
   });
 
