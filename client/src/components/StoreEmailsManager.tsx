@@ -100,7 +100,6 @@ function SortableStoreCard({ store, isDragMode, onCopyEmail, onCopyPhone }: Sort
 
 export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDragMode, setIsDragMode] = useState(false);
   const [localStores, setLocalStores] = useState<StoreEmail[]>([]);
   
   const { toast } = useToast();
@@ -110,7 +109,18 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   // Check if current user is admin - for admin mode, we save to backend
   const isAdmin = user?.role === 'admin';
   
-  console.log('[StoreEmailsManager] User role:', user?.role, 'isAdmin:', isAdmin);
+  // FIXED: Admin users always have drag mode enabled, regular users need to toggle it
+  const [isDragMode, setIsDragMode] = useState(isAdmin || false);
+  
+  console.log('[StoreEmailsManager] Component loaded - User role:', user?.role, 'isAdmin:', isAdmin, 'isDragMode:', isDragMode);
+
+  // Update drag mode when admin status changes  
+  useEffect(() => {
+    if (isAdmin) {
+      setIsDragMode(true);
+      console.log('[StoreEmailsManager] Admin detected - enabling drag mode');
+    }
+  }, [isAdmin]);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -325,15 +335,25 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
         <div className="space-y-4">
           {/* Reordering Controls */}
           <div className="flex gap-2 items-center">
-            <Button
-              onClick={() => setIsDragMode(!isDragMode)}
-              variant={isDragMode ? "default" : "outline"}
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Shuffle className="h-4 w-4" />
-              {isDragMode ? "Exit Reorder Mode" : "Reorder Stores"}
-            </Button>
+            {isAdmin ? (
+              <div className="flex items-center gap-2">
+                <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                  <Shuffle className="h-3 w-3 mr-1" />
+                  Admin Drag Mode Active
+                </Badge>
+                <span className="text-sm text-gray-600">Drag and drop to reorder globally</span>
+              </div>
+            ) : (
+              <Button
+                onClick={() => setIsDragMode(!isDragMode)}
+                variant={isDragMode ? "default" : "outline"}
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Shuffle className="h-4 w-4" />
+                {isDragMode ? "Exit Reorder Mode" : "Reorder Stores"}
+              </Button>
+            )}
             
             {(hasCustomOrder || isDragMode) && (
               <Button
@@ -343,7 +363,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
                 className="flex items-center gap-2"
               >
                 <RotateCcw className="h-4 w-4" />
-                Reset Order
+                {isAdmin ? "Reset Global Order" : "Reset Order"}
               </Button>
             )}
           </div>
