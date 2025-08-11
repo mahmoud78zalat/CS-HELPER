@@ -15,24 +15,20 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { apiRequest } from "@/lib/queryClient";
 import type { CallScript } from "@shared/schema";
-import { getCategoryColor, getGenreColor } from "@/lib/templateColors";
+import { getCategoryBadgeClasses, getGenreBadgeClasses } from "@/lib/templateColors";
 
 interface SortableScriptCardProps {
   script: CallScript;
   isExpanded: boolean;
   isDragMode: boolean;
   onToggleExpansion: (scriptId: string) => void;
-  getCategoryColor: (category: string) => string;
-  getGenreColor: (genre: string) => string;
 }
 
 function SortableScriptCard({ 
   script, 
   isExpanded, 
   isDragMode, 
-  onToggleExpansion, 
-  getCategoryColor,
-  getGenreColor
+  onToggleExpansion
 }: SortableScriptCardProps) {
   const {
     attributes,
@@ -115,28 +111,12 @@ function SortableScriptCard({
               
               <div className="flex gap-3 items-center ml-12">
                 {script.category && (
-                  <Badge 
-                    className="text-xs font-semibold px-3 py-1 rounded-full shadow-sm"
-                    style={{
-                      backgroundColor: getCategoryColor(script.category) + '20', 
-                      color: getCategoryColor(script.category),
-                      borderColor: getCategoryColor(script.category) + '40',
-                      border: '1px solid'
-                    }}
-                  >
+                  <Badge className={`text-xs font-semibold px-3 py-1 rounded-full shadow-sm border ${getCategoryBadgeClasses(script.category)}`}>
                     {script.category}
                   </Badge>
                 )}
                 {script.genre && (
-                  <Badge 
-                    className="text-xs font-semibold px-3 py-1 rounded-full shadow-sm"
-                    style={{
-                      backgroundColor: getGenreColor(script.genre) + '15', 
-                      color: getGenreColor(script.genre),
-                      borderColor: getGenreColor(script.genre),
-                      border: '1px solid'
-                    }}
-                  >
+                  <Badge className={`text-xs font-semibold px-3 py-1 rounded-full shadow-sm border ${getGenreBadgeClasses(script.genre)}`}>
                     {script.genre}
                   </Badge>
                 )}
@@ -485,9 +465,6 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
                       isExpanded={expandedScripts.has(script.id)}
                       isDragMode={isDragMode}
                       onToggleExpansion={toggleScriptExpansion}
-
-                      getCategoryColor={getCategoryColor}
-                      getGenreColor={getGenreColor}
                     />
                   ))}
                 </div>

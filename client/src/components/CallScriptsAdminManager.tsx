@@ -48,7 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Phone, Search, Plus, Edit, Trash2, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { getCategoryColor, getGenreColor } from "@/lib/templateColors";
+import { getCategoryBadgeClasses, getGenreBadgeClasses } from "@/lib/templateColors";
 
 // Sortable Script Item Component
 function SortableScriptItem({ 
@@ -102,16 +102,10 @@ function SortableScriptItem({
                 )}
               </CardTitle>
               <CardDescription className="flex gap-2 mt-2">
-                <Badge 
-                  variant="secondary" 
-                  className="text-xs"
-                >
+                <Badge className={`text-xs font-semibold px-3 py-1 rounded-full shadow-sm border ${getCategoryBadgeClasses(script.category)}`}>
                   {script.category}
                 </Badge>
-                <Badge 
-                  variant="outline"
-                  className="text-xs"
-                >
+                <Badge className={`text-xs font-semibold px-3 py-1 rounded-full shadow-sm border ${getGenreBadgeClasses(script.genre)}`}>
                   {script.genre}
                 </Badge>
               </CardDescription>

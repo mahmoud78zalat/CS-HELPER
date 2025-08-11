@@ -13,7 +13,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { CallScript } from "@shared/schema";
-import { getCategoryColor, getGenreColor } from "@/lib/templateColors";
+import { getCategoryBadgeClasses, getGenreBadgeClasses } from "@/lib/templateColors";
 
 interface CallScriptsManagerProps {
   onClose: () => void;
@@ -251,28 +251,12 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
                           
                           <div className="flex gap-3 items-center">
                             {script.category && (
-                              <Badge 
-                                className="text-xs font-semibold px-3 py-1 rounded-full shadow-sm"
-                                style={{ 
-                                  backgroundColor: getCategoryColor(script.category) + '20', 
-                                  color: getCategoryColor(script.category), 
-                                  borderColor: getCategoryColor(script.category) + '40',
-                                  border: '1px solid'
-                                }}
-                              >
+                              <Badge className={`text-xs font-semibold px-3 py-1 rounded-full shadow-sm border ${getCategoryBadgeClasses(script.category)}`}>
                                 {script.category}
                               </Badge>
                             )}
                             {script.genre && (
-                              <Badge 
-                                className="text-xs font-semibold px-3 py-1 rounded-full shadow-sm"
-                                style={{ 
-                                  backgroundColor: getGenreColor(script.genre) + '15', 
-                                  color: getGenreColor(script.genre), 
-                                  borderColor: getGenreColor(script.genre),
-                                  border: '1px solid'
-                                }}
-                              >
+                              <Badge className={`text-xs font-semibold px-3 py-1 rounded-full shadow-sm border ${getGenreBadgeClasses(script.genre)}`}>
                                 {script.genre}
                               </Badge>
                             )}
