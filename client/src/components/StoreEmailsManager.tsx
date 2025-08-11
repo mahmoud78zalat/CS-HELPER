@@ -1,193 +1,78 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { Copy, Search, X, Mail, Building, Phone as PhoneIcon, Shuffle, RotateCcw, GripVertical } from "lucide-react";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { Copy, Search, X, Mail, Building, Phone as PhoneIcon } from "lucide-react";
 import type { StoreEmail } from "@shared/schema";
 
 interface StoreEmailsManagerProps {
   onClose: () => void;
 }
 
-interface SortableStoreCardProps {
+interface StoreCardProps {
   store: StoreEmail;
-  isDragMode: boolean;
   onCopyEmail: (email: string, storeName: string) => void;
   onCopyPhone: (phone: string, storeName: string) => void;
 }
 
-function SortableStoreCard({ store, isDragMode, onCopyEmail, onCopyPhone }: SortableStoreCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: store.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
+function StoreCard({ store, onCopyEmail, onCopyPhone }: StoreCardProps) {
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
-      <Card className={`transition-shadow ${isDragging ? 'shadow-lg' : 'hover:shadow-md'}`}>
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                {isDragMode && (
-                  <div 
-                    {...listeners} 
-                    className="cursor-grab active:cursor-grabbing"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <GripVertical className="h-4 w-4 text-gray-400" />
-                  </div>
-                )}
-                <CardTitle className="text-lg font-semibold">
-                  {store.storeName}
-                </CardTitle>
-              </div>
-            </div>
+    <Card className="transition-shadow hover:shadow-md">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-lg font-semibold">
+              {store.storeName}
+            </CardTitle>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Mail className="h-4 w-4 text-gray-500" />
-            <span className="text-sm font-mono">{store.storeEmail}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onCopyEmail(store.storeEmail, store.storeName)}
-              className="h-6 w-6 p-0 ml-auto"
-              title="Copy email"
-            >
-              <Copy className="h-3 w-3" />
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <PhoneIcon className="h-4 w-4 text-gray-500" />
-            <span className="text-sm font-mono">{store.storePhone}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onCopyPhone(store.storePhone, store.storeName)}
-              className="h-6 w-6 p-0 ml-auto"
-              title="Copy phone"
-            >
-              <Copy className="h-3 w-3" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Mail className="h-4 w-4 text-gray-500" />
+          <span className="text-sm font-mono">{store.storeEmail}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onCopyEmail(store.storeEmail, store.storeName)}
+            className="h-6 w-6 p-0 ml-auto"
+            title="Copy email"
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <PhoneIcon className="h-4 w-4 text-gray-500" />
+          <span className="text-sm font-mono">{store.storePhone}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onCopyPhone(store.storePhone, store.storeName)}
+            className="h-6 w-6 p-0 ml-auto"
+            title="Copy phone"
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
 export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDragMode, setIsDragMode] = useState(false);
-  const [localStores, setLocalStores] = useState<StoreEmail[]>([]);
   
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  
-  // Check if current user is admin - for admin mode, we save to backend
-  const isAdmin = user?.role === 'admin';
-  
-  console.log('[StoreEmailsManager] User role:', user?.role, 'isAdmin:', isAdmin);
-
-  // Drag and drop sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   // Fetch store emails
   const { data: storeEmails = [], isLoading: storesLoading } = useQuery<StoreEmail[]>({
     queryKey: ['/api/store-emails'],
     enabled: true
   });
-
-  // Synchronize local state with server data and apply local ordering
-  useEffect(() => {
-    if (storeEmails && storeEmails.length > 0) {
-      // Check for saved local order
-      const savedOrder = localStorage.getItem('storeEmails_local_order');
-      if (savedOrder) {
-        try {
-          const orderMap = JSON.parse(savedOrder);
-          const reorderedStores = [...storeEmails].sort((a, b) => {
-            const aOrder = orderMap[a.id] !== undefined ? orderMap[a.id] : a.orderIndex;
-            const bOrder = orderMap[b.id] !== undefined ? orderMap[b.id] : b.orderIndex;
-            return aOrder - bOrder;
-          });
-          setLocalStores(reorderedStores);
-        } catch {
-          setLocalStores([...storeEmails].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)));
-        }
-      } else {
-        setLocalStores([...storeEmails].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)));
-      }
-    }
-  }, [storeEmails]);
-
-  // Admin reorder mutation - saves to backend database
-  const reorderMutation = useMutation({
-    mutationFn: async (reorderedStores: StoreEmail[]) => {
-      const updates = reorderedStores.map((store, index) => ({
-        id: store.id,
-        orderIndex: index
-      }));
-      
-      console.log('[StoreEmailsManager] ADMIN MODE - Sending reorder request with updates:', updates);
-      
-      const response = await apiRequest('PATCH', '/api/store-emails/reorder', { updates });
-      console.log('[StoreEmailsManager] ADMIN MODE - Reorder response:', response);
-      return response;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Global order updated",
-        description: isAdmin 
-          ? "Store contacts order has been updated globally for all users" 
-          : "Store contacts have been reordered successfully",
-        className: isAdmin 
-          ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800" 
-          : undefined
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
-    },
-    onError: (error) => {
-      console.error('[StoreEmailsManager] Reorder failed:', error);
-      toast({
-        title: "Reorder failed",
-        description: "Failed to save the new order. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-
-
-
 
   const handleCopyEmail = (email: string, storeName: string) => {
     try {
@@ -221,76 +106,20 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     }
   };
 
-
-
-
-
-  // Handle drag end - Admin vs User behavior  
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (over && active.id !== over.id) {
-      const oldIndex = localStores.findIndex((item) => item.id === active.id);
-      const newIndex = localStores.findIndex((item) => item.id === over.id);
-      
-      const reorderedStores = arrayMove(localStores, oldIndex, newIndex);
-      
-      console.log('[StoreEmailsManager] Drag end event:', { active: active.id, over: over.id });
-      console.log('[StoreEmailsManager] Moving store from index', oldIndex, 'to', newIndex);
-      console.log('[StoreEmailsManager] Reordered stores preview:', reorderedStores.map(s => ({ id: s.id, name: s.storeName })));
-      console.log('[StoreEmailsManager] User is admin:', isAdmin);
-      
-      setLocalStores(reorderedStores);
-      
-      if (isAdmin) {
-        // Admin mode: Save to backend database (global order)
-        console.log('[StoreEmailsManager] ADMIN MODE - Saving order to backend database');
-        reorderMutation.mutate(reorderedStores);
-      } else {
-        // Regular user: Save local order to localStorage only
-        const orderMap: Record<string, number> = {};
-        reorderedStores.forEach((store, index) => {
-          orderMap[store.id] = index;
-        });
-        localStorage.setItem('storeEmails_local_order', JSON.stringify(orderMap));
-        console.log('[StoreEmailsManager] USER MODE - saved to localStorage:', orderMap);
-        
-        toast({
-          title: "Contacts reordered",
-          description: "Your personal store contacts order has been updated",
-        });
-      }
-    } else {
-      console.log('[StoreEmailsManager] No reorder needed - same position');
-    }
-  };
-
-  // Reset local ordering
-  const resetLocalOrder = () => {
-    localStorage.removeItem('storeEmails_local_order');
-    setLocalStores([...storeEmails].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)));
-    setIsDragMode(false);
-    toast({
-      title: "Order reset",
-      description: "Your personal store contacts order has been reset to default",
-    });
-  };
-
   const clearSearch = () => {
     setSearchTerm("");
   };
 
-  // Check if there's any custom ordering
-  const hasCustomOrder = localStorage.getItem('storeEmails_local_order') !== null;
-
-  // Filter store emails based on search term using localStores for custom ordering
-  const filteredStoreEmails = localStores.filter((store: StoreEmail) => {
-    const matchesSearch = store.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         store.storeEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         store.storePhone.includes(searchTerm);
-    
-    return matchesSearch && store.isActive;
-  });
+  // Filter store emails based on search term - sort by orderIndex for consistent ordering
+  const filteredStoreEmails = storeEmails
+    .filter((store: StoreEmail) => {
+      const matchesSearch = store.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           store.storeEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           store.storePhone.includes(searchTerm);
+      
+      return matchesSearch && store.isActive;
+    })
+    .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -304,31 +133,6 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
 
         {/* Control Panel */}
         <div className="space-y-4">
-          {/* Reordering Controls */}
-          <div className="flex gap-2 items-center">
-            <Button
-              onClick={() => setIsDragMode(!isDragMode)}
-              variant={isDragMode ? "default" : "outline"}
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Shuffle className="h-4 w-4" />
-              {isDragMode ? "Exit Reorder Mode" : "Reorder Stores"}
-            </Button>
-            
-            {(hasCustomOrder || isDragMode) && (
-              <Button
-                onClick={resetLocalOrder}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Reset Order
-              </Button>
-            )}
-          </div>
-
           {/* Search Controls */}
           <div className="flex gap-4 items-center">
             <div className="relative flex-1">
@@ -358,9 +162,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
 
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Building className="h-4 w-4" />
-            <span>Showing {filteredStoreEmails.length} of {localStores.length} stores</span>
-            {hasCustomOrder && <Badge variant="secondary">Custom Order</Badge>}
-            {isDragMode && <Badge variant="default">Drag Mode</Badge>}
+            <span>Showing {filteredStoreEmails.length} of {storeEmails.length} stores</span>
           </div>
         </div>
 
@@ -377,30 +179,18 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
               </div>
             </div>
           ) : (
-            <DndContext 
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext 
-                items={filteredStoreEmails.map(store => store.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {filteredStoreEmails.map((store) => (
-                  <SortableStoreCard
-                    key={store.id}
-                    store={store}
-                    isDragMode={isDragMode}
-                    onCopyEmail={handleCopyEmail}
-                    onCopyPhone={handleCopyPhone}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
+            <div className="space-y-4">
+              {filteredStoreEmails.map((store) => (
+                <StoreCard
+                  key={store.id}
+                  store={store}
+                  onCopyEmail={handleCopyEmail}
+                  onCopyPhone={handleCopyPhone}
+                />
+              ))}
+            </div>
           )}
         </div>
-
-
       </DialogContent>
     </Dialog>
   );
