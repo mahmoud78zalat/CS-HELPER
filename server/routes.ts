@@ -39,23 +39,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Updates array is required" });
       }
 
-      console.log('[CallScripts] EARLY ROUTE - Reorder request:', updates);
-      console.log('[CallScripts] EARLY ROUTE - Storage type:', storage.constructor?.name);
-      console.log('[CallScripts] EARLY ROUTE - Storage updateCallScript method exists:', typeof storage.updateCallScript);
+      console.log('[CallScripts] FIXED ROUTE - Reorder request:', updates);
+      console.log('[CallScripts] FIXED ROUTE - Storage type:', storage.constructor?.name);
+      console.log('[CallScripts] FIXED ROUTE - Storage updateCallScript method exists:', typeof storage.updateCallScript);
       
-      // Update each call script's order index
-      const updatePromises = updates.map(({ id, orderIndex }) => {
-        console.log(`[CallScripts] EARLY ROUTE - Updating script ${id} with orderIndex ${orderIndex}`);
-        return storage.updateCallScript(id, { orderIndex });
-      });
+      // Update each call script's order index - FIXED TO MATCH WORKING PATTERN
+      for (const update of updates) {
+        if (update.id) {
+          const updateData: any = {};
+          
+          // Handle different order field names from frontend
+          if (typeof update.order === 'number') {
+            updateData.orderIndex = update.order;
+          }
+          if (typeof update.orderIndex === 'number') {
+            updateData.orderIndex = update.orderIndex;
+          }
+          
+          // Only update if we have valid order data
+          if (Object.keys(updateData).length > 0) {
+            console.log(`[CallScripts] FIXED ROUTE - Updating script ${update.id} with:`, updateData);
+            await storage.updateCallScript(update.id, updateData);
+          }
+        }
+      }
       
-      const results = await Promise.all(updatePromises);
-      console.log('[CallScripts] EARLY ROUTE - Update results:', results.map(r => ({ id: r.id, orderIndex: r.orderIndex })));
-      
-      console.log('[CallScripts] EARLY ROUTE - Call scripts reordered successfully');
+      console.log('[CallScripts] FIXED ROUTE - Call scripts reordered successfully');
       res.json({ message: "Call scripts reordered successfully" });
     } catch (error) {
-      console.error("EARLY ROUTE - Error reordering call scripts:", error);
+      console.error("FIXED ROUTE - Error reordering call scripts:", error);
       res.status(500).json({ message: "Failed to reorder call scripts" });
     }
   });
@@ -67,23 +79,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Updates array is required" });
       }
 
-      console.log('[StoreEmails] EARLY ROUTE - Reorder request:', updates);
-      console.log('[StoreEmails] EARLY ROUTE - Storage type:', storage.constructor?.name);
-      console.log('[StoreEmails] EARLY ROUTE - Storage updateStoreEmail method exists:', typeof storage.updateStoreEmail);
+      console.log('[StoreEmails] FIXED ROUTE - Reorder request:', updates);
+      console.log('[StoreEmails] FIXED ROUTE - Storage type:', storage.constructor?.name);
+      console.log('[StoreEmails] FIXED ROUTE - Storage updateStoreEmail method exists:', typeof storage.updateStoreEmail);
       
-      // Update each store email's order index
-      const updatePromises = updates.map(({ id, orderIndex }) => {
-        console.log(`[StoreEmails] EARLY ROUTE - Updating email ${id} with orderIndex ${orderIndex}`);
-        return storage.updateStoreEmail(id, { orderIndex });
-      });
+      // Update each store email's order index - FIXED TO MATCH WORKING PATTERN
+      for (const update of updates) {
+        if (update.id) {
+          const updateData: any = {};
+          
+          // Handle different order field names from frontend
+          if (typeof update.order === 'number') {
+            updateData.orderIndex = update.order;
+          }
+          if (typeof update.orderIndex === 'number') {
+            updateData.orderIndex = update.orderIndex;
+          }
+          
+          // Only update if we have valid order data
+          if (Object.keys(updateData).length > 0) {
+            console.log(`[StoreEmails] FIXED ROUTE - Updating email ${update.id} with:`, updateData);
+            await storage.updateStoreEmail(update.id, updateData);
+          }
+        }
+      }
       
-      const results = await Promise.all(updatePromises);
-      console.log('[StoreEmails] EARLY ROUTE - Update results:', results.map(r => ({ id: r.id, orderIndex: r.orderIndex })));
-      
-      console.log('[StoreEmails] EARLY ROUTE - Store emails reordered successfully');
+      console.log('[StoreEmails] FIXED ROUTE - Store emails reordered successfully');
       res.json({ message: "Store emails reordered successfully" });
     } catch (error) {
-      console.error("EARLY ROUTE - Error reordering store emails:", error);
+      console.error("FIXED ROUTE - Error reordering store emails:", error);
       res.status(500).json({ message: "Failed to reorder store emails" });
     }
   });
