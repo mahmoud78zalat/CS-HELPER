@@ -19,6 +19,10 @@ import {
   type InsertUserAnnouncementAck,
   type Faq,
   type InsertFaq,
+  type CallScript,
+  type InsertCallScript,
+  type StoreEmail,
+  type InsertStoreEmail,
   // Legacy types for backward compatibility
   type Template,
   type InsertTemplate,
@@ -37,6 +41,8 @@ export class MemoryStorage implements IStorage {
   private announcements = new Map<string, Announcement>();
   private userAnnouncementAcks = new Map<string, UserAnnouncementAck>();
   private faqs = new Map<string, Faq>();
+  private callScripts = new Map<string, CallScript>();
+  private storeEmails = new Map<string, StoreEmail>();
 
   constructor() {
     console.log('[MemoryStorage] ⚠️  Using memory storage - data will not persist!');
@@ -46,6 +52,110 @@ export class MemoryStorage implements IStorage {
   private initializeSampleData(): void {
     // FAQ data will be fetched from database only - no hardcoded data
     console.log('[MemoryStorage] FAQ system configured to use database data only');
+    
+    // Add sample call scripts for testing
+    this.initializeSampleCallScripts();
+    this.initializeSampleStoreEmails();
+  }
+
+  private initializeSampleCallScripts(): void {
+    const sampleScripts = [
+      {
+        id: "cs1",
+        name: "Welcome Greeting",
+        content: "Hello, thank you for calling our support. How may I assist you today?",
+        category: "greeting",
+        genre: "general greeting",
+        isActive: true,
+        orderIndex: 1,
+        createdBy: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+      },
+      {
+        id: "cs2", 
+        name: "Order Status Check",
+        content: "I'll be happy to check your order status. Could you please provide me with your order number?",
+        category: "order inquiry",
+        genre: "order id",
+        isActive: true,
+        orderIndex: 2,
+        createdBy: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+      },
+      {
+        id: "cs3",
+        name: "Apology for Delay",
+        content: "I sincerely apologize for the delay in your order delivery. Let me look into this matter immediately and find a solution for you.",
+        category: "delivery problems", 
+        genre: "apology",
+        isActive: true,
+        orderIndex: 3,
+        createdBy: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+      }
+    ];
+
+    sampleScripts.forEach(script => {
+      this.callScripts.set(script.id, script);
+    });
+    
+    console.log('[MemoryStorage] Initialized with 3 sample call scripts');
+  }
+
+  private initializeSampleStoreEmails(): void {
+    const sampleStoreEmails = [
+      {
+        id: "se1",
+        storeName: "Dubai Mall Store",
+        storeEmail: "dubaimall@brandsforless.ae",
+        storePhone: "+971-4-123-4567",
+        isActive: true,
+        createdBy: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+      },
+      {
+        id: "se2",
+        storeName: "Mall of Emirates Store", 
+        storeEmail: "moe@brandsforless.ae",
+        storePhone: "+971-4-987-6543",
+        isActive: true,
+        createdBy: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+      },
+      {
+        id: "se3",
+        storeName: "City Centre Deira Store",
+        storeEmail: "deira@brandsforless.ae", 
+        storePhone: "+971-4-555-0123",
+        isActive: true,
+        createdBy: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: null,
+        lastSyncedAt: null,
+      }
+    ];
+
+    sampleStoreEmails.forEach(storeEmail => {
+      this.storeEmails.set(storeEmail.id, storeEmail);
+    });
+    
+    console.log('[MemoryStorage] Initialized with 3 sample store emails');
   }
 
 
@@ -900,5 +1010,164 @@ export class MemoryStorage implements IStorage {
   async getUserSeenAnnouncements(userId: string): Promise<string[]> {
     console.log(`[MemoryStorage] getUserSeenAnnouncements for user ${userId} - returning empty`);
     return [];
+  }
+
+  // Call Scripts operations
+  async getCallScripts(filters?: {
+    category?: string;
+    search?: string;
+    isActive?: boolean;
+  }): Promise<CallScript[]> {
+    let scriptList = Array.from(this.callScripts.values());
+
+    if (filters?.category) {
+      scriptList = scriptList.filter(s => s.category === filters.category);
+    }
+
+    if (filters?.search) {
+      const searchLower = filters.search.toLowerCase();
+      scriptList = scriptList.filter(s => 
+        s.name.toLowerCase().includes(searchLower) ||
+        s.content.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (filters?.isActive !== undefined) {
+      scriptList = scriptList.filter(s => s.isActive === filters.isActive);
+    }
+
+    return scriptList.sort((a, b) => a.orderIndex - b.orderIndex);
+  }
+
+  async getCallScript(id: string): Promise<CallScript | undefined> {
+    return this.callScripts.get(id);
+  }
+
+  async createCallScript(script: InsertCallScript): Promise<CallScript> {
+    const id = nanoid();
+    const now = new Date();
+    
+    const newScript: CallScript = {
+      id,
+      name: script.name,
+      content: script.content,
+      category: script.category || null,
+      genre: script.genre || null,
+      isActive: script.isActive !== undefined ? script.isActive : true,
+      orderIndex: script.orderIndex || 0,
+      createdBy: script.createdBy || null,
+      createdAt: now,
+      updatedAt: now,
+      supabaseId: null,
+      lastSyncedAt: null,
+    };
+
+    this.callScripts.set(id, newScript);
+    console.log(`[MemoryStorage] Created call script: ${script.name}`);
+    return newScript;
+  }
+
+  async updateCallScript(id: string, script: Partial<InsertCallScript>): Promise<CallScript> {
+    const existingScript = this.callScripts.get(id);
+    if (!existingScript) {
+      throw new Error("Call script not found");
+    }
+
+    const updatedScript: CallScript = {
+      ...existingScript,
+      ...script,
+      updatedAt: new Date(),
+    };
+
+    this.callScripts.set(id, updatedScript);
+    console.log(`[MemoryStorage] Updated call script: ${updatedScript.name}`);
+    return updatedScript;
+  }
+
+  async deleteCallScript(id: string): Promise<void> {
+    const script = this.callScripts.get(id);
+    if (script) {
+      console.log(`[MemoryStorage] Deleted call script: ${script.name}`);
+    }
+    this.callScripts.delete(id);
+  }
+
+  // Store Emails operations
+  async getStoreEmails(filters?: {
+    search?: string;
+    isActive?: boolean;
+  }): Promise<StoreEmail[]> {
+    let emailList = Array.from(this.storeEmails.values());
+
+    if (filters?.search) {
+      const searchLower = filters.search.toLowerCase();
+      emailList = emailList.filter(e => 
+        e.storeName.toLowerCase().includes(searchLower) ||
+        e.storeEmail.toLowerCase().includes(searchLower) ||
+        e.storePhone.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (filters?.isActive !== undefined) {
+      emailList = emailList.filter(e => e.isActive === filters.isActive);
+    }
+
+    return emailList.sort((a, b) => a.storeName.localeCompare(b.storeName));
+  }
+
+  async getAllStoreEmails(): Promise<StoreEmail[]> {
+    return Array.from(this.storeEmails.values())
+      .sort((a, b) => a.storeName.localeCompare(b.storeName));
+  }
+
+  async getStoreEmail(id: string): Promise<StoreEmail | undefined> {
+    return this.storeEmails.get(id);
+  }
+
+  async createStoreEmail(storeEmail: InsertStoreEmail): Promise<StoreEmail> {
+    const id = nanoid();
+    const now = new Date();
+    
+    const newStoreEmail: StoreEmail = {
+      id,
+      storeName: storeEmail.storeName,
+      storeEmail: storeEmail.storeEmail,
+      storePhone: storeEmail.storePhone,
+      isActive: storeEmail.isActive !== undefined ? storeEmail.isActive : true,
+      createdBy: storeEmail.createdBy || null,
+      createdAt: now,
+      updatedAt: now,
+      supabaseId: null,
+      lastSyncedAt: null,
+    };
+
+    this.storeEmails.set(id, newStoreEmail);
+    console.log(`[MemoryStorage] Created store email: ${storeEmail.storeName}`);
+    return newStoreEmail;
+  }
+
+  async updateStoreEmail(id: string, storeEmail: Partial<InsertStoreEmail>): Promise<StoreEmail> {
+    const existingEmail = this.storeEmails.get(id);
+    if (!existingEmail) {
+      throw new Error("Store email not found");
+    }
+
+    const updatedEmail: StoreEmail = {
+      ...existingEmail,
+      ...storeEmail,
+      updatedAt: new Date(),
+    };
+
+    this.storeEmails.set(id, updatedEmail);
+    console.log(`[MemoryStorage] Updated store email: ${updatedEmail.storeName}`);
+    return updatedEmail;
+  }
+
+  async deleteStoreEmail(id: string): Promise<void> {
+    const email = this.storeEmails.get(id);
+    if (email) {
+      console.log(`[MemoryStorage] Deleted store email: ${email.storeName}`);
+    }
+    this.storeEmails.delete(id);
   }
 }
