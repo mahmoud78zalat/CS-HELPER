@@ -21,10 +21,21 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   
   const { toast } = useToast();
 
-  // Fetch call scripts
-  const { data: callScripts = [], isLoading: scriptsLoading } = useQuery({
+  // Fetch call scripts with authentication
+  const { data: callScripts = [], isLoading: scriptsLoading } = useQuery<CallScript[]>({
     queryKey: ['/api/call-scripts'],
-    enabled: true
+    enabled: true,
+    queryFn: async (): Promise<CallScript[]> => {
+      const response = await fetch('/api/call-scripts', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': localStorage.getItem('current_user_id') || '',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch call scripts');
+      return response.json();
+    }
   });
 
   // Fetch categories and genres from existing endpoints

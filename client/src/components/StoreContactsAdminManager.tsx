@@ -44,10 +44,21 @@ export function StoreContactsAdminManager({ onClose }: StoreContactsAdminManager
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch store emails
-  const { data: storeEmails = [], isLoading: storesLoading } = useQuery({
+  // Fetch store emails with authentication
+  const { data: storeEmails = [], isLoading: storesLoading } = useQuery<StoreEmail[]>({
     queryKey: ['/api/store-emails'],
-    enabled: true
+    enabled: true,
+    queryFn: async (): Promise<StoreEmail[]> => {
+      const response = await fetch('/api/store-emails', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': localStorage.getItem('current_user_id') || '',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch store emails');
+      return response.json();
+    }
   });
 
   // Delete mutation
