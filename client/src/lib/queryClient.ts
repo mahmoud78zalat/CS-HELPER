@@ -19,25 +19,26 @@ export async function apiRequest(
   let userEmail = '';
   let userRole = '';
   
-  if (!currentUserId) {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      currentUserId = session?.user?.id;
-      userEmail = session?.user?.email || '';
-    } catch (error) {
-      console.warn('[apiRequest] Failed to get session, using fallback');
-    }
+  // Primary: use stored user data in localStorage
+  const storedUser = localStorage.getItem('current_user_id');
+  const storedEmail = localStorage.getItem('current_user_email');
+  const storedRole = localStorage.getItem('current_user_role');
+  
+  if (storedUser) {
+    currentUserId = currentUserId || storedUser;
+    userEmail = storedEmail || '';
+    userRole = storedRole || '';
   }
   
-  // Fallback to stored user data in localStorage
-  if (!currentUserId) {
-    const storedUser = localStorage.getItem('current_user_id');
-    const storedEmail = localStorage.getItem('current_user_email');
-    const storedRole = localStorage.getItem('current_user_role');
-    if (storedUser) {
-      currentUserId = storedUser;
-      userEmail = storedEmail || '';
-      userRole = storedRole || '';
+  // Fallback: try to get from session if localStorage is missing data
+  if (!currentUserId || !userRole) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      currentUserId = currentUserId || session?.user?.id;
+      userEmail = userEmail || session?.user?.email || '';
+      // Note: Supabase session doesn't contain role, so we'll need to fetch it if missing
+    } catch (error) {
+      console.warn('[apiRequest] Failed to get session, using fallback');
     }
   }
   
@@ -53,6 +54,15 @@ export async function apiRequest(
     email: userEmail || 'missing',
     role: userRole || 'missing'
   });
+  
+  // Debug localStorage for role issues
+  if (!userRole && url.includes('/reorder')) {
+    console.log('[apiRequest] ROLE DEBUG - localStorage values:', {
+      current_user_id: localStorage.getItem('current_user_id'),
+      current_user_email: localStorage.getItem('current_user_email'),
+      current_user_role: localStorage.getItem('current_user_role')
+    });
+  }
 
   if (method === 'POST' && url.includes('/api/live-reply-template-groups')) {
     console.log('[apiRequest] Template group creation - detailed debug:');

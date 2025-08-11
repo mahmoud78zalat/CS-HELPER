@@ -113,9 +113,12 @@ export function StoreContactsAdminManager({ onClose }: StoreContactsAdminManager
         orderIndex: index
       }));
       
+      console.log('[StoreContactsAdminManager] Sending reorder request:', updates);
+      
       return apiRequest('PATCH', '/api/store-emails/reorder', { updates });
     },
     onSuccess: () => {
+      console.log('[StoreContactsAdminManager] Reorder mutation successful');
       queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
       toast({
         title: "Order updated",
@@ -123,7 +126,7 @@ export function StoreContactsAdminManager({ onClose }: StoreContactsAdminManager
       });
     },
     onError: (error: any) => {
-      console.error('Reorder error:', error);
+      console.error('[StoreContactsAdminManager] Reorder error:', error);
       toast({
         title: "Reorder failed",  
         description: error?.message || "Unable to reorder store contacts",
@@ -136,13 +139,24 @@ export function StoreContactsAdminManager({ onClose }: StoreContactsAdminManager
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
+    console.log('[StoreContactsAdminManager] Drag end event:', { 
+      active: active.id, 
+      over: over?.id 
+    });
+
     if (active.id !== over?.id) {
       const oldIndex = localStores.findIndex((store) => store.id === active.id);
       const newIndex = localStores.findIndex((store) => store.id === over?.id);
 
+      console.log('[StoreContactsAdminManager] Moving from index', oldIndex, 'to', newIndex);
+
       const reorderedStores = arrayMove(localStores, oldIndex, newIndex);
+      console.log('[StoreContactsAdminManager] Reordered stores preview:', reorderedStores.map(s => ({ id: s.id, name: s.storeName })));
+      
       setLocalStores(reorderedStores);
       reorderMutation.mutate(reorderedStores);
+    } else {
+      console.log('[StoreContactsAdminManager] No reorder needed - same position');
     }
   };
 

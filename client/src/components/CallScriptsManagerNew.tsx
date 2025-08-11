@@ -174,16 +174,22 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   // Reorder mutation for admin users
   const reorderMutation = useMutation({
     mutationFn: async (reorderedScripts: CallScript[]) => {
-      if (user?.role !== 'admin') return;
+      if (user?.role !== 'admin') {
+        console.log('[CallScriptsManagerNew] Mutation blocked - user is not admin');
+        return;
+      }
       
       const updates = reorderedScripts.map((script, index) => ({
         id: script.id,
         orderIndex: index
       }));
       
+      console.log('[CallScriptsManagerNew] Sending reorder request:', updates);
+      
       return apiRequest('PATCH', '/api/call-scripts/reorder', { updates });
     },
     onSuccess: () => {
+      console.log('[CallScriptsManagerNew] Reorder mutation successful');
       queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
       toast({
         title: "Global order updated",
@@ -191,7 +197,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
       });
     },
     onError: (error: any) => {
-      console.error('Reorder error:', error);
+      console.error('[CallScriptsManagerNew] Reorder error:', error);
       toast({
         title: "Reorder failed",  
         description: error?.message || "Unable to reorder call scripts",
@@ -244,10 +250,18 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
+    console.log('[CallScriptsManagerNew] Drag end event:', { 
+      active: active.id, 
+      over: over?.id, 
+      userRole: user?.role 
+    });
+    
     if (over && active.id !== over.id) {
       setLocalScripts((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        console.log('[CallScriptsManagerNew] Moving from index', oldIndex, 'to', newIndex);
         
         const newItems = arrayMove(items, oldIndex, newIndex);
         
@@ -256,6 +270,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
           // Clear localStorage to prevent conflicts with database ordering
           localStorage.removeItem('callScripts_local_order');
           console.log('[CallScriptsManagerNew] Admin reorder - cleared localStorage, sending to database');
+          console.log('[CallScriptsManagerNew] New items preview:', newItems.map(s => ({ id: s.id, name: s.name })));
           reorderMutation.mutate(newItems);
         } else {
           // Regular users: Save local order to localStorage
@@ -264,6 +279,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
             orderMap[item.id] = index;
           });
           localStorage.setItem('callScripts_local_order', JSON.stringify(orderMap));
+          console.log('[CallScriptsManagerNew] User reorder - saved to localStorage:', orderMap);
           
           toast({
             title: "Scripts reordered",
@@ -273,6 +289,8 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
         
         return newItems;
       });
+    } else {
+      console.log('[CallScriptsManagerNew] No reorder needed - same position or no over target');
     }
   };
 
