@@ -31,6 +31,55 @@ async function isAuthenticated(req: any, res: any, next: any) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
 
+  // Critical API route protection: Register these routes FIRST to prevent Vite interception
+  app.patch('/api/call-scripts/reorder', isAuthenticated, async (req: any, res) => {
+    try {
+      const { updates } = req.body;
+      if (!Array.isArray(updates) || updates.length === 0) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[CallScripts] EARLY ROUTE - Reorder request:', updates);
+      
+      // Update each call script's order index
+      const updatePromises = updates.map(({ id, orderIndex }) => 
+        storage.updateCallScript(id, { orderIndex })
+      );
+      
+      await Promise.all(updatePromises);
+      
+      console.log('[CallScripts] EARLY ROUTE - Call scripts reordered successfully');
+      res.json({ message: "Call scripts reordered successfully" });
+    } catch (error) {
+      console.error("EARLY ROUTE - Error reordering call scripts:", error);
+      res.status(500).json({ message: "Failed to reorder call scripts" });
+    }
+  });
+
+  app.patch('/api/store-emails/reorder', isAuthenticated, async (req: any, res) => {
+    try {
+      const { updates } = req.body;
+      if (!Array.isArray(updates) || updates.length === 0) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[StoreEmails] EARLY ROUTE - Reorder request:', updates);
+      
+      // Update each store email's order index
+      const updatePromises = updates.map(({ id, orderIndex }) => 
+        storage.updateStoreEmail(id, { orderIndex })
+      );
+      
+      await Promise.all(updatePromises);
+      
+      console.log('[StoreEmails] EARLY ROUTE - Store emails reordered successfully');
+      res.json({ message: "Store emails reordered successfully" });
+    } catch (error) {
+      console.error("EARLY ROUTE - Error reordering store emails:", error);
+      res.status(500).json({ message: "Failed to reorder store emails" });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
@@ -966,53 +1015,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/store-emails/reorder', isAuthenticated, async (req: any, res) => {
-    try {
-      const { updates } = req.body;
-      if (!Array.isArray(updates) || updates.length === 0) {
-        return res.status(400).json({ message: "Updates array is required" });
-      }
-
-      console.log('[StoreEmails] Reorder request:', updates);
-      
-      // Update each store email's order index
-      const updatePromises = updates.map(({ id, orderIndex }) => 
-        storage.updateStoreEmail(id, { orderIndex })
-      );
-      
-      await Promise.all(updatePromises);
-      
-      console.log('[StoreEmails] Store emails reordered successfully');
-      res.json({ message: "Store emails reordered successfully" });
-    } catch (error) {
-      console.error("Error reordering store emails:", error);
-      res.status(500).json({ message: "Failed to reorder store emails" });
-    }
-  });
-
-  app.patch('/api/call-scripts/reorder', isAuthenticated, async (req: any, res) => {
-    try {
-      const { updates } = req.body;
-      if (!Array.isArray(updates) || updates.length === 0) {
-        return res.status(400).json({ message: "Updates array is required" });
-      }
-
-      console.log('[CallScripts] Reorder request:', updates);
-      
-      // Update each call script's order index
-      const updatePromises = updates.map(({ id, orderIndex }) => 
-        storage.updateCallScript(id, { orderIndex })
-      );
-      
-      await Promise.all(updatePromises);
-      
-      console.log('[CallScripts] Call scripts reordered successfully');
-      res.json({ message: "Call scripts reordered successfully" });
-    } catch (error) {
-      console.error("Error reordering call scripts:", error);
-      res.status(500).json({ message: "Failed to reorder call scripts" });
-    }
-  });
+  // NOTE: Reorder endpoints moved to top of file to prevent Vite interception
 
   // Template Categories and Genres endpoints (for Call Scripts)
   app.get('/api/template-categories', async (req, res) => {
