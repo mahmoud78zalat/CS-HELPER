@@ -3782,25 +3782,52 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateCallScript(id: string, updates: any) {
-    // Mock implementation - should update in database
-    throw new Error('Call scripts table not created yet. Please run the database setup script.');
+    console.log('[SupabaseStorage] Updating call script:', id, updates);
     
-    // This would be the actual implementation once tables are created:
-    // const updatedScript = {
-    //   id,
-    //   name: updates.name || 'Updated Script',
-    //   content: updates.content || 'Updated content',
-    //   category: updates.category || null,
-    //   genre: updates.genre || null,
-    //   orderIndex: updates.orderIndex || 0,
-    //   isActive: updates.isActive !== undefined ? updates.isActive : true,
-    //   createdBy: updates.createdBy || null,
-    //   createdAt: new Date(),
-    //   updatedAt: new Date(),
-    //   supabaseId: id,
-    //   lastSyncedAt: new Date(),
-    // };
-    // return updatedScript;
+    const updateData = {
+      name: updates.name,
+      content: updates.content,
+      category: updates.category || null,
+      genre: updates.genre || null,
+      order_index: updates.orderIndex || 0,
+      is_active: updates.isActive !== undefined ? updates.isActive : true,
+      updated_at: new Date().toISOString(),
+      last_synced_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await this.serviceClient
+      .from('call_scripts')
+      .update(updateData)
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] Error updating call script:', error);
+      throw new Error(`Failed to update call script: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('Call script not found');
+    }
+
+    console.log('[SupabaseStorage] Call script updated successfully:', data);
+    
+    // Convert back to the expected format
+    return {
+      id: data.id,
+      name: data.name,
+      content: data.content,
+      category: data.category,
+      genre: data.genre,
+      orderIndex: data.order_index,
+      isActive: data.is_active,
+      createdBy: data.created_by,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+      supabaseId: data.supabase_id,
+      lastSyncedAt: new Date(data.last_synced_at),
+    };
   }
 
   async deleteCallScript(id: string) {
@@ -3909,28 +3936,64 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateStoreEmail(id: string, updates: any) {
-    // Mock implementation - should update in database
-    throw new Error('Store emails table not created yet. Please run the database setup script.');
+    console.log('[SupabaseStorage] Updating store email:', id, updates);
     
-    // This would be the actual implementation once tables are created:
-    // const updatedStoreEmail = {
-    //   id,
-    //   storeName: updates.storeName || 'Updated Store',
-    //   storeEmail: updates.storeEmail || 'updated@store.com',
-    //   storePhone: updates.storePhone || '+000-000-0000',
-    //   isActive: updates.isActive !== undefined ? updates.isActive : true,
-    //   createdBy: updates.createdBy || null,
-    //   createdAt: new Date(),
-    //   updatedAt: new Date(),
-    //   supabaseId: id,
-    //   lastSyncedAt: new Date(),
-    // };
-    // return updatedStoreEmail;
+    const updateData = {
+      store_name: updates.storeName,
+      store_email: updates.storeEmail,
+      store_phone: updates.storePhone,
+      is_active: updates.isActive !== undefined ? updates.isActive : true,
+      updated_at: new Date().toISOString(),
+      last_synced_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await this.serviceClient
+      .from('store_emails')
+      .update(updateData)
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] Error updating store email:', error);
+      throw new Error(`Failed to update store email: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('Store email not found');
+    }
+
+    console.log('[SupabaseStorage] Store email updated successfully:', data);
+    
+    // Convert back to the expected format
+    return {
+      id: data.id,
+      storeName: data.store_name,
+      storeEmail: data.store_email,
+      storePhone: data.store_phone,
+      isActive: data.is_active,
+      createdBy: data.created_by,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+      supabaseId: data.supabase_id,
+      lastSyncedAt: new Date(data.last_synced_at),
+    };
   }
 
   async deleteStoreEmail(id: string) {
-    // Mock implementation - should delete from database
-    throw new Error('Store emails table not created yet. Please run the database setup script.');
+    console.log('[SupabaseStorage] Deleting store email:', id);
+    
+    const { error } = await this.serviceClient
+      .from('store_emails')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('[SupabaseStorage] Error deleting store email:', error);
+      throw new Error(`Failed to delete store email: ${error.message}`);
+    }
+
+    console.log('[SupabaseStorage] Store email deleted successfully');
   }
 
   // Template Categories and Genres for Call Scripts filtering

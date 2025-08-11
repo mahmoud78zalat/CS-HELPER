@@ -281,8 +281,8 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
       {showCreateModal && (
         <CallScriptCreateModal 
           onClose={() => setShowCreateModal(false)}
-          categories={categoriesData}
-          genres={genresData}
+          categories={(categoriesData as any[]) || []}
+          genres={(genresData as any[]) || []}
         />
       )}
 
@@ -294,8 +294,8 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
             setShowEditModal(false);
             setEditingScript(null);
           }}
-          categories={categoriesData}
-          genres={genresData}
+          categories={(categoriesData as any[]) || []}
+          genres={(genresData as any[]) || []}
         />
       )}
     </>
@@ -467,7 +467,7 @@ function CallScriptEditModal({
   const updateMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       const response = await fetch(`/api/call-scripts/${script.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(data),

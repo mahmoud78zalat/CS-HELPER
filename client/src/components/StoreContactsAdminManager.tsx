@@ -201,7 +201,7 @@ export function StoreContactsAdminManager({ onClose }: StoreContactsAdminManager
               <div className="text-center py-8">Loading store contacts...</div>
             ) : filteredStoreEmails.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                {storeEmails.length === 0 ? "No store contacts found" : "No stores match your search"}
+                {(storeEmails as StoreEmail[]).length === 0 ? "No store contacts found" : "No stores match your search"}
               </div>
             ) : (
               <div className="grid gap-4">
@@ -431,7 +431,7 @@ function StoreContactEditModal({
   const updateMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       const response = await fetch(`/api/store-emails/${store.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(data),
