@@ -683,64 +683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Call Scripts API Routes
-  app.get('/api/call-scripts', isAuthenticated, async (req: any, res) => {
-    try {
-      const { category, search, isActive } = req.query;
-      const scripts = await storage.getCallScripts({
-        category: category || undefined,
-        search: search || undefined,
-        isActive: isActive ? isActive === 'true' : undefined,
-      });
-      res.json(scripts);
-    } catch (error) {
-      console.error("Error fetching call scripts:", error);
-      res.status(500).json({ message: "Failed to fetch call scripts" });
-    }
-  });
 
-  app.get('/api/call-scripts/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const script = await storage.getCallScript(id);
-      if (!script) {
-        return res.status(404).json({ message: "Call script not found" });
-      }
-      res.json(script);
-    } catch (error) {
-      console.error("Error fetching call script:", error);
-      res.status(500).json({ message: "Failed to fetch call script" });
-    }
-  });
-
-  // Store Emails API Routes
-  app.get('/api/store-emails', isAuthenticated, async (req: any, res) => {
-    try {
-      const { search, isActive } = req.query;
-      const emails = await storage.getStoreEmails({
-        search: search || undefined,
-        isActive: isActive ? isActive === 'true' : undefined,
-      });
-      res.json(emails);
-    } catch (error) {
-      console.error("Error fetching store emails:", error);
-      res.status(500).json({ message: "Failed to fetch store emails" });
-    }
-  });
-
-  app.get('/api/store-emails/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const email = await storage.getStoreEmail(id);
-      if (!email) {
-        return res.status(404).json({ message: "Store email not found" });
-      }
-      res.json(email);
-    } catch (error) {
-      console.error("Error fetching store email:", error);
-      res.status(500).json({ message: "Failed to fetch store email" });
-    }
-  });
 
   // Template Categories and Genres API (for Call Scripts filtering)
   app.get('/api/template-categories', isAuthenticated, async (req: any, res) => {
