@@ -62,16 +62,16 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
     enabled: true
   });
 
-  // Fetch categories and genres from existing endpoints
+  // Fetch connected categories and genres
   const { data: categoriesData = [] } = useQuery({
-    queryKey: ['/api/template-categories'],
+    queryKey: ['/api/connected-template-categories'],
     enabled: true
   });
 
-  const { data: genresData = [] } = useQuery({
-    queryKey: ['/api/template-genres'],
-    enabled: true
-  });
+  // Extract all genres from all categories for filtering
+  const allGenres = categoriesData ? categoriesData.flatMap((cat: any) => 
+    cat.genres?.map((genre: any) => ({ ...genre, categoryName: cat.name, categoryId: cat.id })) || []
+  ) : [];
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -288,7 +288,7 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
         <CallScriptCreateModal 
           onClose={() => setShowCreateModal(false)}
           categories={(categoriesData as any[]) || []}
-          genres={(genresData as any[]) || []}
+          genres={allGenres || []}
         />
       )}
 
@@ -301,7 +301,7 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
             setEditingScript(null);
           }}
           categories={(categoriesData as any[]) || []}
-          genres={(genresData as any[]) || []}
+          genres={allGenres || []}
         />
       )}
     </>
@@ -370,7 +370,7 @@ function CallScriptCreateModal({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-6">
         <DialogHeader>
           <DialogTitle>Create New Call Script</DialogTitle>
         </DialogHeader>
@@ -519,7 +519,7 @@ function CallScriptEditModal({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-6">
         <DialogHeader>
           <DialogTitle>Edit Call Script</DialogTitle>
         </DialogHeader>
@@ -539,7 +539,10 @@ function CallScriptEditModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="category">Category *</Label>
-              <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+              <Select 
+                value={formData.category} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value, genre: "" }))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -555,12 +558,18 @@ function CallScriptEditModal({
 
             <div>
               <Label htmlFor="genre">Genre *</Label>
-              <Select value={formData.genre} onValueChange={(value) => setFormData(prev => ({ ...prev, genre: value }))}>
+              <Select 
+                value={formData.genre} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, genre: value }))}
+                disabled={!formData.category}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select genre" />
+                  <SelectValue placeholder={!formData.category ? "Select category first" : "Select genre"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {genres.map((genre: any) => (
+                  {genres
+                    .filter((genre: any) => genre.categoryName === formData.category)
+                    .map((genre: any) => (
                     <SelectItem key={genre.id} value={genre.name}>
                       {genre.name}
                     </SelectItem>

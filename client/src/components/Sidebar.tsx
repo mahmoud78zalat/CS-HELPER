@@ -313,7 +313,7 @@ export default function Sidebar({
               className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg p-2 lg:p-3 transition-colors duration-200 shadow-sm"
             >
               <div className="flex items-center justify-center lg:justify-start space-x-3">
-                <Phone className="h-4 w-4" />
+                <span className="text-lg">📞</span>
                 <span className="hidden lg:block font-medium">Call Scripts</span>
               </div>
             </Button>

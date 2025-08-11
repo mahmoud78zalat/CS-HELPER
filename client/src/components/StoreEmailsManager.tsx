@@ -79,7 +79,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building className="h-5 w-5" />

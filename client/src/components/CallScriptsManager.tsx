@@ -39,16 +39,16 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
     }
   });
 
-  // Fetch categories and genres from existing endpoints
+  // Fetch connected categories and genres
   const { data: categoriesData = [] } = useQuery({
-    queryKey: ['/api/template-categories'],
+    queryKey: ['/api/connected-template-categories'],
     enabled: true
   });
 
-  const { data: genresData = [] } = useQuery({
-    queryKey: ['/api/template-genres'],
-    enabled: true
-  });
+  // Extract all genres from all categories for filtering
+  const allGenres = categoriesData ? categoriesData.flatMap((cat: any) => 
+    cat.genres?.map((genre: any) => ({ ...genre, categoryName: cat.name, categoryId: cat.id })) || []
+  ) : [];
 
   // Extract unique categories and genres for filter dropdowns
   const categories = Array.from(new Set(callScripts.map((script: CallScript) => script.category).filter(Boolean)));
@@ -90,7 +90,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Phone className="h-5 w-5" />
