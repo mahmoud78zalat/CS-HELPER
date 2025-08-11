@@ -234,7 +234,8 @@ export const callScripts = pgTable("call_scripts", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name").notNull(),
   content: text("content").notNull(),
-  category: varchar("category").default("general").notNull(),
+  categoryId: uuid("category_id").references(() => templateCategories.id),
+  genreId: uuid("genre_id").references(() => templateGenres.id),
   isActive: boolean("is_active").default(true).notNull(),
   createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
@@ -366,12 +367,7 @@ export const userNotificationPreferencesRelations = relations(userNotificationPr
 }));
 
 // Call Scripts relations
-export const callScriptsRelations = relations(callScripts, ({ one }) => ({
-  creator: one(users, {
-    fields: [callScripts.createdBy],
-    references: [users.id],
-  }),
-}));
+
 
 // Store Emails relations
 export const storeEmailsRelations = relations(storeEmails, ({ one }) => ({
@@ -619,12 +615,30 @@ export const templateGenres = pgTable("template_genres", {
 // Relations for connected categories and genres
 export const templateCategoriesRelations = relations(templateCategories, ({ many }) => ({
   genres: many(templateGenres),
+  callScripts: many(callScripts),
 }));
 
-export const templateGenresRelations = relations(templateGenres, ({ one }) => ({
+export const templateGenresRelations = relations(templateGenres, ({ one, many }) => ({
   category: one(templateCategories, {
     fields: [templateGenres.categoryId],
     references: [templateCategories.id],
+  }),
+  callScripts: many(callScripts),
+}));
+
+// Call Scripts Relations
+export const callScriptsRelations = relations(callScripts, ({ one }) => ({
+  category: one(templateCategories, {
+    fields: [callScripts.categoryId],
+    references: [templateCategories.id],
+  }),
+  genre: one(templateGenres, {
+    fields: [callScripts.genreId],
+    references: [templateGenres.id],
+  }),
+  createdBy: one(users, {
+    fields: [callScripts.createdBy],
+    references: [users.id],
   }),
 }));
 

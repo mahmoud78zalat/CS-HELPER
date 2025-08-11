@@ -1,50 +1,81 @@
 import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Plus, Search, Edit2, Trash2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Search, Phone } from "lucide-react";
-import { CallScript, InsertCallScript } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  type CallScript,
+  type InsertCallScript,
+  type TemplateCategory,
+  type TemplateGenre,
+} from "@shared/schema";
 
-export default function CallScriptsManager() {
+interface CallScriptsManagerProps {
+  onClose: () => void;
+}
+
+export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingScript, setEditingScript] = useState<CallScript | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState<InsertCallScript>({
+  const [formData, setFormData] = useState({
     name: "",
     content: "",
-    category: "general",
-    isActive: true,
+    categoryId: "",
+    genreId: "",
   });
 
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   // Fetch call scripts
-  const { data: scripts = [], isLoading, refetch } = useQuery<CallScript[]>({
+  const { data: callScripts = [], isLoading: scriptsLoading } = useQuery<CallScript[]>({
     queryKey: ["/api/call-scripts"],
-    staleTime: 0,
   });
 
-  // Create script mutation
-  const createScriptMutation = useMutation({
-    mutationFn: async (data: InsertCallScript) => 
-      await apiRequest("POST", "/api/call-scripts", data),
+  // Fetch categories
+  const { data: categories = [] } = useQuery<TemplateCategory[]>({
+    queryKey: ["/api/template-categories"],
+  });
+
+  // Fetch genres
+  const { data: genres = [] } = useQuery<TemplateGenre[]>({
+    queryKey: ["/api/template-genres"],
+  });
+
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: (data: InsertCallScript) =>
+      fetch("/api/call-scripts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/call-scripts"] });
-      setShowForm(false);
-      setFormData({ name: "", content: "", category: "general", isActive: true });
+      setIsCreateDialogOpen(false);
+      resetForm();
       toast({
-        title: "Script created",
-        description: "Call script has been created successfully",
+        title: "Success",
+        description: "Call script created successfully",
       });
     },
     onError: () => {
@@ -56,18 +87,21 @@ export default function CallScriptsManager() {
     },
   });
 
-  // Update script mutation
-  const updateScriptMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertCallScript> }) =>
-      await apiRequest("PUT", `/api/call-scripts/${id}`, data),
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: (data: { id: string; script: Partial<InsertCallScript> }) =>
+      fetch(`/api/call-scripts/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.script),
+      }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/call-scripts"] });
       setEditingScript(null);
-      setShowForm(false);
-      setFormData({ name: "", content: "", category: "general", isActive: true });
+      resetForm();
       toast({
-        title: "Script updated",
-        description: "Call script has been updated successfully",
+        title: "Success",
+        description: "Call script updated successfully",
       });
     },
     onError: () => {
@@ -79,14 +113,17 @@ export default function CallScriptsManager() {
     },
   });
 
-  // Delete script mutation
-  const deleteScriptMutation = useMutation({
-    mutationFn: async (id: string) => await apiRequest("DELETE", `/api/call-scripts/${id}`),
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      fetch(`/api/call-scripts/${id}`, {
+        method: "DELETE",
+      }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/call-scripts"] });
       toast({
-        title: "Script deleted",
-        description: "Call script has been deleted successfully",
+        title: "Success",
+        description: "Call script deleted successfully",
       });
     },
     onError: () => {
@@ -98,51 +135,109 @@ export default function CallScriptsManager() {
     },
   });
 
-  // Filter scripts based on search term
-  const filteredScripts = scripts.filter((script) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      script.name?.toLowerCase().includes(searchLower) ||
-      script.content?.toLowerCase().includes(searchLower) ||
-      script.category?.toLowerCase().includes(searchLower)
-    );
-  });
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      content: "",
+      categoryId: "",
+      genreId: "",
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.content) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const submitData: InsertCallScript = {
+      name: formData.name,
+      content: formData.content,
+      categoryId: formData.categoryId || null,
+      genreId: formData.genreId || null,
+      isActive: true,
+    };
+
+    if (editingScript) {
+      updateMutation.mutate({
+        id: editingScript.id,
+        script: submitData,
+      });
+    } else {
+      createMutation.mutate(submitData);
+    }
+  };
 
   const handleEdit = (script: CallScript) => {
     setEditingScript(script);
     setFormData({
       name: script.name,
       content: script.content,
-      category: script.category,
-      isActive: script.isActive,
+      categoryId: script.categoryId || "",
+      genreId: script.genreId || "",
     });
-    setShowForm(true);
+    setIsCreateDialogOpen(true);
   };
 
-  const handleSubmit = () => {
-    if (editingScript) {
-      updateScriptMutation.mutate({ id: editingScript.id, data: formData });
-    } else {
-      createScriptMutation.mutate(formData);
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this call script?")) {
+      deleteMutation.mutate(id);
     }
   };
 
-  const handleCancel = () => {
-    setShowForm(false);
-    setEditingScript(null);
-    setFormData({ name: "", content: "", category: "general", isActive: true });
+  const getCategoryName = (categoryId: string | null) => {
+    if (!categoryId) return "No Category";
+    const category = categories.find(c => c.id === categoryId);
+    return category?.name || "Unknown Category";
   };
 
-  if (isLoading) {
-    return <div className="p-4 text-center">Loading call scripts...</div>;
-  }
+  const getGenreName = (genreId: string | null) => {
+    if (!genreId) return "No Genre";
+    const genre = genres.find(g => g.id === genreId);
+    return genre?.name || "Unknown Genre";
+  };
+
+  const filteredScripts = callScripts.filter((script) =>
+    script.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    script.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const availableGenres = genres.filter(genre => 
+    !formData.categoryId || genre.categoryId === formData.categoryId
+  );
 
   return (
-    <div className="space-y-4 overflow-y-auto max-h-[70vh]">
-      {/* Header with search and add button */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+            <Phone className="h-5 w-5 text-green-600 dark:text-green-400" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Call Scripts Management
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Manage call scripts organized by categories and genres
+            </p>
+          </div>
+        </div>
+        <Button variant="outline" onClick={onClose}>
+          Close
+        </Button>
+      </div>
+
+      {/* Search and Create */}
+      <div className="flex gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Search call scripts..."
             value={searchTerm}
@@ -150,156 +245,196 @@ export default function CallScriptsManager() {
             className="pl-10"
           />
         </div>
-        <Dialog open={showForm} onOpenChange={setShowForm}>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-green-600 hover:bg-green-700">
+            <Button 
+              onClick={() => {
+                setEditingScript(null);
+                resetForm();
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Script
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Phone className="h-5 w-5 text-green-600" />
+              <DialogTitle>
                 {editingScript ? "Edit Call Script" : "Create New Call Script"}
               </DialogTitle>
+              <DialogDescription>
+                {editingScript 
+                  ? "Update the call script details below."
+                  : "Create a new call script with categories and genres."
+                }
+              </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Script Name</Label>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Script Name *</label>
                 <Input
-                  id="name"
-                  placeholder="e.g., Welcome Call, Follow-up Script"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter script name..."
+                  required
                 />
               </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Category</label>
+                  <Select
+                    value={formData.categoryId}
+                    onValueChange={(value) => setFormData(prev => ({ 
+                      ...prev, 
+                      categoryId: value,
+                      genreId: "" // Reset genre when category changes
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No Category</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">General</SelectItem>
-                    <SelectItem value="welcome">Welcome</SelectItem>
-                    <SelectItem value="follow-up">Follow-up</SelectItem>
-                    <SelectItem value="complaint">Complaint Handling</SelectItem>
-                    <SelectItem value="sales">Sales</SelectItem>
-                    <SelectItem value="support">Technical Support</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div>
+                  <label className="text-sm font-medium">Genre</label>
+                  <Select
+                    value={formData.genreId}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, genreId: value }))}
+                    disabled={!formData.categoryId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select genre" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No Genre</SelectItem>
+                      {availableGenres.map((genre) => (
+                        <SelectItem key={genre.id} value={genre.id}>
+                          {genre.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="content">Script Content</Label>
+              <div>
+                <label className="text-sm font-medium">Script Content *</label>
                 <Textarea
-                  id="content"
-                  placeholder="Enter the call script content here..."
-                  rows={8}
                   value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="Enter the call script content..."
+                  className="min-h-[120px]"
+                  required
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                />
-                <Label htmlFor="isActive">Active</Label>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button
-                  onClick={handleSubmit}
-                  disabled={createScriptMutation.isPending || updateScriptMutation.isPending || !formData.name.trim() || !formData.content.trim()}
-                  className="flex-1"
+              <div className="flex justify-end gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsCreateDialogOpen(false);
+                    setEditingScript(null);
+                    resetForm();
+                  }}
                 >
-                  {createScriptMutation.isPending || updateScriptMutation.isPending ? "Saving..." : "Save Script"}
-                </Button>
-                <Button variant="outline" onClick={handleCancel}>
                   Cancel
                 </Button>
+                <Button 
+                  type="submit" 
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {editingScript ? "Update Script" : "Create Script"}
+                </Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
 
       {/* Scripts List */}
-      <div className="space-y-3">
-        {filteredScripts.length === 0 ? (
-          <Card className="p-8 text-center">
-            <Phone className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No call scripts found</h3>
-            <p className="text-gray-500 mb-4">
-              {searchTerm ? "No scripts match your search criteria" : "Get started by creating your first call script"}
+      <div className="space-y-4">
+        {scriptsLoading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 dark:text-gray-400">Loading call scripts...</p>
+          </div>
+        ) : filteredScripts.length === 0 ? (
+          <div className="text-center py-8">
+            <Phone className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-500 dark:text-gray-400">
+              {searchTerm ? "No call scripts match your search." : "No call scripts found. Create your first script!"}
             </p>
-          </Card>
+          </div>
         ) : (
-          filteredScripts.map((script) => (
-            <Card key={script.id} className="p-4">
+          filteredScripts.map((script: CallScript) => (
+            <div
+              key={script.id}
+              className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+            >
               <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
+                <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-medium text-gray-900 truncate">{script.name}</h3>
-                    <Badge variant={script.isActive ? "default" : "secondary"}>
-                      {script.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {script.category}
-                    </Badge>
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                      {script.name}
+                    </h4>
+                    <div className="flex gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {getCategoryName(script.categoryId)}
+                      </Badge>
+                      {script.genreId && (
+                        <Badge variant="outline" className="text-xs">
+                          {getGenreName(script.genreId)}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
                     {script.content}
                   </p>
-                  <p className="text-xs text-gray-400">
-                    Created: {new Date(script.createdAt!).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-gray-400">
+                    <span>Created: {script.createdAt ? new Date(script.createdAt).toLocaleDateString() : 'N/A'}</span>
+                    {script.updatedAt && script.updatedAt !== script.createdAt && (
+                      <span>Updated: {new Date(script.updatedAt).toLocaleDateString()}</span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => handleEdit(script)}
+                    className="h-8 w-8 p-0"
                   >
-                    <Edit className="h-3 w-3" />
+                    <Edit2 className="h-4 w-4" />
                   </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-3 w-3 text-red-600" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Call Script</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{script.name}"? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteScriptMutation.mutate(script.id)}
-                          disabled={deleteScriptMutation.isPending}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          {deleteScriptMutation.isPending ? "Deleting..." : "Delete"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(script.id)}
+                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            </Card>
+            </div>
           ))
         )}
       </div>
     </div>
   );
 }
+
+export default CallScriptsManager;

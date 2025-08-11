@@ -7,6 +7,8 @@ import AdminPanel from "@/components/AdminPanel";
 import AboutModal from "@/components/AboutModal";
 import FAQModal from "@/components/FAQModal";
 import PersonalNotes from "@/components/PersonalNotes";
+import CallScriptsManager from "@/components/CallScriptsManager";
+import StoreEmailsManager from "@/components/StoreEmailsManager";
 
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 import { useAuth } from "@/hooks/useAuth";
@@ -77,38 +79,24 @@ export default function Home() {
         onClose={() => setShowPersonalNotes(false)} 
       />
 
-      {/* Call Scripts Modal - Placeholder */}
+      {/* Call Scripts Management */}
       {showCallScripts && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Call Scripts Management</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Feature coming soon! This will allow agents to manage and access call scripts for customer service calls.
-            </p>
-            <button 
-              onClick={() => setShowCallScripts(false)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-            >
-              Close
-            </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-auto">
+            <div className="p-6">
+              <CallScriptsManager onClose={() => setShowCallScripts(false)} />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Store Emails Modal - Placeholder */}
+      {/* Store Emails Management */}
       {showStoreEmails && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Store Emails Management</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Feature coming soon! This will provide Excel-like management of store names, emails, and phone numbers.
-            </p>
-            <button 
-              onClick={() => setShowStoreEmails(false)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
-            >
-              Close
-            </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-auto">
+            <div className="p-6">
+              <StoreEmailsManager onClose={() => setShowStoreEmails(false)} />
+            </div>
           </div>
         </div>
       )}

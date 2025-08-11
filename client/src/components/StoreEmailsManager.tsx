@@ -12,7 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Search, Database, Mail, Phone } from "lucide-react";
 import { StoreEmail, InsertStoreEmail } from "@shared/schema";
 
-export default function StoreEmailsManager() {
+interface StoreEmailsManagerProps {
+  onClose: () => void;
+}
+
+export default function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingStore, setEditingStore] = useState<StoreEmail | null>(null);
   const [showForm, setShowForm] = useState(false);

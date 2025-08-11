@@ -287,10 +287,16 @@ export interface IStorage {
     search?: string;
     isActive?: boolean;
   }): Promise<StoreEmail[]>;
+  getAllStoreEmails(): Promise<StoreEmail[]>;
   getStoreEmail(id: string): Promise<StoreEmail | undefined>;
   createStoreEmail(storeEmail: InsertStoreEmail): Promise<StoreEmail>;
   updateStoreEmail(id: string, storeEmail: Partial<InsertStoreEmail>): Promise<StoreEmail>;
   deleteStoreEmail(id: string): Promise<void>;
+
+  // Template Categories and Genres for Call Scripts
+  getAllTemplateCategories(): Promise<any[]>;
+  getAllTemplateGenres(): Promise<any[]>;
+  getAllCallScripts(): Promise<CallScript[]>;
 }
 
 // DatabaseStorage class commented out for beta testing
