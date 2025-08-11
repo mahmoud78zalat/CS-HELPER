@@ -67,6 +67,13 @@ Key tables include Users (with online presence fields), Live Reply Templates, Em
 - **White-Label Content Management**: Complete site customization including branding, about content, and footer.
 - **Universal Variable Management**: Centralized control for template variables, exclusively supporting `{variable}` format with intelligent deduplication.
 - **Professional Drag & Drop System**: Enterprise-grade interface with collision detection and visual feedback. Allows local reordering for regular users (via localStorage) and global reordering for admins.
+- **Universal Reorder Endpoints**: All modules now have properly registered reorder endpoints in routes.ts to prevent Vite interception issues:
+  - `/api/call-scripts/reorder` (PATCH with authentication)
+  - `/api/store-emails/reorder` (PATCH with authentication)  
+  - `/api/live-reply-templates/reorder` (POST)
+  - `/api/email-templates/reorder` (POST)
+  - `/api/faq-templates/reorder` (POST)
+  - `/api/variable-templates/reorder` (POST)
 - **Persistent Notification Architecture**: Tracking for FAQ views and announcements with unique filtering.
 - **Improved UX**: Enhanced collision detection, always-enabled admin drag & drop, and comprehensive toast notifications.
 - **Widget Interaction**: Full functionality of draggable support widgets (e.g., Ziwo, Chatbase) above modal overlays.

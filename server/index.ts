@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./simple-routes";
+import { registerRoutes } from "./routes";
 import { validateRailwayEnvironment, optimizeForRailway } from "./railway-config";
 import { createRailwayServer, startRailwayServer } from "./railway-startup";
 
