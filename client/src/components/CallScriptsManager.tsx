@@ -31,18 +31,21 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const { toast } = useToast();
 
   // Fetch call scripts
-  const { data: callScripts = [], isLoading: scriptsLoading } = useQuery<CallScript[]>({
+  const { data: callScripts = [], isLoading: scriptsLoading, error: scriptsError } = useQuery<CallScript[]>({
     queryKey: ["/api/call-scripts"],
+    retry: 1, // Only retry once to avoid long loading times
   });
 
   // Fetch categories
-  const { data: categories = [] } = useQuery<TemplateCategory[]>({
+  const { data: categories = [], error: categoriesError } = useQuery<TemplateCategory[]>({
     queryKey: ["/api/template-categories"],
+    retry: 1,
   });
 
   // Fetch genres
-  const { data: genres = [] } = useQuery<TemplateGenre[]>({
+  const { data: genres = [], error: genresError } = useQuery<TemplateGenre[]>({
     queryKey: ["/api/template-genres"],
+    retry: 1,
   });
 
   const handleCopyScript = (content: string) => {
@@ -53,31 +56,28 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
     });
   };
 
-  const getCategoryName = (categoryId: string | null) => {
-    if (!categoryId) return "No Category";
-    const category = categories.find(c => c.id === categoryId);
-    return category?.name || "Unknown Category";
+  const getCategoryName = (categoryName: string | null | undefined) => {
+    if (!categoryName) return "No Category";
+    return categoryName;
   };
 
-  const getGenreName = (genreId: string | null) => {
-    if (!genreId) return "No Genre";
-    const genre = genres.find(g => g.id === genreId);
-    return genre?.name || "Unknown Genre";
+  const getGenreName = (genreName: string | null | undefined) => {
+    if (!genreName) return "No Genre";
+    return genreName;
   };
 
   // Filter scripts based on search term, category, and genre
   const filteredScripts = callScripts.filter(script => {
     const matchesSearch = script.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          script.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || script.categoryId === selectedCategory;
-    const matchesGenre = !selectedGenre || script.genreId === selectedGenre;
+    const matchesCategory = !selectedCategory || script.category === selectedCategory;
+    const matchesGenre = !selectedGenre || script.genre === selectedGenre;
     
     return matchesSearch && matchesCategory && matchesGenre;
   });
 
-  const availableGenres = genres.filter(genre => 
-    !selectedCategory || genre.categoryId === selectedCategory
-  );
+  // Show all genres since we're using simple string matching for now
+  const availableGenres = genres;
 
   const clearFilters = () => {
     setSelectedCategory("");
@@ -139,8 +139,8 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                {categories.filter(category => category.name && category.name.trim() !== '').map((category) => (
+                  <SelectItem key={category.id || category.name} value={category.name}>
                     {category.name}
                   </SelectItem>
                 ))}
@@ -153,15 +153,14 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
             <Select 
               value={selectedGenre} 
               onValueChange={setSelectedGenre}
-              disabled={!selectedCategory}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All genres" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All genres</SelectItem>
-                {availableGenres.map((genre) => (
-                  <SelectItem key={genre.id} value={genre.id}>
+                {availableGenres.filter(genre => genre.name && genre.name.trim() !== '').map((genre) => (
+                  <SelectItem key={genre.id || genre.name} value={genre.name}>
                     {genre.name}
                   </SelectItem>
                 ))}

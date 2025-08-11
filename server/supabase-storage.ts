@@ -3666,4 +3666,289 @@ export class SupabaseStorage implements IStorage {
       return [];
     }
   }
+
+  // Call Scripts operations - Mock implementation until database tables are created
+  async getCallScripts(filters?: { category?: string; search?: string; isActive?: boolean }) {
+    // Return mock data for now - this should be replaced with actual database queries
+    const mockCallScripts = [
+      {
+        id: '1',
+        name: 'Welcome Call Script',
+        content: 'Hello {customer_name}, thank you for contacting Brands For Less. How may I assist you today?',
+        category: 'WELCOME GREETINGS 👋',
+        genre: 'greeting',
+        orderIndex: 0,
+        isActive: true,
+        createdBy: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: '1',
+        lastSyncedAt: new Date(),
+      },
+      {
+        id: '2',
+        name: 'Complaint Handling Script',
+        content: 'I understand your concern about {issue}. Let me check your order {order_id} and see how we can resolve this for you.',
+        category: 'ITEM COMPLAINT 🚨',
+        genre: 'complaint',
+        orderIndex: 1,
+        isActive: true,
+        createdBy: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: '2',
+        lastSyncedAt: new Date(),
+      }
+    ];
+
+    let filteredScripts = mockCallScripts;
+
+    if (filters?.category) {
+      filteredScripts = filteredScripts.filter(script => 
+        script.category?.toLowerCase().includes(filters.category!.toLowerCase())
+      );
+    }
+
+    if (filters?.search) {
+      filteredScripts = filteredScripts.filter(script => 
+        script.name.toLowerCase().includes(filters.search!.toLowerCase()) ||
+        script.content.toLowerCase().includes(filters.search!.toLowerCase())
+      );
+    }
+
+    if (filters?.isActive !== undefined) {
+      filteredScripts = filteredScripts.filter(script => script.isActive === filters.isActive);
+    }
+
+    return filteredScripts;
+  }
+
+  async getAllCallScripts() {
+    return this.getCallScripts();
+  }
+
+  async getCallScript(id: string) {
+    const scripts = await this.getCallScripts();
+    return scripts.find(script => script.id === id);
+  }
+
+  async createCallScript(scriptData: any) {
+    // Mock implementation - should create in database
+    throw new Error('Call scripts table not created yet. Please run the database setup script.');
+    
+    // This would be the actual implementation once tables are created:
+    // const newScript = {
+    //   id: crypto.randomUUID(),
+    //   name: scriptData.name,
+    //   content: scriptData.content,
+    //   category: scriptData.category || null,
+    //   genre: scriptData.genre || null,
+    //   orderIndex: scriptData.orderIndex || 0,
+    //   isActive: scriptData.isActive !== undefined ? scriptData.isActive : true,
+    //   createdBy: scriptData.createdBy || null,
+    //   createdAt: new Date(),
+    //   updatedAt: new Date(),
+    //   supabaseId: crypto.randomUUID(),
+    //   lastSyncedAt: new Date(),
+    // };
+    // return newScript;
+  }
+
+  async updateCallScript(id: string, updates: any) {
+    // Mock implementation - should update in database
+    throw new Error('Call scripts table not created yet. Please run the database setup script.');
+    
+    // This would be the actual implementation once tables are created:
+    // const updatedScript = {
+    //   id,
+    //   name: updates.name || 'Updated Script',
+    //   content: updates.content || 'Updated content',
+    //   category: updates.category || null,
+    //   genre: updates.genre || null,
+    //   orderIndex: updates.orderIndex || 0,
+    //   isActive: updates.isActive !== undefined ? updates.isActive : true,
+    //   createdBy: updates.createdBy || null,
+    //   createdAt: new Date(),
+    //   updatedAt: new Date(),
+    //   supabaseId: id,
+    //   lastSyncedAt: new Date(),
+    // };
+    // return updatedScript;
+  }
+
+  async deleteCallScript(id: string) {
+    // Mock implementation - should delete from database
+    throw new Error('Call scripts table not created yet. Please run the database setup script.');
+  }
+
+  // Store Emails operations - Mock implementation until database tables are created
+  async getStoreEmails(filters?: { search?: string; isActive?: boolean }) {
+    // Return mock data for now - this should be replaced with actual database queries
+    const mockStoreEmails = [
+      {
+        id: '1',
+        storeName: 'Dubai Mall Store',
+        storeEmail: 'dubaimall@brandsforless.com',
+        storePhone: '+971-4-325-2525',
+        isActive: true,
+        createdBy: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: '1',
+        lastSyncedAt: new Date(),
+      },
+      {
+        id: '2',
+        storeName: 'Mall of the Emirates Store',
+        storeEmail: 'moe@brandsforless.com',
+        storePhone: '+971-4-341-4141',
+        isActive: true,
+        createdBy: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: '2',
+        lastSyncedAt: new Date(),
+      },
+      {
+        id: '3',
+        storeName: 'Abu Dhabi Mall Store',
+        storeEmail: 'abudhabi@brandsforless.com',
+        storePhone: '+971-2-645-5555',
+        isActive: true,
+        createdBy: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        supabaseId: '3',
+        lastSyncedAt: new Date(),
+      }
+    ];
+
+    let filteredEmails = mockStoreEmails;
+
+    if (filters?.search) {
+      filteredEmails = filteredEmails.filter(email => 
+        email.storeName.toLowerCase().includes(filters.search!.toLowerCase()) ||
+        email.storeEmail.toLowerCase().includes(filters.search!.toLowerCase()) ||
+        email.storePhone.includes(filters.search!)
+      );
+    }
+
+    if (filters?.isActive !== undefined) {
+      filteredEmails = filteredEmails.filter(email => email.isActive === filters.isActive);
+    }
+
+    return filteredEmails;
+  }
+
+  async getAllStoreEmails() {
+    return this.getStoreEmails();
+  }
+
+  async getStoreEmail(id: string) {
+    const emails = await this.getStoreEmails();
+    return emails.find(email => email.id === id);
+  }
+
+  async createStoreEmail(emailData: any) {
+    // Mock implementation - should create in database
+    throw new Error('Store emails table not created yet. Please run the database setup script.');
+    
+    // This would be the actual implementation once tables are created:
+    // const newStoreEmail = {
+    //   id: crypto.randomUUID(),
+    //   storeName: emailData.storeName,
+    //   storeEmail: emailData.storeEmail,
+    //   storePhone: emailData.storePhone,
+    //   isActive: emailData.isActive !== undefined ? emailData.isActive : true,
+    //   createdBy: emailData.createdBy || null,
+    //   createdAt: new Date(),
+    //   updatedAt: new Date(),
+    //   supabaseId: crypto.randomUUID(),
+    //   lastSyncedAt: new Date(),
+    // };
+    // return newStoreEmail;
+  }
+
+  async updateStoreEmail(id: string, updates: any) {
+    // Mock implementation - should update in database
+    throw new Error('Store emails table not created yet. Please run the database setup script.');
+    
+    // This would be the actual implementation once tables are created:
+    // const updatedStoreEmail = {
+    //   id,
+    //   storeName: updates.storeName || 'Updated Store',
+    //   storeEmail: updates.storeEmail || 'updated@store.com',
+    //   storePhone: updates.storePhone || '+000-000-0000',
+    //   isActive: updates.isActive !== undefined ? updates.isActive : true,
+    //   createdBy: updates.createdBy || null,
+    //   createdAt: new Date(),
+    //   updatedAt: new Date(),
+    //   supabaseId: id,
+    //   lastSyncedAt: new Date(),
+    // };
+    // return updatedStoreEmail;
+  }
+
+  async deleteStoreEmail(id: string) {
+    // Mock implementation - should delete from database
+    throw new Error('Store emails table not created yet. Please run the database setup script.');
+  }
+
+  // Template Categories and Genres for Call Scripts filtering
+  async getAllTemplateCategories() {
+    // Use existing live reply template groups as categories
+    const groups = await this.getLiveReplyTemplateGroups();
+    return groups.map(group => ({
+      id: group.id,
+      name: group.name,
+      description: group.description || '',
+      isActive: group.isActive,
+      type: 'live_reply',
+      orderIndex: group.orderIndex,
+      createdAt: group.createdAt,
+      updatedAt: group.updatedAt,
+    }));
+  }
+
+  async getAllTemplateGenres() {
+    // Return basic genres that could be used for call scripts
+    return [
+      {
+        id: 'greeting',
+        name: 'Greeting',
+        description: 'Welcome and greeting scripts',
+        isActive: true,
+        orderIndex: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'complaint',
+        name: 'Complaint Handling',
+        description: 'Scripts for handling customer complaints',
+        isActive: true,
+        orderIndex: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'order-inquiry',
+        name: 'Order Inquiry',
+        description: 'Scripts for order status inquiries',
+        isActive: true,
+        orderIndex: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'return-request',
+        name: 'Return Request',
+        description: 'Scripts for handling return requests',
+        isActive: true,
+        orderIndex: 3,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    ];
+  }
 }

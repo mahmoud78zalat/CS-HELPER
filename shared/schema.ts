@@ -219,24 +219,15 @@ export const announcementAcknowledgments = pgTable("announcement_acknowledgments
   index("unique_announcement_ack").on(table.userId, table.announcementId, table.announcementVersion)
 ]);
 
-// User Notification Preferences for future customization
-export const userNotificationPreferences = pgTable("user_notification_preferences", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id").references(() => users.id).notNull().unique(),
-  disableFaqNotifications: boolean("disable_faq_notifications").default(false).notNull(),
-  disableAnnouncementNotifications: boolean("disable_announcement_notifications").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Call Scripts table for agent scripts management
+// Call Scripts table for agent-facing functionality
 export const callScripts = pgTable("call_scripts", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name").notNull(),
   content: text("content").notNull(),
-  categoryId: uuid("category_id").references(() => templateCategories.id),
-  genreId: uuid("genre_id").references(() => templateGenres.id),
+  category: varchar("category"),
+  genre: varchar("genre"),
   isActive: boolean("is_active").default(true).notNull(),
+  orderIndex: integer("order_index").default(0).notNull(),
   createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -245,7 +236,7 @@ export const callScripts = pgTable("call_scripts", {
   lastSyncedAt: timestamp("last_synced_at"),
 });
 
-// Store Emails table for storing email, phone, and store information
+// Store Emails table for agent-facing functionality  
 export const storeEmails = pgTable("store_emails", {
   id: uuid("id").primaryKey().defaultRandom(),
   storeName: varchar("store_name").notNull(),
@@ -259,6 +250,18 @@ export const storeEmails = pgTable("store_emails", {
   supabaseId: uuid("supabase_id").unique(),
   lastSyncedAt: timestamp("last_synced_at"),
 });
+
+// User Notification Preferences for future customization
+export const userNotificationPreferences = pgTable("user_notification_preferences", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => users.id).notNull().unique(),
+  disableFaqNotifications: boolean("disable_faq_notifications").default(false).notNull(),
+  disableAnnouncementNotifications: boolean("disable_announcement_notifications").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -365,9 +368,6 @@ export const userNotificationPreferencesRelations = relations(userNotificationPr
     references: [users.id],
   }),
 }));
-
-// Call Scripts relations
-
 
 // Store Emails relations
 export const storeEmailsRelations = relations(storeEmails, ({ one }) => ({
@@ -538,6 +538,36 @@ export type InsertUserAnnouncementAck = z.infer<typeof insertUserAnnouncementAck
 export type UserAnnouncementAck = typeof userAnnouncementAcks.$inferSelect;
 
 export type InsertFaq = z.infer<typeof insertFaqSchema>;
+export type Faq = typeof faqs.$inferSelect;
+
+export type InsertUserFaqAck = z.infer<typeof insertUserFaqAckSchema>;
+export type UserFaqAck = typeof userFaqAcks.$inferSelect;
+
+export type InsertCallScript = z.infer<typeof insertCallScriptSchema>;
+export type CallScript = typeof callScripts.$inferSelect;
+
+export type InsertStoreEmail = z.infer<typeof insertStoreEmailSchema>;
+export type StoreEmail = typeof storeEmails.$inferSelect;
+
+// Template categories and genres types - for dynamic system support
+export type TemplateCategory = {
+  id: string;
+  name: string;
+  type: 'live_reply' | 'email';
+  isActive: boolean;
+  orderIndex: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type TemplateGenre = {
+  id: string;
+  name: string;
+  isActive: boolean;
+  orderIndex: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
 export type Faq = typeof faqs.$inferSelect;
 
 export type InsertUserFaqAck = z.infer<typeof insertUserFaqAckSchema>;
