@@ -66,10 +66,14 @@ Key tables include Users (with online presence fields), Live Reply Templates, Em
 - **Agent Profile Management System**: First-time user onboarding for bilingual name setup, with automatic agent variable population.
 - **White-Label Content Management**: Complete site customization including branding, about content, and footer.
 - **Universal Variable Management**: Centralized control for template variables, exclusively supporting `{variable}` format with intelligent deduplication.
-- **Professional Drag & Drop System**: Enterprise-grade interface with collision detection and visual feedback. Allows local reordering for regular users (via localStorage) and global reordering for admins.
+- **Professional Drag & Drop System**: Enterprise-grade interface with collision detection and visual feedback. Strict separation between user and admin modal functionality.
+- **Strict Modal Separation**: Complete segregation of user and admin functionality to prevent confusion:
+  - **User Modals**: CallScriptsManagerNew.tsx, StoreEmailsManager.tsx - Save ONLY to localStorage (personal ordering)
+  - **Admin Modals**: CallScriptsAdminManager.tsx, StoreContactsAdminManager.tsx - Save ONLY to database (global ordering)
+  - **No Overlap**: User modals contain zero admin logic, admin modals always save globally
 - **Universal Reorder Endpoints**: All modules now have properly registered reorder endpoints in routes.ts to prevent Vite interception issues:
-  - `/api/call-scripts/reorder` (PATCH with authentication)
-  - `/api/store-emails/reorder` (PATCH with authentication)  
+  - `/api/call-scripts/reorder` (PATCH with authentication) - Admin-only
+  - `/api/store-emails/reorder` (PATCH with authentication) - Admin-only  
   - `/api/live-reply-templates/reorder` (POST)
   - `/api/email-templates/reorder` (POST)
   - `/api/faq-templates/reorder` (POST)
