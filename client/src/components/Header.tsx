@@ -124,7 +124,7 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
     checkForNewFAQs();
   }, [faqs, user?.id]);
 
-  // Initialize agent name from user data with enhanced tracking
+  // Initialize agent name from user data with enhanced tracking and persistence
   useEffect(() => {
     console.log('[Header] User data changed - updating agent name:', {
       user: user,
@@ -137,7 +137,14 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
     });
     
     if (user) {
-      // Enhanced name selection logic with Arabic support
+      // Check if we have a previously saved valid agent name that's not an email
+      const savedAgentName = localStorage.getItem('selectedAgentName');
+      const isValidSavedName = savedAgentName && 
+                               savedAgentName !== 'User' && 
+                               !savedAgentName.includes('@') &&
+                               savedAgentName.length > 1;
+
+      // Enhanced name selection logic with Arabic support and persistence
       let displayName = '';
       
       if (user.firstName || user.arabicFirstName) {
@@ -147,17 +154,25 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
         } else {
           displayName = user.firstName || user.arabicFirstName || '';
         }
+      } else if (isValidSavedName && !agentName) {
+        // Use previously saved name if available and current agent name is empty
+        console.log('[Header] Using saved agent name:', savedAgentName);
+        displayName = savedAgentName;
+      } else if (user.lastName) {
+        // Try to use lastName if available
+        displayName = user.lastName;
       } else if (user.email) {
-        // Fallback to email prefix
-        displayName = user.email.split('@')[0];
+        // Last resort fallback to email prefix, but try to make it more presentable
+        const emailPrefix = user.email.split('@')[0];
+        displayName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
       } else {
-        displayName = 'User';
+        displayName = 'Agent';
       }
       
       console.log('[Header] Setting new agent name:', displayName);
       setAgentName(displayName);
     }
-  }, [user, user?.firstName, user?.arabicFirstName, user?.isFirstTimeUser]);
+  }, [user, user?.firstName, user?.arabicFirstName, user?.lastName, user?.isFirstTimeUser]);
 
   // Save agent name to localStorage for use in templates
   useEffect(() => {

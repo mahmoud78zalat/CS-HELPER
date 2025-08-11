@@ -200,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (Object.keys(updateData).length > 0) {
             console.log(`[FaqTemplates] FIXED ROUTE - Updating template ${update.id} with:`, updateData);
-            await storage.updateFaqTemplate(update.id, updateData);
+            await storage.updateEmailTemplate(update.id, updateData);
           }
         }
       }
@@ -236,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (Object.keys(updateData).length > 0) {
             console.log(`[VariableTemplates] FIXED ROUTE - Updating template ${update.id} with:`, updateData);
-            await storage.updateVariableTemplate(update.id, updateData);
+            await storage.updateEmailTemplate(update.id, updateData);
           }
         }
       }
@@ -948,8 +948,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = req.params;
       const { search } = req.query;
       
-      const personalNotesStorage = (storage as any).personalNotesStorage || storage;
-      const notes = await personalNotesStorage.getPersonalNotes(userId, search as string);
+      const notes = await storage.getPersonalNotes(userId, { search: search as string });
       res.json(notes);
     } catch (error) {
       console.error('Error fetching personal notes:', error);
@@ -974,12 +973,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content
       });
 
-      const personalNotesStorage = (storage as any).personalNotesStorage || storage;
-      const note = await personalNotesStorage.createPersonalNote(noteData);
+      // Use the main storage interface directly instead of sub-storage
+      const note = await storage.createPersonalNote(noteData);
       res.status(201).json(note);
     } catch (error) {
       console.error('Error creating personal note:', error);
-      res.status(500).json({ message: 'Failed to create note' });
+      console.error('Error details:', error);
+      res.status(500).json({ message: 'Failed to create note', error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -988,8 +988,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { subject, content } = req.body;
       
-      const personalNotesStorage = (storage as any).personalNotesStorage || storage;
-      const note = await personalNotesStorage.updatePersonalNote(id, { subject, content });
+      const note = await storage.updatePersonalNote(id, { subject, content });
       res.json(note);
     } catch (error) {
       console.error('Error updating personal note:', error);
@@ -1000,8 +999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/personal-notes/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const personalNotesStorage = (storage as any).personalNotesStorage || storage;
-      await personalNotesStorage.deletePersonalNote(id);
+      await storage.deletePersonalNote(id);
       res.status(204).send();
     } catch (error) {
       console.error('Error deleting personal note:', error);
