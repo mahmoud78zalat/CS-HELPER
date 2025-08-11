@@ -100,6 +100,7 @@ function SortableStoreCard({ store, isDragMode, onCopyEmail, onCopyPhone }: Sort
 
 export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDragMode, setIsDragMode] = useState(false);
   const [localStores, setLocalStores] = useState<StoreEmail[]>([]);
   
   const { toast } = useToast();
@@ -109,18 +110,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   // Check if current user is admin - for admin mode, we save to backend
   const isAdmin = user?.role === 'admin';
   
-  // FIXED: Admin users always have drag mode enabled, regular users need to toggle it
-  const [isDragMode, setIsDragMode] = useState(isAdmin || false);
-  
-  console.log('[StoreEmailsManager] Component loaded - User role:', user?.role, 'isAdmin:', isAdmin, 'isDragMode:', isDragMode);
-
-  // Update drag mode when admin status changes  
-  useEffect(() => {
-    if (isAdmin) {
-      setIsDragMode(true);
-      console.log('[StoreEmailsManager] Admin detected - enabling drag mode');
-    }
-  }, [isAdmin]);
+  console.log('[StoreEmailsManager] User role:', user?.role, 'isAdmin:', isAdmin);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -159,7 +149,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     }
   }, [storeEmails]);
 
-  // Admin reorder mutation - saves to backend database (FIXED TO MATCH WORKING PATTERN)
+  // Admin reorder mutation - saves to backend database
   const reorderMutation = useMutation({
     mutationFn: async (reorderedStores: StoreEmail[]) => {
       const updates = reorderedStores.map((store, index) => ({
@@ -169,31 +159,11 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
       
       console.log('[StoreEmailsManager] ADMIN MODE - Sending reorder request with updates:', updates);
       
-      try {
-        // FIXED: Match working pattern - use apiRequest properly and get JSON response
-        const response = await apiRequest('PATCH', '/api/store-emails/reorder', { updates });
-        
-        console.log('[StoreEmailsManager] ADMIN MODE - Raw response status:', response.status);
-        console.log('[StoreEmailsManager] ADMIN MODE - Raw response ok:', response.ok);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('[StoreEmailsManager] ADMIN MODE - Reorder result:', result);
-        return result;
-      } catch (error) {
-        console.error('[StoreEmailsManager] ADMIN MODE - Mutation function error:', error);
-        throw error;
-      }
+      const response = await apiRequest('PATCH', '/api/store-emails/reorder', { updates });
+      console.log('[StoreEmailsManager] ADMIN MODE - Reorder response:', response);
+      return response;
     },
-    onSuccess: (data) => {
-      console.log('[StoreEmailsManager] ADMIN MODE - Reorder successful with data:', data);
-      console.log('[StoreEmailsManager] ADMIN MODE - Invalidating cache and showing toast');
-      
-      // FIXED: Invalidate queries FIRST, then show toast
-      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
+    onSuccess: () => {
       toast({
         title: "Global order updated",
         description: isAdmin 
@@ -203,12 +173,13 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
           ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800" 
           : undefined
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
     },
     onError: (error) => {
-      console.error('[StoreEmailsManager] ADMIN MODE - Reorder failed with error:', error);
+      console.error('[StoreEmailsManager] Reorder failed:', error);
       toast({
         title: "Reorder failed",
-        description: `Failed to save the new order: ${error.message || 'Please try again.'}`,
+        description: "Failed to save the new order. Please try again.",
         variant: "destructive",
       });
     },
@@ -335,25 +306,15 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
         <div className="space-y-4">
           {/* Reordering Controls */}
           <div className="flex gap-2 items-center">
-            {isAdmin ? (
-              <div className="flex items-center gap-2">
-                <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                  <Shuffle className="h-3 w-3 mr-1" />
-                  Admin Drag Mode Active
-                </Badge>
-                <span className="text-sm text-gray-600">Drag and drop to reorder globally</span>
-              </div>
-            ) : (
-              <Button
-                onClick={() => setIsDragMode(!isDragMode)}
-                variant={isDragMode ? "default" : "outline"}
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Shuffle className="h-4 w-4" />
-                {isDragMode ? "Exit Reorder Mode" : "Reorder Stores"}
-              </Button>
-            )}
+            <Button
+              onClick={() => setIsDragMode(!isDragMode)}
+              variant={isDragMode ? "default" : "outline"}
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Shuffle className="h-4 w-4" />
+              {isDragMode ? "Exit Reorder Mode" : "Reorder Stores"}
+            </Button>
             
             {(hasCustomOrder || isDragMode) && (
               <Button
@@ -363,7 +324,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
                 className="flex items-center gap-2"
               >
                 <RotateCcw className="h-4 w-4" />
-                {isAdmin ? "Reset Global Order" : "Reset Order"}
+                Reset Order
               </Button>
             )}
           </div>
