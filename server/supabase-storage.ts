@@ -3833,8 +3833,19 @@ export class SupabaseStorage implements IStorage {
   }
 
   async deleteCallScript(id: string) {
-    // Mock implementation - should delete from database
-    throw new Error('Call scripts table not created yet. Please run the database setup script.');
+    console.log('[SupabaseStorage] Deleting call script:', id);
+    
+    const { error } = await this.serviceClient
+      .from('call_scripts')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('[SupabaseStorage] Error deleting call script:', error);
+      throw new Error(`Failed to delete call script: ${error.message}`);
+    }
+
+    console.log('[SupabaseStorage] Call script deleted successfully:', id);
   }
 
   // Store Emails operations
@@ -4054,5 +4065,36 @@ export class SupabaseStorage implements IStorage {
         updatedAt: new Date(),
       }
     ];
+  }
+
+  // Personal Notes operations (placeholder implementation)
+  async getPersonalNotes(userId: string, filters?: { search?: string; category?: string; isArchived?: boolean }): Promise<any[]> {
+    console.log('[SupabaseStorage] Getting personal notes for user:', userId, 'with filters:', filters);
+    // Placeholder implementation - would integrate with personal_notes table
+    return [];
+  }
+
+  async getPersonalNote(id: string): Promise<any | undefined> {
+    console.log('[SupabaseStorage] Getting personal note:', id);
+    // Placeholder implementation - would query personal_notes table
+    return undefined;
+  }
+
+  async createPersonalNote(note: any): Promise<any> {
+    console.log('[SupabaseStorage] Creating personal note:', note);
+    // Placeholder implementation - would insert into personal_notes table
+    throw new Error('Personal notes feature not yet implemented');
+  }
+
+  async updatePersonalNote(id: string, updates: Partial<any>): Promise<any> {
+    console.log('[SupabaseStorage] Updating personal note:', id, updates);
+    // Placeholder implementation - would update personal_notes table
+    throw new Error('Personal notes feature not yet implemented');
+  }
+
+  async deletePersonalNote(id: string): Promise<void> {
+    console.log('[SupabaseStorage] Deleting personal note:', id);
+    // Placeholder implementation - would delete from personal_notes table
+    throw new Error('Personal notes feature not yet implemented');
   }
 }
