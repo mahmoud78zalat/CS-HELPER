@@ -149,7 +149,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     }
   }, [storeEmails]);
 
-  // Admin reorder mutation - saves to backend database
+  // Admin reorder mutation - saves to backend database (FIXED TO MATCH WORKING PATTERN)
   const reorderMutation = useMutation({
     mutationFn: async (reorderedStores: StoreEmail[]) => {
       const updates = reorderedStores.map((store, index) => ({
@@ -159,11 +159,16 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
       
       console.log('[StoreEmailsManager] ADMIN MODE - Sending reorder request with updates:', updates);
       
+      // FIXED: Match working pattern - use apiRequest properly and get JSON response
       const response = await apiRequest('PATCH', '/api/store-emails/reorder', { updates });
-      console.log('[StoreEmailsManager] ADMIN MODE - Reorder response:', response);
-      return response;
+      const result = await response.json();
+      console.log('[StoreEmailsManager] ADMIN MODE - Reorder result:', result);
+      return result;
     },
     onSuccess: () => {
+      console.log('[StoreEmailsManager] ADMIN MODE - Reorder successful, invalidating cache');
+      // FIXED: Invalidate queries FIRST, then show toast
+      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
       toast({
         title: "Global order updated",
         description: isAdmin 
@@ -173,10 +178,9 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
           ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800" 
           : undefined
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
     },
     onError: (error) => {
-      console.error('[StoreEmailsManager] Reorder failed:', error);
+      console.error('[StoreEmailsManager] ADMIN MODE - Reorder failed:', error);
       toast({
         title: "Reorder failed",
         description: "Failed to save the new order. Please try again.",
