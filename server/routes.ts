@@ -40,13 +40,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('[CallScripts] EARLY ROUTE - Reorder request:', updates);
+      console.log('[CallScripts] EARLY ROUTE - Storage type:', storage.constructor?.name);
+      console.log('[CallScripts] EARLY ROUTE - Storage updateCallScript method exists:', typeof storage.updateCallScript);
       
       // Update each call script's order index
-      const updatePromises = updates.map(({ id, orderIndex }) => 
-        storage.updateCallScript(id, { orderIndex })
-      );
+      const updatePromises = updates.map(({ id, orderIndex }) => {
+        console.log(`[CallScripts] EARLY ROUTE - Updating script ${id} with orderIndex ${orderIndex}`);
+        return storage.updateCallScript(id, { orderIndex });
+      });
       
-      await Promise.all(updatePromises);
+      const results = await Promise.all(updatePromises);
+      console.log('[CallScripts] EARLY ROUTE - Update results:', results.map(r => ({ id: r.id, orderIndex: r.orderIndex })));
       
       console.log('[CallScripts] EARLY ROUTE - Call scripts reordered successfully');
       res.json({ message: "Call scripts reordered successfully" });
@@ -64,13 +68,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('[StoreEmails] EARLY ROUTE - Reorder request:', updates);
+      console.log('[StoreEmails] EARLY ROUTE - Storage type:', storage.constructor?.name);
+      console.log('[StoreEmails] EARLY ROUTE - Storage updateStoreEmail method exists:', typeof storage.updateStoreEmail);
       
       // Update each store email's order index
-      const updatePromises = updates.map(({ id, orderIndex }) => 
-        storage.updateStoreEmail(id, { orderIndex })
-      );
+      const updatePromises = updates.map(({ id, orderIndex }) => {
+        console.log(`[StoreEmails] EARLY ROUTE - Updating email ${id} with orderIndex ${orderIndex}`);
+        return storage.updateStoreEmail(id, { orderIndex });
+      });
       
-      await Promise.all(updatePromises);
+      const results = await Promise.all(updatePromises);
+      console.log('[StoreEmails] EARLY ROUTE - Update results:', results.map(r => ({ id: r.id, orderIndex: r.orderIndex })));
       
       console.log('[StoreEmails] EARLY ROUTE - Store emails reordered successfully');
       res.json({ message: "Store emails reordered successfully" });
