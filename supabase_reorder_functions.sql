@@ -13,12 +13,15 @@ BEGIN
   -- Loop through each script update
   FOREACH script_update IN ARRAY script_updates
   LOOP
-    -- Update using string comparison to avoid type issues
+    -- Cast the JSON string to UUID for proper comparison
     UPDATE call_scripts 
     SET order_index = (script_update->>'orderIndex')::integer,
         updated_at = NOW()
-    WHERE id::text = script_update->>'id';
+    WHERE id = (script_update->>'id')::uuid;
   END LOOP;
+  
+  -- Enable extension if needed
+  CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 END;
 $$;
 
@@ -34,12 +37,15 @@ BEGIN
   -- Loop through each store update
   FOREACH store_update IN ARRAY store_updates
   LOOP
-    -- Update using string comparison to avoid type issues
+    -- Cast the JSON string to UUID for proper comparison
     UPDATE store_emails 
     SET order_index = (store_update->>'orderIndex')::integer,
         updated_at = NOW()
-    WHERE id::text = store_update->>'id';
+    WHERE id = (store_update->>'id')::uuid;
   END LOOP;
+  
+  -- Enable extension if needed
+  CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 END;
 $$;
 
