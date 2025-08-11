@@ -19,7 +19,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   const { toast } = useToast();
 
   // Fetch store emails
-  const { data: storeEmails = [], isLoading: storesLoading } = useQuery({
+  const { data: storeEmails = [], isLoading: storesLoading } = useQuery<StoreEmail[]>({
     queryKey: ['/api/store-emails'],
     enabled: true
   });
@@ -204,15 +204,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-between items-center pt-4 border-t">
-          <div className="text-sm text-gray-500">
-            Quick access to store contact information for customer inquiries
-          </div>
-          <Button onClick={onClose} variant="outline" data-testid="button-close">
-            Close
-          </Button>
-        </div>
+
       </DialogContent>
     </Dialog>
   );

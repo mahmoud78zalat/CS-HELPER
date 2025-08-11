@@ -7,7 +7,7 @@ import AdminPanel from "@/components/AdminPanel";
 import AboutModal from "@/components/AboutModal";
 import FAQModal from "@/components/FAQModal";
 import PersonalNotes from "@/components/PersonalNotes";
-import { CallScriptsManager } from "@/components/CallScriptsManager";
+import { CallScriptsManager } from "@/components/CallScriptsManagerNew";
 import { StoreEmailsManager } from "@/components/StoreEmailsManager";
 
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
