@@ -60,22 +60,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     }
   };
 
-  const handleCopyAll = (store: StoreEmail) => {
-    try {
-      const allInfo = `Store: ${store.storeName}\nEmail: ${store.storeEmail}\nPhone: ${store.storePhone}`;
-      navigator.clipboard.writeText(allInfo);
-      toast({
-        title: "Copied!",
-        description: `${store.storeName} contact info copied to clipboard`,
-      });
-    } catch (error) {
-      toast({
-        title: "Copy failed",
-        description: "Unable to copy to clipboard",
-        variant: "destructive",
-      });
-    }
-  };
+
 
 
 
@@ -98,7 +83,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building className="h-5 w-5" />
-            Store Contacts - View Only
+            Store Contacts
           </DialogTitle>
         </DialogHeader>
 
@@ -167,18 +152,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
                           Active Store
                         </Badge>
                       </div>
-                      <div className="flex gap-2 shrink-0">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleCopyAll(store)}
-                          className="flex items-center gap-1"
-                          data-testid={`button-copy-all-${store.id}`}
-                        >
-                          <Copy className="h-4 w-4" />
-                          Copy All
-                        </Button>
-                      </div>
+
                     </div>
                   </CardHeader>
                   <CardContent>

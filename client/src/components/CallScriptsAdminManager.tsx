@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Phone, Search, Plus, Edit, Trash2, Copy } from "lucide-react";
+import { Phone, Search, Plus, Edit, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface CallScript {
@@ -51,6 +51,7 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingScript, setEditingScript] = useState<CallScript | null>(null);
+  const [expandedScripts, setExpandedScripts] = useState<Set<string>>(new Set());
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -99,20 +100,16 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
     },
   });
 
-  const handleCopyScript = (content: string, name: string) => {
-    try {
-      navigator.clipboard.writeText(content);
-      toast({
-        title: "Copied!",
-        description: `"${name}" script copied to clipboard`,
-      });
-    } catch (error) {
-      toast({
-        title: "Copy failed",
-        description: "Unable to copy to clipboard",
-        variant: "destructive",
-      });
-    }
+  const toggleScriptExpansion = (scriptId: string) => {
+    setExpandedScripts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(scriptId)) {
+        newSet.delete(scriptId);
+      } else {
+        newSet.add(scriptId);
+      }
+      return newSet;
+    });
   };
 
   const handleEdit = (script: CallScript) => {
@@ -226,52 +223,60 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
               </div>
             ) : (
               <div className="grid gap-4">
-                {filteredScripts.map((script: CallScript) => (
-                  <Card key={script.id}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{script.name}</CardTitle>
-                          <CardDescription className="flex gap-2 mt-2">
-                            <Badge variant="secondary">{script.category}</Badge>
-                            <Badge variant="outline">{script.genre}</Badge>
-                          </CardDescription>
+                {filteredScripts.map((script: CallScript) => {
+                  const isExpanded = expandedScripts.has(script.id);
+                  return (
+                    <Card key={script.id}>
+                      <CardHeader 
+                        className="cursor-pointer"
+                        onClick={() => toggleScriptExpansion(script.id)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              {script.name}
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-gray-500" />
+                              )}
+                            </CardTitle>
+                            <CardDescription className="flex gap-2 mt-2">
+                              <Badge variant="secondary">{script.category}</Badge>
+                              <Badge variant="outline">{script.genre}</Badge>
+                            </CardDescription>
+                          </div>
+                          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(script)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(script.id, script.name)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCopyScript(script.content, script.name)}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(script)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(script.id, script.name)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                        <pre className="text-sm whitespace-pre-wrap font-mono">
-                          {script.content}
-                        </pre>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardHeader>
+                      {isExpanded && (
+                        <CardContent>
+                          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+                            <pre className="text-sm whitespace-pre-wrap font-mono">
+                              {script.content}
+                            </pre>
+                          </div>
+                        </CardContent>
+                      )}
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -385,7 +390,10 @@ function CallScriptCreateModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="category">Category *</Label>
-              <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+              <Select 
+                value={formData.category} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value, genre: "" }))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -401,12 +409,18 @@ function CallScriptCreateModal({
 
             <div>
               <Label htmlFor="genre">Genre *</Label>
-              <Select value={formData.genre} onValueChange={(value) => setFormData(prev => ({ ...prev, genre: value }))}>
+              <Select 
+                value={formData.genre} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, genre: value }))}
+                disabled={!formData.category}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select genre" />
+                  <SelectValue placeholder={!formData.category ? "Select category first" : "Select genre"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {genres.map((genre: any) => (
+                  {genres
+                    .filter((genre: any) => genre.categoryName === formData.category)
+                    .map((genre: any) => (
                     <SelectItem key={genre.id} value={genre.name}>
                       {genre.name}
                     </SelectItem>

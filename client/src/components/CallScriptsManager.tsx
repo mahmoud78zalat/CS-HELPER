@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Search, X, Phone, FileText } from "lucide-react";
+import { Search, X, Phone, FileText, ChevronDown, ChevronRight } from "lucide-react";
 import type { CallScript } from "@shared/schema";
 
 interface CallScriptsManagerProps {
@@ -18,6 +18,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedGenre, setSelectedGenre] = useState<string>("");
+  const [expandedScripts, setExpandedScripts] = useState<Set<string>>(new Set());
   
   const { toast } = useToast();
 
@@ -57,20 +58,16 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
 
 
 
-  const handleCopyScript = (content: string, name: string) => {
-    try {
-      navigator.clipboard.writeText(content);
-      toast({
-        title: "Copied!",
-        description: `"${name}" script copied to clipboard`,
-      });
-    } catch (error) {
-      toast({
-        title: "Copy failed",
-        description: "Unable to copy to clipboard",
-        variant: "destructive",
-      });
-    }
+  const toggleScriptExpansion = (scriptId: string) => {
+    setExpandedScripts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(scriptId)) {
+        newSet.delete(scriptId);
+      } else {
+        newSet.add(scriptId);
+      }
+      return newSet;
+    });
   };
 
 
@@ -97,7 +94,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Phone className="h-5 w-5" />
-            Call Scripts - View Only
+            Call Scripts
           </DialogTitle>
         </DialogHeader>
 
@@ -181,51 +178,52 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
             </div>
           ) : (
             <div className="grid gap-4">
-              {filteredScripts.map((script: CallScript) => (
-                <Card key={script.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg font-medium mb-2 flex items-center gap-2">
-                          <FileText className="h-5 w-5 text-blue-600" />
-                          {script.name}
-                        </CardTitle>
-                        <div className="flex gap-2">
-                          {script.category && (
-                            <Badge variant="secondary" className="text-xs">
-                              {script.category}
-                            </Badge>
-                          )}
-                          {script.genre && (
-                            <Badge variant="outline" className="text-xs">
-                              {script.genre}
-                            </Badge>
-                          )}
+              {filteredScripts.map((script: CallScript) => {
+                const isExpanded = expandedScripts.has(script.id);
+                return (
+                  <Card key={script.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader 
+                      className="pb-3 cursor-pointer"
+                      onClick={() => toggleScriptExpansion(script.id)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg font-medium mb-2 flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                            {script.name}
+                            {isExpanded ? (
+                              <ChevronDown className="h-4 w-4 text-gray-500" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4 text-gray-500" />
+                            )}
+                          </CardTitle>
+                          <div className="flex gap-2">
+                            {script.category && (
+                              <Badge variant="secondary" className="text-xs">
+                                {script.category}
+                              </Badge>
+                            )}
+                            {script.genre && (
+                              <Badge variant="outline" className="text-xs">
+                                {script.genre}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex gap-2 shrink-0">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleCopyScript(script.content, script.name)}
-                          className="flex items-center gap-1"
-                          data-testid={`button-copy-${script.id}`}
-                        >
-                          <Copy className="h-4 w-4" />
-                          Copy
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                        {script.content}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardHeader>
+                    {isExpanded && (
+                      <CardContent>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                            {script.content}
+                          </p>
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
