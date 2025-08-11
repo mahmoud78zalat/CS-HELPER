@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { railwaySupabase } from './railway-supabase-client';
+import { randomUUID } from 'crypto';
 import type { 
   User, 
   UpsertUser,
@@ -20,7 +21,11 @@ import type {
   UserAnnouncementAck,
   InsertUserAnnouncementAck,
   Faq,
-  InsertFaq
+  InsertFaq,
+  CallScript,
+  InsertCallScript,
+  StoreEmail,
+  InsertStoreEmail
 } from '@shared/schema';
 import { IStorage } from './storage';
 
@@ -3667,60 +3672,56 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
-  // Call Scripts operations - Mock implementation until database tables are created
+  // Call Scripts operations
   async getCallScripts(filters?: { category?: string; search?: string; isActive?: boolean }) {
-    // Return mock data for now - this should be replaced with actual database queries
-    const mockCallScripts = [
-      {
-        id: '1',
-        name: 'Welcome Call Script',
-        content: 'Hello {customer_name}, thank you for contacting Brands For Less. How may I assist you today?',
-        category: 'WELCOME GREETINGS 👋',
-        genre: 'greeting',
-        orderIndex: 0,
-        isActive: true,
-        createdBy: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        supabaseId: '1',
-        lastSyncedAt: new Date(),
-      },
-      {
-        id: '2',
-        name: 'Complaint Handling Script',
-        content: 'I understand your concern about {issue}. Let me check your order {order_id} and see how we can resolve this for you.',
-        category: 'ITEM COMPLAINT 🚨',
-        genre: 'complaint',
-        orderIndex: 1,
-        isActive: true,
-        createdBy: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        supabaseId: '2',
-        lastSyncedAt: new Date(),
+    console.log('[SupabaseStorage] Getting call scripts with filters:', filters);
+
+    try {
+      let query = this.serviceClient.from('call_scripts').select('*');
+
+      // Apply filters
+      if (filters?.category) {
+        query = query.ilike('category', `%${filters.category}%`);
       }
-    ];
+      
+      if (filters?.search) {
+        query = query.or(`name.ilike.%${filters.search}%,content.ilike.%${filters.search}%`);
+      }
+      
+      if (filters?.isActive !== undefined) {
+        query = query.eq('is_active', filters.isActive);
+      }
 
-    let filteredScripts = mockCallScripts;
+      const { data, error } = await query.order('order_index', { ascending: true });
 
-    if (filters?.category) {
-      filteredScripts = filteredScripts.filter(script => 
-        script.category?.toLowerCase().includes(filters.category!.toLowerCase())
-      );
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching call scripts:', error);
+        throw new Error(`Failed to fetch call scripts: ${error.message}`);
+      }
+
+      if (!data) {
+        return [];
+      }
+
+      // Convert database format to expected format
+      return data.map(script => ({
+        id: script.id,
+        name: script.name,
+        content: script.content,
+        category: script.category,
+        genre: script.genre,
+        orderIndex: script.order_index,
+        isActive: script.is_active,
+        createdBy: script.created_by,
+        createdAt: new Date(script.created_at),
+        updatedAt: new Date(script.updated_at),
+        supabaseId: script.supabase_id,
+        lastSyncedAt: new Date(script.last_synced_at),
+      }));
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getCallScripts:', error);
+      return [];
     }
-
-    if (filters?.search) {
-      filteredScripts = filteredScripts.filter(script => 
-        script.name.toLowerCase().includes(filters.search!.toLowerCase()) ||
-        script.content.toLowerCase().includes(filters.search!.toLowerCase())
-      );
-    }
-
-    if (filters?.isActive !== undefined) {
-      filteredScripts = filteredScripts.filter(script => script.isActive === filters.isActive);
-    }
-
-    return filteredScripts;
   }
 
   async getAllCallScripts() {
@@ -3733,25 +3734,51 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createCallScript(scriptData: any) {
-    // Mock implementation - should create in database
-    throw new Error('Call scripts table not created yet. Please run the database setup script.');
+    console.log('[SupabaseStorage] Creating call script:', scriptData);
     
-    // This would be the actual implementation once tables are created:
-    // const newScript = {
-    //   id: crypto.randomUUID(),
-    //   name: scriptData.name,
-    //   content: scriptData.content,
-    //   category: scriptData.category || null,
-    //   genre: scriptData.genre || null,
-    //   orderIndex: scriptData.orderIndex || 0,
-    //   isActive: scriptData.isActive !== undefined ? scriptData.isActive : true,
-    //   createdBy: scriptData.createdBy || null,
-    //   createdAt: new Date(),
-    //   updatedAt: new Date(),
-    //   supabaseId: crypto.randomUUID(),
-    //   lastSyncedAt: new Date(),
-    // };
-    // return newScript;
+    const newScript = {
+      id: randomUUID(),
+      name: scriptData.name,
+      content: scriptData.content,
+      category: scriptData.category || null,
+      genre: scriptData.genre || null,
+      order_index: scriptData.orderIndex || 0,
+      is_active: scriptData.isActive !== undefined ? scriptData.isActive : true,
+      created_by: scriptData.createdBy || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      supabase_id: randomUUID(),
+      last_synced_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await this.serviceClient
+      .from('call_scripts')
+      .insert([newScript])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] Error creating call script:', error);
+      throw new Error(`Failed to create call script: ${error.message}`);
+    }
+
+    console.log('[SupabaseStorage] Call script created successfully:', data);
+    
+    // Convert back to the expected format
+    return {
+      id: data.id,
+      name: data.name,
+      content: data.content,
+      category: data.category,
+      genre: data.genre,
+      orderIndex: data.order_index,
+      isActive: data.is_active,
+      createdBy: data.created_by,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+      supabaseId: data.supabase_id,
+      lastSyncedAt: new Date(data.last_synced_at),
+    };
   }
 
   async updateCallScript(id: string, updates: any) {
@@ -3781,63 +3808,50 @@ export class SupabaseStorage implements IStorage {
     throw new Error('Call scripts table not created yet. Please run the database setup script.');
   }
 
-  // Store Emails operations - Mock implementation until database tables are created
+  // Store Emails operations
   async getStoreEmails(filters?: { search?: string; isActive?: boolean }) {
-    // Return mock data for now - this should be replaced with actual database queries
-    const mockStoreEmails = [
-      {
-        id: '1',
-        storeName: 'Dubai Mall Store',
-        storeEmail: 'dubaimall@brandsforless.com',
-        storePhone: '+971-4-325-2525',
-        isActive: true,
-        createdBy: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        supabaseId: '1',
-        lastSyncedAt: new Date(),
-      },
-      {
-        id: '2',
-        storeName: 'Mall of the Emirates Store',
-        storeEmail: 'moe@brandsforless.com',
-        storePhone: '+971-4-341-4141',
-        isActive: true,
-        createdBy: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        supabaseId: '2',
-        lastSyncedAt: new Date(),
-      },
-      {
-        id: '3',
-        storeName: 'Abu Dhabi Mall Store',
-        storeEmail: 'abudhabi@brandsforless.com',
-        storePhone: '+971-2-645-5555',
-        isActive: true,
-        createdBy: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        supabaseId: '3',
-        lastSyncedAt: new Date(),
+    console.log('[SupabaseStorage] Getting store emails with filters:', filters);
+
+    try {
+      let query = this.serviceClient.from('store_emails').select('*');
+
+      // Apply filters
+      if (filters?.search) {
+        query = query.or(`store_name.ilike.%${filters.search}%,store_email.ilike.%${filters.search}%,store_phone.ilike.%${filters.search}%`);
       }
-    ];
+      
+      if (filters?.isActive !== undefined) {
+        query = query.eq('is_active', filters.isActive);
+      }
 
-    let filteredEmails = mockStoreEmails;
+      const { data, error } = await query.order('created_at', { ascending: true });
 
-    if (filters?.search) {
-      filteredEmails = filteredEmails.filter(email => 
-        email.storeName.toLowerCase().includes(filters.search!.toLowerCase()) ||
-        email.storeEmail.toLowerCase().includes(filters.search!.toLowerCase()) ||
-        email.storePhone.includes(filters.search!)
-      );
+      if (error) {
+        console.error('[SupabaseStorage] Error fetching store emails:', error);
+        throw new Error(`Failed to fetch store emails: ${error.message}`);
+      }
+
+      if (!data) {
+        return [];
+      }
+
+      // Convert database format to expected format
+      return data.map(email => ({
+        id: email.id,
+        storeName: email.store_name,
+        storeEmail: email.store_email,
+        storePhone: email.store_phone,
+        isActive: email.is_active,
+        createdBy: email.created_by,
+        createdAt: new Date(email.created_at),
+        updatedAt: new Date(email.updated_at),
+        supabaseId: email.supabase_id,
+        lastSyncedAt: new Date(email.last_synced_at),
+      }));
+    } catch (error) {
+      console.error('[SupabaseStorage] Error in getStoreEmails:', error);
+      return [];
     }
-
-    if (filters?.isActive !== undefined) {
-      filteredEmails = filteredEmails.filter(email => email.isActive === filters.isActive);
-    }
-
-    return filteredEmails;
   }
 
   async getAllStoreEmails() {
@@ -3851,22 +3865,47 @@ export class SupabaseStorage implements IStorage {
 
   async createStoreEmail(emailData: any) {
     // Mock implementation - should create in database
-    throw new Error('Store emails table not created yet. Please run the database setup script.');
+    console.log('[SupabaseStorage] Creating store email:', emailData);
     
-    // This would be the actual implementation once tables are created:
-    // const newStoreEmail = {
-    //   id: crypto.randomUUID(),
-    //   storeName: emailData.storeName,
-    //   storeEmail: emailData.storeEmail,
-    //   storePhone: emailData.storePhone,
-    //   isActive: emailData.isActive !== undefined ? emailData.isActive : true,
-    //   createdBy: emailData.createdBy || null,
-    //   createdAt: new Date(),
-    //   updatedAt: new Date(),
-    //   supabaseId: crypto.randomUUID(),
-    //   lastSyncedAt: new Date(),
-    // };
-    // return newStoreEmail;
+    const newStoreEmail = {
+      id: randomUUID(),
+      store_name: emailData.storeName,
+      store_email: emailData.storeEmail,
+      store_phone: emailData.storePhone,
+      is_active: emailData.isActive !== undefined ? emailData.isActive : true,
+      created_by: emailData.createdBy || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      supabase_id: randomUUID(),
+      last_synced_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await this.serviceClient
+      .from('store_emails')
+      .insert([newStoreEmail])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] Error creating store email:', error);
+      throw new Error(`Failed to create store email: ${error.message}`);
+    }
+
+    console.log('[SupabaseStorage] Store email created successfully:', data);
+    
+    // Convert back to the expected format
+    return {
+      id: data.id,
+      storeName: data.store_name,
+      storeEmail: data.store_email,
+      storePhone: data.store_phone,
+      isActive: data.is_active,
+      createdBy: data.created_by,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+      supabaseId: data.supabase_id,
+      lastSyncedAt: new Date(data.last_synced_at),
+    };
   }
 
   async updateStoreEmail(id: string, updates: any) {

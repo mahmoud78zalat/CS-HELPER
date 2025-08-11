@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { createHmac } from "crypto";
 import { storage } from "./storage";
-import { insertLiveReplyTemplateSchema, insertEmailTemplateSchema, insertSiteContentSchema } from "@shared/schema";
+import { insertLiveReplyTemplateSchema, insertEmailTemplateSchema, insertSiteContentSchema, insertCallScriptSchema, insertStoreEmailSchema } from "@shared/schema";
 import { z } from "zod";
 import { presenceApiRouter } from './routes/presence-api';
 
