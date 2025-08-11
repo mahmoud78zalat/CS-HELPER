@@ -942,28 +942,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Personal Notes Routes (moved from simple-routes.ts)
-  // Get personal notes for current user (via header)
-  app.get('/api/personal-notes', async (req, res) => {
-    try {
-      const userId = req.headers['x-user-id'] as string;
-      const { search } = req.query;
-      
-      if (!userId) {
-        return res.status(400).json({ message: 'User ID is required in x-user-id header' });
-      }
-      
-      console.log('[API] GET /api/personal-notes called for user:', userId);
-      const notes = await storage.getPersonalNotes(userId, { search: search as string });
-      console.log('[API] Found', notes.length, 'personal notes');
-      res.json(notes);
-    } catch (error) {
-      console.error('Error fetching personal notes:', error);
-      res.status(500).json({ message: 'Failed to fetch notes' });
-    }
-  });
-  
-  // Get personal notes for specific user (via URL param)
+  // Personal Notes Routes (moved from simple-routes.ts)  
   app.get('/api/personal-notes/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
