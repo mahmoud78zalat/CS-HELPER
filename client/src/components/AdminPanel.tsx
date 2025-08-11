@@ -54,6 +54,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [showConfigManager, setShowConfigManager] = useState(false);
   const [showGroupManager, setShowGroupManager] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any>(null);
+  
+  // Admin-specific management modal states
+  const [showAdminCallScripts, setShowAdminCallScripts] = useState(false);
+  const [showAdminStoreEmails, setShowAdminStoreEmails] = useState(false);
 
   const [siteContentValues, setSiteContentValues] = useState<{[key: string]: string}>({});
   const [genreColors, setGenreColors] = useState<Record<string, any>>({});
@@ -2877,43 +2881,27 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     
                     {/* Call Scripts and Store Emails Management */}
                     <div className="border-t pt-4 mt-4 space-y-3">
-                      <h4 className="text-sm font-medium text-slate-700">Additional Tools</h4>
+                      <h4 className="text-sm font-medium text-slate-700">Admin Management Tools</h4>
                       <div className="grid grid-cols-2 gap-3">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="w-full justify-start bg-green-50 hover:bg-green-100 border-green-200">
-                              <Phone className="h-4 w-4 mr-2 text-green-600" />
-                              <span className="text-green-700">Call Scripts</span>
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center gap-2">
-                                <Phone className="h-5 w-5 text-green-600" />
-                                Call Scripts Management
-                              </DialogTitle>
-                            </DialogHeader>
-                            <CallScriptsManager />
-                          </DialogContent>
-                        </Dialog>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full justify-start bg-green-50 hover:bg-green-100 border-green-200"
+                          onClick={() => setShowAdminCallScripts(true)}
+                        >
+                          <Phone className="h-4 w-4 mr-2 text-green-600" />
+                          <span className="text-green-700">Manage Call Scripts</span>
+                        </Button>
                         
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="w-full justify-start bg-purple-50 hover:bg-purple-100 border-purple-200">
-                              <Database className="h-4 w-4 mr-2 text-purple-600" />
-                              <span className="text-purple-700">Store Emails</span>
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center gap-2">
-                                <Database className="h-5 w-5 text-purple-600" />
-                                Store Emails Management
-                              </DialogTitle>
-                            </DialogHeader>
-                            <StoreEmailsManager />
-                          </DialogContent>
-                        </Dialog>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full justify-start bg-purple-50 hover:bg-purple-100 border-purple-200"
+                          onClick={() => setShowAdminStoreEmails(true)}
+                        >
+                          <Database className="h-4 w-4 mr-2 text-purple-600" />
+                          <span className="text-purple-700">Manage Store Contacts</span>
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -3024,6 +3012,38 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         onCreateGroup={createGroupMutation.mutate}
         onUpdateGroup={updateGroupMutation.mutate}
       />
+
+      {/* Admin Call Scripts Management Modal */}
+      <Dialog open={showAdminCallScripts} onOpenChange={setShowAdminCallScripts}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Phone className="h-5 w-5 text-green-600" />
+              Admin Call Scripts Management
+            </DialogTitle>
+            <p className="text-sm text-slate-600">
+              Manage call scripts for all agents. You can add, edit, and remove call scripts from the admin panel.
+            </p>
+          </DialogHeader>
+          <CallScriptsManager />
+        </DialogContent>
+      </Dialog>
+
+      {/* Admin Store Emails Management Modal */}
+      <Dialog open={showAdminStoreEmails} onOpenChange={setShowAdminStoreEmails}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-purple-600" />
+              Admin Store Contacts Management
+            </DialogTitle>
+            <p className="text-sm text-slate-600">
+              Manage store contact information for all agents. You can add, edit, and remove store contact details.
+            </p>
+          </DialogHeader>
+          <StoreEmailsManager />
+        </DialogContent>
+      </Dialog>
 
       {/* Modern Delete Confirmation Dialog */}
       <AlertDialog open={deleteConfirmation.isOpen} onOpenChange={(open) => 
