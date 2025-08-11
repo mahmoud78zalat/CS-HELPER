@@ -3864,7 +3864,8 @@ export class SupabaseStorage implements IStorage {
         query = query.eq('is_active', filters.isActive);
       }
 
-      const { data, error } = await query.order('order_index', { ascending: true });
+      // Order by id as fallback since order_index may not exist
+      const { data, error } = await query.order('id', { ascending: true });
 
       console.log('[SupabaseStorage] Store emails query result - data:', data, 'error:', error);
 
@@ -3880,18 +3881,18 @@ export class SupabaseStorage implements IStorage {
 
       console.log('[SupabaseStorage] Raw store emails data:', JSON.stringify(data, null, 2));
 
-      // Convert database format to expected format
-      const mapped = data.map(email => ({
+      // Convert database format to expected format - handle missing columns gracefully
+      const mapped = data.map((email, index) => ({
         id: email.id,
         storeName: email.store_name,
         storeEmail: email.store_email,
         storePhone: email.store_phone,
-        orderIndex: email.order_index || 0,
-        isActive: email.is_active,
+        orderIndex: index + 1, // Use array index as order since order_index column doesn't exist
+        isActive: email.is_active !== false, // Default to true if null/undefined
         createdBy: email.created_by,
-        createdAt: new Date(email.created_at),
-        updatedAt: new Date(email.updated_at),
-        supabaseId: email.supabase_id,
+        createdAt: email.created_at ? new Date(email.created_at) : new Date(),
+        updatedAt: email.updated_at ? new Date(email.updated_at) : new Date(),
+        supabaseId: email.supabase_id || email.id,
         lastSyncedAt: email.last_synced_at ? new Date(email.last_synced_at) : new Date(),
       }));
 
