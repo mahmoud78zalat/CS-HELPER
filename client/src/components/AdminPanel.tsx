@@ -33,6 +33,8 @@ import GroupManager from "@/components/GroupManager";
 import FAQEditor from "@/components/FAQEditor";
 import { CallScriptsManager } from "@/components/CallScriptsManager";
 import { StoreEmailsManager } from "@/components/StoreEmailsManager";
+import { CallScriptsAdminManager } from "@/components/CallScriptsAdminManager";
+import { StoreContactsAdminManager } from "@/components/StoreContactsAdminManager";
 
 import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates, loadColorsFromDatabase, getGenreColor, getCategoryColor } from "@/lib/templateColors";
 import { HexColorPicker } from 'react-colorful';
@@ -2193,7 +2195,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     <p className="text-sm text-slate-600">Manage standardized call scripts for agents</p>
                   </CardHeader>
                   <CardContent>
-                    <CallScriptsManager />
+                    <Button 
+                      onClick={() => setShowAdminCallScripts(true)}
+                      className="w-full"
+                    >
+                      Open Call Scripts Manager
+                    </Button>
                   </CardContent>
                 </Card>
 
@@ -2207,7 +2214,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     <p className="text-sm text-slate-600">Manage store email addresses and contact details</p>
                   </CardHeader>
                   <CardContent>
-                    <StoreEmailsManager />
+                    <Button 
+                      onClick={() => setShowAdminStoreEmails(true)}
+                      className="w-full"
+                    >
+                      Open Store Contacts Manager
+                    </Button>
                   </CardContent>
                 </Card>
               </div>
@@ -3014,36 +3026,14 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       />
 
       {/* Admin Call Scripts Management Modal */}
-      <Dialog open={showAdminCallScripts} onOpenChange={setShowAdminCallScripts}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Phone className="h-5 w-5 text-green-600" />
-              Admin Call Scripts Management
-            </DialogTitle>
-            <p className="text-sm text-slate-600">
-              Manage call scripts for all agents. You can add, edit, and remove call scripts from the admin panel.
-            </p>
-          </DialogHeader>
-          <CallScriptsManager />
-        </DialogContent>
-      </Dialog>
+      {showAdminCallScripts && (
+        <CallScriptsAdminManager onClose={() => setShowAdminCallScripts(false)} />
+      )}
 
       {/* Admin Store Emails Management Modal */}
-      <Dialog open={showAdminStoreEmails} onOpenChange={setShowAdminStoreEmails}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5 text-purple-600" />
-              Admin Store Contacts Management
-            </DialogTitle>
-            <p className="text-sm text-slate-600">
-              Manage store contact information for all agents. You can add, edit, and remove store contact details.
-            </p>
-          </DialogHeader>
-          <StoreEmailsManager />
-        </DialogContent>
-      </Dialog>
+      {showAdminStoreEmails && (
+        <StoreContactsAdminManager onClose={() => setShowAdminStoreEmails(false)} />
+      )}
 
       {/* Modern Delete Confirmation Dialog */}
       <AlertDialog open={deleteConfirmation.isOpen} onOpenChange={(open) => 
