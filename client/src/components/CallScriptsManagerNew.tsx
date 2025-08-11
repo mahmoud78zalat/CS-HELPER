@@ -123,7 +123,7 @@ function SortableScriptCard({
                       border: '1px solid'
                     }}
                   >
-                    📋 {script.category}
+                    {script.category}
                   </Badge>
                 )}
                 {script.genre && (
@@ -136,7 +136,7 @@ function SortableScriptCard({
                       border: '1px solid'
                     }}
                   >
-                    🎯 {script.genre}
+                    {script.genre}
                   </Badge>
                 )}
               </div>
@@ -389,13 +389,9 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
               </div>
               <div>
                 <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">Call Scripts</DialogTitle>
-                <p className="text-sm text-gray-500">Advanced drag & drop reordering</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="px-2 py-1 bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 rounded-full">
-                <span className="text-xs font-semibold text-green-700 dark:text-green-400">Enhanced</span>
-              </div>
               <div className="text-sm text-gray-500">
                 {filteredScripts.length} of {localScripts.length} scripts
               </div>

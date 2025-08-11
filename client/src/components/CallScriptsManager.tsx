@@ -60,7 +60,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   });
 
   // Extract all genres from all categories for filtering
-  const allGenres = categoriesData ? categoriesData.flatMap((cat: any) => 
+  const allGenres = Array.isArray(categoriesData) ? categoriesData.flatMap((cat: any) => 
     cat.genres?.map((genre: any) => ({ ...genre, categoryName: cat.name, categoryId: cat.id })) || []
   ) : [];
 
@@ -161,7 +161,6 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
               </div>
               <div>
                 <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">Call Scripts</DialogTitle>
-                <p className="text-sm text-gray-500">Search and manage your call scripts</p>
               </div>
             </div>
             <div className="text-sm text-gray-500">
@@ -190,7 +189,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
+                  <SelectItem key={category || ''} value={category || ''}>
                     {category}
                   </SelectItem>
                 ))}
@@ -203,7 +202,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
               </SelectTrigger>
               <SelectContent>
                 {genres.map((genre) => (
-                  <SelectItem key={genre} value={genre}>
+                  <SelectItem key={genre || ''} value={genre || ''}>
                     {genre}
                   </SelectItem>
                 ))}
@@ -306,7 +305,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
                                   border: '1px solid'
                                 }}
                               >
-                                📋 {script.category}
+                                {script.category}
                               </Badge>
                             )}
                             {script.genre && (
@@ -319,7 +318,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
                                   border: '1px solid'
                                 }}
                               >
-                                🎯 {script.genre}
+                                {script.genre}
                               </Badge>
                             )}
                           </div>
