@@ -72,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/store-emails/reorder', async (req: any, res) => {
+  app.patch('/api/store-emails/reorder', isAuthenticated, async (req: any, res) => {
     try {
       const { updates } = req.body;
       if (!Array.isArray(updates) || updates.length === 0) {
