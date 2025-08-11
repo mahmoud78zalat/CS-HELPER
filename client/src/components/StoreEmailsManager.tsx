@@ -87,8 +87,6 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
           </DialogTitle>
         </DialogHeader>
 
-
-
         {/* Search Controls */}
         <div className="space-y-4">
           <div className="flex gap-4 items-center">

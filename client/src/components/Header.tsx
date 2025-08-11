@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/context/ThemeContext";
-import { Headphones, Mail, Settings, Info, LogOut, Edit3, Sun, Moon, HelpCircle, Phone } from "lucide-react";
+import { Headphones, Mail, Settings, Info, LogOut, Edit3, Sun, Moon, HelpCircle, Phone, Building } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ZiwoWidget from "./ZiwoWidget";

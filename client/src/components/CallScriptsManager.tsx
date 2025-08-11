@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Search, X, Phone, FileText, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, X, Phone, FileText, ChevronDown, ChevronRight, GripVertical, Copy, RotateCcw } from "lucide-react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { CallScript } from "@shared/schema";
 
 interface CallScriptsManagerProps {
@@ -19,8 +23,18 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedGenre, setSelectedGenre] = useState<string>("");
   const [expandedScripts, setExpandedScripts] = useState<Set<string>>(new Set());
+  const [localScripts, setLocalScripts] = useState<CallScript[]>([]);
+  const [isDragMode, setIsDragMode] = useState(false);
   
   const { toast } = useToast();
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Fetch call scripts with authentication
   const { data: callScripts = [], isLoading: scriptsLoading } = useQuery<CallScript[]>({
