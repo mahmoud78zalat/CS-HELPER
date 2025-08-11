@@ -694,11 +694,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Site content routes (accessible to all authenticated users for reading)
-  app.get('/api/site-content', isAuthenticated, async (req: any, res) => {
+  // Site content routes (GET is public for login page, POST requires admin auth)
+  app.get('/api/site-content', async (req: any, res) => {
     try {
       const { key } = req.query;
+      console.log('[API] Fetching site content (public access) - key:', key);
       const content = await storage.getSiteContent(key as string);
+      console.log('[API] Site content fetched successfully:', content);
       res.json(content);
     } catch (error) {
       console.error("Error fetching site content:", error);

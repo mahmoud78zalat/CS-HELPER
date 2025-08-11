@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Copy, Search, X, Mail, Building, Phone as PhoneIcon, Shuffle, RotateCcw, GripVertical } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -104,6 +105,12 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // Check if current user is admin - for admin mode, we save to backend
+  const isAdmin = user?.role === 'admin';
+  
+  console.log('[StoreEmailsManager] User role:', user?.role, 'isAdmin:', isAdmin);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -142,7 +149,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     }
   }, [storeEmails]);
 
-  // Reorder mutation (not used in user modal - kept for potential future use)
+  // Admin reorder mutation - saves to backend database
   const reorderMutation = useMutation({
     mutationFn: async (reorderedStores: StoreEmail[]) => {
       const updates = reorderedStores.map((store, index) => ({
@@ -150,16 +157,21 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
         orderIndex: index
       }));
       
-      console.log('[StoreEmailsManager] Sending reorder request with updates:', updates);
+      console.log('[StoreEmailsManager] ADMIN MODE - Sending reorder request with updates:', updates);
       
       const response = await apiRequest('PATCH', '/api/store-emails/reorder', { updates });
-      console.log('[StoreEmailsManager] Reorder response:', response);
+      console.log('[StoreEmailsManager] ADMIN MODE - Reorder response:', response);
       return response;
     },
     onSuccess: () => {
       toast({
-        title: "Order updated",
-        description: "Store contacts have been reordered successfully",
+        title: "Global order updated",
+        description: isAdmin 
+          ? "Store contacts order has been updated globally for all users" 
+          : "Store contacts have been reordered successfully",
+        className: isAdmin 
+          ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800" 
+          : undefined
       });
       queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
     },
@@ -213,7 +225,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
 
 
 
-  // Handle drag end for local reordering  
+  // Handle drag end - Admin vs User behavior  
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
@@ -226,21 +238,28 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
       console.log('[StoreEmailsManager] Drag end event:', { active: active.id, over: over.id });
       console.log('[StoreEmailsManager] Moving store from index', oldIndex, 'to', newIndex);
       console.log('[StoreEmailsManager] Reordered stores preview:', reorderedStores.map(s => ({ id: s.id, name: s.storeName })));
+      console.log('[StoreEmailsManager] User is admin:', isAdmin);
       
       setLocalStores(reorderedStores);
       
-      // For regular users: Save local order to localStorage (NOT to backend)
-      const orderMap: Record<string, number> = {};
-      reorderedStores.forEach((store, index) => {
-        orderMap[store.id] = index;
-      });
-      localStorage.setItem('storeEmails_local_order', JSON.stringify(orderMap));
-      console.log('[StoreEmailsManager] User reorder - saved to localStorage:', orderMap);
-      
-      toast({
-        title: "Contacts reordered",
-        description: "Your personal store contacts order has been updated",
-      });
+      if (isAdmin) {
+        // Admin mode: Save to backend database (global order)
+        console.log('[StoreEmailsManager] ADMIN MODE - Saving order to backend database');
+        reorderMutation.mutate(reorderedStores);
+      } else {
+        // Regular user: Save local order to localStorage only
+        const orderMap: Record<string, number> = {};
+        reorderedStores.forEach((store, index) => {
+          orderMap[store.id] = index;
+        });
+        localStorage.setItem('storeEmails_local_order', JSON.stringify(orderMap));
+        console.log('[StoreEmailsManager] USER MODE - saved to localStorage:', orderMap);
+        
+        toast({
+          title: "Contacts reordered",
+          description: "Your personal store contacts order has been updated",
+        });
+      }
     } else {
       console.log('[StoreEmailsManager] No reorder needed - same position');
     }
