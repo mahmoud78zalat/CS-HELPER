@@ -299,10 +299,10 @@ ALTER TABLE public.usage_tracking ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.announcement_views ENABLE ROW LEVEL SECURITY;
 
 -- Add foreign key constraints after table creation
-ALTER TABLE public.template_genres 
-ADD CONSTRAINT template_genres_category_id_fkey 
-FOREIGN KEY (category_id) REFERENCES public.template_categories(id) ON DELETE SET NULL;
+-- First, ensure the template_categories table exists and has data
+-- Then add foreign key for template_genres
 
+-- Add remaining foreign key constraints
 ALTER TABLE public.call_scripts 
 ADD CONSTRAINT call_scripts_category_id_fkey 
 FOREIGN KEY (category_id) REFERENCES public.template_categories(id) ON DELETE SET NULL;
@@ -402,6 +402,11 @@ INSERT INTO public.template_categories (id, name, description, color, order_inde
 (uuid_generate_v4(), 'Technical', 'Technical support templates', '#9C27B0', 3),
 (uuid_generate_v4(), 'Closure', 'Conversation ending templates', '#FF9800', 4)
 ON CONFLICT DO NOTHING;
+
+-- Now add foreign key constraints after data insertion
+ALTER TABLE public.template_genres 
+ADD CONSTRAINT template_genres_category_id_fkey 
+FOREIGN KEY (category_id) REFERENCES public.template_categories(id) ON DELETE SET NULL;
 
 -- Success message
 DO $$
