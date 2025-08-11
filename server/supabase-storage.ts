@@ -3708,8 +3708,8 @@ export class SupabaseStorage implements IStorage {
         id: script.id,
         name: script.name,
         content: script.content,
-        category: script.category_id, // Map category_id to category
-        genre: script.genre_id,       // Map genre_id to genre
+        category: script.category, // Direct mapping 
+        genre: script.genre,       // Direct mapping
         orderIndex: script.order_index,
         isActive: script.is_active,
         createdBy: script.created_by,
@@ -3740,8 +3740,8 @@ export class SupabaseStorage implements IStorage {
       id: randomUUID(),
       name: scriptData.name,
       content: scriptData.content,
-      category_id: scriptData.category || null, // Fixed: use category_id instead of category
-      genre_id: scriptData.genre || null,       // Fixed: use genre_id instead of genre
+      category: scriptData.category || null, // Use category as VARCHAR
+      genre: scriptData.genre || null,       // Use genre as VARCHAR
       order_index: scriptData.orderIndex || 0,
       is_active: scriptData.isActive !== undefined ? scriptData.isActive : true,
       created_by: scriptData.createdBy || null,
@@ -3771,8 +3771,8 @@ export class SupabaseStorage implements IStorage {
       id: data.id,
       name: data.name,
       content: data.content,
-      category: data.category_id, // Map back from category_id to category 
-      genre: data.genre_id,       // Map back from genre_id to genre
+      category: data.category, // Direct mapping
+      genre: data.genre,       // Direct mapping
       orderIndex: data.order_index,
       isActive: data.is_active,
       createdBy: data.created_by,
@@ -3789,8 +3789,8 @@ export class SupabaseStorage implements IStorage {
     const updateData = {
       name: updates.name,
       content: updates.content,
-      category_id: updates.category || null, // Fixed: use category_id
-      genre_id: updates.genre || null,       // Fixed: use genre_id
+      category: updates.category || null, // Use category as VARCHAR
+      genre: updates.genre || null,       // Use genre as VARCHAR
       order_index: updates.orderIndex || 0,
       is_active: updates.isActive !== undefined ? updates.isActive : true,
       updated_at: new Date().toISOString(),
@@ -3820,8 +3820,8 @@ export class SupabaseStorage implements IStorage {
       id: data.id,
       name: data.name,
       content: data.content,
-      category: data.category_id,  // Map category_id to category
-      genre: data.genre_id,        // Map genre_id to genre
+      category: data.category,  // Direct mapping
+      genre: data.genre,        // Direct mapping
       orderIndex: data.order_index,
       isActive: data.is_active,
       createdBy: data.created_by,

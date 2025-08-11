@@ -1,13 +1,13 @@
 -- Create Missing Database Tables for Call Scripts and Store Emails
 -- Execute this manually in your Supabase SQL editor
 
--- Create call_scripts table
+-- Create call_scripts table (CORRECTED - using category/genre as VARCHAR, not UUID)
 CREATE TABLE IF NOT EXISTS public.call_scripts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
+    name VARCHAR NOT NULL,
     content TEXT NOT NULL,
-    category_id UUID,
-    genre_id UUID,
+    category VARCHAR,
+    genre VARCHAR,
     created_by UUID,
     is_active BOOLEAN DEFAULT true,
     order_index INTEGER DEFAULT 0,
@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS public.call_scripts (
 -- Create store_emails table
 CREATE TABLE IF NOT EXISTS public.store_emails (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    store_name TEXT NOT NULL,
-    store_email TEXT NOT NULL,
-    store_phone TEXT NOT NULL,
+    store_name VARCHAR NOT NULL,
+    store_email VARCHAR NOT NULL,
+    store_phone VARCHAR NOT NULL,
     is_active BOOLEAN DEFAULT true,
     created_by UUID,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -33,8 +33,8 @@ CREATE TABLE IF NOT EXISTS public.store_emails (
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_call_scripts_active ON call_scripts(is_active);
-CREATE INDEX IF NOT EXISTS idx_call_scripts_category ON call_scripts(category_id);
-CREATE INDEX IF NOT EXISTS idx_call_scripts_genre ON call_scripts(genre_id);
+CREATE INDEX IF NOT EXISTS idx_call_scripts_category ON call_scripts(category);
+CREATE INDEX IF NOT EXISTS idx_call_scripts_genre ON call_scripts(genre);
 CREATE INDEX IF NOT EXISTS idx_call_scripts_created_by ON call_scripts(created_by);
 
 CREATE INDEX IF NOT EXISTS idx_store_emails_active ON store_emails(is_active);
@@ -70,8 +70,8 @@ CREATE POLICY "Allow authenticated users to delete store emails" ON store_emails
     FOR DELETE USING (auth.role() = 'authenticated');
 
 -- Insert test data to verify tables work
-INSERT INTO call_scripts (name, content, category_id, genre_id, is_active) VALUES 
-('Test Script 1', 'This is a test call script content', NULL, NULL, true);
+INSERT INTO call_scripts (name, content, category, genre, is_active) VALUES 
+('Test Script 1', 'This is a test call script content', 'test', 'debug', true);
 
 INSERT INTO store_emails (store_name, store_email, store_phone, is_active) VALUES 
 ('Test Store', 'test@example.com', '+1234567890', true);
