@@ -203,25 +203,30 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   // Initialize local scripts when data changes
   useEffect(() => {
     if (callScripts.length > 0) {
-      // Load saved local order from localStorage or use server order
-      const savedOrder = localStorage.getItem('callScripts_local_order');
-      if (savedOrder) {
-        try {
-          const orderMap = JSON.parse(savedOrder);
-          const reorderedScripts = [...callScripts].sort((a, b) => {
-            const aOrder = orderMap[a.id] !== undefined ? orderMap[a.id] : a.orderIndex;
-            const bOrder = orderMap[b.id] !== undefined ? orderMap[b.id] : b.orderIndex;
-            return aOrder - bOrder;
-          });
-          setLocalScripts(reorderedScripts);
-        } catch {
+      // For admin users: ALWAYS use server order, ignore localStorage
+      if (user?.role === 'admin') {
+        setLocalScripts([...callScripts].sort((a, b) => a.orderIndex - b.orderIndex));
+      } else {
+        // For regular users: Load saved local order from localStorage or use server order
+        const savedOrder = localStorage.getItem('callScripts_local_order');
+        if (savedOrder) {
+          try {
+            const orderMap = JSON.parse(savedOrder);
+            const reorderedScripts = [...callScripts].sort((a, b) => {
+              const aOrder = orderMap[a.id] !== undefined ? orderMap[a.id] : a.orderIndex;
+              const bOrder = orderMap[b.id] !== undefined ? orderMap[b.id] : b.orderIndex;
+              return aOrder - bOrder;
+            });
+            setLocalScripts(reorderedScripts);
+          } catch {
+            setLocalScripts([...callScripts].sort((a, b) => a.orderIndex - b.orderIndex));
+          }
+        } else {
           setLocalScripts([...callScripts].sort((a, b) => a.orderIndex - b.orderIndex));
         }
-      } else {
-        setLocalScripts([...callScripts].sort((a, b) => a.orderIndex - b.orderIndex));
       }
     }
-  }, [callScripts]);
+  }, [callScripts, user?.role]);
 
   const toggleScriptExpansion = (scriptId: string) => {
     setExpandedScripts(prev => {
@@ -246,8 +251,11 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
         
         const newItems = arrayMove(items, oldIndex, newIndex);
         
-        // Admin users: Save to database globally
+        // Admin users: Save to database globally (and clear any localStorage conflicts)
         if (user?.role === 'admin') {
+          // Clear localStorage to prevent conflicts with database ordering
+          localStorage.removeItem('callScripts_local_order');
+          console.log('[CallScriptsManagerNew] Admin reorder - cleared localStorage, sending to database');
           reorderMutation.mutate(newItems);
         } else {
           // Regular users: Save local order to localStorage
@@ -275,7 +283,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
     setIsDragMode(false);
     toast({
       title: "Order reset",
-      description: "Call scripts order has been reset to default",
+      description: user?.role === 'admin' ? "Call scripts order has been reset to database order" : "Call scripts order has been reset to default",
     });
   };
 
