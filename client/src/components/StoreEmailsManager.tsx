@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,23 +6,139 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Search, X, Mail, Building, Phone as PhoneIcon } from "lucide-react";
+import { Copy, Search, X, Mail, Building, Phone as PhoneIcon, Shuffle, RotateCcw, GripVertical } from "lucide-react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { StoreEmail } from "@shared/schema";
 
 interface StoreEmailsManagerProps {
   onClose: () => void;
 }
 
+interface SortableStoreCardProps {
+  store: StoreEmail;
+  isDragMode: boolean;
+  onCopyEmail: (email: string, storeName: string) => void;
+  onCopyPhone: (phone: string, storeName: string) => void;
+}
+
+function SortableStoreCard({ store, isDragMode, onCopyEmail, onCopyPhone }: SortableStoreCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: store.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <Card className={`transition-shadow ${isDragging ? 'shadow-lg' : 'hover:shadow-md'}`}>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                {isDragMode && (
+                  <div 
+                    {...listeners} 
+                    className="cursor-grab active:cursor-grabbing"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <GripVertical className="h-4 w-4 text-gray-400" />
+                  </div>
+                )}
+                <CardTitle className="text-lg font-semibold">
+                  {store.storeName}
+                </CardTitle>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Mail className="h-4 w-4 text-gray-500" />
+            <span className="text-sm font-mono">{store.storeEmail}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCopyEmail(store.storeEmail, store.storeName)}
+              className="h-6 w-6 p-0 ml-auto"
+              title="Copy email"
+            >
+              <Copy className="h-3 w-3" />
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <PhoneIcon className="h-4 w-4 text-gray-500" />
+            <span className="text-sm font-mono">{store.storePhone}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCopyPhone(store.storePhone, store.storeName)}
+              className="h-6 w-6 p-0 ml-auto"
+              title="Copy phone"
+            >
+              <Copy className="h-3 w-3" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDragMode, setIsDragMode] = useState(false);
+  const [localStores, setLocalStores] = useState<StoreEmail[]>([]);
   
   const { toast } = useToast();
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Fetch store emails
   const { data: storeEmails = [], isLoading: storesLoading } = useQuery<StoreEmail[]>({
     queryKey: ['/api/store-emails'],
     enabled: true
   });
+
+  // Synchronize local state with server data and apply local ordering
+  useEffect(() => {
+    if (storeEmails && storeEmails.length > 0) {
+      // Check for saved local order
+      const savedOrder = localStorage.getItem('storeEmails_local_order');
+      if (savedOrder) {
+        try {
+          const orderMap = JSON.parse(savedOrder);
+          const reorderedStores = [...storeEmails].sort((a, b) => {
+            const aOrder = orderMap[a.id] !== undefined ? orderMap[a.id] : a.orderIndex;
+            const bOrder = orderMap[b.id] !== undefined ? orderMap[b.id] : b.orderIndex;
+            return aOrder - bOrder;
+          });
+          setLocalStores(reorderedStores);
+        } catch {
+          setLocalStores([...storeEmails].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)));
+        }
+      } else {
+        setLocalStores([...storeEmails].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)));
+      }
+    }
+  }, [storeEmails]);
 
 
 
@@ -64,12 +180,54 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
 
 
 
+  // Handle drag end for local reordering  
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      setLocalStores((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        const newItems = arrayMove(items, oldIndex, newIndex);
+        
+        // Save local order to localStorage (user preferences only)
+        const orderMap: Record<string, number> = {};
+        newItems.forEach((item, index) => {
+          orderMap[item.id] = index;
+        });
+        localStorage.setItem('storeEmails_local_order', JSON.stringify(orderMap));
+        
+        toast({
+          title: "Stores reordered",
+          description: "Your personal store contacts order has been updated",
+        });
+        
+        return newItems;
+      });
+    }
+  };
+
+  // Reset local ordering
+  const resetLocalOrder = () => {
+    localStorage.removeItem('storeEmails_local_order');
+    setLocalStores([...storeEmails].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)));
+    setIsDragMode(false);
+    toast({
+      title: "Order reset",
+      description: "Store contacts order has been reset to default",
+    });
+  };
+
   const clearSearch = () => {
     setSearchTerm("");
   };
 
-  // Filter store emails based on search term
-  const filteredStoreEmails = storeEmails.filter((store: StoreEmail) => {
+  // Check if there's any custom ordering
+  const hasCustomOrder = localStorage.getItem('storeEmails_local_order') !== null;
+
+  // Filter store emails based on search term using localStores for custom ordering
+  const filteredStoreEmails = localStores.filter((store: StoreEmail) => {
     const matchesSearch = store.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          store.storeEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          store.storePhone.includes(searchTerm);
@@ -87,8 +245,34 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
           </DialogTitle>
         </DialogHeader>
 
-        {/* Search Controls */}
+        {/* Control Panel */}
         <div className="space-y-4">
+          {/* Reordering Controls */}
+          <div className="flex gap-2 items-center">
+            <Button
+              onClick={() => setIsDragMode(!isDragMode)}
+              variant={isDragMode ? "default" : "outline"}
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Shuffle className="h-4 w-4" />
+              {isDragMode ? "Exit Reorder Mode" : "Reorder Stores"}
+            </Button>
+            
+            {(hasCustomOrder || isDragMode) && (
+              <Button
+                onClick={resetLocalOrder}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset Order
+              </Button>
+            )}
+          </div>
+
+          {/* Search Controls */}
           <div className="flex gap-4 items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -117,90 +301,45 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
 
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Building className="h-4 w-4" />
-            <span>Showing {filteredStoreEmails.length} of {storeEmails.length} stores</span>
+            <span>Showing {filteredStoreEmails.length} of {localStores.length} stores</span>
+            {hasCustomOrder && <Badge variant="secondary">Custom Order</Badge>}
+            {isDragMode && <Badge variant="default">Drag Mode</Badge>}
           </div>
         </div>
 
         {/* Store Emails Grid */}
         <div className="overflow-y-auto max-h-[50vh] space-y-4">
           {storesLoading ? (
-            <div className="text-center py-8">Loading stores...</div>
+            <div className="flex justify-center items-center py-8">
+              <div className="text-gray-500">Loading store contacts...</div>
+            </div>
           ) : filteredStoreEmails.length === 0 ? (
-            <div className="text-center py-8">
-              <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No stores found</h3>
-              <p className="text-gray-500">
-                {searchTerm
-                  ? "Try adjusting your search criteria"
-                  : "No store information is available"}
-              </p>
+            <div className="flex justify-center items-center py-8">
+              <div className="text-gray-500">
+                {searchTerm ? 'No stores found matching your search.' : 'No store contacts available.'}
+              </div>
             </div>
           ) : (
-            <div className="grid gap-4">
-              {filteredStoreEmails.map((store: StoreEmail) => (
-                <Card key={store.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg font-medium mb-2 flex items-center gap-2">
-                          <Building className="h-5 w-5 text-blue-600" />
-                          {store.storeName}
-                        </CardTitle>
-                        <Badge variant="secondary" className="text-xs">
-                          Active Store
-                        </Badge>
-                      </div>
-
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4">
-                      {/* Email Section */}
-                      <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Mail className="h-5 w-5 text-blue-600" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Email</p>
-                            <p className="text-sm text-gray-600">{store.storeEmail}</p>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleCopyEmail(store.storeEmail, store.storeName)}
-                          className="flex items-center gap-1"
-                          data-testid={`button-copy-email-${store.id}`}
-                        >
-                          <Copy className="h-4 w-4" />
-                          Copy
-                        </Button>
-                      </div>
-
-                      {/* Phone Section */}
-                      <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <PhoneIcon className="h-5 w-5 text-green-600" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Phone</p>
-                            <p className="text-sm text-gray-600">{store.storePhone}</p>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleCopyPhone(store.storePhone, store.storeName)}
-                          className="flex items-center gap-1"
-                          data-testid={`button-copy-phone-${store.id}`}
-                        >
-                          <Copy className="h-4 w-4" />
-                          Copy
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <DndContext 
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext 
+                items={filteredStoreEmails.map(store => store.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {filteredStoreEmails.map((store) => (
+                  <SortableStoreCard
+                    key={store.id}
+                    store={store}
+                    isDragMode={isDragMode}
+                    onCopyEmail={handleCopyEmail}
+                    onCopyPhone={handleCopyPhone}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           )}
         </div>
 

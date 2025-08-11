@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,11 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Search, X, Phone, FileText, ChevronDown, ChevronRight, GripVertical, RotateCcw, Shuffle } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { apiRequest } from "@/lib/queryClient";
 import type { CallScript } from "@shared/schema";
 
 interface SortableScriptCardProps {
@@ -126,6 +128,8 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const [isDragMode, setIsDragMode] = useState(false);
   
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -167,6 +171,35 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const categories = Array.from(new Set(callScripts.map((script: CallScript) => script.category).filter(Boolean)));
   const genres = Array.from(new Set(callScripts.map((script: CallScript) => script.genre).filter(Boolean)));
 
+  // Reorder mutation for admin users
+  const reorderMutation = useMutation({
+    mutationFn: async (reorderedScripts: CallScript[]) => {
+      if (user?.role !== 'admin') return;
+      
+      const updates = reorderedScripts.map((script, index) => ({
+        id: script.id,
+        orderIndex: index
+      }));
+      
+      return apiRequest('PATCH', '/api/call-scripts/reorder', { updates });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
+      toast({
+        title: "Global order updated",
+        description: "Call scripts have been reordered for all users",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Reorder error:', error);
+      toast({
+        title: "Reorder failed",  
+        description: error?.message || "Unable to reorder call scripts",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Initialize local scripts when data changes
   useEffect(() => {
     if (callScripts.length > 0) {
@@ -202,7 +235,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
     });
   };
 
-  // Handle drag end for local reordering
+  // Handle drag end for both local and global reordering
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
@@ -213,17 +246,22 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
         
         const newItems = arrayMove(items, oldIndex, newIndex);
         
-        // Save local order to localStorage (user preferences only)
-        const orderMap: Record<string, number> = {};
-        newItems.forEach((item, index) => {
-          orderMap[item.id] = index;
-        });
-        localStorage.setItem('callScripts_local_order', JSON.stringify(orderMap));
-        
-        toast({
-          title: "Scripts reordered",
-          description: "Your personal call scripts order has been updated",
-        });
+        // Admin users: Save to database globally
+        if (user?.role === 'admin') {
+          reorderMutation.mutate(newItems);
+        } else {
+          // Regular users: Save local order to localStorage
+          const orderMap: Record<string, number> = {};
+          newItems.forEach((item, index) => {
+            orderMap[item.id] = index;
+          });
+          localStorage.setItem('callScripts_local_order', JSON.stringify(orderMap));
+          
+          toast({
+            title: "Scripts reordered",
+            description: "Your personal call scripts order has been updated",
+          });
+        }
         
         return newItems;
       });
@@ -239,6 +277,13 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
       title: "Order reset",
       description: "Call scripts order has been reset to default",
     });
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("");
+    setSelectedGenre("");
   };
 
 
@@ -267,12 +312,6 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
       'Follow-up': '#14B8A6'
     };
     return colors[genre] || '#6B7280';
-  };
-
-  const clearFilters = () => {
-    setSelectedCategory("");
-    setSelectedGenre("");
-    setSearchTerm("");
   };
 
   // Check if there's any custom ordering
@@ -309,7 +348,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
               className="flex items-center gap-2"
             >
               <Shuffle className="h-4 w-4" />
-              {isDragMode ? "Exit Reorder Mode" : "Reorder Scripts"}
+              {isDragMode ? "Exit Reorder Mode" : (user?.role === 'admin' ? "Reorder Scripts (Global)" : "Reorder Scripts (Personal)")}
             </Button>
             
             {(hasCustomOrder || isDragMode) && (
