@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,10 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Search, X, Phone, FileText, Plus, Edit, Trash2 } from "lucide-react";
+import { Copy, Search, X, Phone, FileText } from "lucide-react";
 import type { CallScript } from "@shared/schema";
-import { useAuth } from "@/hooks/useAuth";
-import { CallScriptModal } from "./CallScriptModal";
 
 interface CallScriptsManagerProps {
   onClose: () => void;
@@ -20,13 +18,8 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedGenre, setSelectedGenre] = useState<string>("");
-  const [showModal, setShowModal] = useState(false);
-  const [editingScript, setEditingScript] = useState<CallScript | null>(null);
   
   const { toast } = useToast();
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const isAdmin = user?.role === 'admin';
 
   // Fetch call scripts
   const { data: callScripts = [], isLoading: scriptsLoading } = useQuery({
@@ -51,23 +44,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
 
 
 
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await fetch(`/api/call-scripts/${id}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) throw new Error('Failed to delete script');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
-      toast({ title: "Success", description: "Call script deleted successfully" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to delete call script", variant: "destructive" });
-    }
-  });
+
 
   const handleCopyScript = (content: string, name: string) => {
     try {
@@ -85,26 +62,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
     }
   };
 
-  const handleEdit = (script: CallScript) => {
-    setEditingScript(script);
-    setShowModal(true);
-  };
 
-  const handleAdd = () => {
-    setEditingScript(null);
-    setShowModal(true);
-  };
-
-  const handleModalClose = () => {
-    setShowModal(false);
-    setEditingScript(null);
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this call script?')) {
-      deleteMutation.mutate(id);
-    }
-  };
 
   const clearFilters = () => {
     setSelectedCategory("");
@@ -126,22 +84,10 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <Phone className="h-5 w-5" />
-              Call Scripts Manager
-            </DialogTitle>
-            {isAdmin && (
-              <Button
-                onClick={handleAdd}
-                className="flex items-center gap-2"
-                data-testid="button-add-script"
-              >
-                <Plus className="h-4 w-4" />
-                Add Script
-              </Button>
-            )}
-          </div>
+          <DialogTitle className="flex items-center gap-2">
+            <Phone className="h-5 w-5" />
+            Call Scripts - View Only
+          </DialogTitle>
         </DialogHeader>
 
 
@@ -257,30 +203,6 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
                           <Copy className="h-4 w-4" />
                           Copy
                         </Button>
-                        {isAdmin && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEdit(script)}
-                              className="flex items-center gap-1"
-                              data-testid={`button-edit-${script.id}`}
-                            >
-                              <Edit className="h-4 w-4" />
-                              Edit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDelete(script.id)}
-                              className="flex items-center gap-1 text-red-600 hover:text-red-700"
-                              data-testid={`button-delete-${script.id}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </Button>
-                          </>
-                        )}
                       </div>
                     </div>
                   </CardHeader>
@@ -300,20 +222,13 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
         {/* Footer */}
         <div className="flex justify-between items-center pt-4 border-t">
           <div className="text-sm text-gray-500">
-            {isAdmin ? 'Manage call scripts for your team' : 'Quick access to predefined call scripts for customer support'}
+            Quick access to predefined call scripts for customer support
           </div>
           <Button onClick={onClose} variant="outline" data-testid="button-close">
             Close
           </Button>
         </div>
       </DialogContent>
-
-      {/* Call Script Modal */}
-      <CallScriptModal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        editingScript={editingScript}
-      />
     </Dialog>
   );
 }

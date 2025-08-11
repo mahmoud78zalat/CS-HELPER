@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Phone } from "lucide-react";
 import type { CallScript } from "@shared/schema";
@@ -123,7 +124,9 @@ export function CallScriptModal({ isOpen, onClose, editingScript }: CallScriptMo
       content: formData.content.trim(),
       category: formData.category.trim() || null,
       genre: formData.genre.trim() || null,
-      isActive: true
+      isActive: true,
+      createdBy: null,
+      orderIndex: 0
     };
 
     if (editingScript) {
@@ -163,23 +166,45 @@ export function CallScriptModal({ isOpen, onClose, editingScript }: CallScriptMo
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Category</label>
-              <Input
+              <Select
                 value={formData.category}
-                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                placeholder="Enter category (e.g., Support, Sales)"
-                data-testid="input-script-category"
-              />
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                data-testid="select-script-category"
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Category</SelectItem>
+                  {categoriesData.map((category: any) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
           <div>
             <label className="block text-sm font-medium mb-1">Genre</label>
-            <Input
+            <Select
               value={formData.genre}
-              onChange={(e) => setFormData(prev => ({ ...prev, genre: e.target.value }))}
-              placeholder="Enter genre (e.g., Welcome, Problem Resolution)"
-              data-testid="input-script-genre"
-            />
+              onValueChange={(value) => setFormData(prev => ({ ...prev, genre: value }))}
+              data-testid="select-script-genre"
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select genre" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No Genre</SelectItem>
+                {genresData.map((genre: any) => (
+                  <SelectItem key={genre.id} value={genre.name}>
+                    {genre.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

@@ -1,15 +1,13 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Search, X, Mail, Building, Phone as PhoneIcon, Plus, Edit, Trash2 } from "lucide-react";
+import { Copy, Search, X, Mail, Building, Phone as PhoneIcon } from "lucide-react";
 import type { StoreEmail } from "@shared/schema";
-import { useAuth } from "@/hooks/useAuth";
-import { StoreContactModal } from "./StoreContactModal";
 
 interface StoreEmailsManagerProps {
   onClose: () => void;
@@ -17,13 +15,8 @@ interface StoreEmailsManagerProps {
 
 export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [editingStore, setEditingStore] = useState<StoreEmail | null>(null);
   
   const { toast } = useToast();
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const isAdmin = user?.role === 'admin';
 
   // Fetch store emails
   const { data: storeEmails = [], isLoading: storesLoading } = useQuery({
@@ -33,23 +26,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
 
 
 
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await fetch(`/api/store-emails/${id}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) throw new Error('Failed to delete store');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
-      toast({ title: "Success", description: "Store contact deleted successfully" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to delete store contact", variant: "destructive" });
-    }
-  });
+
 
   const handleCopyEmail = (email: string, storeName: string) => {
     try {
@@ -100,26 +77,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     }
   };
 
-  const handleEdit = (store: StoreEmail) => {
-    setEditingStore(store);
-    setShowModal(true);
-  };
 
-  const handleAdd = () => {
-    setEditingStore(null);
-    setShowModal(true);
-  };
-
-  const handleModalClose = () => {
-    setShowModal(false);
-    setEditingStore(null);
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this store contact?')) {
-      deleteMutation.mutate(id);
-    }
-  };
 
   const clearSearch = () => {
     setSearchTerm("");
@@ -138,22 +96,10 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
-              Store Emails & Contact Information
-            </DialogTitle>
-            {isAdmin && (
-              <Button
-                onClick={handleAdd}
-                className="flex items-center gap-2"
-                data-testid="button-add-store"
-              >
-                <Plus className="h-4 w-4" />
-                Add Store
-              </Button>
-            )}
-          </div>
+          <DialogTitle className="flex items-center gap-2">
+            <Building className="h-5 w-5" />
+            Store Contacts - View Only
+          </DialogTitle>
         </DialogHeader>
 
 
@@ -232,30 +178,6 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
                           <Copy className="h-4 w-4" />
                           Copy All
                         </Button>
-                        {isAdmin && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEdit(store)}
-                              className="flex items-center gap-1"
-                              data-testid={`button-edit-${store.id}`}
-                            >
-                              <Edit className="h-4 w-4" />
-                              Edit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDelete(store.id)}
-                              className="flex items-center gap-1 text-red-600 hover:text-red-700"
-                              data-testid={`button-delete-${store.id}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </Button>
-                          </>
-                        )}
                       </div>
                     </div>
                   </CardHeader>
@@ -313,20 +235,13 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
         {/* Footer */}
         <div className="flex justify-between items-center pt-4 border-t">
           <div className="text-sm text-gray-500">
-            {isAdmin ? 'Manage store contact information for your team' : 'Quick access to store contact information for customer inquiries'}
+            Quick access to store contact information for customer inquiries
           </div>
           <Button onClick={onClose} variant="outline" data-testid="button-close">
             Close
           </Button>
         </div>
       </DialogContent>
-
-      {/* Store Contact Modal */}
-      <StoreContactModal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        editingStore={editingStore}
-      />
     </Dialog>
   );
 }

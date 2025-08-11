@@ -117,7 +117,8 @@ export function StoreContactModal({ isOpen, onClose, editingStore }: StoreContac
       storeName: formData.storeName.trim(),
       storeEmail: formData.storeEmail.trim(),
       storePhone: formData.storePhone.trim(),
-      isActive: true
+      isActive: true,
+      createdBy: null
     };
 
     if (editingStore) {
