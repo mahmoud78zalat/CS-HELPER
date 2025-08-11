@@ -53,9 +53,7 @@ export function StoreContactsAdminManager({ onClose }: StoreContactsAdminManager
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiRequest('DELETE', `/api/store-emails/${id}`);
-      if (!response.ok) throw new Error('Failed to delete store contact');
-      return response.json();
+      return apiRequest('DELETE', `/api/store-emails/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
@@ -312,9 +310,7 @@ function StoreContactCreateModal({ onClose }: { onClose: () => void }) {
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await apiRequest('POST', '/api/store-emails', { ...data, isActive: true });
-      if (!response.ok) throw new Error('Failed to create store contact');
-      return response.json();
+      return apiRequest('POST', '/api/store-emails', { ...data, isActive: true });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
@@ -422,9 +418,7 @@ function StoreContactEditModal({
 
   const updateMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await apiRequest('PUT', `/api/store-emails/${store.id}`, data);
-      if (!response.ok) throw new Error('Failed to update store contact');
-      return response.json();
+      return apiRequest('PUT', `/api/store-emails/${store.id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });

@@ -75,9 +75,7 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiRequest('DELETE', `/api/call-scripts/${id}`);
-      if (!response.ok) throw new Error('Failed to delete call script');
-      return response.json();
+      return apiRequest('DELETE', `/api/call-scripts/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
@@ -321,9 +319,7 @@ function CallScriptCreateModal({
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await apiRequest('POST', '/api/call-scripts', { ...data, isActive: true });
-      if (!response.ok) throw new Error('Failed to create call script');
-      return response.json();
+      return apiRequest('POST', '/api/call-scripts', { ...data, isActive: true });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
@@ -458,9 +454,7 @@ function CallScriptEditModal({
 
   const updateMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await apiRequest('PUT', `/api/call-scripts/${script.id}`, data);
-      if (!response.ok) throw new Error('Failed to update call script');
-      return response.json();
+      return apiRequest('PUT', `/api/call-scripts/${script.id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
