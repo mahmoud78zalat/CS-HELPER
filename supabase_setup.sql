@@ -1,193 +1,264 @@
--- Supabase SQL Script for Call Scripts and Store Emails Features
--- This script creates the necessary tables and relationships for the call scripts and store emails functionality
+-- BFL Customer Service Helper - Complete Supabase Database Setup Script
+-- Execute this script manually in your Supabase SQL editor
 
--- ========================================
--- TEMPLATE CATEGORIES AND GENRES (Updated Structure)
--- ========================================
+-- Enable necessary extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Drop existing tables if they exist (for clean setup)
-DROP TABLE IF EXISTS call_scripts CASCADE;
-DROP TABLE IF EXISTS store_emails CASCADE;
-
--- Ensure template_categories table exists
-CREATE TABLE IF NOT EXISTS template_categories (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR UNIQUE NOT NULL,
-    description TEXT,
-    color VARCHAR DEFAULT '#3b82f6' NOT NULL,
-    is_active BOOLEAN DEFAULT true NOT NULL,
-    order_index INTEGER DEFAULT 0 NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+-- Create users table
+CREATE TABLE IF NOT EXISTS public.users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email TEXT UNIQUE NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    arabic_first_name TEXT,
+    arabic_last_name TEXT,
+    profile_image_url TEXT,
+    role TEXT NOT NULL DEFAULT 'agent' CHECK (role IN ('admin', 'agent')),
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'blocked', 'banned')),
+    is_online BOOLEAN DEFAULT false,
+    is_first_time_user BOOLEAN DEFAULT true,
+    last_seen TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Ensure template_genres table exists
-CREATE TABLE IF NOT EXISTS template_genres (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR NOT NULL,
+-- Create template categories table
+CREATE TABLE IF NOT EXISTS public.template_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
     description TEXT,
-    category_id UUID REFERENCES template_categories(id) NOT NULL,
-    color VARCHAR DEFAULT '#10b981' NOT NULL,
-    is_active BOOLEAN DEFAULT true NOT NULL,
-    order_index INTEGER DEFAULT 0 NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    color TEXT DEFAULT '#3b82f6',
+    is_active BOOLEAN DEFAULT true,
+    order_index INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ========================================
--- CALL SCRIPTS TABLE
--- ========================================
+-- Create template genres table
+CREATE TABLE IF NOT EXISTS public.template_genres (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    description TEXT,
+    color TEXT DEFAULT '#3b82f6',
+    category_id UUID REFERENCES public.template_categories(id) ON DELETE SET NULL,
+    is_active BOOLEAN DEFAULT true,
+    order_index INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Create call_scripts table connected to categories and genres
-CREATE TABLE call_scripts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR NOT NULL,
+-- Create call scripts table
+CREATE TABLE IF NOT EXISTS public.call_scripts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
     content TEXT NOT NULL,
-    category_id UUID REFERENCES template_categories(id),
-    genre_id UUID REFERENCES template_genres(id),
-    is_active BOOLEAN DEFAULT true NOT NULL,
-    created_by UUID REFERENCES auth.users(id),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
-    -- Supabase sync tracking
-    supabase_id UUID UNIQUE,
-    last_synced_at TIMESTAMP
+    category_id UUID REFERENCES public.template_categories(id) ON DELETE SET NULL,
+    genre_id UUID REFERENCES public.template_genres(id) ON DELETE SET NULL,
+    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    is_active BOOLEAN DEFAULT true,
+    order_index INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ========================================
--- STORE EMAILS TABLE
--- ========================================
-
--- Create store_emails table for store contact information
-CREATE TABLE store_emails (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    store_name VARCHAR NOT NULL,
-    store_email VARCHAR NOT NULL,
-    store_phone VARCHAR NOT NULL,
-    is_active BOOLEAN DEFAULT true NOT NULL,
-    created_by UUID REFERENCES auth.users(id),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
-    -- Supabase sync tracking
-    supabase_id UUID UNIQUE,
-    last_synced_at TIMESTAMP
+-- Create store emails table
+CREATE TABLE IF NOT EXISTS public.store_emails (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    store_name TEXT NOT NULL,
+    store_email TEXT NOT NULL,
+    store_phone TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ========================================
--- INDEXES FOR PERFORMANCE
--- ========================================
+-- Create live reply templates table
+CREATE TABLE IF NOT EXISTS public.live_reply_templates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    content TEXT NOT NULL,
+    category_id UUID REFERENCES public.template_categories(id) ON DELETE SET NULL,
+    genre_id UUID REFERENCES public.template_genres(id) ON DELETE SET NULL,
+    group_id UUID,
+    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    is_active BOOLEAN DEFAULT true,
+    is_favorite BOOLEAN DEFAULT false,
+    order_index INTEGER DEFAULT 0,
+    personal_order_index INTEGER,
+    usage_count INTEGER DEFAULT 0,
+    last_used_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Call Scripts indexes
-CREATE INDEX IF NOT EXISTS idx_call_scripts_category_id ON call_scripts(category_id);
-CREATE INDEX IF NOT EXISTS idx_call_scripts_genre_id ON call_scripts(genre_id);
-CREATE INDEX IF NOT EXISTS idx_call_scripts_created_by ON call_scripts(created_by);
-CREATE INDEX IF NOT EXISTS idx_call_scripts_is_active ON call_scripts(is_active);
-CREATE INDEX IF NOT EXISTS idx_call_scripts_supabase_id ON call_scripts(supabase_id);
+-- Create email templates table
+CREATE TABLE IF NOT EXISTS public.email_templates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    content TEXT NOT NULL,
+    category_id UUID REFERENCES public.template_categories(id) ON DELETE SET NULL,
+    genre_id UUID REFERENCES public.template_genres(id) ON DELETE SET NULL,
+    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    is_active BOOLEAN DEFAULT true,
+    order_index INTEGER DEFAULT 0,
+    personal_order_index INTEGER,
+    usage_count INTEGER DEFAULT 0,
+    last_used_at TIMESTAMPTZ,
+    warning_note TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Store Emails indexes
-CREATE INDEX IF NOT EXISTS idx_store_emails_created_by ON store_emails(created_by);
-CREATE INDEX IF NOT EXISTS idx_store_emails_is_active ON store_emails(is_active);
-CREATE INDEX IF NOT EXISTS idx_store_emails_supabase_id ON store_emails(supabase_id);
+-- Create template groups table
+CREATE TABLE IF NOT EXISTS public.live_reply_template_groups (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    description TEXT,
+    color TEXT DEFAULT '#3b82f6',
+    is_active BOOLEAN DEFAULT true,
+    order_index INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Template Categories and Genres indexes
-CREATE INDEX IF NOT EXISTS idx_template_categories_is_active ON template_categories(is_active);
-CREATE INDEX IF NOT EXISTS idx_template_categories_order_index ON template_categories(order_index);
-CREATE INDEX IF NOT EXISTS idx_template_genres_category_id ON template_genres(category_id);
-CREATE INDEX IF NOT EXISTS idx_template_genres_is_active ON template_genres(is_active);
-CREATE INDEX IF NOT EXISTS idx_template_genres_order_index ON template_genres(order_index);
+-- Create personal notes table
+CREATE TABLE IF NOT EXISTS public.personal_notes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    subject TEXT,
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- ========================================
--- INSERT SAMPLE DATA (Based on existing categories/genres)
--- ========================================
+-- Create template variables table
+CREATE TABLE IF NOT EXISTS public.template_variables (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    category TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Insert sample categories if they don't exist
-INSERT INTO template_categories (name, description, color, order_index) VALUES 
-    ('Customer Service', 'General customer service responses', '#3b82f6', 0),
-    ('Sales Support', 'Sales and product inquiries', '#10b981', 1),
-    ('Technical Support', 'Technical assistance and troubleshooting', '#f59e0b', 2),
-    ('Complaints', 'Handling customer complaints', '#ef4444', 3),
-    ('Order Management', 'Order processing and tracking', '#8b5cf6', 4)
-ON CONFLICT (name) DO NOTHING;
+-- Create FAQ table
+CREATE TABLE IF NOT EXISTS public.faq (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    category TEXT,
+    is_active BOOLEAN DEFAULT true,
+    order_index INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Insert sample genres if they don't exist
-INSERT INTO template_genres (name, description, category_id, color, order_index) VALUES 
-    ('Greeting', 'Welcome and initial contact scripts', (SELECT id FROM template_categories WHERE name = 'Customer Service'), '#10b981', 0),
-    ('Apology', 'Apology and acknowledgment scripts', (SELECT id FROM template_categories WHERE name = 'Customer Service'), '#f59e0b', 1),
-    ('Product Inquiry', 'Product information and details', (SELECT id FROM template_categories WHERE name = 'Sales Support'), '#3b82f6', 0),
-    ('Order Status', 'Order tracking and updates', (SELECT id FROM template_categories WHERE name = 'Order Management'), '#8b5cf6', 0),
-    ('Complaint Response', 'Handling customer complaints', (SELECT id FROM template_categories WHERE name = 'Complaints'), '#ef4444', 0),
-    ('Technical Issue', 'Technical problem resolution', (SELECT id FROM template_categories WHERE name = 'Technical Support'), '#f59e0b', 0)
-ON CONFLICT DO NOTHING;
+-- Create site content table
+CREATE TABLE IF NOT EXISTS public.site_content (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT NOT NULL UNIQUE,
+    value TEXT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Insert sample call scripts
-INSERT INTO call_scripts (name, content, category_id, genre_id) VALUES 
-    (
-        'Welcome Greeting Script',
-        'Hello and thank you for calling [Company Name]. My name is [Agent Name] and I''ll be happy to assist you today. How may I help you?',
-        (SELECT id FROM template_categories WHERE name = 'Customer Service'),
-        (SELECT id FROM template_genres WHERE name = 'Greeting')
-    ),
-    (
-        'Order Status Inquiry',
-        'I understand you''d like to check on your order status. Can you please provide me with your order number? I''ll be happy to look that up for you right away.',
-        (SELECT id FROM template_categories WHERE name = 'Order Management'),
-        (SELECT id FROM template_genres WHERE name = 'Order Status')
-    ),
-    (
-        'Product Information Request',
-        'I''d be happy to provide you with information about [Product Name]. Let me pull up the details for you. This product features [Key Features] and is available in [Available Options].',
-        (SELECT id FROM template_categories WHERE name = 'Sales Support'),
-        (SELECT id FROM template_genres WHERE name = 'Product Inquiry')
-    ),
-    (
-        'Service Apology Script',
-        'I sincerely apologize for the inconvenience you''ve experienced. I understand how frustrating this must be, and I''m here to make this right for you. Let me see what I can do to resolve this issue immediately.',
-        (SELECT id FROM template_categories WHERE name = 'Customer Service'),
-        (SELECT id FROM template_genres WHERE name = 'Apology')
-    ),
-    (
-        'Technical Support Opening',
-        'Thank you for contacting our technical support team. I''m here to help you resolve any technical issues you may be experiencing. Can you describe the problem you''re encountering?',
-        (SELECT id FROM template_categories WHERE name = 'Technical Support'),
-        (SELECT id FROM template_genres WHERE name = 'Technical Issue')
-    )
-ON CONFLICT DO NOTHING;
+-- Create template colors table
+CREATE TABLE IF NOT EXISTS public.template_colors (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    entity_type TEXT NOT NULL CHECK (entity_type IN ('category', 'genre')),
+    entity_name TEXT NOT NULL,
+    color TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(entity_type, entity_name)
+);
 
--- Insert sample store emails
-INSERT INTO store_emails (store_name, store_email, store_phone) VALUES 
-    ('Main Customer Service', 'support@company.com', '+1-800-123-4567'),
-    ('Sales Department', 'sales@company.com', '+1-800-123-4568'),
-    ('Technical Support', 'tech@company.com', '+1-800-123-4569'),
-    ('Billing Department', 'billing@company.com', '+1-800-123-4570'),
-    ('Returns & Exchanges', 'returns@company.com', '+1-800-123-4571')
-ON CONFLICT DO NOTHING;
+-- Create usage tracking table
+CREATE TABLE IF NOT EXISTS public.usage_tracking (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    template_id UUID,
+    template_type TEXT NOT NULL CHECK (template_type IN ('live_reply', 'email')),
+    action_type TEXT NOT NULL CHECK (action_type IN ('used', 'created', 'edited', 'deleted')),
+    timestamp TIMESTAMPTZ DEFAULT NOW(),
+    metadata JSONB,
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- ========================================
--- ROW LEVEL SECURITY (RLS) POLICIES
--- ========================================
+-- Create sessions table (for session management)
+CREATE TABLE IF NOT EXISTS public.sessions (
+    sid TEXT PRIMARY KEY,
+    sess JSONB NOT NULL,
+    expire TIMESTAMPTZ NOT NULL
+);
 
--- Enable RLS on tables
-ALTER TABLE call_scripts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE store_emails ENABLE ROW LEVEL SECURITY;
+-- Create announcement views table
+CREATE TABLE IF NOT EXISTS public.announcement_views (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    announcement_id TEXT NOT NULL,
+    viewed_at TIMESTAMPTZ DEFAULT NOW(),
+    supabase_id UUID,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, announcement_id)
+);
 
--- Call Scripts policies
-CREATE POLICY "Users can view all call scripts" ON call_scripts FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can insert call scripts" ON call_scripts FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Users can update own call scripts" ON call_scripts FOR UPDATE USING (auth.uid() = created_by);
-CREATE POLICY "Users can delete own call scripts" ON call_scripts FOR DELETE USING (auth.uid() = created_by);
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
+CREATE INDEX IF NOT EXISTS idx_users_status ON public.users(status);
+CREATE INDEX IF NOT EXISTS idx_users_is_online ON public.users(is_online);
+CREATE INDEX IF NOT EXISTS idx_call_scripts_category_id ON public.call_scripts(category_id);
+CREATE INDEX IF NOT EXISTS idx_call_scripts_genre_id ON public.call_scripts(genre_id);
+CREATE INDEX IF NOT EXISTS idx_call_scripts_is_active ON public.call_scripts(is_active);
+CREATE INDEX IF NOT EXISTS idx_store_emails_is_active ON public.store_emails(is_active);
+CREATE INDEX IF NOT EXISTS idx_live_reply_templates_category_id ON public.live_reply_templates(category_id);
+CREATE INDEX IF NOT EXISTS idx_live_reply_templates_genre_id ON public.live_reply_templates(genre_id);
+CREATE INDEX IF NOT EXISTS idx_live_reply_templates_group_id ON public.live_reply_templates(group_id);
+CREATE INDEX IF NOT EXISTS idx_live_reply_templates_is_active ON public.live_reply_templates(is_active);
+CREATE INDEX IF NOT EXISTS idx_email_templates_category_id ON public.email_templates(category_id);
+CREATE INDEX IF NOT EXISTS idx_email_templates_genre_id ON public.email_templates(genre_id);
+CREATE INDEX IF NOT EXISTS idx_email_templates_is_active ON public.email_templates(is_active);
+CREATE INDEX IF NOT EXISTS idx_personal_notes_user_id ON public.personal_notes(user_id);
+CREATE INDEX IF NOT EXISTS idx_template_genres_category_id ON public.template_genres(category_id);
+CREATE INDEX IF NOT EXISTS idx_usage_tracking_user_id ON public.usage_tracking(user_id);
+CREATE INDEX IF NOT EXISTS idx_usage_tracking_timestamp ON public.usage_tracking(timestamp);
+CREATE INDEX IF NOT EXISTS idx_sessions_expire ON public.sessions(expire);
+CREATE INDEX IF NOT EXISTS idx_announcement_views_user_id ON public.announcement_views(user_id);
 
--- Store Emails policies
-CREATE POLICY "Users can view all store emails" ON store_emails FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can insert store emails" ON store_emails FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Users can update own store emails" ON store_emails FOR UPDATE USING (auth.uid() = created_by);
-CREATE POLICY "Users can delete own store emails" ON store_emails FOR DELETE USING (auth.uid() = created_by);
-
--- ========================================
--- TRIGGERS FOR UPDATED_AT TIMESTAMPS
--- ========================================
-
--- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+-- Add updated_at trigger function
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
@@ -195,14 +266,92 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply triggers to tables
-CREATE TRIGGER update_call_scripts_updated_at BEFORE UPDATE ON call_scripts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_store_emails_updated_at BEFORE UPDATE ON store_emails FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_template_categories_updated_at BEFORE UPDATE ON template_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_template_genres_updated_at BEFORE UPDATE ON template_genres FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Create triggers for updated_at
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_template_categories_updated_at BEFORE UPDATE ON public.template_categories FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_template_genres_updated_at BEFORE UPDATE ON public.template_genres FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_call_scripts_updated_at BEFORE UPDATE ON public.call_scripts FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_store_emails_updated_at BEFORE UPDATE ON public.store_emails FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_live_reply_templates_updated_at BEFORE UPDATE ON public.live_reply_templates FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_email_templates_updated_at BEFORE UPDATE ON public.email_templates FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_live_reply_template_groups_updated_at BEFORE UPDATE ON public.live_reply_template_groups FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_personal_notes_updated_at BEFORE UPDATE ON public.personal_notes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_template_variables_updated_at BEFORE UPDATE ON public.template_variables FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_faq_updated_at BEFORE UPDATE ON public.faq FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_site_content_updated_at BEFORE UPDATE ON public.site_content FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_template_colors_updated_at BEFORE UPDATE ON public.template_colors FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
--- ========================================
--- COMPLETION MESSAGE
--- ========================================
+-- Enable Row Level Security (RLS)
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.template_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.template_genres ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.call_scripts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.store_emails ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.live_reply_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.live_reply_template_groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.personal_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.template_variables ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.faq ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.site_content ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.template_colors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.usage_tracking ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.announcement_views ENABLE ROW LEVEL SECURITY;
 
-SELECT 'Call Scripts and Store Emails tables have been successfully created with proper relationships to categories and genres!' as message;
+-- Create RLS policies (allow all for authenticated users)
+CREATE POLICY "Allow authenticated users full access" ON public.users FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.template_categories FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.template_genres FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.call_scripts FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.store_emails FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.live_reply_templates FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.email_templates FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.live_reply_template_groups FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.personal_notes FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.template_variables FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.faq FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.site_content FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.template_colors FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.usage_tracking FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users full access" ON public.announcement_views FOR ALL USING (auth.role() = 'authenticated');
+
+-- Insert default template variables
+INSERT INTO public.template_variables (name, description, category) VALUES
+('customer_name', 'Customer full name', 'Customer Info'),
+('customer_first_name', 'Customer first name', 'Customer Info'),
+('customer_phone', 'Customer phone number', 'Customer Info'),
+('customer_email', 'Customer email address', 'Customer Info'),
+('order_id', 'Order ID number', 'Order Info'),
+('awb_number', 'AWB tracking number', 'Order Info'),
+('delivery_date', 'Expected delivery date', 'Order Info'),
+('agent_name', 'Agent name', 'Agent Info'),
+('agent_arabic_name', 'Agent Arabic name', 'Agent Info'),
+('gender_title', 'Gender-based title (Sir/Ma''am)', 'Customer Info')
+ON CONFLICT (name) DO NOTHING;
+
+-- Insert default site content
+INSERT INTO public.site_content (key, value, description) VALUES
+('site_name', 'BFL Customer Service Helper', 'Main site name'),
+('company_name', 'Brands For Less', 'Company name'),
+('support_email', 'support@brandsforless.com', 'Support email address'),
+('about_content', 'Professional customer service management platform', 'About page content')
+ON CONFLICT (key) DO NOTHING;
+
+-- Insert sample template categories
+INSERT INTO public.template_categories (id, name, description, color, order_index) VALUES
+(uuid_generate_v4(), 'Greeting', 'Welcome and greeting templates', '#00C851', 0),
+(uuid_generate_v4(), 'Order Support', 'Order-related support templates', '#33B5E5', 1),
+(uuid_generate_v4(), 'Returns', 'Return and refund templates', '#FF4444', 2),
+(uuid_generate_v4(), 'Technical', 'Technical support templates', '#9C27B0', 3),
+(uuid_generate_v4(), 'Closure', 'Conversation ending templates', '#FF9800', 4)
+ON CONFLICT DO NOTHING;
+
+-- Success message
+DO $$
+BEGIN
+    RAISE NOTICE 'BFL Customer Service Helper database setup completed successfully!';
+    RAISE NOTICE 'Tables created: users, template_categories, template_genres, call_scripts, store_emails, live_reply_templates, email_templates, live_reply_template_groups, personal_notes, template_variables, faq, site_content, template_colors, usage_tracking, sessions, announcement_views';
+    RAISE NOTICE 'Indexes and triggers have been set up for optimal performance.';
+    RAISE NOTICE 'Row Level Security (RLS) has been enabled with appropriate policies.';
+    RAISE NOTICE 'Default data has been inserted for template variables, site content, and sample categories.';
+END $$;

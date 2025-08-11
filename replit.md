@@ -30,6 +30,11 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Added is_first_time_user check in authentication to trigger agent setup modal for new users
 - Fixed personal notes deletion JSON parsing error by properly handling 204 no-content response
 - Removed debugging console logs for cleaner production code
+- **AGENT-FACING IMPLEMENTATION (August 2025)**: Converted Call Scripts and Store Emails components to be view-only for normal users
+- Removed add/edit/delete functionality from both components, making them purely informational for agents
+- Added comprehensive copy functionality for easy access to call scripts and store contact information
+- Enhanced filtering and search capabilities for better agent workflow efficiency
+- Created complete Supabase SQL setup script with all necessary tables, indexes, triggers, and RLS policies
 - **CRITICAL FIX**: Resolved Railway IPv6/IPv4 connectivity issues affecting data fetching
 - Implemented automatic DATABASE_URL conversion to use Supabase pooler for IPv4 compatibility
 - Added Railway-specific connection string fixes and environment variable handling

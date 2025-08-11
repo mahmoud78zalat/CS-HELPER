@@ -1,17 +1,10 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, Edit2, Trash2, Phone } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Search, Phone, Copy, X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -19,12 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   type CallScript,
-  type InsertCallScript,
   type TemplateCategory,
   type TemplateGenre,
 } from "@shared/schema";
@@ -35,14 +25,8 @@ interface CallScriptsManagerProps {
 
 export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingScript, setEditingScript] = useState<CallScript | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    content: "",
-    categoryId: "",
-    genreId: "",
-  });
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedGenre, setSelectedGenre] = useState<string>("");
 
   const { toast } = useToast();
 
@@ -61,134 +45,12 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
     queryKey: ["/api/template-genres"],
   });
 
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: (data: InsertCallScript) =>
-      fetch("/api/call-scripts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      }).then(res => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/call-scripts"] });
-      setIsCreateDialogOpen(false);
-      resetForm();
-      toast({
-        title: "Success",
-        description: "Call script created successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create call script",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: (data: { id: string; script: Partial<InsertCallScript> }) =>
-      fetch(`/api/call-scripts/${data.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data.script),
-      }).then(res => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/call-scripts"] });
-      setEditingScript(null);
-      resetForm();
-      toast({
-        title: "Success",
-        description: "Call script updated successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update call script",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) =>
-      fetch(`/api/call-scripts/${id}`, {
-        method: "DELETE",
-      }).then(res => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/call-scripts"] });
-      toast({
-        title: "Success",
-        description: "Call script deleted successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete call script",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      content: "",
-      categoryId: "",
-      genreId: "",
+  const handleCopyScript = (content: string) => {
+    navigator.clipboard.writeText(content);
+    toast({
+      title: "Copied!",
+      description: "Call script copied to clipboard",
     });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name || !formData.content) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const submitData: InsertCallScript = {
-      name: formData.name,
-      content: formData.content,
-      categoryId: formData.categoryId || null,
-      genreId: formData.genreId || null,
-      isActive: true,
-    };
-
-    if (editingScript) {
-      updateMutation.mutate({
-        id: editingScript.id,
-        script: submitData,
-      });
-    } else {
-      createMutation.mutate(submitData);
-    }
-  };
-
-  const handleEdit = (script: CallScript) => {
-    setEditingScript(script);
-    setFormData({
-      name: script.name,
-      content: script.content,
-      categoryId: script.categoryId || "",
-      genreId: script.genreId || "",
-    });
-    setIsCreateDialogOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this call script?")) {
-      deleteMutation.mutate(id);
-    }
   };
 
   const getCategoryName = (categoryId: string | null) => {
@@ -203,14 +65,25 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
     return genre?.name || "Unknown Genre";
   };
 
-  const filteredScripts = callScripts.filter((script) =>
-    script.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    script.content.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter scripts based on search term, category, and genre
+  const filteredScripts = callScripts.filter(script => {
+    const matchesSearch = script.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         script.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = !selectedCategory || script.categoryId === selectedCategory;
+    const matchesGenre = !selectedGenre || script.genreId === selectedGenre;
+    
+    return matchesSearch && matchesCategory && matchesGenre;
+  });
 
   const availableGenres = genres.filter(genre => 
-    !formData.categoryId || genre.categoryId === formData.categoryId
+    !selectedCategory || genre.categoryId === selectedCategory
   );
+
+  const clearFilters = () => {
+    setSelectedCategory("");
+    setSelectedGenre("");
+    setSearchTerm("");
+  };
 
   return (
     <div className="space-y-6">
@@ -222,214 +95,144 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Call Scripts Management
+              Call Scripts
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Manage call scripts organized by categories and genres
+              View and copy call scripts organized by categories and genres
             </p>
           </div>
         </div>
-        <Button variant="outline" onClick={onClose}>
+        <Button variant="outline" onClick={onClose} className="shrink-0">
+          <X className="h-4 w-4 mr-2" />
           Close
         </Button>
       </div>
 
-      {/* Search and Create */}
-      <div className="flex gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search call scripts..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+      {/* Search and Filters */}
+      <div className="space-y-4">
+        <div className="flex gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search call scripts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={clearFilters}
+            className="shrink-0"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Clear Filters
+          </Button>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              onClick={() => {
-                setEditingScript(null);
-                resetForm();
-              }}
-              className="bg-green-600 hover:bg-green-700 text-white"
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Filter by Category</label>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All categories</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Filter by Genre</label>
+            <Select 
+              value={selectedGenre} 
+              onValueChange={setSelectedGenre}
+              disabled={!selectedCategory}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Script
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {editingScript ? "Edit Call Script" : "Create New Call Script"}
-              </DialogTitle>
-              <DialogDescription>
-                {editingScript 
-                  ? "Update the call script details below."
-                  : "Create a new call script with categories and genres."
-                }
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Script Name *</label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter script name..."
-                  required
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Category</label>
-                  <Select
-                    value={formData.categoryId}
-                    onValueChange={(value) => setFormData(prev => ({ 
-                      ...prev, 
-                      categoryId: value,
-                      genreId: "" // Reset genre when category changes
-                    }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">No Category</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Genre</label>
-                  <Select
-                    value={formData.genreId}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, genreId: value }))}
-                    disabled={!formData.categoryId}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select genre" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">No Genre</SelectItem>
-                      {availableGenres.map((genre) => (
-                        <SelectItem key={genre.id} value={genre.id}>
-                          {genre.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Script Content *</label>
-                <Textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="Enter the call script content..."
-                  className="min-h-[120px]"
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setIsCreateDialogOpen(false);
-                    setEditingScript(null);
-                    resetForm();
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  {editingScript ? "Update Script" : "Create Script"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              <SelectTrigger>
+                <SelectValue placeholder="All genres" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All genres</SelectItem>
+                {availableGenres.map((genre) => (
+                  <SelectItem key={genre.id} value={genre.id}>
+                    {genre.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       {/* Scripts List */}
       <div className="space-y-4">
         {scriptsLoading ? (
           <div className="text-center py-8">
-            <p className="text-gray-500 dark:text-gray-400">Loading call scripts...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+            <p className="text-sm text-gray-500 mt-2">Loading call scripts...</p>
           </div>
         ) : filteredScripts.length === 0 ? (
-          <div className="text-center py-8">
-            <Phone className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <Card className="p-8 text-center">
+            <Phone className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              No call scripts found
+            </h3>
             <p className="text-gray-500 dark:text-gray-400">
-              {searchTerm ? "No call scripts match your search." : "No call scripts found. Create your first script!"}
+              {searchTerm || selectedCategory || selectedGenre 
+                ? "No scripts match your search criteria" 
+                : "No call scripts are available"
+              }
             </p>
-          </div>
+          </Card>
         ) : (
-          filteredScripts.map((script: CallScript) => (
-            <div
-              key={script.id}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-medium text-gray-900 dark:text-gray-100">
+          filteredScripts.map((script) => (
+            <Card key={script.id} className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg text-gray-900 dark:text-gray-100">
                       {script.name}
-                    </h4>
-                    <div className="flex gap-2">
+                    </CardTitle>
+                    <CardDescription className="flex items-center gap-2 mt-2">
                       <Badge variant="secondary" className="text-xs">
                         {getCategoryName(script.categoryId)}
                       </Badge>
-                      {script.genreId && (
-                        <Badge variant="outline" className="text-xs">
-                          {getGenreName(script.genreId)}
-                        </Badge>
-                      )}
-                    </div>
+                      <Badge variant="outline" className="text-xs">
+                        {getGenreName(script.genreId)}
+                      </Badge>
+                    </CardDescription>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopyScript(script.content)}
+                    className="shrink-0 ml-4"
+                  >
+                    <Copy className="h-3 w-3 mr-2" />
+                    Copy
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-mono">
                     {script.content}
+                  </pre>
+                </div>
+                {script.createdAt && (
+                  <p className="text-xs text-gray-400 mt-3">
+                    Created: {new Date(script.createdAt).toLocaleDateString()}
                   </p>
-                  <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-gray-400">
-                    <span>Created: {script.createdAt ? new Date(script.createdAt).toLocaleDateString() : 'N/A'}</span>
-                    {script.updatedAt && script.updatedAt !== script.createdAt && (
-                      <span>Updated: {new Date(script.updatedAt).toLocaleDateString()}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 ml-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(script)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(script.id)}
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+                )}
+              </CardContent>
+            </Card>
           ))
         )}
       </div>
