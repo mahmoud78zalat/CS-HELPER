@@ -71,6 +71,12 @@ PersonalNotes Layout: Add/edit form moved above search bar for better UX.
 - Enhanced pointer events management with aggressive modal backdrop fixes and event propagation control
 - Added ultimate click event force-through mechanism ensuring widget interaction works regardless of modal state
 - Both Ziwo and Chatbase widgets now maintain full functionality and user interaction above any modal overlay
+- **MAJOR ADMIN PANEL REFACTORING (January 2025)**: Successfully separated Call Script and Store Contact modals from their manager components
+- Created independent CallScriptModal.tsx and StoreContactModal.tsx components for better code modularity and maintainability
+- Refactored CallScriptsManager.tsx and StoreEmailsManager.tsx to remove embedded form logic and use separate modal components
+- Moved CRUD mutation logic from manager components to dedicated modal components for proper separation of concerns
+- Enhanced admin panel architecture with clear separation between listing/management UI and editing/creation UI
+- Improved code clarity by removing complex embedded forms and replacing with clean modal-based workflows
 
 ## System Architecture
 

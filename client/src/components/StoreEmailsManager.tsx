@@ -9,26 +9,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Copy, Search, X, Mail, Building, Phone as PhoneIcon, Plus, Edit, Trash2 } from "lucide-react";
 import type { StoreEmail } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
+import { StoreContactModal } from "./StoreContactModal";
 
 interface StoreEmailsManagerProps {
   onClose: () => void;
 }
 
-interface StoreEmailFormData {
-  storeName: string;
-  storeEmail: string;
-  storePhone: string;
-}
-
 export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [showForm, setShowForm] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editingStore, setEditingStore] = useState<StoreEmail | null>(null);
-  const [formData, setFormData] = useState<StoreEmailFormData>({
-    storeName: "",
-    storeEmail: "",
-    storePhone: ""
-  });
   
   const { toast } = useToast();
   const { user } = useAuth();
@@ -41,50 +31,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     enabled: true
   });
 
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: async (data: Omit<StoreEmail, 'id' | 'createdAt' | 'updatedAt' | 'supabaseId' | 'lastSyncedAt'>) => {
-      const response = await fetch('/api/store-emails', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!response.ok) throw new Error('Failed to create store');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
-      setShowForm(false);
-      resetForm();
-      toast({ title: "Success", description: "Store contact created successfully" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to create store contact", variant: "destructive" });
-    }
-  });
 
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<StoreEmail> }) => {
-      const response = await fetch(`/api/store-emails/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!response.ok) throw new Error('Failed to update store');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
-      setEditingStore(null);
-      setShowForm(false);
-      resetForm();
-      toast({ title: "Success", description: "Store contact updated successfully" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to update store contact", variant: "destructive" });
-    }
-  });
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -153,40 +100,19 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     }
   };
 
-  const resetForm = () => {
-    setFormData({ storeName: "", storeEmail: "", storePhone: "" });
-    setEditingStore(null);
-  };
-
-  const handleSubmit = () => {
-    if (!formData.storeName || !formData.storeEmail || !formData.storePhone) {
-      toast({ title: "Error", description: "All fields are required", variant: "destructive" });
-      return;
-    }
-
-    const storeData = {
-      storeName: formData.storeName,
-      storeEmail: formData.storeEmail,
-      storePhone: formData.storePhone,
-      isActive: true,
-      createdBy: user?.id || null
-    };
-
-    if (editingStore) {
-      updateMutation.mutate({ id: editingStore.id, data: storeData });
-    } else {
-      createMutation.mutate(storeData);
-    }
-  };
-
   const handleEdit = (store: StoreEmail) => {
     setEditingStore(store);
-    setFormData({
-      storeName: store.storeName,
-      storeEmail: store.storeEmail,
-      storePhone: store.storePhone
-    });
-    setShowForm(true);
+    setShowModal(true);
+  };
+
+  const handleAdd = () => {
+    setEditingStore(null);
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setEditingStore(null);
   };
 
   const handleDelete = (id: string) => {
@@ -219,7 +145,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
             </DialogTitle>
             {isAdmin && (
               <Button
-                onClick={() => setShowForm(true)}
+                onClick={handleAdd}
                 className="flex items-center gap-2"
                 data-testid="button-add-store"
               >
@@ -230,62 +156,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
           </div>
         </DialogHeader>
 
-        {showForm && (
-          <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
-            <h3 className="font-medium">
-              {editingStore ? 'Edit Store Contact' : 'Add New Store Contact'}
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Store Name</label>
-                <Input
-                  value={formData.storeName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, storeName: e.target.value }))}
-                  placeholder="Store name"
-                  data-testid="input-store-name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Store Email</label>
-                <Input
-                  type="email"
-                  value={formData.storeEmail}
-                  onChange={(e) => setFormData(prev => ({ ...prev, storeEmail: e.target.value }))}
-                  placeholder="store@company.com"
-                  data-testid="input-store-email"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-medium mb-1">Store Phone</label>
-                <Input
-                  value={formData.storePhone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, storePhone: e.target.value }))}
-                  placeholder="+971-50-123-4567"
-                  data-testid="input-store-phone"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowForm(false);
-                  resetForm();
-                }}
-                data-testid="button-cancel-form"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={createMutation.isPending || updateMutation.isPending}
-                data-testid="button-save-store"
-              >
-                {editingStore ? 'Update' : 'Create'}
-              </Button>
-            </div>
-          </div>
-        )}
+
 
         {/* Search Controls */}
         <div className="space-y-4">
@@ -449,6 +320,13 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
           </Button>
         </div>
       </DialogContent>
+
+      {/* Store Contact Modal */}
+      <StoreContactModal
+        isOpen={showModal}
+        onClose={handleModalClose}
+        editingStore={editingStore}
+      />
     </Dialog>
   );
 }

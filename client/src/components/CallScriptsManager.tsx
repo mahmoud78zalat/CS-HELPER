@@ -3,38 +3,25 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Search, Filter, X, Phone, FileText, Plus, Edit, Trash2 } from "lucide-react";
+import { Copy, Search, X, Phone, FileText, Plus, Edit, Trash2 } from "lucide-react";
 import type { CallScript } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
+import { CallScriptModal } from "./CallScriptModal";
 
 interface CallScriptsManagerProps {
   onClose: () => void;
-}
-
-interface CallScriptFormData {
-  name: string;
-  content: string;
-  category: string;
-  genre: string;
 }
 
 export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedGenre, setSelectedGenre] = useState<string>("");
-  const [showForm, setShowForm] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editingScript, setEditingScript] = useState<CallScript | null>(null);
-  const [formData, setFormData] = useState<CallScriptFormData>({
-    name: "",
-    content: "",
-    category: "",
-    genre: ""
-  });
   
   const { toast } = useToast();
   const { user } = useAuth();
@@ -62,50 +49,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const categories = Array.from(new Set(callScripts.map((script: CallScript) => script.category).filter(Boolean)));
   const genres = Array.from(new Set(callScripts.map((script: CallScript) => script.genre).filter(Boolean)));
 
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: async (data: Omit<CallScript, 'id' | 'createdAt' | 'updatedAt' | 'supabaseId' | 'lastSyncedAt'>) => {
-      const response = await fetch('/api/call-scripts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!response.ok) throw new Error('Failed to create script');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
-      setShowForm(false);
-      resetForm();
-      toast({ title: "Success", description: "Call script created successfully" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to create call script", variant: "destructive" });
-    }
-  });
 
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<CallScript> }) => {
-      const response = await fetch(`/api/call-scripts/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!response.ok) throw new Error('Failed to update script');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
-      setEditingScript(null);
-      setShowForm(false);
-      resetForm();
-      toast({ title: "Success", description: "Call script updated successfully" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to update call script", variant: "destructive" });
-    }
-  });
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -141,43 +85,19 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
     }
   };
 
-  const resetForm = () => {
-    setFormData({ name: "", content: "", category: "", genre: "" });
-    setEditingScript(null);
-  };
-
-  const handleSubmit = () => {
-    if (!formData.name || !formData.content) {
-      toast({ title: "Error", description: "Name and content are required", variant: "destructive" });
-      return;
-    }
-
-    const scriptData = {
-      name: formData.name,
-      content: formData.content,
-      category: formData.category || null,
-      genre: formData.genre || null,
-      isActive: true,
-      orderIndex: callScripts.length + 1,
-      createdBy: user?.id || null
-    };
-
-    if (editingScript) {
-      updateMutation.mutate({ id: editingScript.id, data: scriptData });
-    } else {
-      createMutation.mutate(scriptData);
-    }
-  };
-
   const handleEdit = (script: CallScript) => {
     setEditingScript(script);
-    setFormData({
-      name: script.name,
-      content: script.content,
-      category: script.category || "",
-      genre: script.genre || ""
-    });
-    setShowForm(true);
+    setShowModal(true);
+  };
+
+  const handleAdd = () => {
+    setEditingScript(null);
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setEditingScript(null);
   };
 
   const handleDelete = (id: string) => {
@@ -213,7 +133,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
             </DialogTitle>
             {isAdmin && (
               <Button
-                onClick={() => setShowForm(true)}
+                onClick={handleAdd}
                 className="flex items-center gap-2"
                 data-testid="button-add-script"
               >
@@ -224,71 +144,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
           </div>
         </DialogHeader>
 
-        {showForm && (
-          <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
-            <h3 className="font-medium">
-              {editingScript ? 'Edit Call Script' : 'Add New Call Script'}
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Script name"
-                  data-testid="input-script-name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Category</label>
-                <Input
-                  value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  placeholder="Enter category (e.g., Support, Sales)"
-                  data-testid="input-script-category"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-medium mb-1">Genre</label>
-                <Input
-                  value={formData.genre}
-                  onChange={(e) => setFormData(prev => ({ ...prev, genre: e.target.value }))}
-                  placeholder="Enter genre (e.g., Welcome, Problem Resolution)"
-                  data-testid="input-script-genre"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Content</label>
-              <Textarea
-                value={formData.content}
-                onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                placeholder="Script content..."
-                rows={4}
-                data-testid="textarea-script-content"
-              />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowForm(false);
-                  resetForm();
-                }}
-                data-testid="button-cancel-form"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={createMutation.isPending || updateMutation.isPending}
-                data-testid="button-save-script"
-              >
-                {editingScript ? 'Update' : 'Create'}
-              </Button>
-            </div>
-          </div>
-        )}
+
 
         {/* Search and Filter Controls */}
         <div className="space-y-4">
@@ -451,6 +307,13 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
           </Button>
         </div>
       </DialogContent>
+
+      {/* Call Script Modal */}
+      <CallScriptModal
+        isOpen={showModal}
+        onClose={handleModalClose}
+        editingScript={editingScript}
+      />
     </Dialog>
   );
 }
