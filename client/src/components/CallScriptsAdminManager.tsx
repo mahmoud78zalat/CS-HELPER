@@ -104,19 +104,13 @@ function SortableScriptItem({
               <CardDescription className="flex gap-2 mt-2">
                 <Badge 
                   variant="secondary" 
-                  style={{
-                    backgroundColor: getCategoryColor(script.category) + '20', 
-                    color: getCategoryColor(script.category)
-                  }}
+                  className="text-xs"
                 >
                   {script.category}
                 </Badge>
                 <Badge 
                   variant="outline"
-                  style={{
-                    backgroundColor: getGenreColor(script.genre) + '20', 
-                    color: getGenreColor(script.genre)
-                  }}
+                  className="text-xs"
                 >
                   {script.genre}
                 </Badge>
@@ -196,7 +190,7 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
 
   // Update local scripts when data changes
   useEffect(() => {
-    if (callScripts.length > 0) {
+    if (Array.isArray(callScripts) && callScripts.length > 0) {
       const sortedScripts = [...(callScripts as CallScript[])].sort((a, b) => 
         (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
       );
@@ -211,9 +205,9 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
   });
 
   // Extract all genres from all categories for filtering
-  const allGenres = categoriesData ? categoriesData.flatMap((cat: any) => 
+  const allGenres = (Array.isArray(categoriesData) ? categoriesData.flatMap((cat: any) => 
     cat.genres?.map((genre: any) => ({ ...genre, categoryName: cat.name, categoryId: cat.id })) || []
-  ) : [];
+  ) : []);
 
   // Reorder mutation
   const reorderMutation = useMutation({
@@ -223,9 +217,15 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
         orderIndex: index
       }));
       
-      return apiRequest('PATCH', '/api/call-scripts/reorder', { updates });
+      console.log('[CallScriptsAdminManager] Sending reorder request with updates:', updates);
+      console.log('[CallScriptsAdminManager] Reordered scripts:', reorderedScripts.map(s => ({ id: s.id, name: s.name, orderIndex: s.orderIndex })));
+      
+      const response = await apiRequest('PATCH', '/api/call-scripts/reorder', { updates });
+      console.log('[CallScriptsAdminManager] Reorder response:', response);
+      return response;
     },
     onSuccess: () => {
+      console.log('[CallScriptsAdminManager] Reorder successful, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
       toast({
         title: "Order updated",
@@ -233,7 +233,7 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
       });
     },
     onError: (error: any) => {
-      console.error('Reorder error:', error);
+      console.error('[CallScriptsAdminManager] Reorder error:', error);
       toast({
         title: "Reorder failed",  
         description: error?.message || "Unable to reorder call scripts",
@@ -273,13 +273,22 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
+    console.log('[CallScriptsAdminManager] Drag end event:', { active: active.id, over: over?.id });
+
     if (active.id !== over?.id) {
       const oldIndex = localScripts.findIndex((script) => script.id === active.id);
       const newIndex = localScripts.findIndex((script) => script.id === over?.id);
 
+      console.log('[CallScriptsAdminManager] Moving script from index', oldIndex, 'to', newIndex);
+      console.log('[CallScriptsAdminManager] Current localScripts count:', localScripts.length);
+
       const reorderedScripts = arrayMove(localScripts, oldIndex, newIndex);
+      console.log('[CallScriptsAdminManager] Reordered scripts preview:', reorderedScripts.map(s => ({ id: s.id, name: s.name })));
+      
       setLocalScripts(reorderedScripts);
       reorderMutation.mutate(reorderedScripts);
+    } else {
+      console.log('[CallScriptsAdminManager] No reorder needed - same position');
     }
   };
 
