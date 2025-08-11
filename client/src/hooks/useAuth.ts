@@ -139,39 +139,49 @@ export function useAuth() {
       // First attempt: Check if user exists in database
       try {
         console.log('[Auth] Checking if user exists in database...');
-        const response = await fetchWithTimeout(`/api/user/${supabaseUser.id}`, 5000);
-        const responseText = await response.text();
+        const response = await fetchWithTimeout(`/api/user/${supabaseUser.id}`, 8000);
         
         console.log('[Auth] User lookup response status:', response.status);
-        console.log('[Auth] Response content type:', response.headers.get('content-type'));
         
-        if (response.ok && !responseText.includes('<!DOCTYPE html>')) {
-          try {
-            const userData = JSON.parse(responseText);
-            console.log('[Auth] ✅ Existing user found:', userData.email, userData.role);
-            
-            // Store user information in localStorage for apiRequest function
-            localStorage.setItem('current_user_id', userData.id);
-            localStorage.setItem('current_user_email', userData.email);
-            localStorage.setItem('current_user_role', userData.role);
-            
-            setUser(userData);
-            setIsLoading(false);
-            if (authTimeout) clearTimeout(authTimeout);
-            
-            console.log('[Auth] 🚀 Enhanced presence system will auto-start via usePresenceHeartbeat hook');
-            return;
-          } catch (parseError) {
-            console.error('[Auth] JSON parse error:', parseError);
-            console.log('[Auth] Response text:', responseText);
+        if (response.ok) {
+          const responseText = await response.text();
+          console.log('[Auth] Response content type:', response.headers.get('content-type'));
+          
+          // Check if it's a valid JSON response
+          if (!responseText.includes('<!DOCTYPE html>') && responseText.trim().startsWith('{')) {
+            try {
+              const userData = JSON.parse(responseText);
+              console.log('[Auth] ✅ Existing user found:', userData.email, userData.role, 'FirstTime:', userData.isFirstTimeUser);
+              
+              // Store user information in localStorage for apiRequest function
+              localStorage.setItem('current_user_id', userData.id);
+              localStorage.setItem('current_user_email', userData.email);
+              localStorage.setItem('current_user_role', userData.role);
+              
+              setUser(userData);
+              setIsLoading(false);
+              if (authTimeout) clearTimeout(authTimeout);
+              
+              console.log('[Auth] 🚀 Enhanced presence system will auto-start via usePresenceHeartbeat hook');
+              return;
+            } catch (parseError) {
+              console.error('[Auth] JSON parse error:', parseError);
+              console.log('[Auth] Response text sample:', responseText.substring(0, 100));
+            }
+          } else {
+            console.log('[Auth] ⚠️ Invalid response format - likely HTML error page');
           }
         } else if (response.status === 404) {
           console.log('[Auth] ⚠️ User not found in database (404) - will create new user');
         } else {
-          console.log('[Auth] ⚠️ Unexpected response:', response.status, responseText.substring(0, 200));
+          console.log('[Auth] ⚠️ Unexpected response status:', response.status);
         }
       } catch (fetchError) {
-        console.log('[Auth] ⚠️ User lookup failed:', fetchError instanceof Error ? fetchError.message : 'Unknown error');
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          console.log('[Auth] ⚠️ User lookup timed out - will try to create user');
+        } else {
+          console.log('[Auth] ⚠️ User lookup failed:', fetchError instanceof Error ? fetchError.message : 'Unknown error');
+        }
       }
       
       // Second attempt: Create new user in database

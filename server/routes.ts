@@ -355,7 +355,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Note: /api/create-user endpoint is handled in simple-routes.ts to avoid conflicts
+  // Create new user endpoint (moved from simple-routes.ts)
+  app.post('/api/create-user', async (req, res) => {
+    try {
+      console.log('[API] POST /api/create-user called with:', req.body);
+      
+      const userData = req.body;
+      if (!userData.id || !userData.email) {
+        return res.status(400).json({ message: 'User ID and email are required' });
+      }
+
+      // Check if user already exists (more reliable check)
+      const existingUser = await storage.getUser(userData.id);
+      if (existingUser) {
+        console.log('[API] ✅ User already exists:', existingUser.email, '- returning existing user data');
+        console.log('[API] User status - FirstTime:', existingUser.isFirstTimeUser, 'Role:', existingUser.role);
+        return res.json(existingUser);
+      }
+
+      // Create new user only if they don't exist
+      console.log('[API] 🔧 Creating truly new user in database...');
+      const newUser = await storage.createUser(userData);
+      if (newUser) {
+        console.log('[API] ✅ New user created successfully:', newUser.email, newUser.role);
+        res.status(201).json(newUser);
+      } else {
+        console.error('[API] ❌ Failed to create user - storage returned null');
+        res.status(500).json({ message: 'Failed to create user in database' });
+      }
+    } catch (error) {
+      console.error('[API] ❌ Error in create-user endpoint:', error);
+      res.status(500).json({ message: 'Failed to create user', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
 
   // Heartbeat endpoint for online status detection - Now works for all users
   app.post('/api/user/heartbeat', isAuthenticated, async (req: any, res) => {
@@ -873,39 +905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User Management Routes (moved from simple-routes.ts)
-  app.get('/api/users', async (req, res) => {
-    try {
-      console.log('[API] /api/users called - fetching all users');
-      const users = await storage.getAllUsers();
-      console.log('[API] Fetched', users.length, 'users from storage');
-      
-      res.setHeader('Content-Type', 'application/json');
-      res.json(users);
-    } catch (error) {
-      console.error("[API] Error fetching users:", error);
-      res.status(500).json({ message: "Failed to fetch users" });
-    }
-  });
-
-  app.get('/api/user/:id', async (req, res) => {
-    try {
-      console.log('[API] Getting user by ID:', req.params.id);
-      const { id } = req.params;
-      const user = await storage.getUser(id);
-      
-      if (!user) {
-        console.log('[API] User not found:', id);
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      console.log('[API] User found:', user.email, user.role);
-      res.json(user);
-    } catch (error) {
-      console.error("[API] Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  // Duplicate routes removed - using the ones defined earlier in the file
 
   // Call Scripts & Store Emails Routes (moved from simple-routes.ts)
   app.get('/api/call-scripts', async (req, res) => {
@@ -1513,6 +1513,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+
+  // FAQ and Announcement Acknowledgment API endpoints (Persistent notification system)
+  app.post('/api/persistent/user/:userId/faq-acknowledgments/:faqId', async (req, res) => {
+    try {
+      const { userId, faqId } = req.params;
+      await storage.acknowledgeFaq(userId, faqId);
+      res.json({ success: true, message: 'FAQ acknowledged' });
+    } catch (error) {
+      console.error('Error acknowledging FAQ:', error);
+      res.status(500).json({ message: 'Failed to acknowledge FAQ' });
+    }
+  });
+
+  app.get('/api/persistent/user/:userId/faq-acknowledgments', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const acknowledgments = await storage.getUserFaqAcknowledgments(userId);
+      res.json(acknowledgments);
+    } catch (error) {
+      console.error('Error fetching FAQ acknowledgments:', error);
+      res.status(500).json({ message: 'Failed to fetch FAQ acknowledgments' });
+    }
+  });
+
+  app.post('/api/persistent/user/:userId/announcement-acknowledgments/:announcementId', async (req, res) => {
+    try {
+      const { userId, announcementId } = req.params;
+      const { version } = req.body;
+      await storage.acknowledgeAnnouncement(userId, announcementId, version || 1);
+      res.json({ success: true, message: 'Announcement acknowledged' });
+    } catch (error) {
+      console.error('Error acknowledging announcement:', error);
+      res.status(500).json({ message: 'Failed to acknowledge announcement' });
+    }
+  });
+
+  app.get('/api/persistent/user/:userId/announcement-acknowledgments', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const acknowledgments = await storage.getUserAnnouncementAcknowledgments(userId);
+      res.json(acknowledgments);
+    } catch (error) {
+      console.error('Error fetching announcement acknowledgments:', error);
+      res.status(500).json({ message: 'Failed to fetch announcement acknowledgments' });
+    }
+  });
+
+  // FAQ Routes 
+  app.get('/api/faqs', async (req, res) => {
+    try {
+      const { category, search, isActive } = req.query;
+      const filters = {
+        category: category as string,
+        search: search as string,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined
+      };
+      const faqs = await storage.getFaqs(filters);
+      res.json(faqs);
+    } catch (error) {
+      console.error('Error fetching FAQs:', error);
+      res.status(500).json({ message: 'Failed to fetch FAQs' });
+    }
+  });
 
   // Enhanced presence API endpoints
   app.use('/api/presence', presenceApiRouter);
