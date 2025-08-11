@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,29 @@ interface CallScriptFormData {
   genre: string;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  color: string;
+  isActive: boolean;
+  orderIndex: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Genre {
+  id: string;
+  name: string;
+  description?: string;
+  categoryId: string;
+  color: string;
+  isActive: boolean;
+  orderIndex: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export function CallScriptModal({ isOpen, onClose, editingScript }: CallScriptModalProps) {
   const [formData, setFormData] = useState<CallScriptFormData>({
     name: "",
@@ -29,20 +52,28 @@ export function CallScriptModal({ isOpen, onClose, editingScript }: CallScriptMo
     category: "",
     genre: ""
   });
+  
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch categories and genres from existing endpoints
-  const { data: categoriesData = [] } = useQuery({
+  const { data: categoriesData = [] } = useQuery<Category[]>({
     queryKey: ['/api/template-categories'],
     enabled: isOpen
   });
 
-  const { data: genresData = [] } = useQuery({
+  const { data: genresData = [] } = useQuery<Genre[]>({
     queryKey: ['/api/template-genres'],
     enabled: isOpen
   });
+
+  // Filter genres based on selected category
+  const filteredGenres = useMemo(() => {
+    if (!selectedCategoryId || !genresData) return [];
+    return genresData.filter((genre: Genre) => genre.categoryId === selectedCategoryId && genre.isActive);
+  }, [selectedCategoryId, genresData]);
 
   // Reset form when modal opens/closes or editing script changes
   useEffect(() => {
@@ -53,10 +84,18 @@ export function CallScriptModal({ isOpen, onClose, editingScript }: CallScriptMo
         category: editingScript.category || "",
         genre: editingScript.genre || ""
       });
+      
+      // Find and set the category ID for genre filtering
+      if (editingScript.category && categoriesData) {
+        const category = categoriesData.find((cat: Category) => cat.name === editingScript.category);
+        if (category) {
+          setSelectedCategoryId(category.id);
+        }
+      }
     } else {
       resetForm();
     }
-  }, [editingScript, isOpen]);
+  }, [editingScript, isOpen, categoriesData]);
 
   const resetForm = () => {
     setFormData({
@@ -65,6 +104,28 @@ export function CallScriptModal({ isOpen, onClose, editingScript }: CallScriptMo
       category: "",
       genre: ""
     });
+    setSelectedCategoryId("");
+  };
+
+  const handleCategoryChange = (categoryName: string) => {
+    if (categoryName === "none") {
+      setSelectedCategoryId("");
+      setFormData(prev => ({ 
+        ...prev, 
+        category: "",
+        genre: "" // Reset genre when category changes
+      }));
+    } else {
+      const category = categoriesData.find((cat: Category) => cat.name === categoryName);
+      if (category) {
+        setSelectedCategoryId(category.id);
+        setFormData(prev => ({ 
+          ...prev, 
+          category: categoryName,
+          genre: "" // Reset genre when category changes
+        }));
+      }
+    }
   };
 
   // Create mutation
@@ -122,8 +183,8 @@ export function CallScriptModal({ isOpen, onClose, editingScript }: CallScriptMo
     const scriptData = {
       name: formData.name.trim(),
       content: formData.content.trim(),
-      category: formData.category.trim() || null,
-      genre: formData.genre.trim() || null,
+      category: formData.category && formData.category !== "none" ? formData.category.trim() : null,
+      genre: formData.genre && formData.genre !== "none" ? formData.genre.trim() : null,
       isActive: true,
       createdBy: null,
       orderIndex: 0
@@ -168,15 +229,15 @@ export function CallScriptModal({ isOpen, onClose, editingScript }: CallScriptMo
               <label className="block text-sm font-medium mb-1">Category</label>
               <Select
                 value={formData.category}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                onValueChange={handleCategoryChange}
                 data-testid="select-script-category"
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Category</SelectItem>
-                  {categoriesData.map((category: any) => (
+                  <SelectItem value="none">No Category</SelectItem>
+                  {categoriesData.filter((category: Category) => category.isActive).map((category: Category) => (
                     <SelectItem key={category.id} value={category.name}>
                       {category.name}
                     </SelectItem>
@@ -192,13 +253,14 @@ export function CallScriptModal({ isOpen, onClose, editingScript }: CallScriptMo
               value={formData.genre}
               onValueChange={(value) => setFormData(prev => ({ ...prev, genre: value }))}
               data-testid="select-script-genre"
+              disabled={!selectedCategoryId}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select genre" />
+                <SelectValue placeholder={selectedCategoryId ? "Select genre" : "Select category first"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No Genre</SelectItem>
-                {genresData.map((genre: any) => (
+                <SelectItem value="none">No Genre</SelectItem>
+                {filteredGenres.map((genre: Genre) => (
                   <SelectItem key={genre.id} value={genre.name}>
                     {genre.name}
                   </SelectItem>
