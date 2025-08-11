@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS public.template_genres (
     name TEXT NOT NULL,
     description TEXT,
     color TEXT DEFAULT '#3b82f6',
-    category_id UUID REFERENCES public.template_categories(id) ON DELETE SET NULL,
+    category_id UUID,
     is_active BOOLEAN DEFAULT true,
     order_index INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -58,9 +58,9 @@ CREATE TABLE IF NOT EXISTS public.call_scripts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     content TEXT NOT NULL,
-    category_id UUID REFERENCES public.template_categories(id) ON DELETE SET NULL,
-    genre_id UUID REFERENCES public.template_genres(id) ON DELETE SET NULL,
-    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    category_id UUID,
+    genre_id UUID,
+    created_by UUID,
     is_active BOOLEAN DEFAULT true,
     order_index INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS public.store_emails (
     store_email TEXT NOT NULL,
     store_phone TEXT NOT NULL,
     is_active BOOLEAN DEFAULT true,
-    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    created_by UUID,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     supabase_id UUID,
@@ -88,10 +88,10 @@ CREATE TABLE IF NOT EXISTS public.live_reply_templates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     content TEXT NOT NULL,
-    category_id UUID REFERENCES public.template_categories(id) ON DELETE SET NULL,
-    genre_id UUID REFERENCES public.template_genres(id) ON DELETE SET NULL,
+    category_id UUID,
+    genre_id UUID,
     group_id UUID,
-    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    created_by UUID,
     is_active BOOLEAN DEFAULT true,
     is_favorite BOOLEAN DEFAULT false,
     order_index INTEGER DEFAULT 0,
@@ -110,9 +110,9 @@ CREATE TABLE IF NOT EXISTS public.email_templates (
     name TEXT NOT NULL,
     subject TEXT NOT NULL,
     content TEXT NOT NULL,
-    category_id UUID REFERENCES public.template_categories(id) ON DELETE SET NULL,
-    genre_id UUID REFERENCES public.template_genres(id) ON DELETE SET NULL,
-    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    category_id UUID,
+    genre_id UUID,
+    created_by UUID,
     is_active BOOLEAN DEFAULT true,
     order_index INTEGER DEFAULT 0,
     personal_order_index INTEGER,
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS public.live_reply_template_groups (
 -- Create personal notes table
 CREATE TABLE IF NOT EXISTS public.personal_notes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL,
     subject TEXT,
     content TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -206,9 +206,9 @@ CREATE TABLE IF NOT EXISTS public.template_colors (
 -- Create usage tracking table
 CREATE TABLE IF NOT EXISTS public.usage_tracking (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL,
     template_id UUID,
-    template_type TEXT NOT NULL CHECK (template_type IN ('live_reply', 'email')),
+    template_type TEXT NOT NULL CHECK (template_type IN ('live_reply', 'email', 'call_script')),
     action_type TEXT NOT NULL CHECK (action_type IN ('used', 'created', 'edited', 'deleted')),
     timestamp TIMESTAMPTZ DEFAULT NOW(),
     metadata JSONB,
@@ -226,7 +226,7 @@ CREATE TABLE IF NOT EXISTS public.sessions (
 -- Create announcement views table
 CREATE TABLE IF NOT EXISTS public.announcement_views (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL,
     announcement_id TEXT NOT NULL,
     viewed_at TIMESTAMPTZ DEFAULT NOW(),
     supabase_id UUID,
@@ -297,6 +297,63 @@ ALTER TABLE public.site_content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.template_colors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.usage_tracking ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.announcement_views ENABLE ROW LEVEL SECURITY;
+
+-- Add foreign key constraints after table creation
+ALTER TABLE public.template_genres 
+ADD CONSTRAINT template_genres_category_id_fkey 
+FOREIGN KEY (category_id) REFERENCES public.template_categories(id) ON DELETE SET NULL;
+
+ALTER TABLE public.call_scripts 
+ADD CONSTRAINT call_scripts_category_id_fkey 
+FOREIGN KEY (category_id) REFERENCES public.template_categories(id) ON DELETE SET NULL;
+
+ALTER TABLE public.call_scripts 
+ADD CONSTRAINT call_scripts_genre_id_fkey 
+FOREIGN KEY (genre_id) REFERENCES public.template_genres(id) ON DELETE SET NULL;
+
+ALTER TABLE public.call_scripts 
+ADD CONSTRAINT call_scripts_created_by_fkey 
+FOREIGN KEY (created_by) REFERENCES public.users(id) ON DELETE SET NULL;
+
+ALTER TABLE public.store_emails 
+ADD CONSTRAINT store_emails_created_by_fkey 
+FOREIGN KEY (created_by) REFERENCES public.users(id) ON DELETE SET NULL;
+
+ALTER TABLE public.live_reply_templates 
+ADD CONSTRAINT live_reply_templates_category_id_fkey 
+FOREIGN KEY (category_id) REFERENCES public.template_categories(id) ON DELETE SET NULL;
+
+ALTER TABLE public.live_reply_templates 
+ADD CONSTRAINT live_reply_templates_genre_id_fkey 
+FOREIGN KEY (genre_id) REFERENCES public.template_genres(id) ON DELETE SET NULL;
+
+ALTER TABLE public.live_reply_templates 
+ADD CONSTRAINT live_reply_templates_created_by_fkey 
+FOREIGN KEY (created_by) REFERENCES public.users(id) ON DELETE SET NULL;
+
+ALTER TABLE public.email_templates 
+ADD CONSTRAINT email_templates_category_id_fkey 
+FOREIGN KEY (category_id) REFERENCES public.template_categories(id) ON DELETE SET NULL;
+
+ALTER TABLE public.email_templates 
+ADD CONSTRAINT email_templates_genre_id_fkey 
+FOREIGN KEY (genre_id) REFERENCES public.template_genres(id) ON DELETE SET NULL;
+
+ALTER TABLE public.email_templates 
+ADD CONSTRAINT email_templates_created_by_fkey 
+FOREIGN KEY (created_by) REFERENCES public.users(id) ON DELETE SET NULL;
+
+ALTER TABLE public.personal_notes 
+ADD CONSTRAINT personal_notes_user_id_fkey 
+FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+ALTER TABLE public.usage_tracking 
+ADD CONSTRAINT usage_tracking_user_id_fkey 
+FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+ALTER TABLE public.announcement_views 
+ADD CONSTRAINT announcement_views_user_id_fkey 
+FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 -- Create RLS policies (allow all for authenticated users)
 CREATE POLICY "Allow authenticated users full access" ON public.users FOR ALL USING (auth.role() = 'authenticated');
