@@ -19,44 +19,68 @@ interface StoreCardProps {
   onCopyPhone: (phone: string, storeName: string) => void;
 }
 
-function StoreCard({ store, onCopyEmail, onCopyPhone }: StoreCardProps) {
+function StoreCard({ store, onCopyEmail, onCopyPhone, index = 0 }: StoreCardProps & { index?: number }) {
+  // Generate vibrant colors for each store
+  const colors = [
+    'from-violet-500 to-purple-500',
+    'from-cyan-500 to-blue-500', 
+    'from-teal-500 to-green-500',
+    'from-red-500 to-pink-500',
+    'from-indigo-500 to-blue-500',
+    'from-rose-500 to-pink-500',
+    'from-amber-500 to-orange-500',
+    'from-emerald-500 to-cyan-500',
+  ];
+  const gradientClass = colors[index % colors.length];
+
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card className="overflow-hidden relative group hover:shadow-xl transition-all duration-300 border-2 hover:border-opacity-50">
+      {/* Gradient Header */}
+      <div className={`h-16 bg-gradient-to-r ${gradientClass} relative`}>
+        <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+        <div className="absolute bottom-3 left-4">
+          <Building className="w-6 h-6 text-white/90" />
+        </div>
+      </div>
+      
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold">
-              {store.storeName}
-            </CardTitle>
-          </div>
-        </div>
+        <CardTitle className="text-lg font-bold text-gray-800 dark:text-white">
+          {store.storeName}
+        </CardTitle>
       </CardHeader>
+      
       <CardContent className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Mail className="h-4 w-4 text-gray-500" />
-          <span className="text-sm font-mono">{store.storeEmail}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onCopyEmail(store.storeEmail, store.storeName)}
-            className="h-6 w-6 p-0 ml-auto"
-            title="Copy email"
-          >
-            <Copy className="h-3 w-3" />
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          <PhoneIcon className="h-4 w-4 text-gray-500" />
-          <span className="text-sm font-mono">{store.storePhone}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onCopyPhone(store.storePhone, store.storeName)}
-            className="h-6 w-6 p-0 ml-auto"
-            title="Copy phone"
-          >
-            <Copy className="h-3 w-3" />
-          </Button>
+        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <Mail className="h-4 w-4 text-blue-500" />
+            <span className="text-sm font-mono bg-white dark:bg-slate-700 px-2 py-1 rounded text-blue-600 dark:text-blue-400 flex-1">
+              {store.storeEmail}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCopyEmail(store.storeEmail, store.storeName)}
+              className="h-6 w-6 p-0 hover:bg-blue-100"
+              title="Copy email"
+            >
+              <Copy className="h-3 w-3 text-blue-500" />
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <PhoneIcon className="h-4 w-4 text-green-500" />
+            <span className="text-sm font-mono bg-white dark:bg-slate-700 px-2 py-1 rounded text-green-600 dark:text-green-400 flex-1">
+              {store.storePhone}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCopyPhone(store.storePhone, store.storeName)}
+              className="h-6 w-6 p-0 hover:bg-green-100"
+              title="Copy phone"
+            >
+              <Copy className="h-3 w-3 text-green-500" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -167,7 +191,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
         </div>
 
         {/* Store Emails Grid */}
-        <div className="overflow-y-auto max-h-[50vh] space-y-4">
+        <div className="overflow-y-auto max-h-[60vh]">
           {storesLoading ? (
             <div className="flex justify-center items-center py-8">
               <div className="text-gray-500">Loading store contacts...</div>
@@ -179,11 +203,12 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
-              {filteredStoreEmails.map((store) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredStoreEmails.map((store, index) => (
                 <StoreCard
                   key={store.id}
                   store={store}
+                  index={index}
                   onCopyEmail={handleCopyEmail}
                   onCopyPhone={handleCopyPhone}
                 />

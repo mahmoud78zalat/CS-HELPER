@@ -266,9 +266,18 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
 
 
 
-  // Get color for category badge
+  // Get color for category badge - using actual colors from admin panel
   const getCategoryColor = (category: string): string => {
-    const colors: Record<string, string> = {
+    // Find the category in the actual data from admin panel
+    if (Array.isArray(categoriesData)) {
+      const foundCategory = categoriesData.find((cat: any) => cat.name === category);
+      if (foundCategory && foundCategory.color) {
+        return foundCategory.color;
+      }
+    }
+    
+    // Fallback colors for common categories
+    const fallbackColors: Record<string, string> = {
       'General': '#3B82F6',
       'Support': '#10B981',
       'Sales': '#F59E0B',
@@ -276,12 +285,25 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
       'Billing': '#EF4444',
       'Complaint': '#F97316'
     };
-    return colors[category] || '#6B7280';
+    return fallbackColors[category] || '#6B7280';
   };
 
-  // Get color for genre badge
+  // Get color for genre badge - using actual colors from admin panel
   const getGenreColor = (genre: string): string => {
-    const colors: Record<string, string> = {
+    // Find the genre in the actual data from admin panel
+    if (Array.isArray(categoriesData)) {
+      for (const category of categoriesData) {
+        if (category.genres && Array.isArray(category.genres)) {
+          const foundGenre = category.genres.find((g: any) => g.name === genre);
+          if (foundGenre && foundGenre.color) {
+            return foundGenre.color;
+          }
+        }
+      }
+    }
+    
+    // Fallback colors for common genres
+    const fallbackColors: Record<string, string> = {
       'Greeting': '#10B981',
       'Closure': '#EF4444',
       'Information': '#3B82F6',
@@ -289,7 +311,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
       'Escalation': '#F97316',
       'Follow-up': '#14B8A6'
     };
-    return colors[genre] || '#6B7280';
+    return fallbackColors[genre] || '#6B7280';
   };
 
   // Check if there's any custom ordering

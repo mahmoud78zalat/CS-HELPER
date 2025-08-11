@@ -209,23 +209,42 @@ export default function LoginPage() {
     }
   }, [isPasswordFocused]);
 
-  // Enhanced success animation with more celebration
+  // Enhanced success animation with more celebration and automatic eye opening/rolling
   const playSuccessAnimation = () => {
-    if (!yetiRef.current || !signRef.current || !mouthRef.current) return;
+    if (!yetiRef.current || !signRef.current || !mouthRef.current || !leftEyeRef.current || !rightEyeRef.current) return;
     
     const tl = gsap.timeline();
     
+    // FIRST: Force eyes open immediately after successful login
+    tl.to([leftEyeRef.current, rightEyeRef.current], {
+      scaleY: 1, // Force open eyes
+      x: 0,
+      y: 0,
+      duration: 0.3,
+      ease: "power2.out"
+    })
+    
     // Initial happy bounce - bigger and more visible
-    tl.to(yetiRef.current, {
+    .to(yetiRef.current, {
       y: -50, // Higher bounce for more excitement
       duration: 0.5,
       ease: "power2.out"
-    })
+    }, "-=0.1")
     .to(yetiRef.current, {
       y: -2,
       duration: 0.8,
       ease: "bounce.out"
     })
+    
+    // Fast eye rolling celebration - multiple quick rolls
+    .to([leftEyeRef.current, rightEyeRef.current], {
+      rotation: 360,
+      duration: 0.15,
+      repeat: 8, // Fast rolling 8 times
+      ease: "none",
+      transformOrigin: "center center"
+    }, "-=1.2")
+    
     // Multiple sign wiggles for celebration
     .to(signRef.current, {
       rotation: 8, // More rotation for excitement
@@ -234,18 +253,21 @@ export default function LoginPage() {
       repeat: 7, // More wiggles
       ease: "power2.inOut"
     }, "-=1.2")
+    
     // Very happy eyebrows
     .to(eyebrowRef.current, {
       y: -5, // More movement
       duration: 0.4,
       ease: "power2.out"
     }, "-=1.3")
+    
     // Big smile
     .to(mouthRef.current, {
       scaleY: 1.5, // Bigger smile
       duration: 0.4,
       ease: "power2.out"
     }, "-=1.1")
+    
     // Add a second celebration bounce after 1.5 seconds
     .to(yetiRef.current, {
       y: -25,
@@ -256,6 +278,25 @@ export default function LoginPage() {
       y: -2,
       duration: 0.5,
       ease: "bounce.out"
+    })
+    
+    // Final eye celebration - slower happy movement
+    .to([leftEyeRef.current, rightEyeRef.current], {
+      x: 3,
+      y: -2,
+      duration: 0.3,
+      yoyo: true,
+      repeat: 3,
+      ease: "power2.inOut"
+    }, "-=0.5")
+    
+    // Return eyes to normal position
+    .to([leftEyeRef.current, rightEyeRef.current], {
+      x: 0,
+      y: 0,
+      rotation: 0,
+      duration: 0.5,
+      ease: "power2.out"
     });
   };
 
@@ -358,9 +399,12 @@ export default function LoginPage() {
         setMascotState('success');
         playSuccessAnimation();
         
+        // Extract agent name from email or use first part before @
+        const agentName = (data.user as any).firstName || data.user.email?.split('@')[0] || 'Agent';
+        
         toast({
           title: "Login Successful! 🎉",
-          description: `Welcome back, ${data.user.email}!`,
+          description: `Welcome back, ${agentName}!`,
         });
         
         // Navigate after success animation (3 seconds to fully see the happy yeti animation)

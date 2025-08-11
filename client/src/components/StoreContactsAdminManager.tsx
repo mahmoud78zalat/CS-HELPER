@@ -195,39 +195,43 @@ export function StoreContactsAdminManager({ onClose }: StoreContactsAdminManager
 
             {/* Store List */}
             <ScrollArea className="h-[500px]">
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {storesLoading ? (
-                  <div className="flex justify-center py-8">
+                  <div className="col-span-full flex justify-center py-8">
                     <div className="text-gray-500">Loading stores...</div>
                   </div>
                 ) : filteredStores.length === 0 ? (
-                  <div className="flex justify-center py-8">
+                  <div className="col-span-full flex justify-center py-8">
                     <div className="text-gray-500">
                       {searchTerm ? 'No stores found matching your search.' : 'No stores found.'}
                     </div>
                   </div>
                 ) : (
-                  filteredStores.map((store) => (
-                    <Card key={store.id}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="text-lg">
-                              {store.storeName}
-                            </CardTitle>
-                            <CardDescription>
-                              {store.isActive ? (
-                                <Badge variant="secondary">Active</Badge>
-                              ) : (
-                                <Badge variant="outline">Inactive</Badge>
-                              )}
-                            </CardDescription>
-                          </div>
-                          <div className="flex gap-2">
+                  filteredStores.map((store, index) => {
+                    // Generate vibrant colors for each store
+                    const colors = [
+                      'from-purple-500 to-pink-500',
+                      'from-blue-500 to-cyan-500', 
+                      'from-green-500 to-teal-500',
+                      'from-orange-500 to-red-500',
+                      'from-indigo-500 to-purple-500',
+                      'from-pink-500 to-rose-500',
+                      'from-yellow-400 to-orange-500',
+                      'from-emerald-500 to-blue-500',
+                    ];
+                    const gradientClass = colors[index % colors.length];
+                    
+                    return (
+                      <Card key={store.id} className="overflow-hidden relative group hover:shadow-xl transition-all duration-300 border-2 hover:border-opacity-50">
+                        {/* Gradient Header */}
+                        <div className={`h-20 bg-gradient-to-r ${gradientClass} relative`}>
+                          <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+                          <div className="absolute top-3 right-3 flex gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleEdit(store)}
+                              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -235,40 +239,70 @@ export function StoreContactsAdminManager({ onClose }: StoreContactsAdminManager
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDelete(store)}
+                              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
+                          <div className="absolute bottom-3 left-4">
+                            <Building className="w-8 h-8 text-white/90" />
+                          </div>
                         </div>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm font-mono">{store.storeEmail}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCopy(store.storeEmail, "Email")}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Copy className="w-3 h-3" />
-                          </Button>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm font-mono">{store.storePhone}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCopy(store.storePhone, "Phone")}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Copy className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                        
+                        <CardHeader className="pb-3">
+                          <div className="space-y-2">
+                            <CardTitle className="text-lg font-bold text-gray-800 dark:text-white">
+                              {store.storeName}
+                            </CardTitle>
+                            <div>
+                              {store.isActive ? (
+                                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                                  ✓ Active
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
+                                  ⚠ Inactive
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </CardHeader>
+                        
+                        <CardContent className="space-y-3">
+                          <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Mail className="w-4 h-4 text-blue-500" />
+                              <span className="text-sm font-mono bg-white dark:bg-slate-700 px-2 py-1 rounded text-blue-600 dark:text-blue-400">
+                                {store.storeEmail}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleCopy(store.storeEmail, "Email")}
+                                className="h-6 w-6 p-0 hover:bg-blue-100"
+                              >
+                                <Copy className="w-3 h-3 text-blue-500" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-4 h-4 text-green-500" />
+                              <span className="text-sm font-mono bg-white dark:bg-slate-700 px-2 py-1 rounded text-green-600 dark:text-green-400">
+                                {store.storePhone}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleCopy(store.storePhone, "Phone")}
+                                className="h-6 w-6 p-0 hover:bg-green-100"
+                              >
+                                <Copy className="w-3 h-3 text-green-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
                 )}
               </div>
             </ScrollArea>
