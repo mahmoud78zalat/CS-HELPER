@@ -966,6 +966,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/store-emails/reorder', isAuthenticated, async (req: any, res) => {
+    try {
+      const { updates } = req.body;
+      if (!Array.isArray(updates) || updates.length === 0) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[StoreEmails] Reorder request:', updates);
+      
+      // Update each store email's order index
+      const updatePromises = updates.map(({ id, orderIndex }) => 
+        storage.updateStoreEmail(id, { orderIndex })
+      );
+      
+      await Promise.all(updatePromises);
+      
+      console.log('[StoreEmails] Store emails reordered successfully');
+      res.json({ message: "Store emails reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering store emails:", error);
+      res.status(500).json({ message: "Failed to reorder store emails" });
+    }
+  });
+
   // Template Categories and Genres endpoints (for Call Scripts)
   app.get('/api/template-categories', async (req, res) => {
     try {

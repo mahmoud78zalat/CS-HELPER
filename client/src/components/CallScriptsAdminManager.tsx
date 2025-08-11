@@ -1,5 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -26,8 +46,110 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Phone, Search, Plus, Edit, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { Phone, Search, Plus, Edit, Trash2, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { getCategoryColor, getGenreColor } from "@/lib/templateColors";
+
+// Sortable Script Item Component
+function SortableScriptItem({ 
+  script, 
+  isExpanded, 
+  onToggleExpansion, 
+  onEdit, 
+  onDelete 
+}: {
+  script: CallScript;
+  isExpanded: boolean;
+  onToggleExpansion: (id: string) => void;
+  onEdit: (script: CallScript) => void;
+  onDelete: (id: string, name: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: script.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Card ref={setNodeRef} style={style} className={isDragging ? 'z-50' : ''}>
+      <CardHeader className="cursor-pointer" onClick={() => onToggleExpansion(script.id)}>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3 flex-1">
+            <div
+              {...attributes}
+              {...listeners}
+              className="cursor-grab hover:cursor-grabbing"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <GripVertical className="h-4 w-4 text-gray-400" />
+            </div>
+            <div className="flex-1">
+              <CardTitle className="text-lg flex items-center gap-2">
+                {script.name}
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-gray-500" />
+                )}
+              </CardTitle>
+              <CardDescription className="flex gap-2 mt-2">
+                <Badge 
+                  variant="secondary" 
+                  style={{
+                    backgroundColor: getCategoryColor(script.category) + '20', 
+                    color: getCategoryColor(script.category)
+                  }}
+                >
+                  {script.category}
+                </Badge>
+                <Badge 
+                  variant="outline"
+                  style={{
+                    backgroundColor: getGenreColor(script.genre) + '20', 
+                    color: getGenreColor(script.genre)
+                  }}
+                >
+                  {script.genre}
+                </Badge>
+              </CardDescription>
+            </div>
+          </div>
+          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="sm" onClick={() => onEdit(script)}>
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(script.id, script.name)}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      {isExpanded && (
+        <CardContent>
+          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+            <pre className="text-sm whitespace-pre-wrap font-mono">
+              {script.content}
+            </pre>
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
 
 interface CallScript {
   id: string;
@@ -36,6 +158,7 @@ interface CallScript {
   category: string;
   genre: string;
   isActive: boolean;
+  orderIndex: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -52,15 +175,34 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingScript, setEditingScript] = useState<CallScript | null>(null);
   const [expandedScripts, setExpandedScripts] = useState<Set<string>>(new Set());
+  const [localScripts, setLocalScripts] = useState<CallScript[]>([]);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Fetch call scripts
   const { data: callScripts = [], isLoading: scriptsLoading } = useQuery({
     queryKey: ['/api/call-scripts'],
     enabled: true
   });
+
+  // Update local scripts when data changes
+  useEffect(() => {
+    if (callScripts.length > 0) {
+      const sortedScripts = [...(callScripts as CallScript[])].sort((a, b) => 
+        (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
+      );
+      setLocalScripts(sortedScripts);
+    }
+  }, [callScripts]);
 
   // Fetch connected categories and genres
   const { data: categoriesData = [] } = useQuery({
@@ -72,6 +214,33 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
   const allGenres = categoriesData ? categoriesData.flatMap((cat: any) => 
     cat.genres?.map((genre: any) => ({ ...genre, categoryName: cat.name, categoryId: cat.id })) || []
   ) : [];
+
+  // Reorder mutation
+  const reorderMutation = useMutation({
+    mutationFn: async (reorderedScripts: CallScript[]) => {
+      const updates = reorderedScripts.map((script, index) => ({
+        id: script.id,
+        orderIndex: index
+      }));
+      
+      return apiRequest('PATCH', '/api/call-scripts/reorder', { updates });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
+      toast({
+        title: "Order updated",
+        description: "Call scripts have been reordered successfully",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Reorder error:', error);
+      toast({
+        title: "Reorder failed",  
+        description: error?.message || "Unable to reorder call scripts",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -99,6 +268,20 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
       });
     },
   });
+
+  // Drag end handler
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = localScripts.findIndex((script) => script.id === active.id);
+      const newIndex = localScripts.findIndex((script) => script.id === over?.id);
+
+      const reorderedScripts = arrayMove(localScripts, oldIndex, newIndex);
+      setLocalScripts(reorderedScripts);
+      reorderMutation.mutate(reorderedScripts);
+    }
+  };
 
   const toggleScriptExpansion = (scriptId: string) => {
     setExpandedScripts(prev => {
@@ -129,8 +312,8 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
     setSearchTerm("");
   };
 
-  // Filter scripts
-  const filteredScripts = (callScripts as CallScript[]).filter((script: CallScript) => {
+  // Filter scripts using local scripts for ordering
+  const filteredScripts = localScripts.filter((script: CallScript) => {
     const matchesSearch = script.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          script.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || script.category === selectedCategory;
@@ -213,73 +396,42 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
             </div>
           </div>
 
-          {/* Scripts List */}
-          <div className="flex-1 overflow-y-auto">
-            {scriptsLoading ? (
-              <div className="text-center py-8">Loading scripts...</div>
-            ) : filteredScripts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                {(callScripts as CallScript[]).length === 0 ? "No call scripts found" : "No scripts match your filters"}
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {filteredScripts.map((script: CallScript) => {
-                  const isExpanded = expandedScripts.has(script.id);
-                  return (
-                    <Card key={script.id}>
-                      <CardHeader 
-                        className="cursor-pointer"
-                        onClick={() => toggleScriptExpansion(script.id)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              {script.name}
-                              {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-gray-500" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-500" />
-                              )}
-                            </CardTitle>
-                            <CardDescription className="flex gap-2 mt-2">
-                              <Badge variant="secondary">{script.category}</Badge>
-                              <Badge variant="outline">{script.genre}</Badge>
-                            </CardDescription>
-                          </div>
-                          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(script)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(script.id, script.name)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      {isExpanded && (
-                        <CardContent>
-                          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                            <pre className="text-sm whitespace-pre-wrap font-mono">
-                              {script.content}
-                            </pre>
-                          </div>
-                        </CardContent>
-                      )}
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          {/* Scripts List with Drag and Drop */}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex-1 overflow-hidden">
+              <ScrollArea className="h-[500px] w-full">
+                {scriptsLoading ? (
+                  <div className="text-center py-8">Loading scripts...</div>
+                ) : filteredScripts.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    {localScripts.length === 0 ? "No call scripts found" : "No scripts match your filters"}
+                  </div>
+                ) : (
+                  <SortableContext
+                    items={filteredScripts.map(s => s.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="grid gap-4 p-4">
+                      {filteredScripts.map((script: CallScript) => (
+                        <SortableScriptItem
+                          key={script.id}
+                          script={script}
+                          isExpanded={expandedScripts.has(script.id)}
+                          onToggleExpansion={toggleScriptExpansion}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                )}
+              </ScrollArea>
+            </div>
+          </DndContext>
         </DialogContent>
       </Dialog>
 
