@@ -172,7 +172,7 @@ export const announcements = pgTable("announcements", {
 // User announcement acknowledgments to track who has seen announcements
 export const userAnnouncementAcks = pgTable("user_announcement_acks", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
   announcementId: uuid("announcement_id").references(() => announcements.id).notNull(),
   acknowledgedAt: timestamp("acknowledged_at").defaultNow(),
   // Supabase sync tracking
@@ -183,7 +183,7 @@ export const userAnnouncementAcks = pgTable("user_announcement_acks", {
 // User FAQ acknowledgments to track who has seen FAQs
 export const userFaqAcks = pgTable("user_faq_acks", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
   faqId: uuid("faq_id").references(() => faqs.id).notNull(),
   acknowledgedAt: timestamp("acknowledged_at").defaultNow(),
   // Supabase sync tracking
@@ -195,7 +195,7 @@ export const userFaqAcks = pgTable("user_faq_acks", {
 // FAQ Acknowledgments - replaces localStorage for FAQ disco states
 export const faqAcknowledgments = pgTable("faq_acknowledgments", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
   faqId: uuid("faq_id").references(() => faqs.id).notNull(),
   acknowledgedAt: timestamp("acknowledged_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -208,7 +208,7 @@ export const faqAcknowledgments = pgTable("faq_acknowledgments", {
 // Announcement Acknowledgments - replaces localStorage for "Got it" states  
 export const announcementAcknowledgments = pgTable("announcement_acknowledgments", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id").references(() => users.id).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
   announcementId: uuid("announcement_id").references(() => announcements.id).notNull(),
   acknowledgedAt: timestamp("acknowledged_at").defaultNow(),
   announcementVersion: integer("announcement_version").default(1).notNull(),
@@ -255,7 +255,7 @@ export const storeEmails = pgTable("store_emails", {
 // User Notification Preferences for future customization
 export const userNotificationPreferences = pgTable("user_notification_preferences", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id").references(() => users.id).notNull().unique(),
+  userId: uuid("user_id").references(() => users.id).notNull().unique(),
   disableFaqNotifications: boolean("disable_faq_notifications").default(false).notNull(),
   disableAnnouncementNotifications: boolean("disable_announcement_notifications").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -564,7 +564,7 @@ export type UserNotificationPreferences = typeof userNotificationPreferences.$in
 // Personal Notes Schema
 export const personalNotes = pgTable("personal_notes", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: uuid("user_id").notNull().references(() => users.id),
   subject: text("subject").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -742,7 +742,7 @@ export type InsertColorSetting = z.infer<typeof insertColorSettingSchema>;
 // User ordering preferences for drag-and-drop functionality
 export const userOrderingPreferences = pgTable("user_ordering_preferences", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   contentType: varchar("content_type", { length: 50 }).notNull(), // 'live_reply_templates', 'email_templates', 'faqs', etc.
   itemId: uuid("item_id").notNull(),
   displayOrder: integer("display_order").default(0).notNull(),
