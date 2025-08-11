@@ -83,23 +83,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[StoreEmails] FIXED ROUTE - Storage type:', storage.constructor?.name);
       console.log('[StoreEmails] FIXED ROUTE - Storage updateStoreEmail method exists:', typeof storage.updateStoreEmail);
       
-      // Update each store email's order index - FIXED TO MATCH WORKING PATTERN
+      // Update each store email's order index - CRITICAL FIX FOR ZERO VALUES
       for (const update of updates) {
         if (update.id) {
           const updateData: any = {};
           
-          // Handle different order field names from frontend
+          // CRITICAL FIX: Handle different order field names from frontend including zero values
           if (typeof update.order === 'number') {
             updateData.orderIndex = update.order;
+            console.log(`[StoreEmails] CRITICAL - Using update.order:`, update.order, 'for ID:', update.id);
           }
           if (typeof update.orderIndex === 'number') {
             updateData.orderIndex = update.orderIndex;
+            console.log(`[StoreEmails] CRITICAL - Using update.orderIndex:`, update.orderIndex, 'for ID:', update.id);
           }
           
-          // Only update if we have valid order data
-          if (Object.keys(updateData).length > 0) {
-            console.log(`[StoreEmails] FIXED ROUTE - Updating email ${update.id} with:`, updateData);
-            await storage.updateStoreEmail(update.id, updateData);
+          // CRITICAL FIX: Check for valid order data including zero
+          if (updateData.orderIndex !== undefined) {
+            console.log(`[StoreEmails] CRITICAL - About to update email ${update.id} with orderIndex:`, updateData.orderIndex);
+            console.log(`[StoreEmails] CRITICAL - Update data being sent:`, JSON.stringify(updateData));
+            
+            try {
+              const result = await storage.updateStoreEmail(update.id, updateData);
+              console.log(`[StoreEmails] CRITICAL - Update result for ${update.id}:`, result);
+            } catch (error) {
+              console.error(`[StoreEmails] CRITICAL - Update failed for ${update.id}:`, error);
+              throw error;
+            }
+          } else {
+            console.log(`[StoreEmails] CRITICAL - No valid orderIndex for update:`, update);
           }
         }
       }
