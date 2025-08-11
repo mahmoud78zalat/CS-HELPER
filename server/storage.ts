@@ -37,6 +37,12 @@ import {
   type InsertColorSetting,
   type Faq,
   type InsertFaq,
+  callScripts,
+  storeEmails,
+  type CallScript,
+  type InsertCallScript,
+  type StoreEmail,
+  type InsertStoreEmail,
   // Legacy types for backward compatibility
   type Template,
   type InsertTemplate,
@@ -257,6 +263,34 @@ export interface IStorage {
   // Helper methods to get unacknowledged items
   getUnacknowledgedFaqs(userId: string): Promise<any[]>;
   getUnacknowledgedAnnouncements(userId: string): Promise<any[]>;
+
+  // Personal Notes operations (placeholder - already defined elsewhere)
+  getPersonalNotes(userId: string, filters?: { search?: string; category?: string; isArchived?: boolean }): Promise<any[]>;
+  getPersonalNote(id: string): Promise<any | undefined>;
+  createPersonalNote(note: any): Promise<any>;
+  updatePersonalNote(id: string, updates: Partial<any>): Promise<any>;
+  deletePersonalNote(id: string): Promise<void>;
+
+  // Call Scripts operations
+  getCallScripts(filters?: {
+    category?: string;
+    search?: string;
+    isActive?: boolean;
+  }): Promise<CallScript[]>;
+  getCallScript(id: string): Promise<CallScript | undefined>;
+  createCallScript(script: InsertCallScript): Promise<CallScript>;
+  updateCallScript(id: string, script: Partial<InsertCallScript>): Promise<CallScript>;
+  deleteCallScript(id: string): Promise<void>;
+
+  // Store Emails operations
+  getStoreEmails(filters?: {
+    search?: string;
+    isActive?: boolean;
+  }): Promise<StoreEmail[]>;
+  getStoreEmail(id: string): Promise<StoreEmail | undefined>;
+  createStoreEmail(storeEmail: InsertStoreEmail): Promise<StoreEmail>;
+  updateStoreEmail(id: string, storeEmail: Partial<InsertStoreEmail>): Promise<StoreEmail>;
+  deleteStoreEmail(id: string): Promise<void>;
 }
 
 // DatabaseStorage class commented out for beta testing

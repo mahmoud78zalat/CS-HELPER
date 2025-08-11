@@ -495,6 +495,24 @@ export const insertUserNotificationPreferencesSchema = createInsertSchema(userNo
   updatedAt: true,
 });
 
+// Call Scripts insert schema
+export const insertCallScriptSchema = createInsertSchema(callScripts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
+// Store Emails insert schema
+export const insertStoreEmailSchema = createInsertSchema(storeEmails).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -538,6 +556,14 @@ export type AnnouncementAcknowledgment = typeof announcementAcknowledgments.$inf
 
 export type InsertUserNotificationPreferences = z.infer<typeof insertUserNotificationPreferencesSchema>;
 export type UserNotificationPreferences = typeof userNotificationPreferences.$inferSelect;
+
+// Call Scripts types
+export type InsertCallScript = z.infer<typeof insertCallScriptSchema>;
+export type CallScript = typeof callScripts.$inferSelect;
+
+// Store Emails types
+export type InsertStoreEmail = z.infer<typeof insertStoreEmailSchema>;
+export type StoreEmail = typeof storeEmails.$inferSelect;
 
 // Personal Notes Schema
 export const personalNotes = pgTable("personal_notes", {
@@ -734,30 +760,7 @@ export const insertUserOrderingPreferenceSchema = createInsertSchema(userOrderin
 export type UserOrderingPreference = typeof userOrderingPreferences.$inferSelect;
 export type InsertUserOrderingPreference = z.infer<typeof insertUserOrderingPreferenceSchema>;
 
-// Call Scripts insert schema
-export const insertCallScriptSchema = createInsertSchema(callScripts).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  supabaseId: true,
-  lastSyncedAt: true,
-});
 
-// Store Emails insert schema
-export const insertStoreEmailSchema = createInsertSchema(storeEmails).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  supabaseId: true,
-  lastSyncedAt: true,
-});
-
-// Types for the new tables
-export type CallScript = typeof callScripts.$inferSelect;
-export type InsertCallScript = z.infer<typeof insertCallScriptSchema>;
-
-export type StoreEmail = typeof storeEmails.$inferSelect;
-export type InsertStoreEmail = z.infer<typeof insertStoreEmailSchema>;
 
 // Legacy template type for backward compatibility (will remove after migration)
 export type Template = LiveReplyTemplate;

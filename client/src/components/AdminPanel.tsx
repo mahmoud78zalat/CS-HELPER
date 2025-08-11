@@ -19,7 +19,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { realTimeService } from "@/lib/realTimeService";
 import { 
   X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
-  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save, Loader2, HelpCircle, FolderOpen
+  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save, Loader2, HelpCircle, FolderOpen, Phone, Database
 } from "lucide-react";
 import { User, Template, EmailTemplate } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
@@ -31,6 +31,8 @@ import DragDropEmailTemplates from "@/components/DragDropEmailTemplates";
 import HorizontalGroupedTemplates from "@/components/HorizontalGroupedTemplates";
 import GroupManager from "@/components/GroupManager";
 import FAQEditor from "@/components/FAQEditor";
+import CallScriptsManager from "@/components/CallScriptsManager";
+import StoreEmailsManager from "@/components/StoreEmailsManager";
 
 import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates, loadColorsFromDatabase, getGenreColor, getCategoryColor } from "@/lib/templateColors";
 import { HexColorPicker } from 'react-colorful';
@@ -2829,6 +2831,48 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     >
                       Save Changes
                     </Button>
+                    
+                    {/* Call Scripts and Store Emails Management */}
+                    <div className="border-t pt-4 mt-4 space-y-3">
+                      <h4 className="text-sm font-medium text-slate-700">Additional Tools</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="w-full justify-start bg-green-50 hover:bg-green-100 border-green-200">
+                              <Phone className="h-4 w-4 mr-2 text-green-600" />
+                              <span className="text-green-700">Call Scripts</span>
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center gap-2">
+                                <Phone className="h-5 w-5 text-green-600" />
+                                Call Scripts Management
+                              </DialogTitle>
+                            </DialogHeader>
+                            <CallScriptsManager />
+                          </DialogContent>
+                        </Dialog>
+                        
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="w-full justify-start bg-purple-50 hover:bg-purple-100 border-purple-200">
+                              <Database className="h-4 w-4 mr-2 text-purple-600" />
+                              <span className="text-purple-700">Store Emails</span>
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center gap-2">
+                                <Database className="h-5 w-5 text-purple-600" />
+                                Store Emails Management
+                              </DialogTitle>
+                            </DialogHeader>
+                            <StoreEmailsManager />
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 

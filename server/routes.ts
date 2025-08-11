@@ -810,6 +810,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Call Scripts API endpoints
+  app.get('/api/call-scripts', isAuthenticated, async (req: any, res) => {
+    try {
+      const { category, search, isActive } = req.query;
+      const filters = {
+        ...(category && { category }),
+        ...(search && { search }),
+        ...(isActive !== undefined && { isActive: isActive === 'true' })
+      };
+      const scripts = await storage.getCallScripts(filters);
+      res.json(scripts);
+    } catch (error) {
+      console.error("Error fetching call scripts:", error);
+      res.status(500).json({ message: "Failed to fetch call scripts" });
+    }
+  });
+
+  app.get('/api/call-scripts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const script = await storage.getCallScript(id);
+      if (!script) {
+        return res.status(404).json({ message: "Call script not found" });
+      }
+      res.json(script);
+    } catch (error) {
+      console.error("Error fetching call script:", error);
+      res.status(500).json({ message: "Failed to fetch call script" });
+    }
+  });
+
+  app.post('/api/call-scripts', isAuthenticated, async (req: any, res) => {
+    try {
+      const scriptData = {
+        ...req.body,
+        createdBy: req.user.claims.sub
+      };
+      const script = await storage.createCallScript(scriptData);
+      res.status(201).json(script);
+    } catch (error) {
+      console.error("Error creating call script:", error);
+      res.status(500).json({ message: "Failed to create call script" });
+    }
+  });
+
+  app.put('/api/call-scripts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const script = await storage.updateCallScript(id, req.body);
+      res.json(script);
+    } catch (error) {
+      console.error("Error updating call script:", error);
+      res.status(500).json({ message: "Failed to update call script" });
+    }
+  });
+
+  app.delete('/api/call-scripts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteCallScript(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting call script:", error);
+      res.status(500).json({ message: "Failed to delete call script" });
+    }
+  });
+
+  // Store Emails API endpoints
+  app.get('/api/store-emails', isAuthenticated, async (req: any, res) => {
+    try {
+      const { search, isActive } = req.query;
+      const filters = {
+        ...(search && { search }),
+        ...(isActive !== undefined && { isActive: isActive === 'true' })
+      };
+      const storeEmails = await storage.getStoreEmails(filters);
+      res.json(storeEmails);
+    } catch (error) {
+      console.error("Error fetching store emails:", error);
+      res.status(500).json({ message: "Failed to fetch store emails" });
+    }
+  });
+
+  app.get('/api/store-emails/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const storeEmail = await storage.getStoreEmail(id);
+      if (!storeEmail) {
+        return res.status(404).json({ message: "Store email not found" });
+      }
+      res.json(storeEmail);
+    } catch (error) {
+      console.error("Error fetching store email:", error);
+      res.status(500).json({ message: "Failed to fetch store email" });
+    }
+  });
+
+  app.post('/api/store-emails', isAuthenticated, async (req: any, res) => {
+    try {
+      const storeEmailData = {
+        ...req.body,
+        createdBy: req.user.claims.sub
+      };
+      const storeEmail = await storage.createStoreEmail(storeEmailData);
+      res.status(201).json(storeEmail);
+    } catch (error) {
+      console.error("Error creating store email:", error);
+      res.status(500).json({ message: "Failed to create store email" });
+    }
+  });
+
+  app.put('/api/store-emails/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const storeEmail = await storage.updateStoreEmail(id, req.body);
+      res.json(storeEmail);
+    } catch (error) {
+      console.error("Error updating store email:", error);
+      res.status(500).json({ message: "Failed to update store email" });
+    }
+  });
+
+  app.delete('/api/store-emails/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteStoreEmail(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting store email:", error);
+      res.status(500).json({ message: "Failed to delete store email" });
+    }
+  });
+
   // Enhanced presence API endpoints
   app.use('/api/presence', presenceApiRouter);
 
