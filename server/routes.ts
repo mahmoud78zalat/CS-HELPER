@@ -517,18 +517,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('[RoleUpdate] === ROLE UPDATE REQUEST END ===');
   });
 
-  // Template routes
-  app.get('/api/templates', isAuthenticated, async (req: any, res) => {
+  // Template routes (removed isAuthenticated middleware to match simple-routes.ts behavior)
+  app.get('/api/templates', async (req: any, res) => {
     try {
       const { category, genre, search, isActive } = req.query;
-      
-      const templates = await storage.getTemplates({
+      const filters = {
         category: category as string,
         genre: genre as string,
         search: search as string,
-        isActive: isActive ? isActive === 'true' : undefined,
-      });
-      
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      };
+
+      const templates = await storage.getTemplates(filters);
       res.json(templates);
     } catch (error) {
       console.error("Error fetching templates:", error);
