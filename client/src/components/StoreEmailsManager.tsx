@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,6 +103,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
   const [localStores, setLocalStores] = useState<StoreEmail[]>([]);
   
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -139,6 +141,37 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
       }
     }
   }, [storeEmails]);
+
+  // Reorder mutation for admin users
+  const reorderMutation = useMutation({
+    mutationFn: async (reorderedStores: StoreEmail[]) => {
+      const updates = reorderedStores.map((store, index) => ({
+        id: store.id,
+        orderIndex: index
+      }));
+      
+      console.log('[StoreEmailsManager] Sending reorder request with updates:', updates);
+      
+      const response = await apiRequest('PATCH', '/api/store-emails/reorder', { updates });
+      console.log('[StoreEmailsManager] Reorder response:', response);
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Order updated",
+        description: "Store contacts have been reordered successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
+    },
+    onError: (error) => {
+      console.error('[StoreEmailsManager] Reorder failed:', error);
+      toast({
+        title: "Reorder failed",
+        description: "Failed to save the new order. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
 
 
@@ -185,26 +218,21 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
     const { active, over } = event;
     
     if (over && active.id !== over.id) {
-      setLocalStores((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        
-        const newItems = arrayMove(items, oldIndex, newIndex);
-        
-        // Save local order to localStorage (user preferences only)
-        const orderMap: Record<string, number> = {};
-        newItems.forEach((item, index) => {
-          orderMap[item.id] = index;
-        });
-        localStorage.setItem('storeEmails_local_order', JSON.stringify(orderMap));
-        
-        toast({
-          title: "Stores reordered",
-          description: "Your personal store contacts order has been updated",
-        });
-        
-        return newItems;
-      });
+      const oldIndex = localStores.findIndex((item) => item.id === active.id);
+      const newIndex = localStores.findIndex((item) => item.id === over.id);
+      
+      const reorderedStores = arrayMove(localStores, oldIndex, newIndex);
+      
+      console.log('[StoreEmailsManager] Drag end event:', { active: active.id, over: over.id });
+      console.log('[StoreEmailsManager] Moving store from index', oldIndex, 'to', newIndex);
+      console.log('[StoreEmailsManager] Reordered stores preview:', reorderedStores.map(s => ({ id: s.id, name: s.storeName })));
+      
+      setLocalStores(reorderedStores);
+      
+      // Persist order to backend (global admin reordering)
+      reorderMutation.mutate(reorderedStores);
+    } else {
+      console.log('[StoreEmailsManager] No reorder needed - same position');
     }
   };
 
