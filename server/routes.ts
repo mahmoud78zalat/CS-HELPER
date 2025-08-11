@@ -1044,48 +1044,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Call Scripts CRUD endpoints
-  app.get('/api/call-scripts', async (req, res) => {
-    try {
-      const callScripts = await storage.getAllCallScripts();
-      res.json(callScripts);
-    } catch (error) {
-      console.error('Get call scripts error:', error);
-      res.status(500).json({ error: 'Failed to get call scripts' });
-    }
-  });
 
-  app.post('/api/call-scripts', async (req, res) => {
-    try {
-      const callScript = await storage.createCallScript(req.body);
-      res.json(callScript);
-    } catch (error) {
-      console.error('Create call script error:', error);
-      res.status(500).json({ error: 'Failed to create call script' });
-    }
-  });
-
-  app.patch('/api/call-scripts/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const callScript = await storage.updateCallScript(id, req.body);
-      res.json(callScript);
-    } catch (error) {
-      console.error('Update call script error:', error);
-      res.status(500).json({ error: 'Failed to update call script' });
-    }
-  });
-
-  app.delete('/api/call-scripts/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      await storage.deleteCallScript(id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Delete call script error:', error);
-      res.status(500).json({ error: 'Failed to delete call script' });
-    }
-  });
 
   // Enhanced presence API endpoints
   app.use('/api/presence', presenceApiRouter);

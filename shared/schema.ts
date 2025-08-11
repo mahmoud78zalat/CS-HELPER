@@ -549,29 +549,6 @@ export type CallScript = typeof callScripts.$inferSelect;
 export type InsertStoreEmail = z.infer<typeof insertStoreEmailSchema>;
 export type StoreEmail = typeof storeEmails.$inferSelect;
 
-// Template categories and genres types - for dynamic system support
-export type TemplateCategory = {
-  id: string;
-  name: string;
-  type: 'live_reply' | 'email';
-  isActive: boolean;
-  orderIndex: number;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type TemplateGenre = {
-  id: string;
-  name: string;
-  isActive: boolean;
-  orderIndex: number;
-  createdAt: Date;
-  updatedAt: Date;
-};
-export type Faq = typeof faqs.$inferSelect;
-
-export type InsertUserFaqAck = z.infer<typeof insertUserFaqAckSchema>;
-export type UserFaqAck = typeof userFaqAcks.$inferSelect;
 
 // New persistent notification types
 export type InsertFaqAcknowledgment = z.infer<typeof insertFaqAcknowledgmentSchema>;
@@ -582,14 +559,6 @@ export type AnnouncementAcknowledgment = typeof announcementAcknowledgments.$inf
 
 export type InsertUserNotificationPreferences = z.infer<typeof insertUserNotificationPreferencesSchema>;
 export type UserNotificationPreferences = typeof userNotificationPreferences.$inferSelect;
-
-// Call Scripts types
-export type InsertCallScript = z.infer<typeof insertCallScriptSchema>;
-export type CallScript = typeof callScripts.$inferSelect;
-
-// Store Emails types
-export type InsertStoreEmail = z.infer<typeof insertStoreEmailSchema>;
-export type StoreEmail = typeof storeEmails.$inferSelect;
 
 // Personal Notes Schema
 export const personalNotes = pgTable("personal_notes", {
@@ -645,27 +614,17 @@ export const templateGenres = pgTable("template_genres", {
 // Relations for connected categories and genres
 export const templateCategoriesRelations = relations(templateCategories, ({ many }) => ({
   genres: many(templateGenres),
-  callScripts: many(callScripts),
 }));
 
-export const templateGenresRelations = relations(templateGenres, ({ one, many }) => ({
+export const templateGenresRelations = relations(templateGenres, ({ one }) => ({
   category: one(templateCategories, {
     fields: [templateGenres.categoryId],
     references: [templateCategories.id],
   }),
-  callScripts: many(callScripts),
 }));
 
 // Call Scripts Relations
 export const callScriptsRelations = relations(callScripts, ({ one }) => ({
-  category: one(templateCategories, {
-    fields: [callScripts.categoryId],
-    references: [templateCategories.id],
-  }),
-  genre: one(templateGenres, {
-    fields: [callScripts.genreId],
-    references: [templateGenres.id],
-  }),
   createdBy: one(users, {
     fields: [callScripts.createdBy],
     references: [users.id],
