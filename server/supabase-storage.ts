@@ -4087,34 +4087,67 @@ export class SupabaseStorage implements IStorage {
     ];
   }
 
-  // Personal Notes operations (placeholder implementation)
+  // Personal Notes operations (implemented using SupabasePersonalNotesStorage)
+  private personalNotesStorage = new (require('./supabase-personal-notes').SupabasePersonalNotesStorage)();
+
   async getPersonalNotes(userId: string, filters?: { search?: string; category?: string; isArchived?: boolean }): Promise<any[]> {
     console.log('[SupabaseStorage] Getting personal notes for user:', userId, 'with filters:', filters);
-    // Placeholder implementation - would integrate with personal_notes table
-    return [];
+    try {
+      const notes = await this.personalNotesStorage.getPersonalNotes(userId);
+      
+      // Apply search filter if provided
+      if (filters?.search) {
+        const searchTerm = filters.search.toLowerCase();
+        return notes.filter(note => 
+          (note.subject && note.subject.toLowerCase().includes(searchTerm)) ||
+          (note.content && note.content.toLowerCase().includes(searchTerm))
+        );
+      }
+      
+      return notes;
+    } catch (error) {
+      console.error('[SupabaseStorage] Error getting personal notes:', error);
+      return [];
+    }
   }
 
   async getPersonalNote(id: string): Promise<any | undefined> {
     console.log('[SupabaseStorage] Getting personal note:', id);
-    // Placeholder implementation - would query personal_notes table
-    return undefined;
+    try {
+      return await this.personalNotesStorage.getPersonalNote(id);
+    } catch (error) {
+      console.error('[SupabaseStorage] Error getting personal note:', error);
+      return undefined;
+    }
   }
 
   async createPersonalNote(note: any): Promise<any> {
     console.log('[SupabaseStorage] Creating personal note:', note);
-    // Placeholder implementation - would insert into personal_notes table
-    throw new Error('Personal notes feature not yet implemented');
+    try {
+      return await this.personalNotesStorage.createPersonalNote(note);
+    } catch (error) {
+      console.error('[SupabaseStorage] Error creating personal note:', error);
+      throw error;
+    }
   }
 
   async updatePersonalNote(id: string, updates: Partial<any>): Promise<any> {
     console.log('[SupabaseStorage] Updating personal note:', id, updates);
-    // Placeholder implementation - would update personal_notes table
-    throw new Error('Personal notes feature not yet implemented');
+    try {
+      return await this.personalNotesStorage.updatePersonalNote(id, updates);
+    } catch (error) {
+      console.error('[SupabaseStorage] Error updating personal note:', error);
+      throw error;
+    }
   }
 
   async deletePersonalNote(id: string): Promise<void> {
     console.log('[SupabaseStorage] Deleting personal note:', id);
-    // Placeholder implementation - would delete from personal_notes table
-    throw new Error('Personal notes feature not yet implemented');
+    try {
+      return await this.personalNotesStorage.deletePersonalNote(id);
+    } catch (error) {
+      console.error('[SupabaseStorage] Error deleting personal note:', error);
+      throw error;
+    }
   }
 }
