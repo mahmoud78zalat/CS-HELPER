@@ -46,8 +46,8 @@ interface CallScriptsAdminManagerProps {
 
 export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedGenre, setSelectedGenre] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedGenre, setSelectedGenre] = useState<string>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingScript, setEditingScript] = useState<CallScript | null>(null);
@@ -126,8 +126,8 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
   };
 
   const clearFilters = () => {
-    setSelectedCategory("");
-    setSelectedGenre("");
+    setSelectedCategory("all");
+    setSelectedGenre("all");
     setSearchTerm("");
   };
 
@@ -135,8 +135,8 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
   const filteredScripts = (callScripts as CallScript[]).filter((script: CallScript) => {
     const matchesSearch = script.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          script.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || script.category === selectedCategory;
-    const matchesGenre = !selectedGenre || script.genre === selectedGenre;
+    const matchesCategory = selectedCategory === "all" || script.category === selectedCategory;
+    const matchesGenre = selectedGenre === "all" || script.genre === selectedGenre;
     
     return matchesSearch && matchesCategory && matchesGenre && script.isActive;
   });
@@ -184,7 +184,7 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
                   <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {(categoriesData as any[]).map((category: any) => (
                     <SelectItem key={category.id} value={category.name}>
                       {category.name}
@@ -198,7 +198,7 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
                   <SelectValue placeholder="Filter by genre" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Genres</SelectItem>
+                  <SelectItem value="all">All Genres</SelectItem>
                   {(genresData as any[]).map((genre: any) => (
                     <SelectItem key={genre.id} value={genre.name}>
                       {genre.name}
@@ -207,7 +207,7 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
                 </SelectContent>
               </Select>
 
-              {(searchTerm || selectedCategory || selectedGenre) && (
+              {(searchTerm || selectedCategory !== "all" || selectedGenre !== "all") && (
                 <Button variant="outline" onClick={clearFilters}>
                   Clear Filters
                 </Button>
