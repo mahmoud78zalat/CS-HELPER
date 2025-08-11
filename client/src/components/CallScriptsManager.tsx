@@ -13,6 +13,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { CallScript } from "@shared/schema";
+import { getCategoryColor, getGenreColor } from "@/lib/templateColors";
 
 interface CallScriptsManagerProps {
   onClose: () => void;
@@ -68,53 +69,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
   const categories = Array.from(new Set(callScripts.map((script: CallScript) => script.category).filter(Boolean)));
   const genres = Array.from(new Set(callScripts.map((script: CallScript) => script.genre).filter(Boolean)));
 
-  // Get color for category badge - using actual colors from admin panel
-  const getCategoryColor = (category: string): string => {
-    // Find the category in the actual data from admin panel
-    if (Array.isArray(categoriesData)) {
-      const foundCategory = categoriesData.find((cat: any) => cat.name === category);
-      if (foundCategory && foundCategory.color) {
-        return foundCategory.color;
-      }
-    }
-    
-    // Fallback colors for common categories
-    const fallbackColors: Record<string, string> = {
-      'General': '#3B82F6',
-      'Support': '#10B981',
-      'Sales': '#F59E0B',
-      'Technical': '#8B5CF6',
-      'Billing': '#EF4444',
-      'Complaint': '#F97316'
-    };
-    return fallbackColors[category] || '#6B7280';
-  };
 
-  // Get color for genre badge - using actual colors from admin panel
-  const getGenreColor = (genre: string): string => {
-    // Find the genre in the actual data from admin panel
-    if (Array.isArray(categoriesData)) {
-      for (const category of categoriesData) {
-        if (category.genres && Array.isArray(category.genres)) {
-          const foundGenre = category.genres.find((g: any) => g.name === genre);
-          if (foundGenre && foundGenre.color) {
-            return foundGenre.color;
-          }
-        }
-      }
-    }
-    
-    // Fallback colors for common genres
-    const fallbackColors: Record<string, string> = {
-      'Greeting': '#10B981',
-      'Closure': '#EF4444',
-      'Information': '#3B82F6',
-      'Resolution': '#8B5CF6',
-      'Escalation': '#F97316',
-      'Follow-up': '#14B8A6'
-    };
-    return fallbackColors[genre] || '#6B7280';
-  };
 
 
 
