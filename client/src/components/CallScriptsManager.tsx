@@ -152,142 +152,193 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-6">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Phone className="h-5 w-5" />
-            Call Scripts
-          </DialogTitle>
+      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-4">
+        <DialogHeader className="pb-3 mb-3 border-b">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                <Phone className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">Call Scripts</DialogTitle>
+                <p className="text-sm text-gray-500">Search and manage your call scripts</p>
+              </div>
+            </div>
+            <div className="text-sm text-gray-500">
+              {filteredScripts.length} of {callScripts.length} scripts
+            </div>
+          </div>
         </DialogHeader>
 
-
-
         {/* Search and Filter Controls */}
-        <div className="space-y-4">
-          <div className="flex gap-4 items-center">
+        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
+          <div className="flex gap-3 items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Search scripts by name or content..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-white dark:bg-slate-700"
                 data-testid="input-search-scripts"
               />
             </div>
 
-            <div className="flex gap-2">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48" data-testid="select-filter-category">
-                  <SelectValue placeholder="Filter by category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-44 bg-white dark:bg-slate-700" data-testid="select-filter-category">
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-              <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-                <SelectTrigger className="w-48" data-testid="select-filter-genre">
-                  <SelectValue placeholder="Filter by genre" />
-                </SelectTrigger>
-                <SelectContent>
-                  {genres.map((genre) => (
-                    <SelectItem key={genre} value={genre}>
-                      {genre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+              <SelectTrigger className="w-40 bg-white dark:bg-slate-700" data-testid="select-filter-genre">
+                <SelectValue placeholder="Filter by genre" />
+              </SelectTrigger>
+              <SelectContent>
+                {genres.map((genre) => (
+                  <SelectItem key={genre} value={genre}>
+                    {genre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-              {(selectedCategory || selectedGenre || searchTerm) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="flex items-center gap-2"
-                  data-testid="button-clear-filters"
-                >
-                  <X className="h-4 w-4" />
-                  Clear
-                </Button>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <FileText className="h-4 w-4" />
-            <span>Showing {filteredScripts.length} of {callScripts.length} scripts</span>
+            {(selectedCategory || selectedGenre || searchTerm) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="flex items-center gap-2"
+                data-testid="button-clear-filters"
+              >
+                <X className="h-4 w-4" />
+                Clear
+              </Button>
+            )}
           </div>
         </div>
 
         {/* Scripts Grid */}
-        <div className="overflow-y-auto max-h-[50vh] space-y-4">
+        <div className="flex-1 overflow-y-auto"
+             style={{ maxHeight: 'calc(100vh - 280px)' }}>
           {scriptsLoading ? (
-            <div className="text-center py-8">Loading scripts...</div>
-          ) : filteredScripts.length === 0 ? (
             <div className="text-center py-8">
-              <Phone className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No scripts found</h3>
-              <p className="text-gray-500">
+              <div className="animate-pulse flex justify-center">
+                <div className="h-8 w-8 bg-blue-200 rounded-full animate-bounce"></div>
+              </div>
+              <p className="text-gray-500 mt-2">Loading scripts...</p>
+            </div>
+          ) : filteredScripts.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                <Phone className="h-12 w-12 text-blue-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No scripts found</h3>
+              <p className="text-gray-500 max-w-md mx-auto">
                 {searchTerm || selectedCategory || selectedGenre
-                  ? "Try adjusting your search criteria"
-                  : "No call scripts are available"}
+                  ? "Try adjusting your search criteria to find matching scripts"
+                  : "No call scripts are available at the moment"}
               </p>
             </div>
           ) : (
             <div className="grid gap-4">
-              {filteredScripts.map((script: CallScript) => {
+              {filteredScripts.map((script: CallScript, index: number) => {
                 const isExpanded = expandedScripts.has(script.id);
+                
+                // Generate gradient colors for each script
+                const gradients = [
+                  'from-blue-500 to-purple-600',
+                  'from-green-500 to-teal-600',
+                  'from-orange-500 to-red-600',
+                  'from-purple-500 to-pink-600',
+                  'from-indigo-500 to-blue-600',
+                  'from-teal-500 to-cyan-600',
+                  'from-red-500 to-pink-600',
+                  'from-yellow-500 to-orange-600',
+                ];
+                const gradientClass = gradients[index % gradients.length];
+                
                 return (
-                  <Card key={script.id} className="hover:shadow-md transition-shadow">
+                  <Card key={script.id} className="overflow-hidden group hover:shadow-2xl transition-all duration-300 border-2 hover:border-blue-200 hover:scale-[1.02]">
+                    {/* Gradient Header Bar */}
+                    <div className={`h-2 bg-gradient-to-r ${gradientClass}`}></div>
+                    
                     <CardHeader 
-                      className="pb-3 cursor-pointer"
+                      className="pb-4 cursor-pointer relative"
                       onClick={() => toggleScriptExpansion(script.id)}
                     >
-                      <div className="flex items-start justify-between">
+                      {/* Background pattern */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      
+                      <div className="relative flex items-start justify-between">
                         <div className="flex-1">
-                          <CardTitle className="text-lg font-medium mb-2 flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-blue-600" />
-                            {script.name}
-                            {isExpanded ? (
-                              <ChevronDown className="h-4 w-4 text-gray-500" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4 text-gray-500" />
-                            )}
+                          <CardTitle className="text-xl font-bold mb-3 flex items-center gap-3">
+                            <div className={`p-2 rounded-xl bg-gradient-to-r ${gradientClass} text-white shadow-lg`}>
+                              <FileText className="h-5 w-5" />
+                            </div>
+                            <span className="text-gray-800 dark:text-white group-hover:text-blue-600 transition-colors">
+                              {script.name}
+                            </span>
+                            <div className="ml-auto">
+                              {isExpanded ? (
+                                <ChevronDown className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                              ) : (
+                                <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                              )}
+                            </div>
                           </CardTitle>
-                          <div className="flex gap-2">
+                          
+                          <div className="flex gap-3 items-center">
                             {script.category && (
                               <Badge 
-                                variant="secondary" 
-                                className="text-xs"
-                                style={{ backgroundColor: getCategoryColor(script.category) + '20', color: getCategoryColor(script.category), borderColor: getCategoryColor(script.category) + '40' }}
+                                className="text-xs font-semibold px-3 py-1 rounded-full shadow-sm"
+                                style={{ 
+                                  backgroundColor: getCategoryColor(script.category) + '20', 
+                                  color: getCategoryColor(script.category), 
+                                  borderColor: getCategoryColor(script.category) + '40',
+                                  border: '1px solid'
+                                }}
                               >
-                                {script.category}
+                                📋 {script.category}
                               </Badge>
                             )}
                             {script.genre && (
                               <Badge 
-                                variant="outline" 
-                                className="text-xs"
-                                style={{ backgroundColor: getGenreColor(script.genre) + '20', color: getGenreColor(script.genre), borderColor: getGenreColor(script.genre) }}
+                                className="text-xs font-semibold px-3 py-1 rounded-full shadow-sm"
+                                style={{ 
+                                  backgroundColor: getGenreColor(script.genre) + '15', 
+                                  color: getGenreColor(script.genre), 
+                                  borderColor: getGenreColor(script.genre),
+                                  border: '1px solid'
+                                }}
                               >
-                                {script.genre}
+                                🎯 {script.genre}
                               </Badge>
                             )}
                           </div>
                         </div>
                       </div>
                     </CardHeader>
+                    
                     {isExpanded && (
-                      <CardContent>
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                            {script.content}
-                          </p>
+                      <CardContent className="pt-0 pb-6">
+                        <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-800 dark:to-slate-700 rounded-xl p-6 border border-slate-200 dark:border-slate-600 shadow-inner">
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className={`w-1 h-6 bg-gradient-to-b ${gradientClass} rounded-full`}></div>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Script Content</span>
+                          </div>
+                          <div className="bg-white dark:bg-slate-900 rounded-lg p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed font-medium">
+                              {script.content}
+                            </p>
+                          </div>
                         </div>
                       </CardContent>
                     )}

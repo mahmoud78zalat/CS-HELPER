@@ -399,13 +399,25 @@ export default function LoginPage() {
         setMascotState('success');
         playSuccessAnimation();
         
-        // Extract agent name from email or use first part before @
-        const agentName = (data.user as any).firstName || data.user.email?.split('@')[0] || 'Agent';
-        
-        toast({
-          title: "Login Successful! 🎉",
-          description: `Welcome back, ${agentName}!`,
-        });
+        // Get the actual user data from the API to display proper name
+        try {
+          const userResponse = await fetch(`/api/user/${data.user.id}`);
+          const userData = await userResponse.json();
+          
+          const agentName = userData.firstName || data.user.email?.split('@')[0] || 'Agent';
+          
+          toast({
+            title: "Login Successful! 🎉",
+            description: `Welcome back, ${agentName}!`,
+          });
+        } catch (fetchError) {
+          console.error('Error fetching user data:', fetchError);
+          const agentName = data.user.email?.split('@')[0] || 'Agent';
+          toast({
+            title: "Login Successful! 🎉",
+            description: `Welcome back, ${agentName}!`,
+          });
+        }
         
         // Navigate after success animation (3 seconds to fully see the happy yeti animation)
         setTimeout(() => {

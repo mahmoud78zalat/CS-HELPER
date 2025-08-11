@@ -45,68 +45,119 @@ function SortableScriptCard({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.8 : 1,
+    scale: isDragging ? 1.02 : 1,
   };
+
+  // Generate dynamic gradient colors based on script index
+  const scriptIndex = Math.abs(script.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0));
+  const gradients = [
+    'from-blue-500 to-purple-600',
+    'from-green-500 to-teal-600', 
+    'from-orange-500 to-red-600',
+    'from-purple-500 to-pink-600',
+    'from-indigo-500 to-blue-600',
+    'from-teal-500 to-cyan-600',
+    'from-red-500 to-pink-600',
+    'from-yellow-500 to-orange-600',
+  ];
+  const gradientClass = gradients[scriptIndex % gradients.length];
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
       <Card 
-        className={`transition-shadow cursor-pointer ${isDragging ? 'shadow-lg' : 'hover:shadow-md'}`}
+        className={`overflow-hidden group cursor-pointer transition-all duration-300 border-2 ${
+          isDragging 
+            ? 'shadow-2xl border-blue-300 bg-blue-50/50' 
+            : 'hover:shadow-xl hover:border-blue-200 hover:scale-[1.01]'
+        }`}
         onClick={() => onToggleExpansion(script.id)}
       >
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
+        {/* Gradient Header Bar */}
+        <div className={`h-3 bg-gradient-to-r ${gradientClass} ${isDragging ? 'opacity-100' : ''}`}></div>
+        
+        <CardHeader className="pb-4 relative">
+          {/* Background pattern on hover */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          
+          <div className="relative flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-3 mb-3">
                 {isDragMode && (
                   <div 
                     {...listeners} 
-                    className="cursor-grab active:cursor-grabbing"
+                    className="cursor-grab active:cursor-grabbing p-1 rounded-md hover:bg-gray-100 transition-colors"
                     onClick={(e) => e.stopPropagation()}
+                    title="Drag to reorder"
                   >
-                    <GripVertical className="h-4 w-4 text-gray-400" />
+                    <GripVertical className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                   </div>
                 )}
-                <div className="flex items-center">
-                  {isExpanded ? 
-                    <ChevronDown className="h-4 w-4" /> : 
-                    <ChevronRight className="h-4 w-4" />
-                  }
+                
+                <div className={`p-2 rounded-xl bg-gradient-to-r ${gradientClass} text-white shadow-lg`}>
+                  <FileText className="h-4 w-4" />
                 </div>
-                <CardTitle className="text-base font-medium">
-                  {script.name}
-                </CardTitle>
+                
+                <div className="flex items-center gap-2 flex-1">
+                  <CardTitle className="text-lg font-bold text-gray-800 dark:text-white group-hover:text-blue-600 transition-colors">
+                    {script.name}
+                  </CardTitle>
+                  
+                  <div className="ml-auto">
+                    {isExpanded ? 
+                      <ChevronDown className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" /> : 
+                      <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                    }
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2 mb-2">
-                <Badge 
-                  variant="secondary" 
-                  style={{
-                    backgroundColor: getCategoryColor(script.category || '') + '20', 
-                    color: getCategoryColor(script.category || '')
-                  }}
-                >
-                  {script.category}
-                </Badge>
-                <Badge 
-                  variant="outline"
-                  style={{
-                    backgroundColor: getGenreColor(script.genre || '') + '20', 
-                    color: getGenreColor(script.genre || '')
-                  }}
-                >
-                  {script.genre}
-                </Badge>
+              
+              <div className="flex gap-3 items-center ml-12">
+                {script.category && (
+                  <Badge 
+                    className="text-xs font-semibold px-3 py-1 rounded-full shadow-sm"
+                    style={{
+                      backgroundColor: getCategoryColor(script.category) + '20', 
+                      color: getCategoryColor(script.category),
+                      borderColor: getCategoryColor(script.category) + '40',
+                      border: '1px solid'
+                    }}
+                  >
+                    📋 {script.category}
+                  </Badge>
+                )}
+                {script.genre && (
+                  <Badge 
+                    className="text-xs font-semibold px-3 py-1 rounded-full shadow-sm"
+                    style={{
+                      backgroundColor: getGenreColor(script.genre) + '15', 
+                      color: getGenreColor(script.genre),
+                      borderColor: getGenreColor(script.genre),
+                      border: '1px solid'
+                    }}
+                  >
+                    🎯 {script.genre}
+                  </Badge>
+                )}
               </div>
             </div>
-
           </div>
         </CardHeader>
+        
         {isExpanded && (
-          <CardContent>
-            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-              <pre className="text-sm whitespace-pre-wrap font-mono">
-                {script.content}
-              </pre>
+          <CardContent className="pt-0 pb-6">
+            <div className="ml-12">
+              <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-800 dark:to-slate-700 rounded-xl p-6 border border-slate-200 dark:border-slate-600 shadow-inner">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className={`w-1 h-6 bg-gradient-to-b ${gradientClass} rounded-full`}></div>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Script Content</span>
+                </div>
+                <div className="bg-white dark:bg-slate-900 rounded-lg p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                  <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-medium leading-relaxed">
+                    {script.content}
+                  </pre>
+                </div>
+              </div>
             </div>
           </CardContent>
         )}
@@ -329,16 +380,31 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-6">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Phone className="h-5 w-5" />
-            Call Scripts
-          </DialogTitle>
+      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-4">
+        <DialogHeader className="pb-3 mb-3 border-b">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                <Phone className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">Call Scripts</DialogTitle>
+                <p className="text-sm text-gray-500">Advanced drag & drop reordering</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 rounded-full">
+                <span className="text-xs font-semibold text-green-700 dark:text-green-400">Enhanced</span>
+              </div>
+              <div className="text-sm text-gray-500">
+                {filteredScripts.length} of {localScripts.length} scripts
+              </div>
+            </div>
+          </div>
         </DialogHeader>
 
         {/* Control Panel */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Reordering Controls */}
           <div className="flex gap-2 items-center">
             <Button
@@ -429,17 +495,25 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
         </div>
 
         {/* Scripts List */}
-        <div className="overflow-y-auto max-h-[60vh] space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-3"
+             style={{ maxHeight: 'calc(100vh - 320px)' }}>
           {scriptsLoading ? (
-            <div className="text-center py-8">Loading scripts...</div>
-          ) : filteredScripts.length === 0 ? (
             <div className="text-center py-8">
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No scripts found</h3>
-              <p className="text-gray-500">
+              <div className="animate-pulse flex justify-center">
+                <div className="h-8 w-8 bg-blue-200 rounded-full animate-bounce"></div>
+              </div>
+              <p className="text-gray-500 mt-2">Loading scripts...</p>
+            </div>
+          ) : filteredScripts.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                <FileText className="h-12 w-12 text-blue-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No scripts found</h3>
+              <p className="text-gray-500 max-w-md mx-auto">
                 {searchTerm || selectedCategory || selectedGenre
-                  ? "Try adjusting your search or filter criteria"
-                  : "No call scripts are available"}
+                  ? "Try adjusting your search or filter criteria to find matching scripts"
+                  : "No call scripts are available at the moment"}
               </p>
             </div>
           ) : (
