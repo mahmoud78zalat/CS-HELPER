@@ -159,14 +159,29 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
       
       console.log('[StoreEmailsManager] ADMIN MODE - Sending reorder request with updates:', updates);
       
-      // FIXED: Match working pattern - use apiRequest properly and get JSON response
-      const response = await apiRequest('PATCH', '/api/store-emails/reorder', { updates });
-      const result = await response.json();
-      console.log('[StoreEmailsManager] ADMIN MODE - Reorder result:', result);
-      return result;
+      try {
+        // FIXED: Match working pattern - use apiRequest properly and get JSON response
+        const response = await apiRequest('PATCH', '/api/store-emails/reorder', { updates });
+        
+        console.log('[StoreEmailsManager] ADMIN MODE - Raw response status:', response.status);
+        console.log('[StoreEmailsManager] ADMIN MODE - Raw response ok:', response.ok);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('[StoreEmailsManager] ADMIN MODE - Reorder result:', result);
+        return result;
+      } catch (error) {
+        console.error('[StoreEmailsManager] ADMIN MODE - Mutation function error:', error);
+        throw error;
+      }
     },
-    onSuccess: () => {
-      console.log('[StoreEmailsManager] ADMIN MODE - Reorder successful, invalidating cache');
+    onSuccess: (data) => {
+      console.log('[StoreEmailsManager] ADMIN MODE - Reorder successful with data:', data);
+      console.log('[StoreEmailsManager] ADMIN MODE - Invalidating cache and showing toast');
+      
       // FIXED: Invalidate queries FIRST, then show toast
       queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
       toast({
@@ -180,10 +195,10 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
       });
     },
     onError: (error) => {
-      console.error('[StoreEmailsManager] ADMIN MODE - Reorder failed:', error);
+      console.error('[StoreEmailsManager] ADMIN MODE - Reorder failed with error:', error);
       toast({
         title: "Reorder failed",
-        description: "Failed to save the new order. Please try again.",
+        description: `Failed to save the new order: ${error.message || 'Please try again.'}`,
         variant: "destructive",
       });
     },
