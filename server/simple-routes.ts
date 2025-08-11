@@ -2254,12 +2254,16 @@ export function registerRoutes(app: Express): void {
   
   app.get('/api/store-emails', isAuthenticated, async (req: any, res) => {
     try {
+      console.log('[Simple Routes] Fetching store emails...');
       const { search, isActive } = req.query;
       const filters = {
         ...(search && { search }),
         ...(isActive !== undefined && { isActive: isActive === 'true' })
       };
+      console.log('[Simple Routes] Store emails filters:', filters);
       const storeEmails = await storage.getStoreEmails(filters);
+      console.log('[Simple Routes] Store emails result count:', storeEmails?.length || 0);
+      console.log('[Simple Routes] Store emails sample:', storeEmails?.[0] || 'No data');
       res.json(storeEmails);
     } catch (error) {
       console.error("Error fetching store emails:", error);

@@ -3866,29 +3866,37 @@ export class SupabaseStorage implements IStorage {
 
       const { data, error } = await query.order('order_index', { ascending: true });
 
+      console.log('[SupabaseStorage] Store emails query result - data:', data, 'error:', error);
+
       if (error) {
         console.error('[SupabaseStorage] Error fetching store emails:', error);
         throw new Error(`Failed to fetch store emails: ${error.message}`);
       }
 
       if (!data) {
+        console.log('[SupabaseStorage] No data returned from store emails query');
         return [];
       }
 
+      console.log('[SupabaseStorage] Raw store emails data:', JSON.stringify(data, null, 2));
+
       // Convert database format to expected format
-      return data.map(email => ({
+      const mapped = data.map(email => ({
         id: email.id,
         storeName: email.store_name,
         storeEmail: email.store_email,
         storePhone: email.store_phone,
-        orderIndex: email.order_index,
+        orderIndex: email.order_index || 0,
         isActive: email.is_active,
         createdBy: email.created_by,
         createdAt: new Date(email.created_at),
         updatedAt: new Date(email.updated_at),
         supabaseId: email.supabase_id,
-        lastSyncedAt: new Date(email.last_synced_at),
+        lastSyncedAt: email.last_synced_at ? new Date(email.last_synced_at) : new Date(),
       }));
+
+      console.log('[SupabaseStorage] Mapped store emails:', JSON.stringify(mapped, null, 2));
+      return mapped;
     } catch (error) {
       console.error('[SupabaseStorage] Error in getStoreEmails:', error);
       return [];
