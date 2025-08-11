@@ -303,6 +303,25 @@ ALTER TABLE public.announcement_views ENABLE ROW LEVEL SECURITY;
 -- Then add foreign key for template_genres
 
 -- Add remaining foreign key constraints
+-- Check and add missing columns for call_scripts
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name='call_scripts' AND column_name='category_id') THEN
+        ALTER TABLE public.call_scripts ADD COLUMN category_id UUID;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name='call_scripts' AND column_name='genre_id') THEN
+        ALTER TABLE public.call_scripts ADD COLUMN genre_id UUID;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name='call_scripts' AND column_name='created_by') THEN
+        ALTER TABLE public.call_scripts ADD COLUMN created_by UUID;
+    END IF;
+END $$;
+
 ALTER TABLE public.call_scripts 
 ADD CONSTRAINT call_scripts_category_id_fkey 
 FOREIGN KEY (category_id) REFERENCES public.template_categories(id) ON DELETE SET NULL;
@@ -314,6 +333,15 @@ FOREIGN KEY (genre_id) REFERENCES public.template_genres(id) ON DELETE SET NULL;
 ALTER TABLE public.call_scripts 
 ADD CONSTRAINT call_scripts_created_by_fkey 
 FOREIGN KEY (created_by) REFERENCES public.users(id) ON DELETE SET NULL;
+
+-- Check and add missing columns for store_emails
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name='store_emails' AND column_name='created_by') THEN
+        ALTER TABLE public.store_emails ADD COLUMN created_by UUID;
+    END IF;
+END $$;
 
 ALTER TABLE public.store_emails 
 ADD CONSTRAINT store_emails_created_by_fkey 
@@ -404,6 +432,15 @@ INSERT INTO public.template_categories (id, name, description, color, order_inde
 ON CONFLICT DO NOTHING;
 
 -- Now add foreign key constraints after data insertion
+-- First check if category_id column exists in template_genres, if not add it
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name='template_genres' AND column_name='category_id') THEN
+        ALTER TABLE public.template_genres ADD COLUMN category_id UUID;
+    END IF;
+END $$;
+
 ALTER TABLE public.template_genres 
 ADD CONSTRAINT template_genres_category_id_fkey 
 FOREIGN KEY (category_id) REFERENCES public.template_categories(id) ON DELETE SET NULL;
