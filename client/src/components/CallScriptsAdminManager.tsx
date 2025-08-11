@@ -78,17 +78,19 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
       return apiRequest('DELETE', `/api/call-scripts/${id}`);
     },
     onSuccess: async () => {
-      // Force immediate cache refresh
-      queryClient.removeQueries({ queryKey: ['/api/call-scripts'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/call-scripts'] });
+      // Invalidate and refetch the exact query key
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/call-scripts'],
+        exact: true 
+      });
       
       toast({
         title: "Script deleted",
         description: "Call script has been successfully deleted",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Delete call script error:', error);
       toast({
         title: "Delete failed",
         description: "Unable to delete call script",
@@ -326,10 +328,11 @@ function CallScriptCreateModal({
       return apiRequest('POST', '/api/call-scripts', { ...data, isActive: true });
     },
     onSuccess: async () => {
-      // Force immediate cache refresh
-      queryClient.removeQueries({ queryKey: ['/api/call-scripts'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/call-scripts'] });
+      // Invalidate and refetch the exact query key
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/call-scripts'],
+        exact: true 
+      });
       
       toast({
         title: "Script created",
@@ -337,10 +340,11 @@ function CallScriptCreateModal({
       });
       onClose();
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Create call script error:', error);
       toast({
         title: "Create failed",
-        description: "Unable to create call script",
+        description: error?.message || "Unable to create call script",
         variant: "destructive",
       });
     },
@@ -465,10 +469,11 @@ function CallScriptEditModal({
       return apiRequest('PUT', `/api/call-scripts/${script.id}`, data);
     },
     onSuccess: async () => {
-      // Force immediate cache refresh
-      queryClient.removeQueries({ queryKey: ['/api/call-scripts'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/call-scripts'] });
+      // Invalidate and refetch the exact query key
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/call-scripts'],
+        exact: true 
+      });
       
       toast({
         title: "Script updated",

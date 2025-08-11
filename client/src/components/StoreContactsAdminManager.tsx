@@ -56,20 +56,22 @@ export function StoreContactsAdminManager({ onClose }: StoreContactsAdminManager
       return apiRequest('DELETE', `/api/store-emails/${id}`);
     },
     onSuccess: async () => {
-      // Force immediate cache refresh
-      queryClient.removeQueries({ queryKey: ['/api/store-emails'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/store-emails'] });
+      // Invalidate and refetch the exact query key
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/store-emails'],
+        exact: true 
+      });
       
       toast({
         title: "Store contact deleted",
         description: "Store contact has been successfully deleted",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Delete store contact error:', error);
       toast({
         title: "Delete failed",
-        description: "Unable to delete store contact",
+        description: error?.message || "Unable to delete store contact",
         variant: "destructive",
       });
     },
@@ -317,10 +319,11 @@ function StoreContactCreateModal({ onClose }: { onClose: () => void }) {
       return apiRequest('POST', '/api/store-emails', { ...data, isActive: true });
     },
     onSuccess: async () => {
-      // Force immediate cache refresh
-      queryClient.removeQueries({ queryKey: ['/api/store-emails'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/store-emails'] });
+      // Invalidate and refetch the exact query key
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/store-emails'],
+        exact: true 
+      });
       
       toast({
         title: "Store contact created",
@@ -328,10 +331,11 @@ function StoreContactCreateModal({ onClose }: { onClose: () => void }) {
       });
       onClose();
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Create store contact error:', error);
       toast({
         title: "Create failed",
-        description: "Unable to create store contact",
+        description: error?.message || "Unable to create store contact",
         variant: "destructive",
       });
     },
@@ -429,10 +433,11 @@ function StoreContactEditModal({
       return apiRequest('PUT', `/api/store-emails/${store.id}`, data);
     },
     onSuccess: async () => {
-      // Force immediate cache refresh
-      queryClient.removeQueries({ queryKey: ['/api/store-emails'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/store-emails'] });
+      // Invalidate and refetch the exact query key
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/store-emails'],
+        exact: true 
+      });
       
       toast({
         title: "Store contact updated",
@@ -440,10 +445,11 @@ function StoreContactEditModal({
       });
       onClose();
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Update store contact error:', error);
       toast({
         title: "Update failed",
-        description: "Unable to update store contact",
+        description: error?.message || "Unable to update store contact",
         variant: "destructive",
       });
     },
