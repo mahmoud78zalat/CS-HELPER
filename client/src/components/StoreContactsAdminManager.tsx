@@ -55,8 +55,12 @@ export function StoreContactsAdminManager({ onClose }: StoreContactsAdminManager
     mutationFn: async (id: string) => {
       return apiRequest('DELETE', `/api/store-emails/${id}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
+    onSuccess: async () => {
+      // Force immediate cache refresh
+      queryClient.removeQueries({ queryKey: ['/api/store-emails'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/store-emails'] });
+      
       toast({
         title: "Store contact deleted",
         description: "Store contact has been successfully deleted",
@@ -312,8 +316,12 @@ function StoreContactCreateModal({ onClose }: { onClose: () => void }) {
     mutationFn: async (data: typeof formData) => {
       return apiRequest('POST', '/api/store-emails', { ...data, isActive: true });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
+    onSuccess: async () => {
+      // Force immediate cache refresh
+      queryClient.removeQueries({ queryKey: ['/api/store-emails'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/store-emails'] });
+      
       toast({
         title: "Store contact created",
         description: "New store contact has been successfully created",
@@ -420,8 +428,12 @@ function StoreContactEditModal({
     mutationFn: async (data: typeof formData) => {
       return apiRequest('PUT', `/api/store-emails/${store.id}`, data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
+    onSuccess: async () => {
+      // Force immediate cache refresh
+      queryClient.removeQueries({ queryKey: ['/api/store-emails'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/store-emails'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/store-emails'] });
+      
       toast({
         title: "Store contact updated",
         description: "Store contact has been successfully updated",

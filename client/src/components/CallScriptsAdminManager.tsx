@@ -77,8 +77,12 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
     mutationFn: async (id: string) => {
       return apiRequest('DELETE', `/api/call-scripts/${id}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
+    onSuccess: async () => {
+      // Force immediate cache refresh
+      queryClient.removeQueries({ queryKey: ['/api/call-scripts'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/call-scripts'] });
+      
       toast({
         title: "Script deleted",
         description: "Call script has been successfully deleted",
@@ -321,8 +325,12 @@ function CallScriptCreateModal({
     mutationFn: async (data: typeof formData) => {
       return apiRequest('POST', '/api/call-scripts', { ...data, isActive: true });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
+    onSuccess: async () => {
+      // Force immediate cache refresh
+      queryClient.removeQueries({ queryKey: ['/api/call-scripts'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/call-scripts'] });
+      
       toast({
         title: "Script created",
         description: "New call script has been successfully created",
@@ -456,8 +464,12 @@ function CallScriptEditModal({
     mutationFn: async (data: typeof formData) => {
       return apiRequest('PUT', `/api/call-scripts/${script.id}`, data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
+    onSuccess: async () => {
+      // Force immediate cache refresh
+      queryClient.removeQueries({ queryKey: ['/api/call-scripts'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/call-scripts'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/call-scripts'] });
+      
       toast({
         title: "Script updated",
         description: "Call script has been successfully updated",
