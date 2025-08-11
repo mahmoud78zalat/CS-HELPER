@@ -229,6 +229,36 @@ export const userNotificationPreferences = pgTable("user_notification_preference
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Call Scripts table for agent scripts management
+export const callScripts = pgTable("call_scripts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name").notNull(),
+  content: text("content").notNull(),
+  category: varchar("category").default("general").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(),
+  lastSyncedAt: timestamp("last_synced_at"),
+});
+
+// Store Emails table for storing email, phone, and store information
+export const storeEmails = pgTable("store_emails", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  storeName: varchar("store_name").notNull(),
+  storeEmail: varchar("store_email").notNull(),
+  storePhone: varchar("store_phone").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  // Supabase sync tracking
+  supabaseId: uuid("supabase_id").unique(),
+  lastSyncedAt: timestamp("last_synced_at"),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   liveReplyUsage: many(liveReplyUsage),
@@ -331,6 +361,22 @@ export const announcementAcknowledgmentsRelations = relations(announcementAcknow
 export const userNotificationPreferencesRelations = relations(userNotificationPreferences, ({ one }) => ({
   user: one(users, {
     fields: [userNotificationPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+// Call Scripts relations
+export const callScriptsRelations = relations(callScripts, ({ one }) => ({
+  creator: one(users, {
+    fields: [callScripts.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// Store Emails relations
+export const storeEmailsRelations = relations(storeEmails, ({ one }) => ({
+  creator: one(users, {
+    fields: [storeEmails.createdBy],
     references: [users.id],
   }),
 }));
@@ -687,6 +733,31 @@ export const insertUserOrderingPreferenceSchema = createInsertSchema(userOrderin
 // Export user ordering types
 export type UserOrderingPreference = typeof userOrderingPreferences.$inferSelect;
 export type InsertUserOrderingPreference = z.infer<typeof insertUserOrderingPreferenceSchema>;
+
+// Call Scripts insert schema
+export const insertCallScriptSchema = createInsertSchema(callScripts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
+// Store Emails insert schema
+export const insertStoreEmailSchema = createInsertSchema(storeEmails).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  supabaseId: true,
+  lastSyncedAt: true,
+});
+
+// Types for the new tables
+export type CallScript = typeof callScripts.$inferSelect;
+export type InsertCallScript = z.infer<typeof insertCallScriptSchema>;
+
+export type StoreEmail = typeof storeEmails.$inferSelect;
+export type InsertStoreEmail = z.infer<typeof insertStoreEmailSchema>;
 
 // Legacy template type for backward compatibility (will remove after migration)
 export type Template = LiveReplyTemplate;

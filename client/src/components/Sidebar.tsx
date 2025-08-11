@@ -20,7 +20,9 @@ import {
   Copy,
   Plus,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Phone,
+  Database
 } from "lucide-react";
 
 interface SidebarProps {
@@ -29,6 +31,8 @@ interface SidebarProps {
   onAdminPanel: () => void;
   onAbout: () => void;
   onOpenPersonalNotes?: () => void;
+  onCallScripts: () => void;
+  onStoreEmails: () => void;
 }
 
 export default function Sidebar({ 
@@ -36,7 +40,9 @@ export default function Sidebar({
   onEmailComposer,
   onAdminPanel,
   onAbout,
-  onOpenPersonalNotes
+  onOpenPersonalNotes,
+  onCallScripts,
+  onStoreEmails
 }: SidebarProps) {
   const { user, signOut } = useAuth();
   const [expandedPanel, setExpandedPanel] = useState<string | null>(null);
@@ -299,6 +305,26 @@ export default function Sidebar({
               <div className="flex items-center justify-center lg:justify-start space-x-3">
                 <Search className="h-4 w-4" />
                 <span className="hidden lg:block font-medium">Check Order</span>
+              </div>
+            </Button>
+            
+            <Button 
+              onClick={onCallScripts}
+              className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg p-2 lg:p-3 transition-colors duration-200 shadow-sm"
+            >
+              <div className="flex items-center justify-center lg:justify-start space-x-3">
+                <Phone className="h-4 w-4" />
+                <span className="hidden lg:block font-medium">Call Scripts</span>
+              </div>
+            </Button>
+            
+            <Button 
+              onClick={onStoreEmails}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-lg p-2 lg:p-3 transition-colors duration-200 shadow-sm"
+            >
+              <div className="flex items-center justify-center lg:justify-start space-x-3">
+                <Database className="h-4 w-4" />
+                <span className="hidden lg:block font-medium">Store Emails</span>
               </div>
             </Button>
 
