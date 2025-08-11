@@ -31,8 +31,8 @@ import DragDropEmailTemplates from "@/components/DragDropEmailTemplates";
 import HorizontalGroupedTemplates from "@/components/HorizontalGroupedTemplates";
 import GroupManager from "@/components/GroupManager";
 import FAQEditor from "@/components/FAQEditor";
-import CallScriptsManager from "@/components/CallScriptsManager";
-import StoreEmailsManager from "@/components/StoreEmailsManager";
+import { CallScriptsManager } from "@/components/CallScriptsManager";
+import { StoreEmailsManager } from "@/components/StoreEmailsManager";
 
 import { GENRE_COLORS, CATEGORY_COLORS, syncColorsToSupabase, getAllGenres, getAllCategories, updateColorsFromTemplates, loadColorsFromDatabase, getGenreColor, getCategoryColor } from "@/lib/templateColors";
 import { HexColorPicker } from 'react-colorful';
