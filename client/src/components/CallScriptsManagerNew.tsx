@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Search, X, Phone, FileText, ChevronDown, ChevronRight, GripVertical, Copy, RotateCcw, Shuffle } from "lucide-react";
+import { Search, X, Phone, FileText, ChevronDown, ChevronRight, GripVertical, RotateCcw, Shuffle } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
@@ -19,7 +19,6 @@ interface SortableScriptCardProps {
   isExpanded: boolean;
   isDragMode: boolean;
   onToggleExpansion: (scriptId: string) => void;
-  onCopyScript: (content: string, name: string) => void;
   getCategoryColor: (category: string) => string;
   getGenreColor: (genre: string) => string;
 }
@@ -29,7 +28,6 @@ function SortableScriptCard({
   isExpanded, 
   isDragMode, 
   onToggleExpansion, 
-  onCopyScript,
   getCategoryColor,
   getGenreColor
 }: SortableScriptCardProps) {
@@ -50,27 +48,29 @@ function SortableScriptCard({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-      <Card className={`transition-shadow ${isDragging ? 'shadow-lg' : 'hover:shadow-md'}`}>
+      <Card 
+        className={`transition-shadow cursor-pointer ${isDragging ? 'shadow-lg' : 'hover:shadow-md'}`}
+        onClick={() => onToggleExpansion(script.id)}
+      >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 {isDragMode && (
-                  <div {...listeners} className="cursor-grab active:cursor-grabbing">
+                  <div 
+                    {...listeners} 
+                    className="cursor-grab active:cursor-grabbing"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <GripVertical className="h-4 w-4 text-gray-400" />
                   </div>
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onToggleExpansion(script.id)}
-                  className="p-0 h-auto"
-                >
+                <div className="flex items-center">
                   {isExpanded ? 
                     <ChevronDown className="h-4 w-4" /> : 
                     <ChevronRight className="h-4 w-4" />
                   }
-                </Button>
+                </div>
                 <CardTitle className="text-base font-medium">
                   {script.name}
                 </CardTitle>
@@ -96,16 +96,7 @@ function SortableScriptCard({
                 </Badge>
               </div>
             </div>
-            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => onCopyScript(script.content, script.name)}
-                className="text-blue-600 hover:text-blue-700"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
+
           </div>
         </CardHeader>
         {isExpanded && (
@@ -250,22 +241,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
     });
   };
 
-  // Copy script content to clipboard
-  const handleCopyScript = (content: string, name: string) => {
-    try {
-      navigator.clipboard.writeText(content);
-      toast({
-        title: "Script copied",
-        description: `"${name}" has been copied to clipboard`,
-      });
-    } catch (error) {
-      toast({
-        title: "Copy failed",
-        description: "Unable to copy to clipboard",
-        variant: "destructive",
-      });
-    }
-  };
+
 
   // Get color for category badge
   const getCategoryColor = (category: string): string => {
@@ -445,7 +421,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
                       isExpanded={expandedScripts.has(script.id)}
                       isDragMode={isDragMode}
                       onToggleExpansion={toggleScriptExpansion}
-                      onCopyScript={handleCopyScript}
+
                       getCategoryColor={getCategoryColor}
                       getGenreColor={getGenreColor}
                     />

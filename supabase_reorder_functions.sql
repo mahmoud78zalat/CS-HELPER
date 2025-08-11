@@ -9,15 +9,19 @@ SECURITY DEFINER
 AS $$
 DECLARE
   script_update jsonb;
+  script_id uuid;
 BEGIN
   -- Loop through each script update
   FOREACH script_update IN ARRAY script_updates
   LOOP
-    -- Update using string comparison to avoid UUID casting issues
+    -- Extract and cast the UUID safely
+    script_id := (script_update->>'id')::uuid;
+    
+    -- Update using the UUID variable
     UPDATE call_scripts 
     SET order_index = (script_update->>'orderIndex')::integer,
         updated_at = NOW()
-    WHERE id::text = script_update->>'id';
+    WHERE id = script_id;
   END LOOP;
 END;
 $$;
@@ -30,15 +34,19 @@ SECURITY DEFINER
 AS $$
 DECLARE
   store_update jsonb;
+  store_id uuid;
 BEGIN
   -- Loop through each store update
   FOREACH store_update IN ARRAY store_updates
   LOOP
-    -- Update using string comparison to avoid UUID casting issues
+    -- Extract and cast the UUID safely
+    store_id := (store_update->>'id')::uuid;
+    
+    -- Update using the UUID variable
     UPDATE store_emails 
     SET order_index = (store_update->>'orderIndex')::integer,
         updated_at = NOW()
-    WHERE id::text = store_update->>'id';
+    WHERE id = store_id;
   END LOOP;
 END;
 $$;
