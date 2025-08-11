@@ -197,7 +197,7 @@ export function CallScriptsAdminManager({ onClose }: CallScriptsAdminManagerProp
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Genres</SelectItem>
-                  {(genresData as any[]).map((genre: any) => (
+                  {(allGenres as any[]).map((genre: any) => (
                     <SelectItem key={genre.id} value={genre.name}>
                       {genre.name}
                     </SelectItem>
