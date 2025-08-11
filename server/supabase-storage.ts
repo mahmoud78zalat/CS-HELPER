@@ -3974,8 +3974,8 @@ export class SupabaseStorage implements IStorage {
 
     // Remove undefined values
     Object.keys(updateData).forEach(key => {
-      if (updateData[key] === undefined) {
-        delete updateData[key];
+      if ((updateData as any)[key] === undefined) {
+        delete (updateData as any)[key];
       }
     });
 
@@ -4087,34 +4087,130 @@ export class SupabaseStorage implements IStorage {
     ];
   }
 
-  // Personal Notes operations (placeholder implementation)
+  // Personal Notes operations (implemented)
   async getPersonalNotes(userId: string, filters?: { search?: string; category?: string; isArchived?: boolean }): Promise<any[]> {
-    console.log('[SupabaseStorage] Getting personal notes for user:', userId, 'with filters:', filters);
-    // Placeholder implementation - would integrate with personal_notes table
-    return [];
+    console.log('[SupabaseStorage] 📝 Fetching personal notes for user:', userId, 'with filters:', filters);
+    
+    let query = this.serviceClient
+      .from('personal_notes')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    // Apply search filter if provided
+    if (filters?.search) {
+      query = query.or(`subject.ilike.%${filters.search}%,content.ilike.%${filters.search}%`);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('[SupabaseStorage] ❌ Error fetching personal notes:', error);
+      return [];
+    }
+
+    console.log('[SupabaseStorage] ✅ Successfully fetched notes:', data?.length || 0);
+    return data?.map(this.mapSupabasePersonalNote) || [];
   }
 
   async getPersonalNote(id: string): Promise<any | undefined> {
-    console.log('[SupabaseStorage] Getting personal note:', id);
-    // Placeholder implementation - would query personal_notes table
-    return undefined;
+    console.log('[SupabaseStorage] 📝 Getting personal note:', id);
+    
+    const { data, error } = await this.serviceClient
+      .from('personal_notes')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] ❌ Error fetching personal note:', error);
+      return undefined;
+    }
+
+    return data ? this.mapSupabasePersonalNote(data) : undefined;
   }
 
   async createPersonalNote(note: any): Promise<any> {
-    console.log('[SupabaseStorage] Creating personal note:', note);
-    // Placeholder implementation - would insert into personal_notes table
-    throw new Error('Personal notes feature not yet implemented');
+    console.log('[SupabaseStorage] 📝 Creating personal note:', note);
+    
+    const { data, error } = await this.serviceClient
+      .from('personal_notes')
+      .insert({
+        user_id: note.userId,
+        subject: note.subject,
+        content: note.content,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] ❌ Error creating personal note:', error);
+      throw new Error(`Failed to create note: ${error.message}`);
+    }
+
+    console.log('[SupabaseStorage] ✅ Successfully created note:', data);
+    return this.mapSupabasePersonalNote(data);
   }
 
   async updatePersonalNote(id: string, updates: Partial<any>): Promise<any> {
-    console.log('[SupabaseStorage] Updating personal note:', id, updates);
-    // Placeholder implementation - would update personal_notes table
-    throw new Error('Personal notes feature not yet implemented');
+    console.log('[SupabaseStorage] 📝 Updating personal note:', id, updates);
+    
+    const updateData = {
+      subject: updates.subject,
+      content: updates.content,
+      updated_at: new Date().toISOString()
+    };
+
+    // Remove undefined values
+    Object.keys(updateData).forEach(key => {
+      if ((updateData as any)[key] === undefined) {
+        delete (updateData as any)[key];
+      }
+    });
+
+    const { data, error } = await this.serviceClient
+      .from('personal_notes')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[SupabaseStorage] ❌ Error updating personal note:', error);
+      throw new Error(`Failed to update note: ${error.message}`);
+    }
+
+    console.log('[SupabaseStorage] ✅ Successfully updated note:', data);
+    return this.mapSupabasePersonalNote(data);
   }
 
   async deletePersonalNote(id: string): Promise<void> {
-    console.log('[SupabaseStorage] Deleting personal note:', id);
-    // Placeholder implementation - would delete from personal_notes table
-    throw new Error('Personal notes feature not yet implemented');
+    console.log('[SupabaseStorage] 🗑️ Deleting personal note:', id);
+    
+    const { error } = await this.serviceClient
+      .from('personal_notes')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('[SupabaseStorage] ❌ Error deleting personal note:', error);
+      throw new Error(`Failed to delete note: ${error.message}`);
+    }
+
+    console.log('[SupabaseStorage] ✅ Successfully deleted note:', id);
+  }
+
+  // Helper method to map Supabase personal note to application format
+  private mapSupabasePersonalNote(data: any): any {
+    return {
+      id: data.id,
+      userId: data.user_id,
+      subject: data.subject,
+      content: data.content,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at)
+    };
   }
 }
