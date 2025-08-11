@@ -3708,8 +3708,8 @@ export class SupabaseStorage implements IStorage {
         id: script.id,
         name: script.name,
         content: script.content,
-        category: script.category,
-        genre: script.genre,
+        category: script.category_id, // Map category_id to category
+        genre: script.genre_id,       // Map genre_id to genre
         orderIndex: script.order_index,
         isActive: script.is_active,
         createdBy: script.created_by,
@@ -3734,14 +3734,14 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createCallScript(scriptData: any) {
-    console.log('[SupabaseStorage] Creating call script:', scriptData);
+    console.log('[SupabaseStorage] 📝 Creating call script:', scriptData);
     
     const newScript = {
       id: randomUUID(),
       name: scriptData.name,
       content: scriptData.content,
-      category: scriptData.category || null,
-      genre: scriptData.genre || null,
+      category_id: scriptData.category || null, // Fixed: use category_id instead of category
+      genre_id: scriptData.genre || null,       // Fixed: use genre_id instead of genre
       order_index: scriptData.orderIndex || 0,
       is_active: scriptData.isActive !== undefined ? scriptData.isActive : true,
       created_by: scriptData.createdBy || null,
@@ -3751,6 +3751,8 @@ export class SupabaseStorage implements IStorage {
       last_synced_at: new Date().toISOString(),
     };
 
+    console.log('[SupabaseStorage] 📤 Inserting call script with data:', newScript);
+
     const { data, error } = await this.serviceClient
       .from('call_scripts')
       .insert([newScript])
@@ -3758,19 +3760,19 @@ export class SupabaseStorage implements IStorage {
       .single();
 
     if (error) {
-      console.error('[SupabaseStorage] Error creating call script:', error);
+      console.error('[SupabaseStorage] ❌ Error creating call script:', error);
       throw new Error(`Failed to create call script: ${error.message}`);
     }
 
-    console.log('[SupabaseStorage] Call script created successfully:', data);
+    console.log('[SupabaseStorage] ✅ Call script created successfully:', data);
     
     // Convert back to the expected format
     return {
       id: data.id,
       name: data.name,
       content: data.content,
-      category: data.category,
-      genre: data.genre,
+      category: data.category_id, // Map back from category_id to category 
+      genre: data.genre_id,       // Map back from genre_id to genre
       orderIndex: data.order_index,
       isActive: data.is_active,
       createdBy: data.created_by,
@@ -3787,8 +3789,8 @@ export class SupabaseStorage implements IStorage {
     const updateData = {
       name: updates.name,
       content: updates.content,
-      category: updates.category || null,
-      genre: updates.genre || null,
+      category_id: updates.category || null, // Fixed: use category_id
+      genre_id: updates.genre || null,       // Fixed: use genre_id
       order_index: updates.orderIndex || 0,
       is_active: updates.isActive !== undefined ? updates.isActive : true,
       updated_at: new Date().toISOString(),
@@ -3818,8 +3820,8 @@ export class SupabaseStorage implements IStorage {
       id: data.id,
       name: data.name,
       content: data.content,
-      category: data.category,
-      genre: data.genre,
+      category: data.category_id,  // Map category_id to category
+      genre: data.genre_id,        // Map genre_id to genre
       orderIndex: data.order_index,
       isActive: data.is_active,
       createdBy: data.created_by,
