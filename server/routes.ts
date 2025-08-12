@@ -868,6 +868,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/announcements/:id/re-announce', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log('[ANNOUNCEMENTS] Re-announcing announcement:', id);
+      
+      await storage.reAnnounce(id);
+      res.json({ success: true, announcementId: id, message: 'Announcement re-announced successfully' });
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error re-announcing announcement:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // FAQ API Routes (moved from simple-routes.ts)
   app.get('/api/faqs', async (req, res) => {
     try {
