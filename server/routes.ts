@@ -869,6 +869,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/faqs', async (req, res) => {
+    try {
+      const faqData = req.body;
+      console.log('[API] Creating FAQ with data:', faqData);
+      
+      const newFaq = await storage.createFaq(faqData);
+      console.log('[API] FAQ created successfully:', newFaq.id);
+      res.json(newFaq);
+    } catch (error) {
+      console.error('[API] Error creating FAQ:', error);
+      res.status(500).json({ message: 'Failed to create FAQ', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.put('/api/faqs/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const faqData = req.body;
+      console.log('[API] Updating FAQ:', id, 'with data:', faqData);
+      
+      const updatedFaq = await storage.updateFaq(id, faqData);
+      console.log('[API] FAQ updated successfully:', id);
+      res.json(updatedFaq);
+    } catch (error) {
+      console.error('[API] Error updating FAQ:', error);
+      res.status(500).json({ message: 'Failed to update FAQ', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.delete('/api/faqs/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log('[API] Deleting FAQ:', id);
+      
+      await storage.deleteFaq(id);
+      console.log('[API] FAQ deleted successfully:', id);
+      res.json({ message: 'FAQ deleted successfully', id });
+    } catch (error) {
+      console.error('[API] Error deleting FAQ:', error);
+      res.status(500).json({ message: 'Failed to delete FAQ', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // Core Template System Routes (moved from simple-routes.ts)
   app.get('/api/live-reply-templates', async (req, res) => {
     try {
