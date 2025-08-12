@@ -32,6 +32,12 @@ export function useLocalTemplateOrdering(userId: string) {
       }
     } catch (error) {
       console.error('Error loading local template ordering:', error);
+      // Clear corrupted data from localStorage
+      try {
+        localStorage.removeItem(storageKey);
+      } catch (clearError) {
+        console.error('Failed to clear corrupted localStorage data:', clearError);
+      }
     }
   }, [storageKey]);
 
@@ -48,6 +54,12 @@ export function useLocalTemplateOrdering(userId: string) {
       }
     } catch (error) {
       console.error('Error loading local group ordering:', error);
+      // Clear corrupted data from localStorage
+      try {
+        localStorage.removeItem(groupStorageKey);
+      } catch (clearError) {
+        console.error('Failed to clear corrupted localStorage data:', clearError);
+      }
     }
   }, [groupStorageKey]);
 

@@ -39,11 +39,11 @@ export default function AboutModal({ onClose }: AboutModalProps) {
               <Headphones className="h-5 w-5" />
               <span>About {siteName}</span>
             </DialogTitle>
-            <div id="about-dialog-description" className="sr-only">
-              Information about the {siteName} platform and its comprehensive features
-            </div>
           </div>
         </DialogHeader>
+        <div id="about-dialog-description" className="sr-only">
+          Information about the {siteName} platform and its comprehensive features
+        </div>
 
         <div className="space-y-8">
           {/* Hero Section */}

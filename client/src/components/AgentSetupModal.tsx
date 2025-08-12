@@ -106,13 +106,13 @@ export default function AgentSetupModal({ open, onOpenChange, onComplete }: Agen
 
   return (
     <Dialog open={open} onOpenChange={() => {}} modal>
-      <DialogContent className="max-w-2xl [&>button]:hidden" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+      <DialogContent className="max-w-2xl [&>button]:hidden" aria-describedby="agent-setup-description" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader className="text-center pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <UserCircle className="h-8 w-8 text-white" />
           </div>
           <DialogTitle className="text-2xl font-bold text-slate-800">Welcome to the Team!</DialogTitle>
-          <p className="text-slate-600 mt-2">
+          <p id="agent-setup-description" className="text-slate-600 mt-2">
             Let's set up your profile with both English and Arabic names for customer communication.
           </p>
         </DialogHeader>
