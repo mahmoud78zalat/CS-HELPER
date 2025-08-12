@@ -1816,6 +1816,752 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Live Reply Template Groups Routes
+  app.get('/api/live-reply-template-groups', async (req, res) => {
+    try {
+      const groups = await storage.getLiveReplyTemplateGroups();
+      res.json(groups);
+    } catch (error) {
+      console.error('[API] Error fetching live reply template groups:', error);
+      res.status(500).json({ message: 'Failed to fetch live reply template groups' });
+    }
+  });
+
+  app.post('/api/live-reply-template-groups', async (req, res) => {
+    try {
+      const groupData = req.body;
+      console.log('[API] Creating live reply template group with data:', groupData);
+      
+      const newGroup = await storage.createLiveReplyTemplateGroup(groupData);
+      console.log('[API] Live reply template group created successfully:', newGroup.id);
+      res.json(newGroup);
+    } catch (error) {
+      console.error('[API] Error creating live reply template group:', error);
+      res.status(500).json({ message: 'Failed to create live reply template group', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.put('/api/live-reply-template-groups/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const groupData = req.body;
+      console.log('[API] Updating live reply template group:', id);
+      
+      const updatedGroup = await storage.updateLiveReplyTemplateGroup(id, groupData);
+      console.log('[API] Live reply template group updated successfully:', id);
+      res.json(updatedGroup);
+    } catch (error) {
+      console.error('[API] Error updating live reply template group:', error);
+      res.status(500).json({ message: 'Failed to update live reply template group', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.patch('/api/live-reply-template-groups/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const groupData = req.body;
+      console.log('[API] Patching live reply template group:', id);
+      
+      const updatedGroup = await storage.updateLiveReplyTemplateGroup(id, groupData);
+      console.log('[API] Live reply template group patched successfully:', id);
+      res.json(updatedGroup);
+    } catch (error) {
+      console.error('[API] Error patching live reply template group:', error);
+      res.status(500).json({ message: 'Failed to patch live reply template group', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.delete('/api/live-reply-template-groups/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log('[API] Deleting live reply template group:', id);
+      
+      await storage.deleteLiveReplyTemplateGroup(id);
+      console.log('[API] Live reply template group deleted successfully:', id);
+      res.json({ message: 'Live reply template group deleted successfully', id });
+    } catch (error) {
+      console.error('[API] Error deleting live reply template group:', error);
+      res.status(500).json({ message: 'Failed to delete live reply template group', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.post('/api/live-reply-template-groups/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      if (!Array.isArray(updates)) {
+        return res.status(400).json({ message: 'Updates must be an array' });
+      }
+      
+      await storage.reorderLiveReplyTemplateGroups(updates);
+      res.json({ message: 'Groups reordered successfully' });
+    } catch (error) {
+      console.error('[API] Error reordering live reply template groups:', error);
+      res.status(500).json({ message: 'Failed to reorder live reply template groups' });
+    }
+  });
+
+  // Move template to group endpoint
+  app.post('/api/live-reply-templates/:id/move-to-group', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { groupId } = req.body;
+      
+      const targetGroupId = groupId === null || groupId === undefined ? null : groupId;
+      const template = await storage.updateLiveReplyTemplate(id, { groupId: targetGroupId });
+      
+      if (!template) {
+        return res.status(404).json({ message: 'Template not found' });
+      }
+      
+      res.json(template);
+    } catch (error) {
+      console.error('[API] Error moving template to group:', error);
+      res.status(500).json({ message: 'Failed to move template to group', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  // Legacy template routes for backward compatibility
+  app.get('/api/templates', async (req, res) => {
+    try {
+      const { category, genre, search, isActive } = req.query;
+      const filters = {
+        category: category as string,
+        genre: genre as string,
+        search: search as string,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      };
+
+      const templates = await storage.getTemplates(filters);
+      res.json(templates);
+    } catch (error) {
+      console.error('[API] Error fetching templates:', error);
+      res.status(500).json({ message: 'Failed to fetch templates' });
+    }
+  });
+
+  app.get('/api/templates/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const template = await storage.getTemplate(id);
+      if (!template) {
+        return res.status(404).json({ message: 'Template not found' });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error('[API] Error fetching template:', error);
+      res.status(500).json({ message: 'Failed to fetch template' });
+    }
+  });
+
+  app.post('/api/templates', async (req, res) => {
+    try {
+      const templateData = req.body;
+      const template = await storage.createTemplate(templateData);
+      res.status(201).json(template);
+    } catch (error) {
+      console.error('[API] Error creating template:', error);
+      res.status(500).json({ message: 'Failed to create template' });
+    }
+  });
+
+  app.put('/api/templates/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const templateData = req.body;
+      const template = await storage.updateTemplate(id, templateData);
+      res.json(template);
+    } catch (error) {
+      console.error('[API] Error updating template:', error);
+      res.status(500).json({ message: 'Failed to update template' });
+    }
+  });
+
+  app.delete('/api/templates/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteTemplate(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting template:', error);
+      res.status(500).json({ message: 'Failed to delete template' });
+    }
+  });
+
+  app.post('/api/templates/:id/use', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+
+      await storage.incrementTemplateUsage(id, userId);
+      res.status(200).json({ message: 'Template usage recorded' });
+    } catch (error) {
+      console.error('[API] Error recording template usage:', error);
+      res.status(500).json({ message: 'Failed to record template usage' });
+    }
+  });
+
+  // Additional critical routes from the full API structure
+  
+  // Dynamic Categories and Genres API Routes
+  app.get('/api/template-categories', async (req, res) => {
+    try {
+      console.log('[API] Fetching template categories (no auth required)');
+      const categories = await storage.getTemplateCategories();
+      console.log('[API] Found template categories:', categories.length);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching template categories:", error);
+      res.status(500).json({ message: "Failed to fetch template categories" });
+    }
+  });
+
+  app.get('/api/email-categories', async (req, res) => {
+    try {
+      console.log('[API] Fetching email categories (no auth required)');
+      const categories = await storage.getEmailCategories();
+      console.log('[API] Found email categories:', categories.length);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching email categories:", error);
+      res.status(500).json({ message: "Failed to fetch email categories" });
+    }
+  });
+
+  app.get('/api/template-genres', async (req, res) => {
+    try {
+      console.log('[API] Fetching template genres (no auth required)');
+      const genres = await storage.getTemplateGenres();
+      console.log('[API] Found template genres:', genres.length);
+      res.json(genres);
+    } catch (error) {
+      console.error("Error fetching template genres:", error);
+      res.status(500).json({ message: "Failed to fetch template genres" });
+    }
+  });
+
+  app.get('/api/concerned-teams', async (req, res) => {
+    try {
+      console.log('[API] Fetching concerned teams (no auth required)');
+      const teams = await storage.getConcernedTeams();
+      console.log('[API] Found concerned teams:', teams.length);
+      res.json(teams);
+    } catch (error) {
+      console.error("Error fetching concerned teams:", error);
+      res.status(500).json({ message: "Failed to fetch concerned teams" });
+    }
+  });
+
+  // CRUD operations for template categories
+  app.post('/api/template-categories', async (req, res) => {
+    try {
+      const { name, description, isActive = true } = req.body;
+      const category = await storage.createTemplateCategory({ name, description, isActive });
+      res.status(201).json(category);
+    } catch (error) {
+      console.error('[API] Error creating template category:', error);
+      res.status(500).json({ message: 'Failed to create template category' });
+    }
+  });
+
+  app.patch('/api/template-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const category = await storage.updateTemplateCategory(id, updates);
+      res.json(category);
+    } catch (error) {
+      console.error('[API] Error updating template category:', error);
+      res.status(500).json({ message: 'Failed to update template category' });
+    }
+  });
+
+  app.delete('/api/template-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteTemplateCategory(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting template category:', error);
+      res.status(500).json({ message: 'Failed to delete template category' });
+    }
+  });
+
+  // CRUD operations for email categories
+  app.post('/api/email-categories', async (req, res) => {
+    try {
+      const { name, description, isActive = true } = req.body;
+      const category = await storage.createEmailCategory({ name, description, isActive });
+      res.status(201).json(category);
+    } catch (error) {
+      console.error('[API] Error creating email category:', error);
+      res.status(500).json({ message: 'Failed to create email category' });
+    }
+  });
+
+  app.patch('/api/email-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const category = await storage.updateEmailCategory(id, updates);
+      res.json(category);
+    } catch (error) {
+      console.error('[API] Error updating email category:', error);
+      res.status(500).json({ message: 'Failed to update email category' });
+    }
+  });
+
+  app.delete('/api/email-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteEmailCategory(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting email category:', error);
+      res.status(500).json({ message: 'Failed to delete email category' });
+    }
+  });
+
+  // CRUD operations for template genres
+  app.post('/api/template-genres', async (req, res) => {
+    try {
+      const { name, description, isActive = true } = req.body;
+      const genre = await storage.createTemplateGenre({ name, description, isActive });
+      res.status(201).json(genre);
+    } catch (error) {
+      console.error('[API] Error creating template genre:', error);
+      res.status(500).json({ message: 'Failed to create template genre' });
+    }
+  });
+
+  app.patch('/api/template-genres/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const genre = await storage.updateTemplateGenre(id, updates);
+      res.json(genre);
+    } catch (error) {
+      console.error('[API] Error updating template genre:', error);
+      res.status(500).json({ message: 'Failed to update template genre' });
+    }
+  });
+
+  app.delete('/api/template-genres/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteTemplateGenre(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting template genre:', error);
+      res.status(500).json({ message: 'Failed to delete template genre' });
+    }
+  });
+
+  // CRUD operations for concerned teams
+  app.post('/api/concerned-teams', async (req, res) => {
+    try {
+      const { name, description, isActive = true } = req.body;
+      const team = await storage.createConcernedTeam({ name, description, isActive });
+      res.status(201).json(team);
+    } catch (error) {
+      console.error('[API] Error creating concerned team:', error);
+      res.status(500).json({ message: 'Failed to create concerned team' });
+    }
+  });
+
+  app.patch('/api/concerned-teams/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const team = await storage.updateConcernedTeam(id, updates);
+      res.json(team);
+    } catch (error) {
+      console.error('[API] Error updating concerned team:', error);
+      res.status(500).json({ message: 'Failed to update concerned team' });
+    }
+  });
+
+  app.delete('/api/concerned-teams/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteConcernedTeam(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting concerned team:', error);
+      res.status(500).json({ message: 'Failed to delete concerned team' });
+    }
+  });
+
+  // Color Settings API Routes
+  app.get('/api/color-settings', async (req, res) => {
+    try {
+      const { entityType, entityName } = req.query;
+      const colorSettings = await storage.getColorSettings({ 
+        entityType: entityType as 'genre' | 'category' || undefined,
+        entityName: entityName as string || undefined
+      });
+      res.json(colorSettings);
+    } catch (error) {
+      console.error('[API] Error fetching color settings:', error);
+      res.status(500).json({ message: 'Failed to fetch color settings' });
+    }
+  });
+
+  app.post('/api/create-color-setting', async (req, res) => {
+    console.log('[CREATE-COLOR] POST request received - NO AUTH REQUIRED');
+    console.log('[CREATE-COLOR] Request body:', req.body);
+    try {
+      const colorSetting = await storage.upsertColorSetting(req.body);
+      console.log('[CREATE-COLOR] Color setting created successfully:', colorSetting);
+      res.json(colorSetting);
+    } catch (error) {
+      console.error('[CREATE-COLOR] Error creating color setting:', error);
+      res.status(500).json({ message: 'Failed to create/update color setting', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.post('/api/color-settings', async (req, res) => {
+    try {
+      const colorSetting = await storage.upsertColorSetting(req.body);
+      res.json(colorSetting);
+    } catch (error) {
+      console.error('[API] Error creating/updating color setting:', error);
+      res.status(500).json({ message: 'Failed to create/update color setting', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.delete('/api/color-settings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteColorSetting(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('[API] Error deleting color setting:', error);
+      res.status(500).json({ message: 'Failed to delete color setting' });
+    }
+  });
+
+  // Persistent Notification Routes for FAQ and Announcement acknowledgments
+  app.post('/api/persistent/faqs/:id/acknowledge', async (req, res) => {
+    try {
+      const { id: faqId } = req.params;
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      await storage.acknowledgeFaq(userId, faqId);
+      res.status(200).json({ message: "FAQ persistently acknowledged" });
+    } catch (error) {
+      console.error("Error persistently acknowledging FAQ:", error);
+      res.status(500).json({ message: "Failed to acknowledge FAQ" });
+    }
+  });
+
+  app.get('/api/persistent/user/:userId/faq-acknowledgments', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const acknowledgments = await storage.getUserFaqAcknowledgments(userId);
+      res.json(acknowledgments);
+    } catch (error) {
+      console.error("Error getting persistent FAQ acknowledgments:", error);
+      res.status(500).json({ message: "Failed to get FAQ acknowledgments" });
+    }
+  });
+
+  app.post('/api/persistent/announcements/:id/acknowledge', async (req, res) => {
+    try {
+      const { id: announcementId } = req.params;
+      const { userId, version = 1 } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      await storage.acknowledgeAnnouncement(userId, announcementId, Number(version));
+      res.status(200).json({ message: "Announcement persistently acknowledged" });
+    } catch (error) {
+      console.error("Error persistently acknowledging announcement:", error);
+      res.status(500).json({ message: "Failed to acknowledge announcement" });
+    }
+  });
+
+  app.get('/api/persistent/user/:userId/announcement-acknowledgments', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const acknowledgments = await storage.getUserAnnouncementAcknowledgments(userId);
+      res.json(acknowledgments);
+    } catch (error) {
+      console.error("Error getting persistent announcement acknowledgments:", error);
+      res.status(500).json({ message: "Failed to get announcement acknowledgments" });
+    }
+  });
+
+  // User ordering routes for personalized drag-and-drop
+  app.get('/api/user-ordering/:contentType', async (req, res) => {
+    try {
+      const { contentType } = req.params;
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID required' });
+      }
+
+      console.log(`[API] Getting user ordering for ${contentType} by user ${userId}`);
+      const ordering = await storage.getUserOrdering(userId, contentType);
+      res.json(ordering);
+    } catch (error: any) {
+      console.error(`[API] Error getting user ordering:`, error);
+      res.status(500).json({ message: 'Failed to get user ordering' });
+    }
+  });
+
+  app.post('/api/user-ordering/:contentType', async (req, res) => {
+    try {
+      const { contentType } = req.params;
+      const { user_id, ordering } = req.body;
+      const userId = req.headers['x-user-id'] as string;
+      
+      console.log(`[API] User ordering request for ${contentType}:`, {
+        bodyUserId: user_id,
+        headerUserId: userId,
+        ordering
+      });
+      
+      const finalUserId = user_id || userId;
+      
+      if (!finalUserId || !ordering) {
+        return res.status(400).json({ message: 'User ID and ordering data required' });
+      }
+
+      await storage.saveUserOrdering(finalUserId, contentType, ordering);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error(`[API] Error saving user ordering:`, error);
+      res.status(500).json({ message: 'Failed to save user ordering' });
+    }
+  });
+
+  // Global ordering routes for admin drag-and-drop
+  app.get('/api/global-ordering/:contentType', async (req, res) => {
+    try {
+      const { contentType } = req.params;
+      console.log('[API] Getting global ordering for:', contentType);
+      const ordering = await storage.getGlobalOrdering(contentType);
+      res.json(ordering);
+    } catch (error) {
+      console.error('[API] Error fetching global ordering:', error);
+      res.status(500).json({ message: 'Failed to fetch global ordering' });
+    }
+  });
+
+  app.post('/api/global-ordering/:contentType', async (req, res) => {
+    try {
+      const { contentType } = req.params;
+      const { ordering } = req.body;
+      console.log('[API] Saving global ordering for:', contentType, ordering);
+      await storage.saveGlobalOrdering(contentType, ordering);
+      res.json({ message: 'Global ordering saved successfully' });
+    } catch (error) {
+      console.error('[API] Error saving global ordering:', error);
+      res.status(500).json({ 
+        message: 'Failed to save global ordering', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
+  // FAQ acknowledgment routes
+  app.post('/api/faqs/:id/acknowledge', async (req, res) => {
+    try {
+      const { id: faqId } = req.params;
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      await storage.markFaqAsSeen(userId, faqId);
+      res.status(200).json({ message: "FAQ marked as seen successfully" });
+    } catch (error) {
+      console.error("Error marking FAQ as seen:", error);
+      res.status(500).json({ message: "Failed to mark FAQ as seen" });
+    }
+  });
+
+  app.get('/api/user/:userId/seen-faqs', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const seenFaqs = await storage.getUserSeenFaqs(userId);
+      res.json(seenFaqs);
+    } catch (error) {
+      console.error("Error getting user seen FAQs:", error);
+      res.status(500).json({ message: "Failed to get user seen FAQs" });
+    }
+  });
+
+  app.get('/api/user/:userId/seen-announcements', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const seenAnnouncements = await storage.getUserSeenAnnouncements(userId);
+      res.json(seenAnnouncements);
+    } catch (error) {
+      console.error("Error getting user seen announcements:", error);
+      res.status(500).json({ message: "Failed to get user seen announcements" });
+    }
+  });
+
+  // Connected categories and genres routes
+  app.get('/api/connected-template-categories', async (req, res) => {
+    try {
+      console.log('[API] Fetching connected template categories');
+      const categories = await storage.getConnectedTemplateCategories();
+      console.log('[API] Found connected categories:', categories.length);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching connected template categories:", error);
+      res.status(500).json({ message: "Failed to fetch connected template categories" });
+    }
+  });
+
+  app.post('/api/connected-template-categories', async (req, res) => {
+    try {
+      const { name, description, color, isActive } = req.body;
+      console.log('[API] Creating connected template category:', name);
+      const category = await storage.createConnectedTemplateCategory({
+        name,
+        description: description || '',
+        color: color || '#3b82f6',
+        isActive: isActive !== undefined ? isActive : true,
+      });
+      console.log('[API] Created connected category:', category.id);
+      res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating connected template category:", error);
+      res.status(500).json({ message: "Failed to create connected template category" });
+    }
+  });
+
+  app.patch('/api/connected-template-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      console.log('[API] Updating connected template category:', id, updates);
+      const category = await storage.updateConnectedTemplateCategory(id, updates);
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating connected template category:", error);
+      res.status(500).json({ message: "Failed to update connected template category" });
+    }
+  });
+
+  app.delete('/api/connected-template-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log('[API] Deleting connected template category:', id);
+      await storage.deleteConnectedTemplateCategory(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting connected template category:", error);
+      res.status(500).json({ message: "Failed to delete connected template category" });
+    }
+  });
+
+  app.post('/api/connected-template-genres', async (req, res) => {
+    try {
+      const { name, description, categoryId, color, isActive } = req.body;
+      console.log('[API] Creating connected template genre:', name, 'for category:', categoryId);
+      const genre = await storage.createConnectedTemplateGenre({
+        name,
+        description: description || '',
+        categoryId,
+        color: color || '#10b981',
+        isActive: isActive !== undefined ? isActive : true,
+      });
+      console.log('[API] Created connected genre:', genre.id);
+      res.status(201).json(genre);
+    } catch (error) {
+      console.error("Error creating connected template genre:", error);
+      res.status(500).json({ message: "Failed to create connected template genre" });
+    }
+  });
+
+  app.patch('/api/connected-template-genres/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      console.log('[API] Updating connected template genre:', id, updates);
+      const genre = await storage.updateConnectedTemplateGenre(id, updates);
+      res.json(genre);
+    } catch (error) {
+      console.error("Error updating connected template genre:", error);
+      res.status(500).json({ message: "Failed to update connected template genre" });
+    }
+  });
+
+  app.delete('/api/connected-template-genres/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log('[API] Deleting connected template genre:', id);
+      await storage.deleteConnectedTemplateGenre(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting connected template genre:", error);
+      res.status(500).json({ message: "Failed to delete connected template genre" });
+    }
+  });
+
+  // Reordering routes for connected categories and genres
+  app.post('/api/connected-template-categories/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[API] Reordering connected template categories:', updates);
+
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateConnectedTemplateCategory(update.id, { orderIndex: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "Connected template categories reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering connected template categories:", error);
+      res.status(500).json({ message: "Failed to reorder connected template categories" });
+    }
+  });
+
+  app.post('/api/connected-template-genres/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[API] Reordering connected template genres:', updates);
+
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateConnectedTemplateGenre(update.id, { orderIndex: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "Connected template genres reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering connected template genres:", error);
+      res.status(500).json({ message: "Failed to reorder connected template genres" });
+    }
+  });
+
 
 
   // FAQ and Announcement Acknowledgment API endpoints (Persistent notification system)
