@@ -181,15 +181,38 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
   // Update variable mutation
   const updateVariableMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      console.log('[VariableManager] Updating variable:', id, data);
+      
       const response = await fetch(`/api/template-variables/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to update variable');
-      return response.json();
+      
+      console.log('[VariableManager] Update response status:', response.status);
+      
+      if (!response.ok) {
+        let errorMessage = 'Failed to update variable';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        console.error('[VariableManager] Update error:', errorMessage);
+        throw new Error(errorMessage);
+      }
+      
+      const result = await response.json();
+      console.log('[VariableManager] Update success:', result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('[VariableManager] Update mutation success:', result);
       // Invalidate all template variables cache keys to ensure real-time sync
       queryClient.invalidateQueries({ queryKey: ['template-variables'] });
       queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
@@ -198,26 +221,68 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       setEditingId(null);
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error('[VariableManager] Update mutation error:', error);
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to update variable", 
+        variant: "destructive" 
+      });
     }
   });
 
   // Delete variable mutation
   const deleteVariableMutation = useMutation({
     mutationFn: async (id: string) => {
+      console.log('[VariableManager] Deleting variable:', id);
+      
       const response = await fetch(`/api/template-variables/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Accept': 'application/json'
+        }
       });
-      if (!response.ok) throw new Error('Failed to delete variable');
+      
+      console.log('[VariableManager] Delete response status:', response.status);
+      
+      if (!response.ok) {
+        let errorMessage = 'Failed to delete variable';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        console.error('[VariableManager] Delete error:', errorMessage);
+        throw new Error(errorMessage);
+      }
+      
+      // Parse response if it exists
+      let result = null;
+      try {
+        result = await response.json();
+        console.log('[VariableManager] Delete success:', result);
+      } catch (e) {
+        // Some DELETE endpoints return empty body, which is fine
+        console.log('[VariableManager] Delete success (no response body)');
+      }
+      
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('[VariableManager] Delete mutation success:', result);
       // Invalidate all template variables cache keys to ensure real-time sync
       queryClient.invalidateQueries({ queryKey: ['template-variables'] });
       queryClient.invalidateQueries({ queryKey: ['/api/template-variables'] });
       toast({ title: "Success", description: "Variable deleted successfully" });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error('[VariableManager] Delete mutation error:', error);
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to delete variable", 
+        variant: "destructive" 
+      });
     }
   });
 
