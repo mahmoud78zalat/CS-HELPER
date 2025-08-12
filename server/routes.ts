@@ -2627,6 +2627,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CRITICAL FIX: Register presence heartbeat endpoint directly to prevent Vite HTML responses
+  app.post('/api/presence/heartbeat', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const {
+        sessionId,
+        isActive = true,
+        pageHidden = false,
+        pageVisible = false,
+        pageUnload = false,
+        lastActivity,
+        metadata = {}
+      } = req.body;
+
+      console.log(`[PresenceAPI] 💓 FIXED ROUTE - Heartbeat from ${userId}:`, {
+        isActive,
+        pageHidden,
+        pageVisible,
+        pageUnload,
+        sessionId: sessionId?.slice(0, 8) + '...'
+      });
+
+      // Update the database for persistence
+      await storage.updateUserOnlineStatus(userId, isActive);
+
+      res.json({
+        success: true,
+        userId,
+        isOnline: isActive,
+        statusChanged: false,
+        previousStatus: 'unknown',
+        currentStatus: isActive ? 'online' : 'offline',
+        timestamp: new Date().toISOString(),
+        ttl: 90,
+        nextHeartbeatExpected: 25
+      });
+
+    } catch (error) {
+      console.error('[PresenceAPI] FIXED ROUTE - Heartbeat error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Heartbeat processing failed',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Enhanced presence API endpoints
   app.use('/api/presence', presenceApiRouter);
 
