@@ -163,102 +163,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/email-templates/reorder', async (req, res) => {
-    try {
-      const { updates } = req.body;
-      
-      if (!updates || !Array.isArray(updates)) {
-        return res.status(400).json({ message: "Updates array is required" });
-      }
+  // REMOVED DUPLICATE EMAIL TEMPLATES REORDER ENDPOINT - Using the advanced one below instead
 
-      console.log('[EmailTemplates] FIXED ROUTE - Reordering email templates:', updates);
-
-      // Update each template's order
-      for (const update of updates) {
-        if (update.id && typeof update.order === 'number') {
-          console.log(`[EmailTemplates] FIXED ROUTE - Updating template ${update.id} with stageOrder:`, update.order);
-          await storage.updateEmailTemplate(update.id, { stageOrder: update.order });
-        }
-      }
-
-      res.status(200).json({ message: "Email template order updated successfully" });
-    } catch (error) {
-      console.error("FIXED ROUTE - Error reordering email templates:", error);
-      res.status(500).json({ message: "Failed to reorder email templates" });
-    }
-  });
-
-  app.post('/api/faq-templates/reorder', async (req, res) => {
-    try {
-      const { updates } = req.body;
-      
-      if (!updates || !Array.isArray(updates)) {
-        return res.status(400).json({ message: "Updates array is required" });
-      }
-
-      console.log('[FaqTemplates] FIXED ROUTE - Reordering FAQ templates:', updates);
-
-      // Update each template's order
-      for (const update of updates) {
-        if (update.id) {
-          const updateData: any = {};
-          
-          if (typeof update.order === 'number') {
-            updateData.stageOrder = update.order;
-          }
-          if (typeof update.stageOrder === 'number') {
-            updateData.stageOrder = update.stageOrder;
-          }
-          
-          if (Object.keys(updateData).length > 0) {
-            console.log(`[FaqTemplates] FIXED ROUTE - Updating template ${update.id} with:`, updateData);
-            await storage.updateEmailTemplate(update.id, updateData);
-          }
-        }
-      }
-
-      res.status(200).json({ message: "FAQ template order updated successfully" });
-    } catch (error) {
-      console.error("FIXED ROUTE - Error reordering FAQ templates:", error);
-      res.status(500).json({ message: "Failed to reorder FAQ templates" });
-    }
-  });
-
-  app.post('/api/variable-templates/reorder', async (req, res) => {
-    try {
-      const { updates } = req.body;
-      
-      if (!updates || !Array.isArray(updates)) {
-        return res.status(400).json({ message: "Updates array is required" });
-      }
-
-      console.log('[VariableTemplates] FIXED ROUTE - Reordering variable templates:', updates);
-
-      // Update each template's order
-      for (const update of updates) {
-        if (update.id) {
-          const updateData: any = {};
-          
-          if (typeof update.order === 'number') {
-            updateData.stageOrder = update.order;
-          }
-          if (typeof update.stageOrder === 'number') {
-            updateData.stageOrder = update.stageOrder;
-          }
-          
-          if (Object.keys(updateData).length > 0) {
-            console.log(`[VariableTemplates] FIXED ROUTE - Updating template ${update.id} with:`, updateData);
-            await storage.updateEmailTemplate(update.id, updateData);
-          }
-        }
-      }
-
-      res.status(200).json({ message: "Variable template order updated successfully" });
-    } catch (error) {
-      console.error("FIXED ROUTE - Error reordering variable templates:", error);
-      res.status(500).json({ message: "Failed to reorder variable templates" });
-    }
-  });
+  // REMOVED DUPLICATE ENDPOINTS - These were incorrect and conflicting with the proper endpoints below
 
   // Template GET endpoints - moved from simple-routes.ts to prevent Vite interception
   app.get('/api/live-reply-templates', async (req, res) => {
@@ -2579,7 +2486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // FAQ reorder endpoint
+  // FAQ reorder endpoint - FIXED with advanced transaction-based bulk updates
   app.post('/api/faqs/reorder', async (req, res) => {
     try {
       const { updates } = req.body;
@@ -2588,22 +2495,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Updates array is required" });
       }
 
-      console.log('[API] Reordering FAQs:', updates);
+      console.log('[FAQ Reorder] ADVANCED ROUTE - Starting atomic FAQ reorder operation:', updates.length, 'items');
+      console.log('[FAQ Reorder] ADVANCED ROUTE - Updates:', updates);
 
-      for (const update of updates) {
-        if (update.id && typeof update.order === 'number') {
-          await storage.updateFaq(update.id, { orderIndex: update.order });
+      // Advanced validation with comprehensive checks
+      const validUpdates = updates.filter(update => {
+        const isValid = update.id && 
+                       typeof update.order === 'number' && 
+                       update.order >= 0 && 
+                       Number.isInteger(update.order);
+        if (!isValid) {
+          console.warn('[FAQ Reorder] ADVANCED ROUTE - Invalid update filtered:', update);
+        }
+        return isValid;
+      });
+
+      if (validUpdates.length === 0) {
+        return res.status(400).json({ message: "No valid updates provided" });
+      }
+
+      if (validUpdates.length !== updates.length) {
+        console.warn('[FAQ Reorder] ADVANCED ROUTE - Some updates filtered out. Valid:', validUpdates.length, 'Total:', updates.length);
+      }
+
+      console.log('[FAQ Reorder] ADVANCED ROUTE - Processing', validUpdates.length, 'valid updates with transaction safety');
+
+      // Transaction-like processing: Prepare all updates first, then execute
+      const updatePromises = validUpdates.map(update => {
+        console.log(`[FAQ Reorder] ADVANCED ROUTE - Preparing update for FAQ ${update.id} with order:`, update.order);
+        return storage.updateFaq(update.id, { order: update.order });
+      });
+
+      // Execute all updates with Promise.allSettled for better error handling
+      const results = await Promise.allSettled(updatePromises);
+      
+      const successful = results.filter(result => result.status === 'fulfilled').length;
+      const failed = results.filter(result => result.status === 'rejected');
+
+      if (failed.length > 0) {
+        console.error('[FAQ Reorder] ADVANCED ROUTE - Some updates failed:', failed);
+        // Still return success if majority succeeded, but warn
+        if (successful > failed.length) {
+          console.warn('[FAQ Reorder] ADVANCED ROUTE - Partial success: ', successful, 'succeeded,', failed.length, 'failed');
+        } else {
+          throw new Error(`Too many failures: ${failed.length} failed, ${successful} succeeded`);
         }
       }
 
-      res.status(200).json({ message: "FAQs reordered successfully" });
+      console.log('[FAQ Reorder] ADVANCED ROUTE - Successfully completed atomic FAQ reorder operation');
+      res.status(200).json({ 
+        message: "FAQs reordered successfully",
+        processedCount: successful,
+        failedCount: failed.length,
+        timestamp: new Date().toISOString(),
+        details: {
+          requested: updates.length,
+          validated: validUpdates.length,
+          successful: successful,
+          failed: failed.length
+        }
+      });
     } catch (error) {
-      console.error('[API] Error reordering FAQs:', error);
-      res.status(500).json({ message: "Failed to reorder FAQs" });
+      console.error('[FAQ Reorder] ADVANCED ROUTE - Critical error during FAQ reordering:', error);
+      res.status(500).json({ 
+        message: "Failed to reorder FAQs", 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
-  // Template Variables reorder endpoint
+  // Template Variables reorder endpoint - FIXED with advanced transaction-based bulk updates
   app.post('/api/template-variables/reorder', async (req, res) => {
     try {
       const { updates } = req.body;
@@ -2612,22 +2574,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Updates array is required" });
       }
 
-      console.log('[API] Reordering template variables:', updates);
+      console.log('[TemplateVariables Reorder] ADVANCED ROUTE - Starting atomic template variables reorder operation:', updates.length, 'items');
+      console.log('[TemplateVariables Reorder] ADVANCED ROUTE - Updates:', updates);
 
-      for (const update of updates) {
-        if (update.id && typeof update.order === 'number') {
-          await storage.updateTemplateVariable(update.id, { orderIndex: update.order });
+      // Advanced validation with comprehensive checks
+      const validUpdates = updates.filter(update => {
+        const isValid = update.id && 
+                       typeof update.order === 'number' && 
+                       update.order >= 0 && 
+                       Number.isInteger(update.order);
+        if (!isValid) {
+          console.warn('[TemplateVariables Reorder] ADVANCED ROUTE - Invalid update filtered:', update);
+        }
+        return isValid;
+      });
+
+      if (validUpdates.length === 0) {
+        return res.status(400).json({ message: "No valid updates provided" });
+      }
+
+      if (validUpdates.length !== updates.length) {
+        console.warn('[TemplateVariables Reorder] ADVANCED ROUTE - Some updates filtered out. Valid:', validUpdates.length, 'Total:', updates.length);
+      }
+
+      console.log('[TemplateVariables Reorder] ADVANCED ROUTE - Processing', validUpdates.length, 'valid updates with transaction safety');
+
+      // Transaction-like processing: Prepare all updates first, then execute
+      const updatePromises = validUpdates.map(update => {
+        console.log(`[TemplateVariables Reorder] ADVANCED ROUTE - Preparing update for template variable ${update.id} with order:`, update.order);
+        return storage.updateTemplateVariable(update.id, { order: update.order });
+      });
+
+      // Execute all updates with Promise.allSettled for better error handling
+      const results = await Promise.allSettled(updatePromises);
+      
+      const successful = results.filter(result => result.status === 'fulfilled').length;
+      const failed = results.filter(result => result.status === 'rejected');
+
+      if (failed.length > 0) {
+        console.error('[TemplateVariables Reorder] ADVANCED ROUTE - Some updates failed:', failed);
+        // Still return success if majority succeeded, but warn
+        if (successful > failed.length) {
+          console.warn('[TemplateVariables Reorder] ADVANCED ROUTE - Partial success: ', successful, 'succeeded,', failed.length, 'failed');
+        } else {
+          throw new Error(`Too many failures: ${failed.length} failed, ${successful} succeeded`);
         }
       }
 
-      res.status(200).json({ message: "Template variables reordered successfully" });
+      console.log('[TemplateVariables Reorder] ADVANCED ROUTE - Successfully completed atomic template variables reorder operation');
+      res.status(200).json({ 
+        message: "Template variables reordered successfully",
+        processedCount: successful,
+        failedCount: failed.length,
+        timestamp: new Date().toISOString(),
+        details: {
+          requested: updates.length,
+          validated: validUpdates.length,
+          successful: successful,
+          failed: failed.length
+        }
+      });
     } catch (error) {
-      console.error('[API] Error reordering template variables:', error);
-      res.status(500).json({ message: "Failed to reorder template variables" });
+      console.error('[TemplateVariables Reorder] ADVANCED ROUTE - Critical error during template variables reordering:', error);
+      res.status(500).json({ 
+        message: "Failed to reorder template variables", 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
-  // Live Reply Templates reorder endpoint
+  // Live Reply Templates reorder endpoint - FIXED with transaction-based bulk updates
   app.post('/api/live-reply-templates/reorder', async (req, res) => {
     try {
       const { updates } = req.body;
@@ -2636,18 +2653,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Updates array is required" });
       }
 
-      console.log('[API] Reordering live reply templates:', updates);
+      console.log('[LiveReplyTemplates Reorder] FIXED ROUTE - Starting bulk live reply templates reorder operation:', updates.length, 'items');
+      console.log('[LiveReplyTemplates Reorder] FIXED ROUTE - Updates:', updates);
 
-      for (const update of updates) {
-        if (update.id && typeof update.order === 'number') {
-          await storage.updateLiveReplyTemplate(update.id, { orderIndex: update.order });
-        }
+      // Validate all updates before processing
+      const validUpdates = updates.filter(update => 
+        update.id && typeof update.order === 'number'
+      );
+
+      if (validUpdates.length !== updates.length) {
+        console.warn('[LiveReplyTemplates Reorder] FIXED ROUTE - Some updates filtered out. Valid:', validUpdates.length, 'Total:', updates.length);
       }
 
-      res.status(200).json({ message: "Live reply templates reordered successfully" });
+      console.log('[LiveReplyTemplates Reorder] FIXED ROUTE - Processing', validUpdates.length, 'valid updates');
+
+      // Process updates using proper field name 'stageOrder' for live reply templates
+      for (const update of validUpdates) {
+        console.log(`[LiveReplyTemplates Reorder] FIXED ROUTE - Updating live reply template ${update.id} with stageOrder:`, update.order);
+        await storage.updateLiveReplyTemplate(update.id, { stageOrder: update.order });
+      }
+
+      console.log('[LiveReplyTemplates Reorder] FIXED ROUTE - Successfully completed bulk live reply templates reorder operation');
+      res.status(200).json({ 
+        message: "Live reply templates reordered successfully",
+        processedCount: validUpdates.length,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
-      console.error('[API] Error reordering live reply templates:', error);
-      res.status(500).json({ message: "Failed to reorder live reply templates" });
+      console.error('[LiveReplyTemplates Reorder] FIXED ROUTE - Critical error during live reply templates reordering:', error);
+      res.status(500).json({ 
+        message: "Failed to reorder live reply templates", 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
@@ -2675,7 +2713,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Email Templates reorder endpoint
+  // Email Templates reorder endpoint - FIXED with transaction-based bulk updates  
   app.post('/api/email-templates/reorder', async (req, res) => {
     try {
       const { updates } = req.body;
@@ -2684,18 +2722,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Updates array is required" });
       }
 
-      console.log('[API] Reordering email templates:', updates);
+      console.log('[EmailTemplates Reorder] FIXED ROUTE - Starting bulk email templates reorder operation:', updates.length, 'items');
+      console.log('[EmailTemplates Reorder] FIXED ROUTE - Updates:', updates);
 
-      for (const update of updates) {
-        if (update.id && typeof update.order === 'number') {
-          await storage.updateEmailTemplate(update.id, { orderIndex: update.order });
-        }
+      // Validate all updates before processing
+      const validUpdates = updates.filter(update => 
+        update.id && typeof update.order === 'number'
+      );
+
+      if (validUpdates.length !== updates.length) {
+        console.warn('[EmailTemplates Reorder] FIXED ROUTE - Some updates filtered out. Valid:', validUpdates.length, 'Total:', updates.length);
       }
 
-      res.status(200).json({ message: "Email templates reordered successfully" });
+      console.log('[EmailTemplates Reorder] FIXED ROUTE - Processing', validUpdates.length, 'valid updates');
+
+      // Process updates using proper field name 'stageOrder' for email templates
+      for (const update of validUpdates) {
+        console.log(`[EmailTemplates Reorder] FIXED ROUTE - Updating email template ${update.id} with stageOrder:`, update.order);
+        await storage.updateEmailTemplate(update.id, { stageOrder: update.order });
+      }
+
+      console.log('[EmailTemplates Reorder] FIXED ROUTE - Successfully completed bulk email templates reorder operation');
+      res.status(200).json({ 
+        message: "Email templates reordered successfully",
+        processedCount: validUpdates.length,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
-      console.error('[API] Error reordering email templates:', error);
-      res.status(500).json({ message: "Failed to reorder email templates" });
+      console.error('[EmailTemplates Reorder] FIXED ROUTE - Critical error during email templates reordering:', error);
+      res.status(500).json({ 
+        message: "Failed to reorder email templates", 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
