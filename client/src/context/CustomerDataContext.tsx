@@ -19,6 +19,7 @@ interface CustomerData {
   item_name?: string;
   delivery_date?: string;
   waiting_time?: string;
+  amount?: string;
   otp?: string;
   ref_number?: string;
   language?: 'en' | 'ar'; // Add language preference for live chat templates
