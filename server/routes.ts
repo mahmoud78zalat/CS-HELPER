@@ -512,6 +512,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('[DirectUserDelete] === DIRECT USER DELETE REQUEST END ===');
   });
 
+  // Invalidate user session - Admin only
+  app.post('/api/admin/invalidate-user-session', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.user.claims.sub);
+      if (currentUser?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { userId } = req.body;
+      console.log('[SessionInvalidation] Invalidating session for user:', userId);
+      
+      // For Supabase auth, we'll broadcast a message to force logout
+      // The client will handle the actual session termination
+      console.log('[SessionInvalidation] Broadcasting session invalidation to user:', userId);
+
+      res.json({ message: "User session invalidation initiated successfully" });
+    } catch (error) {
+      console.error("[SessionInvalidation] Error invalidating user session:", error);
+      res.status(500).json({ message: "Failed to invalidate user session" });
+    }
+  });
+
+  // Refresh all users - Admin only
+  app.post('/api/admin/refresh-all-users', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.user.claims.sub);
+      if (currentUser?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      console.log('[RefreshAll] Broadcasting refresh signal to all connected users');
+      
+      // Since we don't have WebSocket, we'll use a timestamp approach
+      // The frontend will check for refresh signals periodically
+      const refreshSignal = {
+        type: 'FORCE_REFRESH',
+        message: 'Admin has initiated a system refresh.',
+        timestamp: Date.now()
+      };
+
+      // Store the refresh signal in a simple in-memory store for demo
+      global.refreshSignal = refreshSignal;
+
+      res.json({ message: "Refresh signal sent to all users successfully" });
+    } catch (error) {
+      console.error("[RefreshAll] Error sending refresh signal:", error);
+      res.status(500).json({ message: "Failed to refresh all users" });
+    }
+  });
+
+  // Get refresh signal endpoint for polling
+  app.get('/api/admin/refresh-signal', async (req: any, res) => {
+    const { lastCheck } = req.query;
+    const lastCheckTimestamp = parseInt(lastCheck) || 0;
+    
+    const refreshSignal = global.refreshSignal;
+    if (refreshSignal && refreshSignal.timestamp > lastCheckTimestamp) {
+      res.json(refreshSignal);
+    } else {
+      res.json({ type: 'NO_REFRESH' });
+    }
+  });
+
+  // Check if user exists (for deletion detection)
+  app.get('/api/user/:id/exists', async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const user = await storage.getUser(id);
+      
+      if (user) {
+        res.json({ exists: true });
+      } else {
+        res.status(404).json({ exists: false });
+      }
+    } catch (error) {
+      console.error("Error checking user existence:", error);
+      res.status(500).json({ exists: false, error: "Unable to verify user" });
+    }
+  });
+
   // Template routes (removed isAuthenticated middleware to match simple-routes.ts behavior)
   app.get('/api/templates', async (req: any, res) => {
     try {

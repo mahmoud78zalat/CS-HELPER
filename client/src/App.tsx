@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { AdminModalProvider } from "@/contexts/AdminModalContext";
 import { ClearOnCopyProvider } from "@/contexts/ClearOnCopyContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminSignals } from "@/hooks/useAdminSignals";
 // Enhanced presence system is now integrated in useAuth hook
 import Login from "@/pages/login";
 import Home from "@/pages/home";
@@ -24,6 +25,9 @@ function Router() {
   const { isAuthenticated, isLoading, user, refreshUser } = useAuth();
   const [showAgentSetup, setShowAgentSetup] = React.useState(false);
   const [appKey, setAppKey] = React.useState(0); // Key for forcing full app re-render
+  
+  // Use admin signals hook to monitor for refresh commands and user deletions
+  useAdminSignals();
 
   // Initialize enhanced presence system when user is authenticated
   React.useEffect(() => {

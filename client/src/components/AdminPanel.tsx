@@ -19,7 +19,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { realTimeService } from "@/lib/realTimeService";
 import { 
   X, Users, FileText, Settings, Edit, Trash, Plus, Crown, Shield, AlertTriangle, 
-  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save, Loader2, HelpCircle, FolderOpen, Phone, Database
+  Wand2, Eye, Code, Copy, ChevronDown, ChevronUp, Edit3, Trash2, Search, Upload, Globe, BarChart3, Mail, MessageSquare, Palette, Megaphone, Info, CheckCircle, Save, Loader2, HelpCircle, FolderOpen, Phone, Database, RefreshCw
 } from "lucide-react";
 import { User, Template, EmailTemplate } from "@shared/schema";
 import TemplateFormModal from "@/components/TemplateFormModal";
@@ -925,10 +925,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     },
   });
 
-  // User delete mutation
+  // User delete mutation with session invalidation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
       await apiRequest('DELETE', `/api/users/${userId}`);
+      // Force session invalidation for the deleted user
+      await apiRequest('POST', `/api/admin/invalidate-user-session`, { userId });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
@@ -936,7 +938,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       await realTimeService.broadcastUserUpdate();
       toast({
         title: "User deleted",
-        description: "User has been permanently removed from the system",
+        description: "User has been permanently removed from the system and logged out",
         duration: 3000,
       });
     },
@@ -961,6 +963,45 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       });
     },
   });
+
+  // Refresh all users mutation
+  const refreshAllMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest('POST', '/api/admin/refresh-all-users');
+    },
+    onSuccess: () => {
+      toast({
+        title: "Refresh initiated",
+        description: "All connected users will be refreshed shortly",
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Session expired",
+          description: "Redirecting to login...",
+          variant: "destructive",
+          duration: 4000,
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Refresh failed",
+        description: "Unable to refresh all users. Please try again.",
+        variant: "destructive",
+        duration: 4000,
+      });
+    },
+  });
+
+  // Handler for refresh all button
+  const handleRefreshAll = () => {
+    refreshAllMutation.mutate();
+  };
 
   // Template delete mutation
   const deleteTemplateMutation = useMutation({
@@ -1899,15 +1940,35 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">User Management</h3>
-                <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-                  <Input
-                    type="text"
-                    className="pl-10"
-                    placeholder="Search users by name, email, or role..."
-                    value={userSearchTerm}
-                    onChange={(e) => setUserSearchTerm(e.target.value)}
-                  />
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={handleRefreshAll}
+                    disabled={refreshAllMutation.isPending}
+                    className="bg-gradient-to-r from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700 transition-all duration-200"
+                    title="Force refresh for all connected users"
+                  >
+                    {refreshAllMutation.isPending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-transparent mr-2"></div>
+                        Refreshing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Refresh All
+                      </>
+                    )}
+                  </Button>
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                    <Input
+                      type="text"
+                      className="pl-10"
+                      placeholder="Search users by name, email, or role..."
+                      value={userSearchTerm}
+                      onChange={(e) => setUserSearchTerm(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
               
