@@ -66,6 +66,16 @@ The BFL Customer Service Helper is a comprehensive, enterprise-grade customer se
 - Fixed duplicate announcements by removing redundant AnnouncementBanner from Layout.tsx
 - All reordering systems now properly save to Supabase database with real persistence
 
+**RESOLVED: Critical Authentication Error & UI Enhancement (August 12, 2025):**
+- Fixed missing X button in CallScriptsManagerNew main modal using hideCloseButton prop
+- RESOLVED critical authentication failure preventing new user sign-in completion
+- Enhanced useAuth.ts handleUser function with comprehensive error handling
+- Added proper toast notifications for authentication failures using useToast hook
+- Implemented token refresh error handling with user-friendly messages
+- Enhanced session recovery mechanisms with automatic cleanup on errors
+- Authentication now provides clear feedback when user lookup/creation fails
+- Maintains admin modal consistency: CallScriptsAdminManager retains standard close buttons
+
 **Build Process:**
 1. Vite builds frontend to `dist/public/`
 2. esbuild compiles production server to `dist/index.production.js`

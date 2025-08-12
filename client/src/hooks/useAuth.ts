@@ -3,8 +3,10 @@ import { flushSync } from "react-dom";
 import { User } from "@shared/schema";
 import { supabase } from "@/lib/supabase";
 import { usePresenceHeartbeat } from "@/hooks/usePresenceHeartbeat";
+import { useToast } from "@/hooks/use-toast";
 
 export function useAuth() {
+  const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authTimeout, setAuthTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -87,6 +89,24 @@ export function useAuth() {
           console.log('[Auth] User signed in/token refreshed - handling user');
           await handleUser(session.user);
         }
+        return;
+      }
+      
+      // Handle token refresh errors
+      if (event === 'TOKEN_REFRESH_ERROR' || event === 'REFRESH_TOKEN_ERROR') {
+        console.error('[Auth] ❌ Token refresh failed - clearing auth state');
+        setUser(null);
+        setIsLoading(false);
+        localStorage.removeItem('current_user_id');
+        localStorage.removeItem('current_user_email');
+        localStorage.removeItem('current_user_role');
+        
+        // Show user-friendly error
+        toast({
+          title: 'Session Expired',
+          description: 'Your session has expired. Please sign in again.',
+          variant: 'destructive'
+        });
         return;
       }
       
@@ -246,44 +266,72 @@ export function useAuth() {
         console.error('[Auth] ❌ Error during user creation:', createError);
       }
       
-      // If all else fails, set a temporary user object (should not happen in production)
-      console.log('[Auth] Fallback: creating temporary user object');
-      const fallbackUserData = {
-        id: supabaseUser.id,
-        email: supabaseUser.email,
-        firstName: supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
-        lastName: supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-        arabicFirstName: null,
-        arabicLastName: null,
-        profileImageUrl: supabaseUser.user_metadata?.avatar_url || '',
-        role: 'agent' as const,
-        status: 'active' as const,
-        isOnline: false,
-        isFirstTimeUser: true,
-        lastSeen: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      // CRITICAL FIX: Instead of fallback, show proper error message
+      console.error('[Auth] ❌ CRITICAL: Unable to authenticate user - all methods failed');
+      console.error('[Auth] ❌ User lookup failed and user creation failed');
+      console.error('[Auth] ❌ This indicates a backend connectivity or database issue');
       
-      console.log('[Auth] Setting fallback user:', fallbackUserData.email, fallbackUserData.role);
-      
-      // Store user ID in localStorage for apiRequest function
-      localStorage.setItem('current_user_id', fallbackUserData.id);
-      localStorage.setItem('current_user_email', fallbackUserData.email || '');
-      localStorage.setItem('current_user_role', fallbackUserData.role);
-      
-      setUser(fallbackUserData);
-      setIsLoading(false);
-      if (authTimeout) clearTimeout(authTimeout);
-      
-      console.log('[Auth] 🚀 Enhanced presence system will auto-start via usePresenceHeartbeat hook');
-      return;
-      
-    } catch (error) {
-      console.error('[Auth] Error in handleUser:', error);
+      // Clear any partial state
       setUser(null);
       setIsLoading(false);
       if (authTimeout) clearTimeout(authTimeout);
+      
+      // Clear potentially corrupted localStorage
+      localStorage.removeItem('current_user_id');
+      localStorage.removeItem('current_user_email');
+      localStorage.removeItem('current_user_role');
+      
+      // Force sign out from Supabase to clear any corrupted session
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (signOutError) {
+        console.error('[Auth] Error during cleanup signout:', signOutError);
+      }
+      
+      // Show user-friendly error
+      const errorMessage = 'Authentication failed. Please check your connection and try signing in again.';
+      
+      // Show error notification
+      toast({
+        title: 'Authentication Error',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+      
+      console.log('[Auth] ❌ Authentication failed - user will need to retry sign-in');
+      return;
+      
+    } catch (error) {
+      console.error('[Auth] ❌ CRITICAL ERROR in handleUser:', error);
+      
+      // Clear any partial state
+      setUser(null);
+      setIsLoading(false);
+      if (authTimeout) clearTimeout(authTimeout);
+      
+      // Clear potentially corrupted localStorage
+      localStorage.removeItem('current_user_id');
+      localStorage.removeItem('current_user_email');
+      localStorage.removeItem('current_user_role');
+      
+      // Force sign out from Supabase to clear any corrupted session
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (signOutError) {
+        console.error('[Auth] Error during cleanup signout:', signOutError);
+      }
+      
+      // Show user-friendly error
+      const errorMessage = 'Authentication failed due to an unexpected error. Please try signing in again.';
+      
+      // Show error notification
+      toast({
+        title: 'Authentication Error',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+      
+      console.log('[Auth] ❌ Handled authentication error - user will need to retry sign-in');
     }
   };
 

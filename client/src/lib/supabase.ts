@@ -31,6 +31,11 @@ const clientOptions = {
     autoRefreshToken: true,
     storage: window.localStorage,
     storageKey: 'supabase.auth.token',
+    // Add debug mode for better error visibility
+    debug: import.meta.env.MODE === 'development',
+    // Add session recovery settings
+    refreshTokenRetryAttempts: 3,
+    refreshTokenRetryDelayMs: 1000,
     ...(isProduction && railwayEnvironment && {
       flowType: 'pkce' as const // Enhanced auth flow for Railway production
     })
