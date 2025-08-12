@@ -30,9 +30,17 @@ export function useAdminSignals() {
           if (signal.type === 'FORCE_REFRESH' && !isProcessingRefresh) {
             setIsProcessingRefresh(true);
             
+            console.log(`[AdminSignals] Received signal:`, {
+              signalAdminId: signal.adminId,
+              signalAdminEmail: signal.adminEmail,
+              currentUserId: user.id,
+              currentUserEmail: user.email,
+              shouldSkip: signal.adminId === user.id
+            });
+            
             // Don't refresh the admin who initiated the refresh
             if (signal.adminId && signal.adminId === user.id) {
-              console.log('[AdminSignals] Skipping refresh for initiating admin');
+              console.log('[AdminSignals] ✅ Skipping refresh for initiating admin');
               lastCheckRef.current = signal.timestamp;
               setIsProcessingRefresh(false);
               return;

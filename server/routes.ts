@@ -542,7 +542,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      console.log('[RefreshAll] Broadcasting refresh signal to all connected users');
+      console.log(`[RefreshAll] Admin ${currentUser.email} (${currentUser.id}) initiating refresh signal`);
       
       // Create refresh signal with current timestamp
       const refreshSignal = {
@@ -552,6 +552,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         adminId: currentUser.id,
         adminEmail: currentUser.email
       };
+
+      console.log(`[RefreshAll] Signal created:`, {
+        type: refreshSignal.type,
+        adminId: refreshSignal.adminId,
+        adminEmail: refreshSignal.adminEmail,
+        timestamp: refreshSignal.timestamp
+      });
 
       // Store the refresh signal - using a more robust approach
       if (!global.refreshSignals) {
