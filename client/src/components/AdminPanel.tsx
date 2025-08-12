@@ -59,7 +59,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   
   // Admin-specific management modal states
   const [showAdminCallScripts, setShowAdminCallScripts] = useState(false);
-  const [showAdminStoreEmails, setShowAdminStoreEmails] = useState(false);
+  const [showAdminTeamCommunication, setShowAdminTeamCommunication] = useState(false);
 
   const [siteContentValues, setSiteContentValues] = useState<{[key: string]: string}>({});
   const [genreColors, setGenreColors] = useState<Record<string, any>>({});
@@ -2840,7 +2840,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       Save Changes
                     </Button>
                     
-                    {/* Call Scripts and Store Emails Management */}
+                    {/* Call Scripts and Team Communication Management */}
                     <div className="border-t pt-4 mt-4 space-y-3">
                       <h4 className="text-sm font-medium text-slate-700">Admin Management Tools</h4>
                       <div className="grid grid-cols-2 gap-3">
@@ -2858,10 +2858,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                           variant="outline" 
                           size="sm" 
                           className="w-full justify-start bg-purple-50 hover:bg-purple-100 border-purple-200"
-                          onClick={() => setShowAdminStoreEmails(true)}
+                          onClick={() => setShowAdminTeamCommunication(true)}
                         >
                           <Database className="h-4 w-4 mr-2 text-purple-600" />
-                          <span className="text-purple-700">Manage Store Contacts</span>
+                          <span className="text-purple-700">Manage Team Communication</span>
                         </Button>
                       </div>
                     </div>
@@ -2979,9 +2979,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         <CallScriptsAdminManager onClose={() => setShowAdminCallScripts(false)} />
       )}
 
-      {/* Admin Store Emails Management Modal */}
-      {showAdminStoreEmails && (
-        <StoreContactsAdminManager onClose={() => setShowAdminStoreEmails(false)} />
+      {/* Admin Team Communication Management Modal */}
+      {showAdminTeamCommunication && (
+        <StoreContactsAdminManager onClose={() => setShowAdminTeamCommunication(false)} />
       )}
 
       {/* Modern Delete Confirmation Dialog */}

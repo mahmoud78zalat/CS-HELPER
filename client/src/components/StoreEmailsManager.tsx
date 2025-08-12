@@ -151,7 +151,7 @@ export function StoreEmailsManager({ onClose }: StoreEmailsManagerProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building className="h-5 w-5" />
-            Store Contacts
+            Team Communication
           </DialogTitle>
         </DialogHeader>
 

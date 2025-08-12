@@ -23,7 +23,7 @@ export default function Home() {
   const [showFAQ, setShowFAQ] = useState(false);
   const [showPersonalNotes, setShowPersonalNotes] = useState(false);
   const [showCallScripts, setShowCallScripts] = useState(false);
-  const [showStoreEmails, setShowStoreEmails] = useState(false);
+  const [showTeamCommunication, setShowTeamCommunication] = useState(false);
 
   // Enable real-time updates for all users
   useRealTimeUpdates();
@@ -45,7 +45,7 @@ export default function Home() {
       onFAQ={() => setShowFAQ(true)}
       onOpenPersonalNotes={() => setShowPersonalNotes(true)}
       onCallScripts={() => setShowCallScripts(true)}
-      onStoreEmails={() => setShowStoreEmails(true)}
+      onTeamCommunication={() => setShowTeamCommunication(true)}
     >
       <TemplatesArea />
       
@@ -90,12 +90,12 @@ export default function Home() {
         </div>
       )}
 
-      {/* Store Emails Management */}
-      {showStoreEmails && (
+      {/* Team Communication Management */}
+      {showTeamCommunication && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-auto">
             <div className="p-6">
-              <StoreEmailsManager onClose={() => setShowStoreEmails(false)} />
+              <StoreEmailsManager onClose={() => setShowTeamCommunication(false)} />
             </div>
           </div>
         </div>

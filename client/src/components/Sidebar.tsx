@@ -32,7 +32,7 @@ interface SidebarProps {
   onAbout: () => void;
   onOpenPersonalNotes?: () => void;
   onCallScripts: () => void;
-  onStoreEmails: () => void;
+  onTeamCommunication: () => void;
 }
 
 export default function Sidebar({ 
@@ -42,7 +42,7 @@ export default function Sidebar({
   onAbout,
   onOpenPersonalNotes,
   onCallScripts,
-  onStoreEmails
+  onTeamCommunication
 }: SidebarProps) {
   const { user, signOut } = useAuth();
   const [expandedPanel, setExpandedPanel] = useState<string | null>(null);
@@ -319,12 +319,12 @@ export default function Sidebar({
             </Button>
             
             <Button 
-              onClick={onStoreEmails}
+              onClick={onTeamCommunication}
               className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-lg p-2 lg:p-3 transition-colors duration-200 shadow-sm"
             >
               <div className="flex items-center justify-center lg:justify-start space-x-3">
                 <Database className="h-4 w-4" />
-                <span className="hidden lg:block font-medium">Store Emails</span>
+                <span className="hidden lg:block font-medium">Team Communication</span>
               </div>
             </Button>
 

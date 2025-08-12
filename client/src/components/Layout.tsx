@@ -12,7 +12,7 @@ interface LayoutProps {
   onFAQ: () => void;
   onOpenPersonalNotes?: () => void;
   onCallScripts: () => void;
-  onStoreEmails: () => void;
+  onTeamCommunication: () => void;
 }
 
 export default function Layout({ 
@@ -24,7 +24,7 @@ export default function Layout({
   onFAQ,
   onOpenPersonalNotes,
   onCallScripts,
-  onStoreEmails
+  onTeamCommunication
 }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -47,7 +47,7 @@ export default function Layout({
             onAbout={onAbout}
             onOpenPersonalNotes={onOpenPersonalNotes}
             onCallScripts={onCallScripts}
-            onStoreEmails={onStoreEmails}
+            onTeamCommunication={onTeamCommunication}
           />
         </div>
         
