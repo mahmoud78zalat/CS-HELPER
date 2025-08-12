@@ -2603,6 +2603,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Template Variables reorder endpoint
+  app.post('/api/template-variables/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[API] Reordering template variables:', updates);
+
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateTemplateVariable(update.id, { orderIndex: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "Template variables reordered successfully" });
+    } catch (error) {
+      console.error('[API] Error reordering template variables:', error);
+      res.status(500).json({ message: "Failed to reorder template variables" });
+    }
+  });
+
+  // Live Reply Templates reorder endpoint
+  app.post('/api/live-reply-templates/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[API] Reordering live reply templates:', updates);
+
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateLiveReplyTemplate(update.id, { orderIndex: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "Live reply templates reordered successfully" });
+    } catch (error) {
+      console.error('[API] Error reordering live reply templates:', error);
+      res.status(500).json({ message: "Failed to reorder live reply templates" });
+    }
+  });
+
+  // Live Reply Template Groups reorder endpoint
+  app.post('/api/live-reply-template-groups/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[API] Reordering live reply template groups:', updates);
+
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateLiveReplyTemplateGroup(update.id, { orderIndex: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "Live reply template groups reordered successfully" });
+    } catch (error) {
+      console.error('[API] Error reordering live reply template groups:', error);
+      res.status(500).json({ message: "Failed to reorder live reply template groups" });
+    }
+  });
+
+  // Email Templates reorder endpoint
+  app.post('/api/email-templates/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[API] Reordering email templates:', updates);
+
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateEmailTemplate(update.id, { orderIndex: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "Email templates reordered successfully" });
+    } catch (error) {
+      console.error('[API] Error reordering email templates:', error);
+      res.status(500).json({ message: "Failed to reorder email templates" });
+    }
+  });
+
 
 
   // FAQ and Announcement Acknowledgment API endpoints (Persistent notification system)

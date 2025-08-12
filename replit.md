@@ -15,6 +15,7 @@ The BFL Customer Service Helper is a comprehensive, enterprise-grade customer se
 - **Modal Configuration**: Fully mandatory onboarding modal (no X button, no escape, no outside clicks), enhanced API integration with proper database updates, and immediate UI refresh after completion
 - **PersonalNotes Layout**: Add/edit form positioned above search bar for improved UX
 - **Team Communication**: Renamed from "Store Emails/Store Contacts" - includes optional phone numbers, amount field integration, and delivery/refund date tracking
+- **Reordering Systems**: ALL drag & drop reordering functionality must work correctly with real database persistence - no fake "success" messages without actual saves
 
 ## System Architecture
 
@@ -56,6 +57,14 @@ The BFL Customer Service Helper is a comprehensive, enterprise-grade customer se
 - Production server builds to `dist/index.production.js` (as expected by Railway)
 - Frontend builds to `dist/public/` directory for static file serving
 - All environment variable handling and IPv6/IPv4 compatibility preserved
+
+**CRITICAL FIX: Complete Reordering System Restoration (August 12, 2025):**
+- Fixed systematic reordering failure across all admin features
+- Migration from `simple-routes.ts` to `routes.ts` had broken multiple endpoints
+- Added missing API endpoints: `/api/template-variables/reorder`, `/api/live-reply-templates/reorder`, `/api/live-reply-template-groups/reorder`, `/api/email-templates/reorder`
+- All existing endpoints verified: `/api/faqs/reorder`, `/api/connected-template-categories/reorder`, `/api/connected-template-genres/reorder`
+- Fixed duplicate announcements by removing redundant AnnouncementBanner from Layout.tsx
+- All reordering systems now properly save to Supabase database with real persistence
 
 **Build Process:**
 1. Vite builds frontend to `dist/public/`
