@@ -1183,32 +1183,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/template-variables/:id', isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
+      console.log('[TEMPLATE-VARIABLES-UPDATE] ===== UPDATE REQUEST STARTED =====');
+      console.log('[TEMPLATE-VARIABLES-UPDATE] ID:', id);
+      console.log('[TEMPLATE-VARIABLES-UPDATE] User:', req.user?.claims?.sub || 'No user');
+      console.log('[TEMPLATE-VARIABLES-UPDATE] Data:', JSON.stringify(req.body, null, 2));
+      
+      if (!id) {
+        console.error('[TEMPLATE-VARIABLES-UPDATE] ❌ No ID provided');
+        return res.status(400).json({ 
+          success: false,
+          message: "Template variable ID is required" 
+        });
+      }
+      
+      if (!req.user?.claims?.sub) {
+        console.error('[TEMPLATE-VARIABLES-UPDATE] ❌ User not authenticated');
+        return res.status(401).json({ 
+          success: false,
+          message: "Authentication required" 
+        });
+      }
+      
+      console.log('[TEMPLATE-VARIABLES-UPDATE] 📝 Calling storage.updateTemplateVariable...');
       const variable = await storage.updateTemplateVariable(id, req.body);
-      res.json(variable);
+      console.log('[TEMPLATE-VARIABLES-UPDATE] ✅ Template variable updated successfully:', id);
+      
+      res.json({
+        success: true,
+        data: variable
+      });
+      
     } catch (error) {
-      console.error("Error updating template variable:", error);
-      res.status(500).json({ message: "Failed to update template variable" });
+      console.error('[TEMPLATE-VARIABLES-UPDATE] ❌ Error:', error);
+      console.error('[TEMPLATE-VARIABLES-UPDATE] Error stack:', error instanceof Error ? error.stack : 'No stack');
+      
+      const errorMessage = error instanceof Error ? error.message : "Failed to update template variable";
+      res.status(500).json({ 
+        success: false,
+        message: errorMessage,
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
   app.delete('/api/template-variables/:id', isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
-      console.log('[API] DELETE /api/template-variables/:id called with ID:', id);
-      console.log('[API] User:', req.user?.claims?.sub || 'No user', 'Role:', req.user?.role || 'No role');
+      console.log('[TEMPLATE-VARIABLES-DELETE] ===== DELETE REQUEST STARTED =====');
+      console.log('[TEMPLATE-VARIABLES-DELETE] ID:', id);
+      console.log('[TEMPLATE-VARIABLES-DELETE] User:', req.user?.claims?.sub || 'No user');
+      console.log('[TEMPLATE-VARIABLES-DELETE] Role:', req.user?.role || 'No role');
+      console.log('[TEMPLATE-VARIABLES-DELETE] Headers:', JSON.stringify(req.headers, null, 2));
       
       if (!id) {
-        console.error('[API] No ID provided for template variable deletion');
-        return res.status(400).json({ message: "Template variable ID is required" });
+        console.error('[TEMPLATE-VARIABLES-DELETE] ❌ No ID provided');
+        return res.status(400).json({ 
+          success: false,
+          message: "Template variable ID is required" 
+        });
       }
       
+      if (!req.user?.claims?.sub) {
+        console.error('[TEMPLATE-VARIABLES-DELETE] ❌ User not authenticated');
+        return res.status(401).json({ 
+          success: false,
+          message: "Authentication required" 
+        });
+      }
+      
+      console.log('[TEMPLATE-VARIABLES-DELETE] 🗑️ Calling storage.deleteTemplateVariable...');
       await storage.deleteTemplateVariable(id);
-      console.log('[API] Template variable deleted successfully:', id);
-      res.status(204).send();
+      console.log('[TEMPLATE-VARIABLES-DELETE] ✅ Template variable deleted successfully:', id);
+      
+      res.status(200).json({ 
+        success: true, 
+        message: 'Template variable deleted successfully',
+        id: id 
+      });
+      
     } catch (error) {
-      console.error("[API] Error deleting template variable:", error);
+      console.error('[TEMPLATE-VARIABLES-DELETE] ❌ Error:', error);
+      console.error('[TEMPLATE-VARIABLES-DELETE] Error stack:', error instanceof Error ? error.stack : 'No stack');
+      
       const errorMessage = error instanceof Error ? error.message : "Failed to delete template variable";
-      res.status(500).json({ message: errorMessage });
+      res.status(500).json({ 
+        success: false,
+        message: errorMessage,
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
@@ -1382,60 +1444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Template Variables routes
-  app.get('/api/template-variables', async (req, res) => {
-    try {
-      const filters = {
-        category: req.query.category as string,
-        search: req.query.search as string,
-        isSystem: req.query.isSystem === 'true' ? true : req.query.isSystem === 'false' ? false : undefined
-      };
-      const variables = await storage.getTemplateVariables(filters);
-      res.json(variables);
-    } catch (error) {
-      console.error("Error fetching template variables:", error);
-      res.status(500).json({ message: "Failed to fetch template variables" });
-    }
-  });
 
-  app.get('/api/template-variables/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const variable = await storage.getTemplateVariable(id);
-      if (!variable) {
-        return res.status(404).json({ message: "Template variable not found" });
-      }
-      res.json(variable);
-    } catch (error) {
-      console.error("Error fetching template variable:", error);
-      res.status(500).json({ message: "Failed to fetch template variable" });
-    }
-  });
-
-  app.post('/api/template-variables', isAuthenticated, async (req: any, res) => {
-    try {
-      const variableData = {
-        ...req.body,
-        createdBy: req.user.claims.sub
-      };
-      const variable = await storage.createTemplateVariable(variableData);
-      res.status(201).json(variable);
-    } catch (error) {
-      console.error("Error creating template variable:", error);
-      res.status(500).json({ message: "Failed to create template variable" });
-    }
-  });
-
-  app.put('/api/template-variables/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const variable = await storage.updateTemplateVariable(id, req.body);
-      res.json(variable);
-    } catch (error) {
-      console.error("Error updating template variable:", error);
-      res.status(500).json({ message: "Failed to update template variable" });
-    }
-  });
 
   // Template Variable Categories routes
   app.get('/api/template-variable-categories', async (req, res) => {
