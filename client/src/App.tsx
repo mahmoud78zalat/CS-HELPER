@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CustomerDataProvider } from "@/context/CustomerDataContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AdminModalProvider } from "@/contexts/AdminModalContext";
+import { ClearOnCopyProvider } from "@/contexts/ClearOnCopyContext";
 import { useAuth } from "@/hooks/useAuth";
 // Enhanced presence system is now integrated in useAuth hook
 import Login from "@/pages/login";
@@ -153,10 +154,12 @@ function App() {
       <ThemeProvider>
         <AdminModalProvider>
           <CustomerDataProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-            </TooltipProvider>
+            <ClearOnCopyProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Router />
+              </TooltipProvider>
+            </ClearOnCopyProvider>
           </CustomerDataProvider>
         </AdminModalProvider>
       </ThemeProvider>

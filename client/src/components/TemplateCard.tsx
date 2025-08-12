@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useCustomerData } from "@/hooks/useCustomerData";
 import { useAuth } from "@/hooks/useAuth";
+import { useClearOnCopy } from "@/contexts/ClearOnCopyContext";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -17,9 +18,10 @@ interface TemplateCardProps {
 }
 
 export default function TemplateCard({ template }: TemplateCardProps) {
-  const { customerData } = useCustomerData();
+  const { customerData, clearCustomerData } = useCustomerData();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isClearOnCopyEnabled } = useClearOnCopy();
   const queryClient = useQueryClient();
 
   // Use useMemo to compute processed content without causing re-renders
@@ -131,6 +133,16 @@ export default function TemplateCard({ template }: TemplateCardProps) {
 
     // Record usage
     usageMutation.mutate();
+
+    // Clear customer data if Clear on Copy is enabled
+    if (isClearOnCopyEnabled) {
+      clearCustomerData();
+      toast({
+        title: "Data Cleared",
+        description: "Customer info and additional info cleared automatically",
+        variant: "secondary",
+      });
+    }
   };
 
 

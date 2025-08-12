@@ -6,9 +6,10 @@ import { useTemplateGroups } from "@/hooks/useTemplateGroups";
 import { useCustomerData } from "@/hooks/useCustomerData";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocalTemplateOrdering } from "@/hooks/useLocalTemplateOrdering";
+import { useClearOnCopy } from "@/contexts/ClearOnCopyContext";
 import TemplateCard from "./TemplateCard";
 import DragDropTemplateList from "./DragDropTemplateList";
-import { Search, FolderOpen, ArrowUpDown, GripHorizontal } from "lucide-react";
+import { Search, FolderOpen, ArrowUpDown, GripHorizontal, Eraser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getGenreColor } from '@/lib/templateColors';
@@ -89,6 +90,7 @@ export default function TemplatesArea() {
   const { customerData } = useCustomerData();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isClearOnCopyEnabled, setIsClearOnCopyEnabled } = useClearOnCopy();
   const queryClient = useQueryClient();
 
   // Fetch template groups instead of individual templates
@@ -255,6 +257,23 @@ export default function TemplatesArea() {
               title={isAdmin ? "Admin: Drag & drop to change global order" : "Drag & drop for personal reordering"}
             >
               <ArrowUpDown className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={isClearOnCopyEnabled ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setIsClearOnCopyEnabled(!isClearOnCopyEnabled);
+                toast({
+                  title: isClearOnCopyEnabled ? "Clear on Copy Disabled" : "Clear on Copy Enabled",
+                  description: isClearOnCopyEnabled 
+                    ? "Customer data will no longer be cleared after copying templates"
+                    : "Customer data will be automatically cleared after copying templates"
+                });
+              }}
+              className="px-3 py-2 lg:py-3"
+              title="Automatically clear customer info and additional info after copying templates"
+            >
+              <Eraser className="h-4 w-4" />
             </Button>
           </div>
           
