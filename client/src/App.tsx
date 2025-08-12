@@ -15,6 +15,7 @@ import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 import AdminPanel from "@/components/AdminPanel";
 import AgentSetupModal from "@/components/AgentSetupModal";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { loadColorsFromDatabase } from "@/lib/templateColors";
 import { initializeSiteName } from "@/utils/initializeSiteName";
 
@@ -101,6 +102,7 @@ function Router() {
           }
         }}
       />
+      <AnnouncementBanner />
       <Switch key={appKey}>
         <Route path="/" component={Home} />
       <Route path="/admin" component={() => {

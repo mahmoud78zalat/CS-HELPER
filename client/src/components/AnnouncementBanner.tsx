@@ -48,8 +48,8 @@ export function AnnouncementBanner() {
       if (!user?.id) return;
 
       try {
-        // Use the persistent notification API to get unacknowledged announcements
-        const response = await fetch(`/api/persistent/user/${user.id}/unacknowledged-announcements`);
+        // Use the announcements API to get unacknowledged announcements
+        const response = await fetch(`/api/announcements/unacknowledged/${user.id}`);
         if (response.ok) {
           const fetchedAnnouncements = await response.json();
           if (fetchedAnnouncements && fetchedAnnouncements.length > 0) {
@@ -65,7 +65,7 @@ export function AnnouncementBanner() {
             setIsVisible(true);
           }
         } else {
-          console.log('No unacknowledged announcements from persistent API');
+          console.log('No unacknowledged announcements found or API error');
         }
       } catch (error) {
         console.error('Error fetching announcements:', error);
@@ -89,8 +89,8 @@ export function AnnouncementBanner() {
       // Process all announcements
       const acknowledgmentPromises = announcements.map(async (announcement) => {
         try {
-          // Try to sync to persistent notification system first
-          const response = await fetch(`/api/persistent/announcements/${announcement.id}/acknowledge`, {
+          // Try to sync to notification system first
+          const response = await fetch(`/api/announcements/${announcement.id}/acknowledge`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -102,14 +102,14 @@ export function AnnouncementBanner() {
           });
 
           if (response.ok) {
-            // Successfully acknowledged via persistent API
-            console.log(`Announcement ${announcement.id} acknowledged via persistent API`);
+            // Successfully acknowledged via API
+            console.log(`Announcement ${announcement.id} acknowledged successfully`);
             return { success: true, id: announcement.id };
           } else {
-            throw new Error(`Persistent API failed with status ${response.status}`);
+            throw new Error(`API failed with status ${response.status}`);
           }
-        } catch (persistentError) {
-          console.warn(`Persistent API failed for ${announcement.id}, falling back to original method:`, persistentError);
+        } catch (apiError) {
+          console.warn(`API failed for ${announcement.id}, falling back to localStorage:`, apiError);
           
           // Fallback: Store acknowledgment in localStorage immediately for instant feedback with version tracking
           const localKey = `announcement_ack_${user.id}_${announcement.id}`;

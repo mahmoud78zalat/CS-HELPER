@@ -851,6 +851,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/announcements/:id/acknowledge', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { userId, version = 1 } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+      }
+      
+      await storage.acknowledgeAnnouncement(userId, id, version);
+      res.json({ success: true, announcementId: id, userId });
+    } catch (error) {
+      console.error('[ANNOUNCEMENTS] Error acknowledging announcement:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // FAQ API Routes (moved from simple-routes.ts)
   app.get('/api/faqs', async (req, res) => {
     try {
