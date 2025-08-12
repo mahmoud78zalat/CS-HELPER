@@ -12,34 +12,61 @@ interface ZiwoWidgetProps {
 
 export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'https://app.ziwo.io/auth/account' }: ZiwoWidgetProps) {
   const [isMaximized, setIsMaximized] = useState(false);
-  const [position, setPosition] = useState({ x: window.innerWidth - 440, y: 80 });
+  const [position, setPosition] = useState({ 
+    x: typeof window !== 'undefined' ? window.innerWidth - 440 : 0, 
+    y: 80 
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isMounted, setIsMounted] = useState(false);
   const widgetRef = useRef<HTMLDivElement>(null);
 
-  // Simple and reliable dragging system
+  // Mount detection for SSR safety
+  useEffect(() => {
+    setIsMounted(true);
+    
+    // Update position on window resize
+    const handleResize = () => {
+      if (typeof window !== 'undefined') {
+        setPosition(prev => ({
+          x: Math.min(prev.x, window.innerWidth - 440),
+          y: Math.min(prev.y, window.innerHeight - 600)
+        }));
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Simple and reliable dragging system with enhanced safety
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || isMaximized) return;
+      if (!isDragging || isMaximized || !isMounted) return;
       
-      const newX = e.clientX - dragStart.x;
-      const newY = e.clientY - dragStart.y;
-      
-      // Boundary constraints
-      const maxX = window.innerWidth - 420;
-      const maxY = window.innerHeight - 600;
-      
-      setPosition({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY))
-      });
+      try {
+        const newX = e.clientX - dragStart.x;
+        const newY = e.clientY - dragStart.y;
+        
+        // Safe boundary constraints with fallbacks
+        const maxX = (typeof window !== 'undefined' ? window.innerWidth : 1200) - 420;
+        const maxY = (typeof window !== 'undefined' ? window.innerHeight : 800) - 600;
+        
+        setPosition({
+          x: Math.max(0, Math.min(newX, maxX)),
+          y: Math.max(0, Math.min(newY, maxY))
+        });
+      } catch (error) {
+        console.error('[ZiwoWidget] Error during drag:', error);
+        setIsDragging(false);
+      }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
     };
 
-    if (isDragging) {
+    if (isDragging && isMounted) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       document.addEventListener('mouseleave', handleMouseUp);
@@ -50,22 +77,44 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
         document.removeEventListener('mouseleave', handleMouseUp);
       };
     }
-  }, [isDragging, dragStart, isMaximized]);
+  }, [isDragging, dragStart, isMaximized, isMounted]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (isMaximized) return;
+    if (isMaximized || !isMounted) return;
     
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    });
+    try {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      });
+    } catch (error) {
+      console.error('[ZiwoWidget] Error starting drag:', error);
+    }
   };
 
-  if (!isOpen) return null;
+  const handleMaximizeToggle = () => {
+    try {
+      setIsMaximized(!isMaximized);
+    } catch (error) {
+      console.error('[ZiwoWidget] Error toggling maximize:', error);
+    }
+  };
+
+  const handleClose = () => {
+    try {
+      setIsDragging(false);
+      onClose();
+    } catch (error) {
+      console.error('[ZiwoWidget] Error closing widget:', error);
+    }
+  };
+
+  // Safety checks - don't render until mounted and open
+  if (!isOpen || !isMounted) return null;
 
   // Create the widget content
   const widgetContent = (
@@ -104,7 +153,7 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
         </div>
         <div className="flex items-center gap-2">
           <Button
-            onClick={() => setIsMaximized(!isMaximized)}
+            onClick={handleMaximizeToggle}
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0 hover:bg-emerald-100 dark:hover:bg-emerald-800/40"
@@ -113,7 +162,7 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
             <Maximize2 className="w-4 h-4" />
           </Button>
           <Button
-            onClick={onClose}
+            onClick={handleClose}
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
@@ -137,6 +186,11 @@ export default function ZiwoWidget({ isOpen, isVisible, onClose, ziwoUrl = 'http
     </div>
   );
 
-  // Use createPortal to render outside normal DOM hierarchy
-  return createPortal(widgetContent, document.body);
+  // Use createPortal to render outside normal DOM hierarchy with error boundary
+  try {
+    return createPortal(widgetContent, document.body);
+  } catch (error) {
+    console.error('[ZiwoWidget] Error rendering portal:', error);
+    return null;
+  }
 }

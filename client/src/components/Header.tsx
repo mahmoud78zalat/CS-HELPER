@@ -237,13 +237,20 @@ export default function Header({ onEmailComposer, onAdminPanel, onAbout, onFAQ }
   };
 
   const handleZiwoClick = () => {
-    if (!isZiwoOpen) {
-      // First time opening - create the session
-      setIsZiwoOpen(true);
-      setIsZiwoVisible(true);
-    } else {
-      // Already opened - just toggle visibility
-      setIsZiwoVisible(!isZiwoVisible);
+    try {
+      if (!isZiwoOpen) {
+        // First time opening - create the session
+        setIsZiwoOpen(true);
+        setIsZiwoVisible(true);
+      } else {
+        // Already opened - just toggle visibility
+        setIsZiwoVisible(!isZiwoVisible);
+      }
+    } catch (error) {
+      console.error('[Header] Error handling Ziwo click:', error);
+      // Reset states on error
+      setIsZiwoOpen(false);
+      setIsZiwoVisible(false);
     }
   };
 
