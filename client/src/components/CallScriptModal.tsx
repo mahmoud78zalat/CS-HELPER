@@ -206,7 +206,7 @@ export function CallScriptModal({ isOpen, onClose, editingScript }: CallScriptMo
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" hideCloseButton>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Phone className="h-5 w-5" />
