@@ -15,6 +15,7 @@ import { useLocalTemplateOrdering } from "@/hooks/useLocalTemplateOrdering";
 import { Copy, X, Search, Send, Edit3, Sparkles, Plus, ArrowUpDown, GripVertical } from "lucide-react";
 import { EmailTemplate } from "@shared/schema";
 import { extractVariablesFromTemplate } from "@/lib/templateUtils";
+import { getGenreBadgeClasses, getCategoryBadgeClasses } from "@/lib/templateColors";
 import { DndContext, DragEndEvent, useDraggable, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -121,10 +122,10 @@ const SortableEmailTemplateItem = ({
                 )}
               </div>
               <div className="flex gap-2 flex-wrap">
-                <Badge variant="secondary" className="text-xs px-2 py-1 bg-blue-100 text-blue-800 border border-blue-200">
+                <Badge className={`text-xs px-2 py-1 border ${getGenreBadgeClasses(template.genre)}`}>
                   {template.genre}
                 </Badge>
-                <Badge variant="outline" className="text-xs px-2 py-1 border-slate-300 text-slate-700">
+                <Badge className={`text-xs px-2 py-1 border ${getCategoryBadgeClasses(template.category)}`}>
                   {template.category}
                 </Badge>
               </div>
@@ -577,10 +578,10 @@ export default function EmailComposerModal({ onClose }: EmailComposerModalProps)
                           )}
                         </div>
                         <div className="flex gap-2 flex-wrap">
-                          <Badge variant="secondary" className="text-xs px-2 py-1 bg-blue-100 text-blue-800 border border-blue-200">
+                          <Badge className={`text-xs px-2 py-1 border ${getGenreBadgeClasses(template.genre)}`}>
                             {template.genre}
                           </Badge>
-                          <Badge variant="outline" className="text-xs px-2 py-1 border-slate-300 text-slate-700">
+                          <Badge className={`text-xs px-2 py-1 border ${getCategoryBadgeClasses(template.category)}`}>
                             {template.category}
                           </Badge>
                         </div>
