@@ -147,25 +147,18 @@ function SortableScriptCard({
                   <span className="text-base font-semibold text-blue-800 dark:text-blue-300">Script Content</span>
                   <div className="flex-1 h-px bg-gradient-to-r from-blue-200 to-transparent"></div>
                 </div>
-                <div 
-                  className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-lg border-2 border-blue-100 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-blue-300 group/content"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigator.clipboard.writeText(script.content);
-                    toast({
-                      title: "Script copied!",
-                      description: `"${script.name}" has been copied to clipboard`,
-                    });
-                  }}
-                  title="Click to copy script content"
-                >
-                  <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-medium leading-relaxed selection:bg-blue-200 selection:text-blue-900 group-hover/content:text-blue-800 dark:group-hover/content:text-blue-200 transition-colors">
-                    {script.content}
-                  </pre>
-                </div>
-                <div className="mt-4 flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                  <span>Click to copy content</span>
+                <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-lg border-2 border-blue-100 dark:border-slate-700 hover:shadow-2xl hover:border-blue-300 dark:hover:border-blue-400 transition-all duration-500 group/content relative overflow-hidden">
+                  {/* Cool hover background effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-purple-50/20 dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-purple-900/10 opacity-0 group-hover/content:opacity-100 transition-opacity duration-500"></div>
+                  
+                  {/* Subtle animated border glow on hover */}
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400/20 via-indigo-400/20 to-purple-400/20 opacity-0 group-hover/content:opacity-100 transition-opacity duration-500 blur-sm"></div>
+                  
+                  <div className="relative z-10">
+                    <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-medium leading-relaxed selection:bg-blue-200 selection:text-blue-900 group-hover/content:text-blue-900 dark:group-hover/content:text-blue-100 transition-all duration-300 group-hover/content:font-semibold">
+                      {script.content}
+                    </pre>
+                  </div>
                 </div>
               </div>
             </div>
