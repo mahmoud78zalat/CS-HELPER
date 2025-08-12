@@ -931,6 +931,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/live-reply-templates', async (req, res) => {
+    try {
+      const templateData = req.body;
+      console.log('[API] Creating live reply template with data:', templateData);
+      
+      const newTemplate = await storage.createLiveReplyTemplate(templateData);
+      console.log('[API] Live reply template created successfully:', newTemplate.id);
+      res.json(newTemplate);
+    } catch (error) {
+      console.error('[API] Error creating live reply template:', error);
+      res.status(500).json({ message: 'Failed to create live reply template', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.put('/api/live-reply-templates/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const templateData = req.body;
+      console.log('[API] Updating live reply template:', id, 'with data:', templateData);
+      
+      const updatedTemplate = await storage.updateLiveReplyTemplate(id, templateData);
+      console.log('[API] Live reply template updated successfully:', id);
+      res.json(updatedTemplate);
+    } catch (error) {
+      console.error('[API] Error updating live reply template:', error);
+      res.status(500).json({ message: 'Failed to update live reply template', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.delete('/api/live-reply-templates/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log('[API] Deleting live reply template:', id);
+      
+      await storage.deleteLiveReplyTemplate(id);
+      console.log('[API] Live reply template deleted successfully:', id);
+      res.json({ message: 'Live reply template deleted successfully', id });
+    } catch (error) {
+      console.error('[API] Error deleting live reply template:', error);
+      res.status(500).json({ message: 'Failed to delete live reply template', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   app.get('/api/email-templates', async (req, res) => {
     try {
       const { category, genre, concernedTeam, search, isActive } = req.query;
@@ -947,6 +990,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching email templates:", error);
       res.status(500).json({ message: "Failed to fetch email templates" });
+    }
+  });
+
+  app.post('/api/email-templates', async (req, res) => {
+    try {
+      const templateData = req.body;
+      console.log('[API] Creating email template with data:', templateData);
+      
+      const newTemplate = await storage.createEmailTemplate(templateData);
+      console.log('[API] Email template created successfully:', newTemplate.id);
+      res.json(newTemplate);
+    } catch (error) {
+      console.error('[API] Error creating email template:', error);
+      res.status(500).json({ message: 'Failed to create email template', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.put('/api/email-templates/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const templateData = req.body;
+      console.log('[API] Updating email template:', id, 'with data:', templateData);
+      
+      const updatedTemplate = await storage.updateEmailTemplate(id, templateData);
+      console.log('[API] Email template updated successfully:', id);
+      res.json(updatedTemplate);
+    } catch (error) {
+      console.error('[API] Error updating email template:', error);
+      res.status(500).json({ message: 'Failed to update email template', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.delete('/api/email-templates/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log('[API] Deleting email template:', id);
+      
+      await storage.deleteEmailTemplate(id);
+      console.log('[API] Email template deleted successfully:', id);
+      res.json({ message: 'Email template deleted successfully', id });
+    } catch (error) {
+      console.error('[API] Error deleting email template:', error);
+      res.status(500).json({ message: 'Failed to delete email template', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -1559,6 +1645,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/template-categories', async (req, res) => {
+    try {
+      const categoryData = req.body;
+      console.log('[API] Creating template category with data:', categoryData);
+      
+      const newCategory = await storage.createTemplateCategory(categoryData);
+      console.log('[API] Template category created successfully:', newCategory.id);
+      res.json(newCategory);
+    } catch (error) {
+      console.error('[API] Error creating template category:', error);
+      res.status(500).json({ message: 'Failed to create template category', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   app.get('/api/template-genres', async (req, res) => {
     try {
       const genres = await storage.getAllTemplateGenres();
@@ -1566,6 +1666,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Get template genres error:', error);
       res.status(500).json({ error: 'Failed to get template genres' });
+    }
+  });
+
+  app.post('/api/template-genres', async (req, res) => {
+    try {
+      const genreData = req.body;
+      console.log('[API] Creating template genre with data:', genreData);
+      
+      const newGenre = await storage.createTemplateGenre(genreData);
+      console.log('[API] Template genre created successfully:', newGenre.id);
+      res.json(newGenre);
+    } catch (error) {
+      console.error('[API] Error creating template genre:', error);
+      res.status(500).json({ message: 'Failed to create template genre', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  // Connected Template Categories and Genres endpoints
+  app.get('/api/connected-template-categories', async (req, res) => {
+    try {
+      const categories = await storage.getAllTemplateCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error('Get connected template categories error:', error);
+      res.status(500).json({ error: 'Failed to get connected template categories' });
+    }
+  });
+
+  app.post('/api/connected-template-categories', async (req, res) => {
+    try {
+      const categoryData = req.body;
+      console.log('[API] Creating connected template category with data:', categoryData);
+      
+      const newCategory = await storage.createTemplateCategory(categoryData);
+      console.log('[API] Connected template category created successfully:', newCategory.id);
+      res.json(newCategory);
+    } catch (error) {
+      console.error('[API] Error creating connected template category:', error);
+      res.status(500).json({ message: 'Failed to create connected template category', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.get('/api/connected-template-genres', async (req, res) => {
+    try {
+      const genres = await storage.getAllTemplateGenres();
+      res.json(genres);
+    } catch (error) {
+      console.error('Get connected template genres error:', error);
+      res.status(500).json({ error: 'Failed to get connected template genres' });
+    }
+  });
+
+  app.post('/api/connected-template-genres', async (req, res) => {
+    try {
+      const genreData = req.body;
+      console.log('[API] Creating connected template genre with data:', genreData);
+      
+      const newGenre = await storage.createTemplateGenre(genreData);
+      console.log('[API] Connected template genre created successfully:', newGenre.id);
+      res.json(newGenre);
+    } catch (error) {
+      console.error('[API] Error creating connected template genre:', error);
+      res.status(500).json({ message: 'Failed to create connected template genre', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  // Concerned Teams endpoints
+  app.get('/api/concerned-teams', async (req, res) => {
+    try {
+      const teams = await storage.getAllConcernedTeams();
+      res.json(teams);
+    } catch (error) {
+      console.error('Get concerned teams error:', error);
+      res.status(500).json({ error: 'Failed to get concerned teams' });
+    }
+  });
+
+  app.post('/api/concerned-teams', async (req, res) => {
+    try {
+      const teamData = req.body;
+      console.log('[API] Creating concerned team with data:', teamData);
+      
+      const newTeam = await storage.createConcernedTeam(teamData);
+      console.log('[API] Concerned team created successfully:', newTeam.id);
+      res.json(newTeam);
+    } catch (error) {
+      console.error('[API] Error creating concerned team:', error);
+      res.status(500).json({ message: 'Failed to create concerned team', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  // Announcements endpoints
+  app.post('/api/announcements', async (req, res) => {
+    try {
+      const announcementData = req.body;
+      console.log('[API] Creating announcement with data:', announcementData);
+      
+      const newAnnouncement = await storage.createAnnouncement(announcementData);
+      console.log('[API] Announcement created successfully:', newAnnouncement.id);
+      res.json(newAnnouncement);
+    } catch (error) {
+      console.error('[API] Error creating announcement:', error);
+      res.status(500).json({ message: 'Failed to create announcement', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.put('/api/announcements/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const announcementData = req.body;
+      console.log('[API] Updating announcement:', id, 'with data:', announcementData);
+      
+      const updatedAnnouncement = await storage.updateAnnouncement(id, announcementData);
+      console.log('[API] Announcement updated successfully:', id);
+      res.json(updatedAnnouncement);
+    } catch (error) {
+      console.error('[API] Error updating announcement:', error);
+      res.status(500).json({ message: 'Failed to update announcement', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.delete('/api/announcements/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log('[API] Deleting announcement:', id);
+      
+      await storage.deleteAnnouncement(id);
+      console.log('[API] Announcement deleted successfully:', id);
+      res.json({ message: 'Announcement deleted successfully', id });
+    } catch (error) {
+      console.error('[API] Error deleting announcement:', error);
+      res.status(500).json({ message: 'Failed to delete announcement', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  // Additional variable creation endpoint that some components might use
+  app.post('/api/create-variable', async (req, res) => {
+    try {
+      const variableData = req.body;
+      console.log('[API] Creating variable with data:', variableData);
+      
+      const newVariable = await storage.createTemplateVariable(variableData);
+      console.log('[API] Variable created successfully:', newVariable.id);
+      res.json(newVariable);
+    } catch (error) {
+      console.error('[API] Error creating variable:', error);
+      res.status(500).json({ message: 'Failed to create variable', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
