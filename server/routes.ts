@@ -1722,7 +1722,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Concerned Teams endpoints
   app.get('/api/concerned-teams', async (req, res) => {
     try {
-      const teams = await storage.getAllConcernedTeams();
+      const teams = await storage.getConcernedTeams();
       res.json(teams);
     } catch (error) {
       console.error('Get concerned teams error:', error);

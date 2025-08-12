@@ -19,9 +19,13 @@ cmds = [
   "echo 'NODE_ENV:' $NODE_ENV",
   "echo '[Railway Nixpacks] Running Vite build...'",
   "NODE_ENV=production npx vite build --config vite.config.railway.ts --mode production",
+  "echo '[Railway Nixpacks] Building production server...'",
+  "NODE_ENV=production npx esbuild server/index.production.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.production.js",
   "echo '[Railway Nixpacks] Build completed, verifying output:'",
+  "ls -la dist/ || echo 'dist/ not found'",
   "ls -la dist/public/ || echo 'dist/public not found'",
-  "test -f dist/public/index.html && echo 'index.html found' || echo 'index.html missing'",
+  "test -f dist/index.production.js && echo 'Production server found' || echo 'Production server missing'",
+  "test -f dist/public/index.html && echo 'Frontend build found' || echo 'Frontend build missing'",
   "echo '[Railway Nixpacks] Build process complete'"
 ]
 

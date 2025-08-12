@@ -46,6 +46,22 @@ The BFL Customer Service Helper is a comprehensive, enterprise-grade customer se
 - **Agent Onboarding**: Mandatory first-time user setup with bilingual profile creation
 - **Security**: Comprehensive authentication middleware, session validation, CSRF protection
 
+### Deployment Configuration
+**Railway Deployment**: ✅ FULLY CONFIGURED with production build pipeline
+
+**Fixed Railway Build Issues (August 12, 2025):**
+- Created production-specific server entry point (`server/index.production.ts`)
+- Added Railway-specific Vite configuration (`vite.config.railway.ts`)
+- Fixed build commands in `nixpacks.toml` to generate correct output files
+- Production server builds to `dist/index.production.js` (as expected by Railway)
+- Frontend builds to `dist/public/` directory for static file serving
+- All environment variable handling and IPv6/IPv4 compatibility preserved
+
+**Build Process:**
+1. Vite builds frontend to `dist/public/`
+2. esbuild compiles production server to `dist/index.production.js`
+3. Railway starts with `node dist/index.production.js`
+
 ### Database Schema  
 **Database Status**: ✅ FULLY OPERATIONAL (PostgreSQL + Supabase Integration)
 
