@@ -43,6 +43,8 @@ export class MemoryStorage implements IStorage {
   private faqs = new Map<string, Faq>();
   private callScripts = new Map<string, CallScript>();
   private storeEmails = new Map<string, StoreEmail>();
+  private templateVariables = new Map<string, any>();
+  private templateVariableCategories = new Map<string, any>();
 
   constructor() {
     console.log('[MemoryStorage] ⚠️  Using memory storage - data will not persist!');
@@ -843,46 +845,127 @@ export class MemoryStorage implements IStorage {
     throw new Error('Not implemented in memory storage');
   }
 
-  // Template Variables operations (stub implementations)
+  // Template Variables operations
   async getTemplateVariables(filters?: { category?: string; search?: string; isSystem?: boolean; }): Promise<any[]> {
-    return [];
+    let variables = Array.from(this.templateVariables.values());
+    
+    if (filters?.category) {
+      variables = variables.filter(v => v.category === filters.category);
+    }
+    
+    if (filters?.search) {
+      const searchLower = filters.search.toLowerCase();
+      variables = variables.filter(v => 
+        v.name.toLowerCase().includes(searchLower) ||
+        v.description.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    if (filters?.isSystem !== undefined) {
+      variables = variables.filter(v => v.isSystem === filters.isSystem);
+    }
+    
+    return variables.sort((a, b) => (a.order || 0) - (b.order || 0));
   }
 
   async getTemplateVariable(id: string): Promise<any | undefined> {
-    return undefined;
+    return this.templateVariables.get(id);
   }
 
   async createTemplateVariable(variable: any): Promise<any> {
-    throw new Error('Not implemented in memory storage');
+    const id = nanoid();
+    const now = new Date();
+    const newVariable = {
+      id,
+      ...variable,
+      createdAt: now,
+      updatedAt: now,
+      order: variable.order || 0
+    };
+    
+    this.templateVariables.set(id, newVariable);
+    console.log('[MemoryStorage] Created template variable:', newVariable.name);
+    return newVariable;
   }
 
   async updateTemplateVariable(id: string, variable: any): Promise<any> {
-    throw new Error('Not implemented in memory storage');
+    const existing = this.templateVariables.get(id);
+    if (!existing) {
+      throw new Error(`Template variable with ID ${id} not found`);
+    }
+    
+    const updatedVariable = {
+      ...existing,
+      ...variable,
+      id, // Keep original ID
+      updatedAt: new Date()
+    };
+    
+    this.templateVariables.set(id, updatedVariable);
+    console.log('[MemoryStorage] Updated template variable:', updatedVariable.name);
+    return updatedVariable;
   }
 
   async deleteTemplateVariable(id: string): Promise<void> {
-    throw new Error('Not implemented in memory storage');
+    const variable = this.templateVariables.get(id);
+    if (!variable) {
+      throw new Error(`Template variable with ID ${id} not found`);
+    }
+    
+    this.templateVariables.delete(id);
+    console.log('[MemoryStorage] Deleted template variable:', variable.name);
   }
 
-  // Template Variable Categories operations (stub implementations)
+  // Template Variable Categories operations
   async getTemplateVariableCategories(): Promise<any[]> {
-    return [];
+    return Array.from(this.templateVariableCategories.values());
   }
 
   async getTemplateVariableCategory(id: string): Promise<any | undefined> {
-    return undefined;
+    return this.templateVariableCategories.get(id);
   }
 
   async createTemplateVariableCategory(category: any): Promise<any> {
-    throw new Error('Not implemented in memory storage');
+    const id = nanoid();
+    const now = new Date();
+    const newCategory = {
+      id,
+      ...category,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.templateVariableCategories.set(id, newCategory);
+    console.log('[MemoryStorage] Created template variable category:', newCategory.name);
+    return newCategory;
   }
 
   async updateTemplateVariableCategory(id: string, category: any): Promise<any> {
-    throw new Error('Not implemented in memory storage');
+    const existing = this.templateVariableCategories.get(id);
+    if (!existing) {
+      throw new Error(`Template variable category with ID ${id} not found`);
+    }
+    
+    const updatedCategory = {
+      ...existing,
+      ...category,
+      id, // Keep original ID
+      updatedAt: new Date()
+    };
+    
+    this.templateVariableCategories.set(id, updatedCategory);
+    console.log('[MemoryStorage] Updated template variable category:', updatedCategory.name);
+    return updatedCategory;
   }
 
   async deleteTemplateVariableCategory(id: string): Promise<void> {
-    throw new Error('Not implemented in memory storage');
+    const category = this.templateVariableCategories.get(id);
+    if (!category) {
+      throw new Error(`Template variable category with ID ${id} not found`);
+    }
+    
+    this.templateVariableCategories.delete(id);
+    console.log('[MemoryStorage] Deleted template variable category:', category.name);
   }
 
   // Color Settings operations (stub implementations)

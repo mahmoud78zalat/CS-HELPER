@@ -2772,15 +2772,44 @@ export class SupabaseStorage implements IStorage {
 
   async deleteTemplateVariable(id: string): Promise<void> {
     try {
-      const { error } = await this.client
+      console.log('[SupabaseStorage] Attempting to delete template variable with ID:', id);
+      
+      // First check if the variable exists
+      const { data: existingVar, error: checkError } = await this.client
         .from('template_variables')
-        .delete()
+        .select('id, name')
+        .eq('id', id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found" error
+        console.error('[SupabaseStorage] Error checking template variable existence:', checkError);
+        throw new Error(`Failed to verify template variable existence: ${checkError.message}`);
+      }
+
+      if (!existingVar) {
+        console.warn('[SupabaseStorage] Template variable not found for deletion:', id);
+        throw new Error(`Template variable with ID ${id} not found`);
+      }
+
+      console.log('[SupabaseStorage] Deleting template variable:', existingVar.name);
+
+      // Proceed with deletion
+      const { error, count } = await this.client
+        .from('template_variables')
+        .delete({ count: 'exact' })
         .eq('id', id);
 
       if (error) {
         console.error('[SupabaseStorage] Error deleting template variable:', error);
-        throw error;
+        throw new Error(`Failed to delete template variable: ${error.message}`);
       }
+
+      console.log('[SupabaseStorage] Successfully deleted template variable. Rows affected:', count);
+      
+      if (count === 0) {
+        console.warn('[SupabaseStorage] No rows were deleted - variable may have been already deleted');
+      }
+
     } catch (error) {
       console.error('[SupabaseStorage] Error in deleteTemplateVariable:', error);
       throw error;
