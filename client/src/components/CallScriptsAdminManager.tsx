@@ -522,7 +522,7 @@ function CallScriptCreateModal({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-6" hideCloseButton>
+      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-6">
         <DialogHeader>
           <DialogTitle>Create New Call Script</DialogTitle>
         </DialogHeader>
@@ -671,7 +671,7 @@ function CallScriptEditModal({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-6" hideCloseButton>
+      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-6">
         <DialogHeader>
           <DialogTitle>Edit Call Script</DialogTitle>
         </DialogHeader>
