@@ -154,10 +154,10 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
     enabled: isOpen,
   });
 
-  // Create variable mutation using bypass route
+  // Create variable mutation
   const createVariableMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch('/api/create-variable', {
+      const response = await fetch('/api/template-variables', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

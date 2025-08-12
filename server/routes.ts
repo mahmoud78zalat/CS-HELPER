@@ -1168,10 +1168,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/template-variables', isAuthenticated, async (req: any, res) => {
+  app.post('/api/template-variables', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const variableData = { ...req.body, createdBy: userId };
+      const variableData = { ...req.body, createdBy: 'admin' };
       const variable = await storage.createTemplateVariable(variableData);
       res.status(201).json(variable);
     } catch (error) {
@@ -1180,12 +1179,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/template-variables/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/template-variables/:id', async (req: any, res) => {
     try {
       const { id } = req.params;
       console.log('[TEMPLATE-VARIABLES-UPDATE] ===== UPDATE REQUEST STARTED =====');
       console.log('[TEMPLATE-VARIABLES-UPDATE] ID:', id);
-      console.log('[TEMPLATE-VARIABLES-UPDATE] User:', req.user?.claims?.sub || 'No user');
       console.log('[TEMPLATE-VARIABLES-UPDATE] Data:', JSON.stringify(req.body, null, 2));
       
       if (!id) {
@@ -1193,14 +1191,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ 
           success: false,
           message: "Template variable ID is required" 
-        });
-      }
-      
-      if (!req.user?.claims?.sub) {
-        console.error('[TEMPLATE-VARIABLES-UPDATE] ❌ User not authenticated');
-        return res.status(401).json({ 
-          success: false,
-          message: "Authentication required" 
         });
       }
       
@@ -1226,28 +1216,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/template-variables/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/template-variables/:id', async (req: any, res) => {
     try {
       const { id } = req.params;
       console.log('[TEMPLATE-VARIABLES-DELETE] ===== DELETE REQUEST STARTED =====');
       console.log('[TEMPLATE-VARIABLES-DELETE] ID:', id);
-      console.log('[TEMPLATE-VARIABLES-DELETE] User:', req.user?.claims?.sub || 'No user');
-      console.log('[TEMPLATE-VARIABLES-DELETE] Role:', req.user?.role || 'No role');
-      console.log('[TEMPLATE-VARIABLES-DELETE] Headers:', JSON.stringify(req.headers, null, 2));
       
       if (!id) {
         console.error('[TEMPLATE-VARIABLES-DELETE] ❌ No ID provided');
         return res.status(400).json({ 
           success: false,
           message: "Template variable ID is required" 
-        });
-      }
-      
-      if (!req.user?.claims?.sub) {
-        console.error('[TEMPLATE-VARIABLES-DELETE] ❌ User not authenticated');
-        return res.status(401).json({ 
-          success: false,
-          message: "Authentication required" 
         });
       }
       
