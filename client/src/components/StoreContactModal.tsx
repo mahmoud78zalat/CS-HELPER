@@ -35,7 +35,7 @@ export function StoreContactModal({ isOpen, onClose, editingStore }: StoreContac
       setFormData({
         storeName: editingStore.storeName,
         storeEmail: editingStore.storeEmail,
-        storePhone: editingStore.storePhone
+        storePhone: editingStore.storePhone || ""
       });
     } else {
       resetForm();
@@ -118,7 +118,8 @@ export function StoreContactModal({ isOpen, onClose, editingStore }: StoreContac
       storeEmail: formData.storeEmail.trim(),
       storePhone: formData.storePhone.trim(),
       isActive: true,
-      createdBy: null
+      createdBy: null,
+      orderIndex: 0
     };
 
     if (editingStore) {
