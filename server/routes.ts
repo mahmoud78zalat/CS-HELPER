@@ -1194,11 +1194,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/template-variables/:id', isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
+      console.log('[API] DELETE /api/template-variables/:id called with ID:', id);
+      console.log('[API] User:', req.user?.claims?.sub || 'No user', 'Role:', req.user?.role || 'No role');
+      
+      if (!id) {
+        console.error('[API] No ID provided for template variable deletion');
+        return res.status(400).json({ message: "Template variable ID is required" });
+      }
+      
       await storage.deleteTemplateVariable(id);
+      console.log('[API] Template variable deleted successfully:', id);
       res.status(204).send();
     } catch (error) {
-      console.error("Error deleting template variable:", error);
-      res.status(500).json({ message: "Failed to delete template variable" });
+      console.error("[API] Error deleting template variable:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete template variable";
+      res.status(500).json({ message: errorMessage });
     }
   });
 
@@ -1424,17 +1434,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating template variable:", error);
       res.status(500).json({ message: "Failed to update template variable" });
-    }
-  });
-
-  app.delete('/api/template-variables/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      await storage.deleteTemplateVariable(id);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting template variable:", error);
-      res.status(500).json({ message: "Failed to delete template variable" });
     }
   });
 
