@@ -337,7 +337,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-4">
+      <DialogContent className="max-w-full max-h-full w-screen h-screen m-0 p-4" onEscapeKeyDown={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader className="pb-3 mb-3 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
