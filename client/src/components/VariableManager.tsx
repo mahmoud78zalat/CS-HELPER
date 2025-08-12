@@ -160,6 +160,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
       const response = await fetch('/api/create-variable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error('Failed to create variable');
@@ -189,6 +190,7 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify(data),
       });
       
@@ -239,7 +241,8 @@ export default function VariableManager({ isOpen, onClose }: VariableManagerProp
         method: 'DELETE',
         headers: {
           'Accept': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
       
       console.log('[VariableManager] Delete response status:', response.status);
