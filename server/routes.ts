@@ -2579,6 +2579,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // FAQ reorder endpoint
+  app.post('/api/faqs/reorder', async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates array is required" });
+      }
+
+      console.log('[API] Reordering FAQs:', updates);
+
+      for (const update of updates) {
+        if (update.id && typeof update.order === 'number') {
+          await storage.updateFaq(update.id, { orderIndex: update.order });
+        }
+      }
+
+      res.status(200).json({ message: "FAQs reordered successfully" });
+    } catch (error) {
+      console.error('[API] Error reordering FAQs:', error);
+      res.status(500).json({ message: "Failed to reorder FAQs" });
+    }
+  });
+
 
 
   // FAQ and Announcement Acknowledgment API endpoints (Persistent notification system)

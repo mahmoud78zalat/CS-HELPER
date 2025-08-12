@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import { AnnouncementBanner } from "./AnnouncementBanner";
+
 
 interface LayoutProps {
   children: ReactNode;
@@ -28,7 +28,7 @@ export default function Layout({
 }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <AnnouncementBanner />
+
       <Header 
         onEmailComposer={onEmailComposer}
         onAdminPanel={onAdminPanel}
