@@ -30,6 +30,7 @@ function SortableScriptCard({
   isDragMode, 
   onToggleExpansion
 }: SortableScriptCardProps) {
+  const { toast } = useToast();
   const {
     attributes,
     listeners,
@@ -66,7 +67,9 @@ function SortableScriptCard({
         className={`overflow-hidden group cursor-pointer transition-all duration-300 border-2 ${
           isDragging 
             ? 'shadow-2xl border-blue-300 bg-blue-50/50' 
-            : 'hover:shadow-xl hover:border-blue-200 hover:scale-[1.01]'
+            : isExpanded
+            ? 'shadow-xl border-blue-400 bg-blue-50/30 scale-[1.02] ring-2 ring-blue-200'
+            : 'hover:shadow-xl hover:border-blue-200 hover:scale-[1.01] hover:bg-slate-50/50'
         }`}
         onClick={() => onToggleExpansion(script.id)}
       >
@@ -96,15 +99,25 @@ function SortableScriptCard({
                 </div>
                 
                 <div className="flex items-center gap-2 flex-1">
-                  <CardTitle className="text-lg font-bold text-gray-800 dark:text-white group-hover:text-blue-600 transition-colors">
+                  <CardTitle className={`text-lg font-bold transition-colors ${
+                    isExpanded 
+                      ? 'text-blue-700 dark:text-blue-300' 
+                      : 'text-gray-800 dark:text-white group-hover:text-blue-600'
+                  }`}>
                     {script.name}
                   </CardTitle>
                   
                   <div className="ml-auto">
-                    {isExpanded ? 
-                      <ChevronDown className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" /> : 
-                      <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                    }
+                    <div className={`p-1.5 rounded-lg transition-all duration-200 ${
+                      isExpanded 
+                        ? 'bg-blue-100 text-blue-600 shadow-sm' 
+                        : 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600'
+                    }`}>
+                      {isExpanded ? 
+                        <ChevronDown className="h-4 w-4" /> : 
+                        <ChevronRight className="h-4 w-4" />
+                      }
+                    </div>
                   </div>
                 </div>
               </div>
@@ -128,15 +141,31 @@ function SortableScriptCard({
         {isExpanded && (
           <CardContent className="pt-0 pb-6">
             <div className="ml-12">
-              <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-800 dark:to-slate-700 rounded-xl p-6 border border-slate-200 dark:border-slate-600 shadow-inner">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className={`w-1 h-6 bg-gradient-to-b ${gradientClass} rounded-full`}></div>
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Script Content</span>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50/50 dark:from-slate-800 dark:to-slate-700 rounded-xl p-6 border-2 border-blue-200 dark:border-slate-600 shadow-inner">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className={`w-1.5 h-8 bg-gradient-to-b ${gradientClass} rounded-full shadow-sm`}></div>
+                  <span className="text-base font-semibold text-blue-800 dark:text-blue-300">Script Content</span>
+                  <div className="flex-1 h-px bg-gradient-to-r from-blue-200 to-transparent"></div>
                 </div>
-                <div className="bg-white dark:bg-slate-900 rounded-lg p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-                  <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-medium leading-relaxed">
+                <div 
+                  className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-lg border-2 border-blue-100 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-blue-300 group/content"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(script.content);
+                    toast({
+                      title: "Script copied!",
+                      description: `"${script.name}" has been copied to clipboard`,
+                    });
+                  }}
+                  title="Click to copy script content"
+                >
+                  <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-medium leading-relaxed selection:bg-blue-200 selection:text-blue-900 group-hover/content:text-blue-800 dark:group-hover/content:text-blue-200 transition-colors">
                     {script.content}
                   </pre>
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  <span>Click to copy content</span>
                 </div>
               </div>
             </div>
@@ -327,9 +356,16 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="text-sm text-gray-500">
-                {filteredScripts.length} of {localScripts.length} scripts
-              </div>
+              {/* Close button for modal */}
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 rounded-full hover:bg-red-100 hover:text-red-600 transition-all duration-200 border border-gray-200 hover:border-red-300"
+                title="Close call scripts"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </DialogHeader>
@@ -418,7 +454,7 @@ export function CallScriptsManager({ onClose }: CallScriptsManagerProps) {
 
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <FileText className="h-4 w-4" />
-            <span>Showing {filteredScripts.length} of {localScripts.length} scripts</span>
+            <span>Showing {filteredScripts.length} scripts</span>
             {hasCustomOrder && !isDragMode && (
               <Badge variant="secondary" className="ml-2">Custom Order</Badge>
             )}
