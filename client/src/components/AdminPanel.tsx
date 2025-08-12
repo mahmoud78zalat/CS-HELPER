@@ -967,16 +967,19 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   // Refresh all users mutation
   const refreshAllMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest('POST', '/api/admin/refresh-all-users');
+      const response = await apiRequest('POST', '/api/admin/refresh-all-users');
+      return response;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[RefreshAll] Success response:', data);
       toast({
-        title: "Refresh initiated",
-        description: "All connected users will be refreshed shortly",
-        duration: 3000,
+        title: "Refresh Signal Sent",
+        description: "All connected users will be refreshed shortly (you won't be refreshed as the admin)",
+        duration: 4000,
       });
     },
     onError: (error) => {
+      console.error('[RefreshAll] Error:', error);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Session expired",
@@ -996,6 +999,10 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         duration: 4000,
       });
     },
+    onSettled: () => {
+      // This ensures the button returns to normal state regardless of success or failure
+      console.log('[RefreshAll] Mutation settled');
+    }
   });
 
   // Handler for refresh all button

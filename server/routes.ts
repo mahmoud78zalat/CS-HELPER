@@ -544,18 +544,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('[RefreshAll] Broadcasting refresh signal to all connected users');
       
-      // Since we don't have WebSocket, we'll use a timestamp approach
-      // The frontend will check for refresh signals periodically
+      // Create refresh signal with current timestamp
       const refreshSignal = {
         type: 'FORCE_REFRESH',
-        message: 'Admin has initiated a system refresh.',
-        timestamp: Date.now()
+        message: 'Admin has initiated a system refresh. Your page will reload shortly.',
+        timestamp: Date.now(),
+        adminId: currentUser.id,
+        adminEmail: currentUser.email
       };
 
-      // Store the refresh signal in a simple in-memory store for demo
-      global.refreshSignal = refreshSignal;
+      // Store the refresh signal - using a more robust approach
+      if (!global.refreshSignals) {
+        global.refreshSignals = [];
+      }
+      
+      // Add new signal and keep only last 10 signals
+      global.refreshSignals.push(refreshSignal);
+      if (global.refreshSignals.length > 10) {
+        global.refreshSignals = global.refreshSignals.slice(-10);
+      }
 
-      res.json({ message: "Refresh signal sent to all users successfully" });
+      // Also store the latest signal for quick access
+      global.latestRefreshSignal = refreshSignal;
+
+      console.log(`[RefreshAll] Refresh signal stored with timestamp: ${refreshSignal.timestamp}`);
+
+      res.json({ 
+        message: "Refresh signal sent to all users successfully",
+        signalTimestamp: refreshSignal.timestamp
+      });
     } catch (error) {
       console.error("[RefreshAll] Error sending refresh signal:", error);
       res.status(500).json({ message: "Failed to refresh all users" });
@@ -564,14 +581,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get refresh signal endpoint for polling
   app.get('/api/admin/refresh-signal', async (req: any, res) => {
-    const { lastCheck } = req.query;
-    const lastCheckTimestamp = parseInt(lastCheck) || 0;
-    
-    const refreshSignal = global.refreshSignal;
-    if (refreshSignal && refreshSignal.timestamp > lastCheckTimestamp) {
-      res.json(refreshSignal);
-    } else {
-      res.json({ type: 'NO_REFRESH' });
+    try {
+      const { lastCheck } = req.query;
+      const lastCheckTimestamp = parseInt(lastCheck) || 0;
+      
+      const latestSignal = global.latestRefreshSignal;
+      
+      if (latestSignal && latestSignal.timestamp > lastCheckTimestamp) {
+        console.log(`[RefreshSignal] Returning signal with timestamp: ${latestSignal.timestamp} (client last check: ${lastCheckTimestamp})`);
+        res.json(latestSignal);
+      } else {
+        res.json({ type: 'NO_REFRESH', timestamp: Date.now() });
+      }
+    } catch (error) {
+      console.error("[RefreshSignal] Error checking refresh signal:", error);
+      res.status(500).json({ type: 'ERROR', message: "Failed to check refresh signal" });
     }
   });
 
