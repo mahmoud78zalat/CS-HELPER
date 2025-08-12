@@ -241,7 +241,7 @@ export const storeEmails = pgTable("store_emails", {
   id: uuid("id").primaryKey().defaultRandom(),
   storeName: varchar("store_name").notNull(),
   storeEmail: varchar("store_email").notNull(),
-  storePhone: varchar("store_phone").notNull(),
+  storePhone: varchar("store_phone"), // Made optional - phone is not required
   isActive: boolean("is_active").default(true).notNull(),
   orderIndex: integer("order_index").default(0).notNull(),
   createdBy: uuid("created_by").references(() => users.id),

@@ -384,12 +384,13 @@ function StoreFormModal({ store, onClose, onSubmit, isLoading }: StoreFormModalP
             />
           </div>
           <div>
-            <Label htmlFor="storePhone">Store Phone</Label>
+            <Label htmlFor="storePhone">Store Phone (Optional)</Label>
             <Input
               id="storePhone"
               value={formData.storePhone}
               onChange={(e) => setFormData({ ...formData, storePhone: e.target.value })}
-              required
+              placeholder="Enter phone number (optional)"
+              data-testid="input-store-phone"
             />
           </div>
           <div className="flex items-center gap-2">

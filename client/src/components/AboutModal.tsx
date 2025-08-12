@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { 
   Headphones, Users, MessageSquare, Clock, Zap, Shield, 
   Sparkles, Database, Settings, Cpu, Globe, Activity, 
-  Palette, Bell, Lock, BarChart, Search, Mouse
+  Palette, Bell, Lock, BarChart, Search, Mouse, Building
 } from 'lucide-react';
 
 interface AboutModalProps {
@@ -127,6 +127,10 @@ export default function AboutModal({ onClose }: AboutModalProps) {
                   <li className="flex items-start">
                     <Palette className="h-4 w-4 mr-2 mt-1 text-pink-500 flex-shrink-0" />
                     <div><span className="font-semibold">Color Management:</span> Centralized visual organization and theme management</div>
+                  </li>
+                  <li className="flex items-start">
+                    <Building className="h-4 w-4 mr-2 mt-1 text-orange-500 flex-shrink-0" />
+                    <div><span className="font-semibold">Store Contacts Management:</span> Comprehensive store email and phone directory with optional fields</div>
                   </li>
                 </ul>
               </div>
