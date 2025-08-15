@@ -1748,19 +1748,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/template-genres', async (req, res) => {
-    try {
-      const genreData = req.body;
-      console.log('[API] Creating template genre with data:', genreData);
-      
-      const newGenre = await storage.createTemplateGenre(genreData);
-      console.log('[API] Template genre created successfully:', newGenre.id);
-      res.json(newGenre);
-    } catch (error) {
-      console.error('[API] Error creating template genre:', error);
-      res.status(500).json({ message: 'Failed to create template genre', error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  });
 
   // Connected Template Categories and Genres endpoints
   app.get('/api/connected-template-categories', async (req, res) => {
@@ -1797,19 +1784,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/connected-template-genres', async (req, res) => {
-    try {
-      const genreData = req.body;
-      console.log('[API] Creating connected template genre with data:', genreData);
-      
-      const newGenre = await storage.createTemplateGenre(genreData);
-      console.log('[API] Connected template genre created successfully:', newGenre.id);
-      res.json(newGenre);
-    } catch (error) {
-      console.error('[API] Error creating connected template genre:', error);
-      res.status(500).json({ message: 'Failed to create connected template genre', error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  });
 
   // Concerned Teams endpoints
   app.get('/api/concerned-teams', async (req, res) => {
